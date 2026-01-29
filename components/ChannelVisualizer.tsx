@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ManningInputs, ChannelShape } from '../types';
-import { MANNING_ROUGHNESS } from '../constants';
+// import { MANNING_ROUGHNESS } from '../constants';
 
 interface Props {
   inputs: ManningInputs;
@@ -19,7 +19,7 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
   const centerX = viewBoxW / 2;
   const bottomY = viewBoxH - padding;
 
-  const material = MANNING_ROUGHNESS.find(m => m.value === inputs.roughness);
+  // const material = MANNING_ROUGHNESS.find(m => m.value === inputs.roughness);
 
   const renderCircular = () => {
     const D = inputs.diameter || 1;

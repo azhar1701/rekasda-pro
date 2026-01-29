@@ -56,6 +56,7 @@ export interface CalculationResult {
   location?: GeoLocationData;
   photoUrl?: string; 
   notes?: string;
+  saved?: boolean;
 }
 
 export interface RoughnessMaterial {

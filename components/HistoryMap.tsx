@@ -12,7 +12,6 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
   const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
-    // 1. Cleanup existing map if strict mode double-invokes or re-renders occur
     if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -20,23 +19,19 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
 
     if (!mapContainerRef.current) return;
 
-    // 2. Prepare Data
     const validData = data.filter(item => item.location && item.location.latitude && item.location.longitude);
     
-    // Default: Bandung City Center
     const defaultCenter: [number, number] = [-6.9175, 107.6191]; 
     const initialCenter = validData.length > 0 
       ? [validData[0].location!.latitude, validData[0].location!.longitude] as [number, number]
       : defaultCenter;
 
-    // 3. Initialize Map
     const map = L.map(mapContainerRef.current, {
-        zoomControl: false // Move zoom control if needed, or keep default
+        zoomControl: false
     }).setView(initialCenter, 13);
     
     mapInstanceRef.current = map;
     
-    // Add Zoom Control at bottom right to avoid overlap with potential top UI
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -44,7 +39,6 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
       maxZoom: 19
     }).addTo(map);
 
-    // 4. Custom Icons
     const blueIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -63,7 +57,6 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
         shadowSize: [41, 41]
       });
 
-    // 5. Add Markers
     const bounds = L.latLngBounds([]);
 
     validData.forEach(item => {
@@ -73,7 +66,7 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
         const icon = item.type === CalculationType.MANNING ? blueIcon : redIcon;
         const colorClass = item.type === CalculationType.MANNING ? 'text-blue-600' : 'text-red-600';
 
-        const marker = L.marker([latitude, longitude], { icon })
+        L.marker([latitude, longitude], { icon })
         .addTo(map)
         .bindPopup(`
             <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 200px;">
@@ -94,17 +87,14 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
         bounds.extend([latitude, longitude]);
     });
 
-    // 6. Fit Bounds
     if (validData.length > 0) {
       map.fitBounds(bounds, { padding: [50, 50] });
     }
 
-    // 7. Critical Fix: Invalidate size after a short delay to account for container animation/rendering
     setTimeout(() => {
         map.invalidateSize();
     }, 200);
 
-    // 8. Cleanup Function
     return () => {
         map.remove();
         mapInstanceRef.current = null;

@@ -28,7 +28,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
     sideSlope: 0.1666, 
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ManningInputs, string>>>({});
+  // const [errors, setErrors] = useState<Partial<Record<keyof ManningInputs, string>>>({});
   const [results, setResults] = useState<any>(null);
 
   const loadPilotData = () => {
@@ -57,11 +57,12 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   };
 
   const validate = (newInputs: ManningInputs) => {
-    const newErrors: Partial<Record<keyof ManningInputs, string>> = {};
-    if (newInputs.roughness <= 0) newErrors.roughness = "n > 0";
-    if (newInputs.slope <= 0) newErrors.slope = "S > 0";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    // const newErrors: Partial<Record<keyof ManningInputs, string>> = {};
+    // if (newInputs.roughness <= 0) newErrors.roughness = "n > 0";
+    // if (newInputs.slope <= 0) newErrors.slope = "S > 0";
+    // setErrors(newErrors);
+    // return Object.keys(newErrors).length === 0;
+    return newInputs.roughness > 0 && newInputs.slope > 0;
   };
 
   const handleInputChange = (field: keyof ManningInputs, value: any) => {
