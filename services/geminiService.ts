@@ -3,10 +3,10 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getAiClient = () => {
-  if (!process.env.AIzaSyASi6AsLcOb7UV6Zq4aVkOL99aQlk3PMp4) {
-    throw new Error("API Key not found");
+  if (!import.meta.env.VITE_GEMINI_API_KEY) {
+    throw new Error("VITE_GEMINI_API_KEY not found in environment variables");
   }
-  return new GoogleGenAI({ apiKey: process.env.AIzaSyASi6AsLcOb7UV6Zq4aVkOL99aQlk3PMp4 });
+  return new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 };
 
 /**
