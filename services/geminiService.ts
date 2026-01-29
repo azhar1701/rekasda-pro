@@ -3,10 +3,10 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getAiClient = () => {
-  if (!process.env.API_KEY) {
+  if (!process.env.AIzaSyASi6AsLcOb7UV6Zq4aVkOL99aQlk3PMp4) {
     throw new Error("API Key not found");
   }
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  return new GoogleGenAI({ apiKey: process.env.AIzaSyASi6AsLcOb7UV6Zq4aVkOL99aQlk3PMp4 });
 };
 
 /**

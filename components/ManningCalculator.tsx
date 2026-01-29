@@ -8,6 +8,8 @@ import { Button } from './Button';
 import { ChannelVisualizer } from './ChannelVisualizer';
 import { FlowInsight } from './FlowInsight';
 import { SiteIdentityForm } from './SiteIdentityForm';
+import { SlopeCalculator } from './SlopeCalculator';
+import { HelpTooltip } from './HelpTooltip';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -30,6 +32,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
 
   // const [errors, setErrors] = useState<Partial<Record<keyof ManningInputs, string>>>({});
   const [results, setResults] = useState<any>(null);
+  const [showSlopeCalculator, setShowSlopeCalculator] = useState<boolean>(false);
 
   const loadPilotData = () => {
     setInputs({
@@ -140,24 +143,47 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                 <div className="grid grid-cols-2 gap-4 md:gap-5">
                      {inputs.shape === ChannelShape.TRAPEZOID ? (
                          <>
-                            <InputGroup label="Lebar Bawah (b)" unit="m" value={inputs.width} onChange={e => handleInputChange('width', parseFloat(e.target.value)||0)} placeholder="1.5" />
-                            <InputGroup label="Lebar Atas (B)" unit="m" value={inputs.topWidth} onChange={e => handleInputChange('topWidth', parseFloat(e.target.value)||0)} placeholder="2.0" />
+                            <InputGroup label="Lebar Bawah (b)" unit="m" value={inputs.width} onChange={e => handleInputChange('width', parseFloat(e.target.value)||0)} placeholder="1.5" helpText="Lebar dasar saluran pada bagian bawah" />
+                            <InputGroup label="Lebar Atas (B)" unit="m" value={inputs.topWidth} onChange={e => handleInputChange('topWidth', parseFloat(e.target.value)||0)} placeholder="2.0" helpText="Lebar saluran pada permukaan air" />
                             <div className="col-span-2 md:col-span-1">
-                                <InputGroup label="Tinggi Total (H)" unit="m" value={inputs.totalDepth} onChange={e => handleInputChange('totalDepth', parseFloat(e.target.value)||0)} placeholder="1.5" />
+                                <InputGroup label="Tinggi Total (H)" unit="m" value={inputs.totalDepth} onChange={e => handleInputChange('totalDepth', parseFloat(e.target.value)||0)} placeholder="1.5" helpText="Tinggi total saluran dari dasar ke puncak" />
                             </div>
                             <div className="col-span-2 md:col-span-1">
-                                <InputGroup label="Tinggi Air (h)" unit="m" value={inputs.depth} onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} placeholder="0.8" />
+                                <InputGroup label="Tinggi Air (h)" unit="m" value={inputs.depth} onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} placeholder="0.8" helpText="Kedalaman air dalam saluran" />
                             </div>
                          </>
                      ) : (
                          <div className="col-span-2 grid grid-cols-2 gap-5">
-                             <InputGroup label="Diameter (D)" unit="m" value={inputs.diameter} onChange={e => handleInputChange('diameter', parseFloat(e.target.value)||0)} placeholder="1.0" />
-                             <InputGroup label="Tinggi Air (h)" unit="m" value={inputs.depth} onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} placeholder="0.8" />
+                             <InputGroup label="Diameter (D)" unit="m" value={inputs.diameter} onChange={e => handleInputChange('diameter', parseFloat(e.target.value)||0)} placeholder="1.0" helpText="Diameter pipa/saluran lingkaran" />
+                             <InputGroup label="Tinggi Air (h)" unit="m" value={inputs.depth} onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} placeholder="0.8" helpText="Kedalaman air dalam pipa" />
                          </div>
                      )}
                 </div>
 
-                <InputGroup label="Kemiringan Dasar (S)" unit="m/m" step="0.0001" value={inputs.slope} onChange={e => handleInputChange('slope', parseFloat(e.target.value)||0)} placeholder="0.002" description="Slope memanjang saluran" />
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <InputGroup label="Kemiringan Dasar (S)" unit="m/m" step="0.0001" value={inputs.slope} onChange={e => handleInputChange('slope', parseFloat(e.target.value)||0)} placeholder="0.002" description="Slope memanjang saluran" helpText="Kemiringan dasar saluran dalam arah aliran (rise/run)" />
+                    </div>
+                    <button 
+                      onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
+                      className="mt-6 p-3 text-orange-600 hover:bg-orange-50 rounded-xl transition-colors border border-orange-200 hover:border-orange-300" 
+                      title="Kalkulator Slope"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                  {showSlopeCalculator && (
+                    <div className="animate-slide-down">
+                      <SlopeCalculator 
+                        onSlopeCalculated={(slope) => handleInputChange('slope', slope)}
+                        onClose={() => setShowSlopeCalculator(false)}
+                      />
+                    </div>
+                  )}
+                </div>
                 
                 <div className="group">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2 group-focus-within:text-safety-blue transition-colors">Kekasaran Manning (n)</label>
@@ -208,7 +234,10 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                         {/* Modified flex alignment for mobile vs desktop */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                             <div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">Kapasitas Debit (Q)</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">Kapasitas Debit (Q)</span>
+                                    <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
+                                </div>
                                 <div className="flex items-baseline">
                                     {/* Responsive Text Size */}
                                     <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900">{results.Discharge}</h3>
@@ -217,11 +246,17 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                             </div>
                             <div className="flex gap-3 mb-2 w-full md:w-auto">
                                 <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right min-w-[110px]">
-                                    <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">Kecepatan (V)</span>
+                                    <div className="flex items-center justify-end gap-1 mb-1">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase">Kecepatan (V)</span>
+                                        <HelpTooltip content="Kecepatan rata-rata aliran air dalam saluran" />
+                                    </div>
                                     <span className="text-lg md:text-xl font-black text-slate-800">{results.Velocity} <span className="text-[10px] text-slate-400">m/s</span></span>
                                 </div>
                                 <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right min-w-[110px]">
-                                    <span className="block text-[9px] font-black text-slate-400 uppercase mb-1">Froude (Fr)</span>
+                                    <div className="flex items-center justify-end gap-1 mb-1">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase">Froude (Fr)</span>
+                                        <HelpTooltip content="Bilangan Froude menunjukkan tipe aliran: <1 subkritis, >1 superkritis" />
+                                    </div>
                                     <span className={`text-lg md:text-xl font-black ${results.FlowType === 'Super-kritis' ? 'text-red-500' : 'text-green-500'}`}>{results.Froude}</span>
                                 </div>
                             </div>
@@ -232,17 +267,20 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                     <div className="p-6 md:p-8 relative z-10">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-6">
                             {[
-                                { label: 'Luas Basah (A)', val: results.Area, unit: 'm²' },
-                                { label: 'Keliling Basah (P)', val: results.Perimeter, unit: 'm' },
-                                { label: 'Jari-jari (R)', val: results.Radius, unit: 'm' },
-                                { label: 'Lebar Atas (T)', val: results.TopWidth, unit: 'm' },
-                                { label: 'Energi Spesifik (E)', val: results.SpecificEnergy, unit: 'm' },
-                                { label: 'Tegangan Geser', val: results.ShearStress, unit: 'N/m²' },
-                                { label: 'Kedalaman Kritis', val: results.CriticalDepth, unit: 'm', highlight: true },
-                                { label: 'Slope Kritis', val: results.CriticalSlope, unit: '', highlight: true },
+                                { label: 'Luas Basah (A)', val: results.Area, unit: 'm²', help: 'Luas penampang basah yang bersentuhan dengan air' },
+                                { label: 'Keliling Basah (P)', val: results.Perimeter, unit: 'm', help: 'Panjang keliling penampang yang bersentuhan dengan air' },
+                                { label: 'Jari-jari (R)', val: results.Radius, unit: 'm', help: 'Jari-jari hidrolis = Luas basah / Keliling basah' },
+                                { label: 'Lebar Atas (T)', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air pada bagian atas' },
+                                { label: 'Energi Spesifik (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energi per unit berat air relatif terhadap dasar saluran' },
+                                { label: 'Tegangan Geser', val: results.ShearStress, unit: 'N/m²', help: 'Gaya geser yang bekerja pada dasar dan dinding saluran' },
+                                { label: 'Kedalaman Kritis', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Kedalaman air pada kondisi aliran kritis (Fr=1)' },
+                                { label: 'Slope Kritis', val: results.CriticalSlope, unit: '', highlight: true, help: 'Kemiringan minimum untuk mencapai aliran kritis' },
                             ].map((item, i) => (
                                 <div key={i} className={`flex flex-col ${item.highlight ? 'bg-safety-blue/5 p-3 -m-3 rounded-2xl border border-safety-blue/10' : ''}`}>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">{item.label}</span>
+                                    <div className="flex items-center gap-1 mb-1.5">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{item.label}</span>
+                                        <HelpTooltip content={item.help} />
+                                    </div>
                                     <span className={`text-base md:text-lg font-bold ${item.highlight ? 'text-safety-blue' : 'text-slate-800'}`}>
                                         {item.val} <span className="text-[10px] text-slate-400 font-bold ml-0.5">{item.unit}</span>
                                     </span>

@@ -7,6 +7,8 @@ import { InputGroup } from './InputGroup';
 import { Button } from './Button';
 import { FlowInsight } from './FlowInsight';
 import { SiteIdentityForm } from './SiteIdentityForm';
+import { SlopeCalculator } from './SlopeCalculator';
+import { HelpTooltip } from './HelpTooltip';
 
 interface Props {
   onSave: (type: CalculationType, inputs: RationalInputs, outputs: any) => void;
@@ -24,6 +26,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
   });
   
   const [results, setResults] = useState<any>(null);
+  const [showSlopeCalculator, setShowSlopeCalculator] = useState<boolean>(false);
 
   const loadPilotData = () => {
     setInputs({
@@ -71,12 +74,35 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
 
                 <div className="space-y-6 relative z-10">
                     <div className="grid grid-cols-2 gap-4 md:gap-5">
-                         <InputGroup label="Luas DAS (A)" unit="km²" value={inputs.area} onChange={e => setInputs({...inputs, area: parseFloat(e.target.value)||0})} placeholder="0.50" />
-                         <InputGroup label="Hujan (R24)" unit="mm" value={inputs.rainfallDesign} onChange={e => setInputs({...inputs, rainfallDesign: parseFloat(e.target.value)||0})} placeholder="100" />
+                         <InputGroup label="Luas DAS (A)" unit="km²" value={inputs.area} onChange={e => setInputs({...inputs, area: parseFloat(e.target.value)||0})} placeholder="0.50" helpText="Luas daerah aliran sungai yang berkontribusi terhadap aliran" />
+                         <InputGroup label="Hujan (R24)" unit="mm" value={inputs.rainfallDesign} onChange={e => setInputs({...inputs, rainfallDesign: parseFloat(e.target.value)||0})} placeholder="100" helpText="Curah hujan rencana dalam 24 jam" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4 md:gap-5">
-                        <InputGroup label="Panjang Alur (L)" unit="km" value={inputs.flowLength} onChange={e => setInputs({...inputs, flowLength: parseFloat(e.target.value)||0})} placeholder="1.5" />
-                        <InputGroup label="Kemiringan Lahan (S)" unit="-" value={inputs.catchmentSlope} onChange={e => setInputs({...inputs, catchmentSlope: parseFloat(e.target.value)||0})} placeholder="0.005" />
+                    
+                    <InputGroup label="Panjang Alur (L)" unit="km" value={inputs.flowLength} onChange={e => setInputs({...inputs, flowLength: parseFloat(e.target.value)||0})} placeholder="1.5" helpText="Panjang alur utama dari hulu hingga outlet DAS" />
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <InputGroup label="Kemiringan Lahan (S)" unit="m/m" value={inputs.catchmentSlope} onChange={e => setInputs({...inputs, catchmentSlope: parseFloat(e.target.value)||0})} placeholder="0.005" helpText="Kemiringan rata-rata lahan DAS atau alur utama" />
+                        </div>
+                        <button 
+                          onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
+                          className="mt-6 p-3 text-orange-600 hover:bg-orange-50 rounded-xl transition-colors border border-orange-200 hover:border-orange-300 flex-shrink-0" 
+                          title="Kalkulator Slope"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                      {showSlopeCalculator && (
+                        <div className="animate-slide-down">
+                          <SlopeCalculator 
+                            onSlopeCalculated={(slope) => setInputs({...inputs, catchmentSlope: slope})}
+                            onClose={() => setShowSlopeCalculator(false)}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="group">
@@ -110,7 +136,10 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"></div>
                              
                              <div className="relative z-10">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-100/80">Debit Banjir Rencana (Q)</span>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-100/80">Debit Banjir Rencana (Q)</span>
+                                    <HelpTooltip content="Debit puncak banjir yang diperkirakan terjadi berdasarkan curah hujan rencana" />
+                                </div>
                                 <div className="flex items-baseline mt-2 mb-8">
                                     <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-white">{results.Discharge}</h3>
                                     <span className="text-lg md:text-2xl font-bold text-red-100 ml-2 md:ml-3">m³/s</span>
@@ -118,11 +147,17 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-                                        <span className="block text-[9px] font-black text-white/60 uppercase mb-1">Volume Est.</span>
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <span className="text-[9px] font-black text-white/60 uppercase">Volume Est.</span>
+                                            <HelpTooltip content="Estimasi total volume air yang mengalir selama kejadian banjir" />
+                                        </div>
                                         <span className="text-lg md:text-xl font-bold text-white">{results.TotalVolume} <span className="text-[10px]">m³</span></span>
                                     </div>
                                     <div className="bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-                                        <span className="block text-[9px] font-black text-white/60 uppercase mb-1">Debit Spesifik</span>
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <span className="text-[9px] font-black text-white/60 uppercase">Debit Spesifik</span>
+                                            <HelpTooltip content="Debit per satuan luas DAS (m³/s/km²)" />
+                                        </div>
                                         <span className="text-lg md:text-xl font-bold text-white">{results.SpecificDischarge}</span>
                                     </div>
                                 </div>
@@ -132,13 +167,16 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                         <div className="p-6 md:p-8 bg-white">
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-6 mb-8">
                                 {[
-                                    { l: 'Intensitas (I)', v: results.Intensity, u: 'mm/jam' },
-                                    { l: 'Waktu Konsentrasi', v: results.Tc, u: 'menit' },
-                                    { l: 'Waktu Lag', v: results.LagTime, u: 'menit' },
-                                    { l: 'Hujan Efektif', v: results.ExcessRain, u: 'mm' }
+                                    { l: 'Intensitas (I)', v: results.Intensity, u: 'mm/jam', h: 'Intensitas curah hujan berdasarkan waktu konsentrasi' },
+                                    { l: 'Waktu Konsentrasi', v: results.Tc, u: 'menit', h: 'Waktu yang diperlukan air hujan untuk mencapai outlet dari titik terjauh DAS' },
+                                    { l: 'Waktu Lag', v: results.LagTime, u: 'menit', h: 'Waktu antara puncak hujan dan puncak debit' },
+                                    { l: 'Hujan Efektif', v: results.ExcessRain, u: 'mm', h: 'Bagian hujan yang menjadi limpasan permukaan setelah dikurangi infiltrasi' }
                                 ].map((item, i) => (
                                     <div key={i}>
-                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">{item.l}</span>
+                                        <div className="flex items-center gap-1 mb-1.5">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{item.l}</span>
+                                            <HelpTooltip content={item.h} />
+                                        </div>
                                         <span className="text-base md:text-lg font-bold text-slate-800">{item.v} <span className="text-[10px] text-slate-400 font-bold">{item.u}</span></span>
                                     </div>
                                 ))}

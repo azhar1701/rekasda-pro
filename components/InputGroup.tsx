@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
+import { HelpTooltip } from './HelpTooltip';
 
 interface InputGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   unit?: string;
   error?: string;
   description?: string;
+  helpText?: string;
 }
 
-export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, description, value, onChange, ...props }) => {
+export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, description, helpText, value, onChange, ...props }) => {
   // Local state to handle decimal typing (prevents "1." turning into "1" immediately)
   const [localValue, setLocalValue] = useState<string>(value?.toString() ?? '');
 
@@ -36,9 +38,12 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
   return (
     <div className="group w-full">
       <div className="flex justify-between items-baseline mb-2">
-        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-focus-within:text-safety-blue transition-colors duration-200">
-          {label}
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-focus-within:text-safety-blue transition-colors duration-200">
+            {label}
+          </label>
+          {helpText && <HelpTooltip content={helpText} />}
+        </div>
         {error && <span className="text-[10px] text-red-500 font-bold animate-pulse">{error}</span>}
       </div>
       
