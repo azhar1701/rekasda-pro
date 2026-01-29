@@ -1,0 +1,10 @@
+
+{
+  "name": "RekaSDA Pro",
+  "description": "Alat Bantu Hidrologi Lapangan Standar SNI - RekaSDA Pro",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
