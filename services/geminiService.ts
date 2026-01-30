@@ -35,27 +35,23 @@ export const consultHydrologist = async (
       ${query}
     `;
 
+    const generativeModel = ai.getGenerativeModel({ model });
+
     if (imageBase64) {
       // Clean base64 string if it contains data URL prefix
       const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
       
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: {
-          parts: [
-            { inlineData: { mimeType: 'image/jpeg', data: cleanBase64 } },
-            { text: prompt }
-          ]
-        }
-      });
-      // Correct extraction of text from response.
-      return response.text || "Maaf, saya tidak dapat menganalisis gambar saat ini.";
+      const response = await generativeModel.generateContent([
+        { inlineData: { mimeType: 'image/jpeg', data: cleanBase64 } },
+        prompt
+      ]);
+      
+      const result = await response.response;
+      return result.text() || "Maaf, saya tidak dapat menganalisis gambar saat ini.";
     } else {
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt
-      });
-      return response.text || "Maaf, tidak ada respon.";
+      const response = await generativeModel.generateContent(prompt);
+      const result = await response.response;
+      return result.text() || "Maaf, tidak ada respon.";
     }
 
   } catch (error) {
