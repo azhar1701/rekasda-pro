@@ -60,7 +60,7 @@ export const databaseService = {
     }
 
     try {
-      const { data, error } = await supabase!
+      const { error } = await supabase!
         .from('calculations')
         .select('count')
         .limit(1)
