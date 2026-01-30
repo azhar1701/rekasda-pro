@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseEnabled } from '../lib/supabase'
 
 export interface CalculationRecord {
   id?: string
@@ -11,7 +11,12 @@ export interface CalculationRecord {
 
 export const databaseService = {
   async saveCalculation(data: Omit<CalculationRecord, 'id' | 'created_at'>) {
-    const { data: result, error } = await supabase
+    if (!isSupabaseEnabled()) {
+      console.warn('Supabase not configured. Calculation not saved.')
+      return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
+    }
+
+    const { data: result, error } = await supabase!
       .from('calculations')
       .insert([data])
       .select()
@@ -21,7 +26,12 @@ export const databaseService = {
   },
 
   async getCalculations() {
-    const { data, error } = await supabase
+    if (!isSupabaseEnabled()) {
+      console.warn('Supabase not configured. Returning empty array.')
+      return []
+    }
+
+    const { data, error } = await supabase!
       .from('calculations')
       .select('*')
       .order('created_at', { ascending: false })
@@ -31,11 +41,33 @@ export const databaseService = {
   },
 
   async deleteCalculation(id: string) {
-    const { error } = await supabase
+    if (!isSupabaseEnabled()) {
+      console.warn('Supabase not configured. Cannot delete calculation.')
+      return
+    }
+
+    const { error } = await supabase!
       .from('calculations')
       .delete()
       .eq('id', id)
     
     if (error) throw error
+  },
+
+  async testConnection() {
+    if (!isSupabaseEnabled()) {
+      return { connected: false, error: 'Supabase not configured' }
+    }
+
+    try {
+      const { data, error } = await supabase!
+        .from('calculations')
+        .select('count')
+        .limit(1)
+      
+      return { connected: !error, error: error?.message }
+    } catch (error) {
+      return { connected: false, error: (error as Error).message }
+    }
   }
 }
