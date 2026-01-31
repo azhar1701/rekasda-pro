@@ -12,7 +12,12 @@ export const useDatabase = () => {
       const record = await databaseService.saveCalculation({
         site_name: result.inputs.site?.channelName || 'Unknown Site',
         calculation_type: result.type === CalculationType.MANNING ? 'manning' : 'rational',
-        input_data: result.inputs,
+        input_data: {
+          ...result.inputs,
+          notes: result.notes,
+          location: result.location,
+          photoUrl: result.photoUrl
+        },
         result_data: result.outputs
       })
       await loadCalculations()

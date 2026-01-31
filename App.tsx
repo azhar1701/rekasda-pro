@@ -10,6 +10,8 @@ import { HistoryMap } from './components/HistoryMap';
 import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
 import { Button } from './components/Button';
 import { calculateManning, calculateRational } from './services/calculationService';
+import { useDatabase } from './lib/useDatabase';
+import { useDatabaseStatus } from './components/DatabaseTest';
 import { APP_NAME } from './constants';
 
 enum Tab {
@@ -32,6 +34,8 @@ const App: React.FC = () => {
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
   const [scrolled, setScrolled] = useState(false);
+  const { calculations, saveCalculation, deleteCalculation, loading } = useDatabase();
+  const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -40,15 +44,22 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem('hydrofield_history');
-    if (saved) {
-        try { setHistory(JSON.parse(saved)); } catch (e) { console.error("Failed to parse history"); }
-    }
-  }, []);
+    // Convert Supabase calculations to CalculationResult format
+    const convertedHistory = calculations.map(calc => ({
+      id: calc.id || `calc-${Date.now()}`,
+      type: calc.calculation_type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
+      date: calc.created_at || new Date().toISOString(),
+      inputs: calc.input_data,
+      outputs: calc.result_data,
+      location: calc.input_data.site?.location,
+      notes: calc.input_data.notes || ''
+    }));
+    setHistory(convertedHistory);
+  }, [calculations]);
 
-  const seedPilotData = () => {
+  const seedPilotData = async () => {
     const timestamp = Date.now();
-     const manningInput: ManningInputs = {
+    const manningInput: ManningInputs = {
       site: { channelName: 'Sekunder Soreang (Pilot)', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
       shape: ChannelShape.TRAPEZOID,
       roughness: 0.015,
@@ -62,7 +73,7 @@ const App: React.FC = () => {
     };
     const manningOutput = calculateManning(manningInput);
     const manningRecord: CalculationResult = {
-      id: `pilot-manning-${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `pilot-manning-${timestamp}`,
       type: CalculationType.MANNING,
       date: new Date(timestamp - 86400000).toISOString(),
       inputs: manningInput,
@@ -81,7 +92,7 @@ const App: React.FC = () => {
     };
     const rationalOutput = calculateRational(rationalInput);
     const rationalRecord: CalculationResult = {
-      id: `pilot-rational-${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `pilot-rational-${timestamp}`,
       type: CalculationType.RATIONAL,
       date: new Date(timestamp - 172800000).toISOString(),
       inputs: rationalInput,
@@ -90,26 +101,42 @@ const App: React.FC = () => {
       notes: "Kawasan pemukiman padat."
     };
 
-    const newHistory = [manningRecord, rationalRecord, ...history];
-    setHistory(newHistory);
-    localStorage.setItem('hydrofield_history', JSON.stringify(newHistory));
-    alert("2 Rekaman Pilot berhasil ditambahkan ke Database!");
+    try {
+      await saveCalculation(manningRecord);
+      await saveCalculation(rationalRecord);
+      alert("2 Rekaman Pilot berhasil ditambahkan ke Database!");
+    } catch (error) {
+      console.error('Error saving pilot data:', error);
+      alert("Gagal menyimpan ke database. Cek koneksi Supabase.");
+    }
   };
 
-  const saveToHistory = (record: CalculationResult) => {
-    const updated = [record, ...history];
-    setHistory(updated);
-    localStorage.setItem('hydrofield_history', JSON.stringify(updated));
-    setReportModalOpen(false);
-    setActiveTab(Tab.HISTORY);
-  };
-
-  const deleteHistoryItem = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); 
-    if (window.confirm("Hapus rekaman ini secara permanen?")) {
-      const updated = history.filter(item => item.id !== id);
+  const saveToHistory = async (record: CalculationResult) => {
+    try {
+      await saveCalculation(record);
+      setReportModalOpen(false);
+      setActiveTab(Tab.HISTORY);
+    } catch (error) {
+      console.error('Error saving to database:', error);
+      alert('Gagal menyimpan ke database. Data disimpan lokal.');
+      // Fallback to localStorage
+      const updated = [record, ...history];
       setHistory(updated);
       localStorage.setItem('hydrofield_history', JSON.stringify(updated));
+      setReportModalOpen(false);
+      setActiveTab(Tab.HISTORY);
+    }
+  };
+
+  const deleteHistoryItem = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); 
+    if (window.confirm("Hapus rekaman ini secara permanen?")) {
+      try {
+        await deleteCalculation(id);
+      } catch (error) {
+        console.error('Error deleting from database:', error);
+        alert('Gagal menghapus dari database.');
+      }
     }
   };
 
@@ -158,7 +185,11 @@ const App: React.FC = () => {
                     <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Field Engineering Tools</span>
                  </div>
             </div>
-            <div className="hidden md:block">
+            <div className="hidden md:flex items-center gap-3">
+                 <div className="flex items-center gap-2 bg-slate-100/60 px-3 py-1.5 rounded-full border border-slate-200">
+                   <div className={`w-2 h-2 rounded-full ${getStatusColor()} ${dbStatus === 'testing' ? 'animate-pulse' : ''}`}></div>
+                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{dbMessage}</span>
+                 </div>
                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100/80 px-4 py-2 rounded-full border border-slate-200">v1.0 Stable Build</span>
             </div>
         </div>
@@ -202,18 +233,24 @@ const App: React.FC = () => {
                         {/* Desktop Add Button */}
                         <button 
                             onClick={() => setManualEntryModalOpen(true)}
-                            className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20"
+                            disabled={loading}
+                            className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 disabled:opacity-50"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-                            <span className="text-xs font-bold">Data Baru</span>
+                            <span className="text-xs font-bold">{loading ? 'Loading...' : 'Data Baru'}</span>
                         </button>
                         
                         {/* Mobile Add Button (Icon Only) */}
                         <button 
                             onClick={() => setManualEntryModalOpen(true)}
-                            className="md:hidden flex items-center justify-center w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 active:scale-95 transition-transform"
+                            disabled={loading}
+                            className="md:hidden flex items-center justify-center w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 active:scale-95 transition-transform disabled:opacity-50"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                            {loading ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                            )}
                         </button>
                       </div>
                   </div>
@@ -226,8 +263,8 @@ const App: React.FC = () => {
                              </span>
                           </div>
                           <p className="text-slate-400 font-medium mb-8 max-w-sm">Belum ada data tersimpan. Mulai dengan membuat data baru atau generate data contoh.</p>
-                          <Button variant="outline" onClick={seedPilotData} className="mx-auto text-xs py-3 px-8 border-dashed bg-white hover:bg-slate-50">
-                            + Generate Pilot Data
+                          <Button variant="outline" onClick={seedPilotData} disabled={loading} className="mx-auto text-xs py-3 px-8 border-dashed bg-white hover:bg-slate-50">
+                            {loading ? 'Menyimpan...' : '+ Generate Pilot Data'}
                           </Button>
                       </div>
                   ) : (
@@ -235,10 +272,11 @@ const App: React.FC = () => {
                         {historyViewMode === 'MAP' ? (
                             <div className="animate-in fade-in zoom-in-95 duration-300 bg-white p-2 rounded-[2.5rem] shadow-soft border border-slate-100">
                                 <HistoryMap data={history} />
-                                <div className="p-4 flex justify-between items-center">
-                                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Menampilkan {history.filter(h => h.location).length} Lokasi Terdata</p>
-                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                </div>
+                                    <div className="p-4 flex justify-between items-center">
+                                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Menampilkan {history.filter(h => h.location).length} Lokasi Terdata</p>
+                                        {loading && <div className="flex items-center gap-2 text-blue-500"><div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div><span className="text-xs">Sync...</span></div>}
+                                        {!loading && <span className="w-2 h-2 bg-green-500 rounded-full"></span>}
+                                    </div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">

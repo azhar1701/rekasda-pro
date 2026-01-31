@@ -6,7 +6,11 @@ export interface CalculationRecord {
   calculation_type: 'manning' | 'rational'
   input_data: any
   result_data: any
+  location?: any
+  photo_url?: string
+  notes?: string
   created_at?: string
+  updated_at?: string
 }
 
 export const databaseService = {
@@ -16,12 +20,19 @@ export const databaseService = {
       return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
     }
 
+    console.log('Attempting to save calculation:', data)
+
     const { data: result, error } = await supabase!
       .from('calculations')
       .insert([data])
       .select()
     
-    if (error) throw error
+    if (error) {
+      console.error('Supabase save error:', error)
+      throw error
+    }
+    
+    console.log('Successfully saved to Supabase:', result)
     return result[0]
   },
 
@@ -62,11 +73,17 @@ export const databaseService = {
     try {
       const { error } = await supabase!
         .from('calculations')
-        .select('count')
+        .select('id')
         .limit(1)
       
-      return { connected: !error, error: error?.message }
+      if (error) {
+        console.error('Supabase connection test failed:', error)
+        return { connected: false, error: error.message }
+      }
+      
+      return { connected: true, error: null }
     } catch (error) {
+      console.error('Supabase connection error:', error)
       return { connected: false, error: (error as Error).message }
     }
   }
