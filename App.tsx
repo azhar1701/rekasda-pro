@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ManningCalculator } from './components/ManningCalculator';
 import { RationalCalculator } from './components/RationalCalculator';
@@ -7,6 +6,7 @@ import { ReportModal } from './components/ReportModal';
 import { DetailModal } from './components/DetailModal';
 import { ManualEntryModal } from './components/ManualEntryModal';
 import { HistoryMap } from './components/HistoryMap';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
 import { Button } from './components/Button';
 import { calculateManning, calculateRational } from './services/calculationService';
@@ -51,8 +51,9 @@ const App: React.FC = () => {
       date: calc.created_at || new Date().toISOString(),
       inputs: calc.input_data,
       outputs: calc.result_data,
-      location: calc.input_data.site?.location,
-      notes: calc.input_data.notes || ''
+      // Fix location mapping - check both input_data.location and direct location field
+      location: calc.input_data?.location || calc.location,
+      notes: calc.input_data?.notes || calc.notes || ''
     }));
     setHistory(convertedHistory);
   }, [calculations]);
@@ -166,6 +167,7 @@ const App: React.FC = () => {
   ];
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col relative overflow-hidden">
       {/* Decorative Background Gradients */}
       <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"></div>
@@ -368,6 +370,7 @@ const App: React.FC = () => {
       </div>
       
     </div>
+    </ErrorBoundary>
   );
 };
 

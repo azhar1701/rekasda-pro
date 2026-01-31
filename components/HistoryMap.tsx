@@ -19,7 +19,24 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
 
     if (!mapContainerRef.current) return;
 
-    const validData = data.filter(item => item.location && item.location.latitude && item.location.longitude);
+    const validData = data.filter(item => {
+      const hasLocation = item.location && 
+                         typeof item.location.latitude === 'number' && 
+                         typeof item.location.longitude === 'number' &&
+                         !isNaN(item.location.latitude) &&
+                         !isNaN(item.location.longitude);
+      
+      if (!hasLocation) {
+        console.log('Item without valid location:', item.id, item.location);
+      }
+      
+      return hasLocation;
+    });
+    
+    console.log(`HistoryMap: Total items: ${data.length}, Valid locations: ${validData.length}`);
+    if (validData.length > 0) {
+      console.log('First valid location:', validData[0].location);
+    }
     
     const defaultCenter: [number, number] = [-6.9175, 107.6191]; 
     const initialCenter = validData.length > 0 

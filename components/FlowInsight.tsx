@@ -8,9 +8,12 @@ interface FlowInsightProps {
 }
 
 export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, label, type }) => {
-  // Normalize flow intensity for animation (scale 1-10)
-  const intensity = Math.min(Math.max(discharge * 2, 1), 15);
-  const flowSpeed = velocity ? Math.min(Math.max(velocity, 0.5), 5) : (discharge > 0 ? 2 : 0);
+  // Validate inputs and normalize flow intensity for animation (scale 1-10)
+  const safeDischarge = typeof discharge === 'number' && !isNaN(discharge) ? discharge : 0;
+  const intensity = Math.min(Math.max(safeDischarge * 2, 1), 15);
+  const flowSpeed = velocity && typeof velocity === 'number' && !isNaN(velocity) 
+    ? Math.min(Math.max(velocity, 0.5), 5) 
+    : (safeDischarge > 0 ? 2 : 0);
 
   return (
     <div className="bg-gray-900 rounded-3xl p-5 border border-white/10 shadow-2xl overflow-hidden relative">
@@ -20,7 +23,7 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
           <p className="text-safety-blue text-[9px] font-bold uppercase">{label || 'Simulasi Pergerakan Air'}</p>
         </div>
         <div className="text-right">
-          <span className="text-white font-black text-xl">{discharge}</span>
+          <span className="text-white font-black text-xl">{safeDischarge.toFixed(2)}</span>
           <span className="text-gray-500 text-[10px] ml-1 font-bold">m³/s</span>
         </div>
       </div>
@@ -58,8 +61,8 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
         {/* Connection Path */}
         <div className="flex-1 h-[2px] mx-4 bg-gradient-to-r from-gray-800 via-safety-blue to-gray-800 relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 px-2">
-            <div className={`px-2 py-0.5 rounded-full border border-safety-blue/30 text-[8px] font-bold ${discharge > 0 ? 'text-safety-blue animate-pulse' : 'text-gray-600'}`}>
-              {discharge > 5 ? 'DEBIT TINGGI' : discharge > 0 ? 'ALIRAN NORMAL' : 'TIDAK ADA ALIRAN'}
+            <div className={`px-2 py-0.5 rounded-full border border-safety-blue/30 text-[8px] font-bold ${safeDischarge > 0 ? 'text-safety-blue animate-pulse' : 'text-gray-600'}`}>
+              {safeDischarge > 5 ? 'DEBIT TINGGI' : safeDischarge > 0 ? 'ALIRAN NORMAL' : 'TIDAK ADA ALIRAN'}
             </div>
           </div>
         </div>

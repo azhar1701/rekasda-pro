@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { WEST_JAVA_LOCATIONS } from '../constants';
 import { SiteIdentity, GeoLocationData } from '../types';
 import { InputGroup } from './InputGroup';
+import { LocationSelector } from './LocationSelector';
 
 interface Props {
   value: SiteIdentity;
@@ -53,9 +52,31 @@ export const SiteIdentityForm: React.FC<Props> = ({ value, onChange }) => {
     }
   };
 
-  const regencies = Object.keys(WEST_JAVA_LOCATIONS);
-  const districts = value.regency ? Object.keys(WEST_JAVA_LOCATIONS[value.regency] || {}) : [];
-  const villages = (value.regency && value.district) ? (WEST_JAVA_LOCATIONS[value.regency][value.district] || []) : [];
+  const handleLocationChange = (location: {
+    kabupaten: string;
+    kecamatan: string;
+    desa: string;
+    coordinates?: { latitude: number; longitude: number };
+  }) => {
+    const updatedValue = {
+      ...value,
+      regency: location.kabupaten,
+      district: location.kecamatan,
+      village: location.desa
+    };
+    
+    // Auto-set GPS coordinates if available
+    if (location.coordinates && !value.location) {
+      updatedValue.location = {
+        latitude: location.coordinates.latitude,
+        longitude: location.coordinates.longitude,
+        accuracy: 10,
+        timestamp: Date.now()
+      };
+    }
+    
+    onChange(updatedValue);
+  };
 
   return (
     <div className="bg-white p-5 md:p-8 rounded-[2rem] shadow-soft border border-slate-100 space-y-6">
@@ -76,31 +97,14 @@ export const SiteIdentityForm: React.FC<Props> = ({ value, onChange }) => {
         onChange={(e) => onChange({ ...value, channelName: e.target.value })}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-            { label: 'Kabupaten/Kota', val: value.regency, options: regencies, action: (v:string) => onChange({ ...value, regency: v, district: '', village: '' }) },
-            { label: 'Kecamatan', val: value.district, options: districts, action: (v:string) => onChange({ ...value, district: v, village: '' }), disabled: !value.regency },
-            { label: 'Desa/Kelurahan', val: value.village, options: villages, action: (v:string) => onChange({ ...value, village: v }), disabled: !value.district }
-        ].map((field, idx) => (
-            <div key={idx} className="group">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block mb-2 group-focus-within:text-safety-blue transition-colors">{field.label}</label>
-                <div className="relative">
-                    <select 
-                        disabled={field.disabled}
-                        className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-2xl px-4 py-3.5 outline-none focus:border-safety-blue focus:ring-4 focus:ring-safety-blue/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        value={field.val}
-                        onChange={(e) => field.action(e.target.value)}
-                    >
-                        <option value="">Pilih...</option>
-                        {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                    </div>
-                </div>
-            </div>
-        ))}
-      </div>
+      <LocationSelector
+        onLocationChange={handleLocationChange}
+        initialValues={{
+          kabupaten: value.regency,
+          kecamatan: value.district,
+          desa: value.village
+        }}
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <button 

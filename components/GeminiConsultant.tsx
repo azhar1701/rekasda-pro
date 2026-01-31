@@ -185,7 +185,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 ml-1">Analisis SDA • Panduan SNI</p>
         </div>
         <div className="hidden md:block relative z-10">
-            <span className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-slate-300 border border-white/10">Powered by Gemini 2.0 Flash</span>
+            <span className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-slate-300 border border-white/10">Powered by Gemini</span>
         </div>
       </div>
       
