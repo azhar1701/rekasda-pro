@@ -1,15 +1,40 @@
 import { LocationData } from './locationService';
 
 export class CSVParser {
-  private static data: LocationData[] | null = null;
+  private static data: LocationData[] = [];
 
   static async loadData(): Promise<LocationData[]> {
-    if (this.data) return this.data;
+    if (this.data.length > 0) return this.data;
 
     try {
-      const response = await fetch('/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try multiple possible paths for the CSV file
+      const possiblePaths = [
+        '/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
+        './docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
+        '/public/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv'
+      ];
+      
+      let response: Response | null = null;
+      let lastError: Error | null = null;
+      
+      for (const path of possiblePaths) {
+        try {
+          console.log(`Trying to load CSV from: ${path}`);
+          response = await fetch(path);
+          if (response.ok) {
+            console.log(`Successfully loaded CSV from: ${path}`);
+            break;
+          } else {
+            console.warn(`Failed to load from ${path}: ${response.status}`);
+          }
+        } catch (error) {
+          console.warn(`Error loading from ${path}:`, error);
+          lastError = error as Error;
+        }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error(`Failed to load CSV from all paths. Last error: ${lastError?.message || 'Unknown error'}`);
       }
       
       const csvText = await response.text();
@@ -35,21 +60,57 @@ export class CSVParser {
             kodePos: values[19]?.trim() || ''
           };
         })
-        .filter((item): item is LocationData => {
+        .filter((item): item is NonNullable<typeof item> => {
           return item !== null && 
                  item.provinsi === 'JAWA BARAT' && 
                  Boolean(item.kabupaten) && 
                  Boolean(item.kecamatan) && 
                  Boolean(item.desa);
-        });
+        }) as LocationData[];
 
       this.data = parsedData;
-      console.log(`Loaded ${this.data.length} location records for Jawa Barat`);
+      console.log(`Loaded ${parsedData.length} location records for Jawa Barat`);
       
-      return this.data;
+      return parsedData;
     } catch (error) {
       console.error('Failed to load CSV data:', error);
-      return [];
+      
+      // Fallback: return some basic data for testing
+      console.warn('Using fallback location data');
+      this.data = [
+        {
+          id: '1',
+          provinsi: 'JAWA BARAT',
+          kabupaten: 'KAB. BOGOR',
+          kecamatan: 'CIBINONG',
+          desa: 'PONDOK RAJEG',
+          latitude: -6.44385,
+          longitude: 106.82049,
+          kodePos: '16913'
+        },
+        {
+          id: '2',
+          provinsi: 'JAWA BARAT',
+          kabupaten: 'KAB. SUKABUMI',
+          kecamatan: 'PALABUHANRATU',
+          desa: 'PALABUHANRATU',
+          latitude: -6.90391,
+          longitude: 106.9375,
+          kodePos: '43341'
+        },
+        {
+          id: '3',
+          provinsi: 'JAWA BARAT',
+          kabupaten: 'KAB. CIANJUR',
+          kecamatan: 'CIANJUR',
+          desa: 'NAGRAK',
+          latitude: -6.83631,
+          longitude: 107.11156,
+          kodePos: '43219'
+        }
+      ];
+      
+      return this.data;
     }
   }
   

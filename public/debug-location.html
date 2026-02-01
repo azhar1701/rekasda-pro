@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Data Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Location Data Debug Tool</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        async function testLocationData() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            statusDiv.innerHTML = '<div class="info status">Testing location data loading...</div>';
+            
+            const paths = [
+                '/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
+                './docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
+                '/public/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv'
+            ];
+            
+            let results = [];
+            
+            for (const path of paths) {
+                try {
+                    console.log(`Testing path: ${path}`);
+                    const response = await fetch(path);
+                    
+                    if (response.ok) {
+                        const text = await response.text();
+                        const lines = text.split('\\n');
+                        results.push({
+                            path: path,
+                            status: 'SUCCESS',
+                            size: text.length,
+                            lines: lines.length,
+                            firstLine: lines[0] || 'Empty',
+                            sampleData: lines.slice(0, 3).join('\\n')
+                        });
+                        break; // Stop on first success
+                    } else {
+                        results.push({
+                            path: path,
+                            status: 'FAILED',
+                            error: `HTTP ${response.status}: ${response.statusText}`
+                        });
+                    }
+                } catch (error) {
+                    results.push({
+                        path: path,
+                        status: 'ERROR',
+                        error: error.message
+                    });
+                }
+            }
+            
+            // Display results
+            let html = '';
+            let hasSuccess = false;
+            
+            results.forEach(result => {
+                if (result.status === 'SUCCESS') {
+                    hasSuccess = true;
+                    html += `
+                        <div class="success status">
+                            <strong>✓ SUCCESS:</strong> ${result.path}<br>
+                            File size: ${result.size} bytes<br>
+                            Lines: ${result.lines}<br>
+                            First line: ${result.firstLine}
+                        </div>
+                        <h3>Sample Data:</h3>
+                        <pre>${result.sampleData}</pre>
+                    `;
+                } else {
+                    html += `
+                        <div class="error status">
+                            <strong>✗ ${result.status}:</strong> ${result.path}<br>
+                            Error: ${result.error}
+                        </div>
+                    `;
+                }
+            });
+            
+            if (hasSuccess) {
+                statusDiv.innerHTML = '<div class="success status">Location data is accessible!</div>';
+            } else {
+                statusDiv.innerHTML = '<div class="error status">All paths failed. Check file deployment.</div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Run test on page load
+        testLocationData();
+    </script>
+</body>
+</html>

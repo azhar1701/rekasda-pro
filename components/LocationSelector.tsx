@@ -23,6 +23,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   const [selectedKecamatan, setSelectedKecamatan] = useState(initialValues?.kecamatan || '');
   const [selectedDesa, setSelectedDesa] = useState(initialValues?.desa || '');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [kabupatenList, setKabupatenList] = useState<string[]>([]);
   const [kecamatanList, setKecamatanList] = useState<string[]>([]);
   const [desaList, setDesaList] = useState<string[]>([]);
@@ -30,12 +31,16 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   useEffect(() => {
     const initData = async () => {
       try {
+        setError(null);
+        console.log('Initializing location data...');
         await locationService.init();
         const kabupatenData = locationService.getKabupaten();
+        console.log('Loaded kabupaten data:', kabupatenData.length, 'items');
         setKabupatenList(kabupatenData);
         setLoading(false);
       } catch (error) {
         console.error('Error initializing location data:', error);
+        setError(`Gagal memuat data lokasi: ${error instanceof Error ? error.message : 'Unknown error'}`);
         setLoading(false);
       }
     };
@@ -94,16 +99,23 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         <select
           value={selectedKabupaten}
           onChange={(e) => handleKabupatenChange(e.target.value)}
-          disabled={loading}
+          disabled={loading || error !== null}
           className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-slate-50 disabled:text-slate-400"
         >
-          <option value="">{loading ? 'Loading...' : 'Pilih Kabupaten/Kota'}</option>
-          {kabupatenList.map((kabupaten) => (
+          <option value="">
+            {loading ? 'Loading...' : error ? 'Error loading data' : 'Pilih Kabupaten/Kota'}
+          </option>
+          {!error && kabupatenList.map((kabupaten) => (
             <option key={kabupaten} value={kabupaten}>
               {kabupaten}
             </option>
           ))}
         </select>
+        {error && (
+          <div className="mt-2 text-sm text-red-600">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Kecamatan */}
