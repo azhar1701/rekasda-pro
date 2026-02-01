@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { ManningCalculator } from './components/ManningCalculator';
 import { RationalCalculator } from './components/RationalCalculator';
 import { GeminiConsultant } from './components/GeminiConsultant';
@@ -6,12 +6,16 @@ import { ReportModal } from './components/ReportModal';
 import { DetailModal } from './components/DetailModal';
 import { ManualEntryModal } from './components/ManualEntryModal';
 import { HistoryMap } from './components/HistoryMap';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { EnhancedErrorBoundary } from './components/EnhancedErrorBoundary';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { ProgressiveHistory } from './components/ProgressiveHistory';
+import { CompactExport } from './components/CompactExport';
 import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
 import { Button } from './components/Button';
 import { calculateManning, calculateRational } from './services/calculationService';
 import { useDatabase } from './lib/useDatabase';
 import { useDatabaseStatus } from './components/DatabaseTest';
+import { OfflineStorage } from './services/offlineStorage';
 import { APP_NAME } from './constants';
 
 enum Tab {
@@ -34,12 +38,73 @@ const App: React.FC = () => {
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
   const [scrolled, setScrolled] = useState(false);
-  const { calculations, saveCalculation, deleteCalculation, loading } = useDatabase();
+  const [pullToRefresh, setPullToRefresh] = useState(false);
+  const { calculations, saveCalculation, deleteCalculation, loading, syncing, error, isOnline, refetch } = useDatabase();
   const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Register service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => console.log('SW registered:', registration))
+        .catch(error => console.log('SW registration failed:', error));
+    }
+  }, []);
+
+  // Pull to refresh functionality
+  useEffect(() => {
+    let startY = 0;
+    let currentY = 0;
+    let isRefreshing = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      currentY = e.touches[0].clientY;
+      const diff = currentY - startY;
+      
+      if (diff > 0 && window.scrollY === 0 && !isRefreshing) {
+        setPullToRefresh(diff > 100);
+      }
+    };
+
+    const handleTouchEnd = async () => {
+      if (pullToRefresh && !isRefreshing) {
+        isRefreshing = true;
+        setPullToRefresh(false);
+        try {
+          await refetch();
+        } catch (error) {
+          console.error('Refresh failed:', error);
+        }
+        isRefreshing = false;
+      }
+      setPullToRefresh(false);
+    };
+
+    const options = { passive: true };
+    document.addEventListener('touchstart', handleTouchStart, options);
+    document.addEventListener('touchmove', handleTouchMove, options);
+    document.addEventListener('touchend', handleTouchEnd, options);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [pullToRefresh, refetch]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -120,11 +185,7 @@ const App: React.FC = () => {
       setActiveTab(Tab.HISTORY);
     } catch (error) {
       console.error('Error saving to database:', error);
-      alert('Gagal menyimpan ke database. Data disimpan lokal.');
-      // Fallback to localStorage
-      const updated = [record, ...history];
-      setHistory(updated);
-      localStorage.setItem('hydrofield_history', JSON.stringify(updated));
+      // Data is already saved offline by the hook
       setReportModalOpen(false);
       setActiveTab(Tab.HISTORY);
     }
@@ -164,12 +225,33 @@ const App: React.FC = () => {
     { tab: Tab.SALURAN, label: 'Saluran', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 10l8-8m0 0l8 8M12 2v20" /></svg>, activeColor: 'text-safety-blue bg-safety-blue/10 shadow-[0_0_15px_rgba(0,98,204,0.3)]' },
     { tab: Tab.BANJIR, label: 'Banjir', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>, activeColor: 'text-alert-red bg-alert-red/10 shadow-[0_0_15px_rgba(211,47,47,0.3)]' },
     { tab: Tab.HISTORY, label: 'Data', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM4 10h16M10 4v16" /></svg>, activeColor: 'text-slate-900 bg-slate-200' },
-    { tab: Tab.AI, label: 'Konsultan', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>, activeColor: 'text-indigo-600 bg-indigo-50 shadow-[0_0_15px_rgba(79,70,229,0.3)]' }
+    { tab: Tab.AI, label: 'AI', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>, activeColor: 'text-indigo-600 bg-indigo-50 shadow-[0_0_15px_rgba(79,70,229,0.3)]' }
   ];
 
   return (
-    <ErrorBoundary>
+    <EnhancedErrorBoundary>
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col relative overflow-hidden">
+      {/* Pull to refresh indicator */}
+      {pullToRefresh && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-blue-500 text-white text-center py-2 text-sm font-medium">
+          Lepaskan untuk refresh
+        </div>
+      )}
+      
+      {/* Offline indicator */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-orange-500 text-white text-center py-1 text-xs font-medium">
+          Mode Offline - Data akan disinkronkan saat online
+        </div>
+      )}
+      
+      {/* Sync indicator */}
+      {syncing && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-blue-500 text-white text-center py-1 text-xs font-medium flex items-center justify-center gap-2">
+          <LoadingSpinner size="sm" />
+          Menyinkronkan data...
+        </div>
+      )}
       {/* Decorative Background Gradients */}
       <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"></div>
       <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none z-0"></div>
@@ -192,8 +274,9 @@ const App: React.FC = () => {
                  <div className="flex items-center gap-2 bg-slate-100/60 px-3 py-1.5 rounded-full border border-slate-200">
                    <div className={`w-2 h-2 rounded-full ${getStatusColor()} ${dbStatus === 'testing' ? 'animate-pulse' : ''}`}></div>
                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{dbMessage}</span>
+                   {!isOnline && <span className="text-[8px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">OFFLINE</span>}
                  </div>
-                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100/80 px-4 py-2 rounded-full border border-slate-200">v1.0 Stable Build</span>
+                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100/80 px-4 py-2 rounded-full border border-slate-200">v2.0 Enhanced</span>
             </div>
         </div>
       </header>
@@ -207,128 +290,177 @@ const App: React.FC = () => {
           {activeTab === Tab.AI && <div className="max-w-4xl mx-auto pt-4 animate-slide-up"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
           
           {activeTab === Tab.HISTORY && (
-               <div className="max-w-6xl mx-auto space-y-8 animate-slide-up">
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-4">
+               <div className="max-w-6xl mx-auto space-y-6 animate-slide-up">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                       <div className="w-full md:w-auto">
                         <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Database Proyek</h2>
-                        <p className="text-slate-500 text-xs md:text-sm mt-1 font-medium">Kelola dan analisis riwayat perhitungan lapangan.</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <p className="text-slate-500 text-xs md:text-sm font-medium">Kelola dan analisis riwayat perhitungan lapangan</p>
+                          {history.length > 0 && (
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                {history.filter(h => h.type === CalculationType.MANNING).length} Manning
+                              </span>
+                              <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                {history.filter(h => h.type === CalculationType.RATIONAL).length} Rational
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
                       {/* Unified Toolbar */}
-                      <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm w-full md:w-auto self-start md:self-auto">
+                      <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm w-full md:w-auto">
                         <div className="flex bg-slate-100 p-1 rounded-xl flex-1 md:flex-none">
                             <button 
                                 onClick={() => setHistoryViewMode('LIST')}
-                                className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${historyViewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all ${historyViewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                Daftar
+                                <svg className="w-4 h-4 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                                <span className="hidden md:inline">Daftar</span>
                             </button>
                             <button 
                                 onClick={() => setHistoryViewMode('MAP')}
-                                className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${historyViewMode === 'MAP' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all ${historyViewMode === 'MAP' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                Peta
+                                <svg className="w-4 h-4 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <span className="hidden md:inline">Peta</span>
                             </button>
                         </div>
                         
-                        <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
+                        <div className="w-px h-6 bg-slate-200 mx-1"></div>
                         
-                        {/* Desktop Add Button */}
+                        {/* Export Button */}
+                        <CompactExport data={history} />
+                        
+                        <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                        
+                        {/* Add Button */}
                         <button 
                             onClick={() => setManualEntryModalOpen(true)}
                             disabled={loading}
-                            className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 disabled:opacity-50"
+                            className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 disabled:opacity-50 text-xs font-bold"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-                            <span className="text-xs font-bold">{loading ? 'Loading...' : 'Data Baru'}</span>
-                        </button>
-                        
-                        {/* Mobile Add Button (Icon Only) */}
-                        <button 
-                            onClick={() => setManualEntryModalOpen(true)}
-                            disabled={loading}
-                            className="md:hidden flex items-center justify-center w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 active:scale-95 transition-transform disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-                            )}
+                            <span className="hidden md:inline">{loading ? 'Loading...' : 'Tambah'}</span>
                         </button>
                       </div>
                   </div>
                   
                   {history.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-24 bg-white/50 backdrop-blur-sm rounded-[2.5rem] border-2 border-dashed border-slate-200 text-center">
-                          <div className="flex justify-center mb-6">
-                             <span className="p-6 bg-slate-50 rounded-full text-slate-300">
-                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                             </span>
+                      <div className="flex flex-col items-center justify-center py-16 bg-gradient-to-br from-slate-50 to-white rounded-3xl border-2 border-dashed border-slate-200 text-center">
+                          <div className="flex justify-center mb-4">
+                             <div className="p-4 bg-slate-100 rounded-2xl">
+                                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                             </div>
                           </div>
-                          <p className="text-slate-400 font-medium mb-8 max-w-sm">Belum ada data tersimpan. Mulai dengan membuat data baru atau generate data contoh.</p>
-                          <Button variant="outline" onClick={seedPilotData} disabled={loading} className="mx-auto text-xs py-3 px-8 border-dashed bg-white hover:bg-slate-50">
-                            {loading ? 'Menyimpan...' : '+ Generate Pilot Data'}
-                          </Button>
+                          <h3 className="text-lg font-semibold text-slate-700 mb-2">Belum Ada Data</h3>
+                          <p className="text-slate-500 font-medium mb-6 max-w-sm">Mulai dengan membuat perhitungan baru atau generate data contoh untuk melihat database beraksi.</p>
+                          <div className="flex gap-3">
+                            <Button variant="outline" onClick={seedPilotData} disabled={loading} className="text-xs py-2 px-6 border-dashed bg-white hover:bg-slate-50">
+                              {loading ? 'Menyimpan...' : '+ Generate Data Contoh'}
+                            </Button>
+                            <button 
+                              onClick={() => setManualEntryModalOpen(true)}
+                              className="text-xs py-2 px-6 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+                            >
+                              + Tambah Data Manual
+                            </button>
+                          </div>
                       </div>
                   ) : (
                       <>
                         {historyViewMode === 'MAP' ? (
-                            <div className="animate-in fade-in zoom-in-95 duration-300 bg-white p-2 rounded-[2.5rem] shadow-soft border border-slate-100">
-                                <HistoryMap data={history} />
-                                    <div className="p-4 flex justify-between items-center">
-                                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Menampilkan {history.filter(h => h.location).length} Lokasi Terdata</p>
-                                        {loading && <div className="flex items-center gap-2 text-blue-500"><div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div><span className="text-xs">Sync...</span></div>}
-                                        {!loading && <span className="w-2 h-2 bg-green-500 rounded-full"></span>}
-                                    </div>
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                                <div className="p-4 border-b border-slate-100 bg-slate-50">
+                                  <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold text-slate-900">Peta Lokasi Pengukuran</h3>
+                                    <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded-full">
+                                      {history.filter(h => h.location).length} lokasi
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-2">
+                                  <HistoryMap data={history} />
+                                </div>
+                                <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                                    <p className="text-xs text-slate-500 font-medium">Menampilkan {history.filter(h => h.location).length} dari {history.length} data dengan koordinat GPS</p>
+                                    {loading && <div className="flex items-center gap-2 text-blue-500"><div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div><span className="text-xs">Sync...</span></div>}
+                                    {!loading && <div className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div><span className="text-xs text-slate-500">Tersinkron</span></div>}
+                                </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
-                                {history.map((item) => (
-                                <div key={item.id} className="bg-white rounded-[2rem] p-6 shadow-soft hover:shadow-float border border-slate-100 transition-all duration-300 flex flex-col justify-between h-full group">
-                                    <div>
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide ${item.type === CalculationType.MANNING ? 'bg-blue-50 text-safety-blue' : 'bg-red-50 text-alert-red'}`}>
-                                                {item.type}
+                            <ProgressiveHistory
+                              data={history}
+                              loading={loading}
+                              renderItem={(item, index) => (
+                                <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md border border-slate-100 transition-all duration-300 group">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${item.type === CalculationType.MANNING ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
+                                                    {item.type}
+                                                </div>
+                                                <button 
+                                                    onClick={(e) => deleteHistoryItem(e, item.id)} 
+                                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Hapus Data"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
                                             </div>
-                                            <button 
-                                                onClick={(e) => deleteHistoryItem(e, item.id)} 
-                                                className="p-2 -mr-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-                                                title="Hapus Data"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
+                                            
+                                            <h3 className="font-bold text-slate-900 text-base mb-2">
+                                                {item.inputs.site?.channelName || 'Tanpa Nama'}
+                                            </h3>
+                                            
+                                            <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
+                                                <div className="flex items-center gap-1">
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                    <span>{new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})}</span>
+                                                </div>
+                                                {item.location && (
+                                                    <div className="flex items-center gap-1">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                                                        <span>GPS</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={() => setViewDetailItem(item)} 
+                                                    className="flex-1 py-2 text-xs font-bold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                                                >
+                                                    Detail
+                                                </button>
+                                                <button 
+                                                    onClick={() => copyToClipboard(item)} 
+                                                    className="p-2 text-slate-400 bg-white border border-slate-200 rounded-lg hover:text-blue-600 hover:border-blue-200 transition-colors" 
+                                                    title="Salin"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1" /></svg>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleConsultAI(item.type, item.inputs, item.outputs)} 
+                                                    className="p-2 text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors" 
+                                                    title="AI Analisis"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <h3 className="font-bold text-slate-900 leading-tight mb-2 text-lg line-clamp-2">{item.inputs.site?.channelName || 'Tanpa Nama'}</h3>
-                                        <p className="text-xs text-slate-500 mb-6 flex items-center gap-1.5">
-                                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            {new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
-                                        </p>
                                         
-                                        <div className="mb-8 p-4 bg-slate-50 rounded-2xl">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Output Utama</span>
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-3xl font-black text-slate-900">{item.outputs.Discharge}</span>
-                                                <span className="text-sm font-bold text-slate-400">m³/s</span>
-                                            </div>
+                                        <div className="bg-slate-50 rounded-xl p-3 text-center min-w-[120px]">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Debit</div>
+                                            <div className="text-xl font-black text-slate-900">{item.outputs.Discharge}</div>
+                                            <div className="text-xs text-slate-500">m³/s</div>
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2 mt-auto">
-                                        <div className="flex gap-2">
-                                            <button onClick={() => setViewDetailItem(item)} className="flex-1 py-3 text-xs font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
-                                                Lihat Detail
-                                            </button>
-                                            <button onClick={() => copyToClipboard(item)} className="px-4 py-3 text-slate-400 bg-white border border-slate-200 rounded-xl hover:text-safety-blue hover:border-safety-blue transition-colors shadow-sm" title="Salin Ringkasan">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1" /></svg>
-                                            </button>
-                                        </div>
-                                        <button onClick={() => handleConsultAI(item.type, item.inputs, item.outputs)} className="w-full py-3 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors shadow-sm flex items-center justify-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                            AI Analisis
-                                        </button>
                                     </div>
                                 </div>
-                                ))}
-                            </div>
+                              )}
+                              className="flex flex-col gap-4"
+                            />
                         )}
                       </>
                   )}
@@ -371,7 +503,7 @@ const App: React.FC = () => {
       </div>
       
     </div>
-    </ErrorBoundary>
+    </EnhancedErrorBoundary>
   );
 };
 
