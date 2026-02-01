@@ -13,6 +13,13 @@ export interface CalculationRecord {
   updated_at?: string
 }
 
+const sanitizeForLog = (data: any): string => {
+  if (typeof data === 'string') {
+    return data.replace(/[\r\n\t]/g, ' ').substring(0, 100);
+  }
+  return JSON.stringify(data).replace(/[\r\n\t]/g, ' ').substring(0, 100);
+};
+
 export const databaseService = {
   async saveCalculation(data: Omit<CalculationRecord, 'id' | 'created_at'>) {
     if (!isSupabaseEnabled()) {
@@ -20,31 +27,13 @@ export const databaseService = {
       return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
     }
 
-    // Extract location from input_data for separate storage
-    let location = null;
-    if (data.input_data?.location) {
-      location = data.input_data.location;
-    } else if (data.input_data?.site?.location) {
-      location = data.input_data.site.location;
-    }
-
-    // Extract notes and photo_url from input_data
-    const notes = data.input_data?.notes || data.notes;
-    const photo_url = data.input_data?.photoUrl || data.input_data?.site?.photoUrl || data.photo_url;
-
-    const recordToSave = {
-      ...data,
-      location: location,
-      notes: notes,
-      photo_url: photo_url
-    };
-
-    console.log('Attempting to save calculation:', recordToSave)
-    console.log('Extracted location:', location)
+    console.log('Attempting to save calculation:', sanitizeForLog(data))
+    console.log('Location data in input_data:', sanitizeForLog(data.input_data?.location))
+    console.log('Site location data:', sanitizeForLog(data.input_data?.site?.location))
 
     const { data: result, error } = await supabase!
       .from('calculations')
-      .insert([recordToSave])
+      .insert([data])
       .select()
     
     if (error) {
@@ -52,7 +41,7 @@ export const databaseService = {
       throw error
     }
     
-    console.log('Successfully saved to Supabase:', result)
+    console.log('Successfully saved to Supabase:', sanitizeForLog(result))
     return result[0]
   },
 

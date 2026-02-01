@@ -11,7 +11,6 @@ export class CSVParser {
       const csvText = await response.text();
       
       const lines = csvText.split('\n');
-      const headers = lines[0].split(',');
       
       this.data = lines.slice(1)
         .filter(line => line.trim())

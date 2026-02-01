@@ -1,11 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Polyfill fetch for environments that don't have it
-if (typeof fetch !== 'function') {
-  const { default: nodeFetch } = await import('node-fetch');
-  global.fetch = nodeFetch;
-}
-
 const getAiClient = () => {
   const apiKey = import.meta.env.VITE_API_KEY;
   if (!apiKey) {

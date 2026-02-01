@@ -20,38 +20,16 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
     if (!mapContainerRef.current) return;
 
     const validData = data.filter(item => {
-      // Check multiple possible location sources
-      let location = item.location;
-      
-      // If no direct location, check in inputs.site.location
-      if (!location && item.inputs?.site?.location) {
-        location = item.inputs.site.location;
-      }
-      
-      // If still no location, check in inputs.location
-      if (!location && item.inputs?.location) {
-        location = item.inputs.location;
-      }
-      
-      const hasLocation = location && 
-                         typeof location.latitude === 'number' && 
-                         typeof location.longitude === 'number' &&
-                         !isNaN(location.latitude) &&
-                         !isNaN(location.longitude) &&
-                         location.latitude !== 0 &&
-                         location.longitude !== 0;
+      const hasLocation = item.location && 
+                         typeof item.location.latitude === 'number' && 
+                         typeof item.location.longitude === 'number' &&
+                         !isNaN(item.location.latitude) &&
+                         !isNaN(item.location.longitude) &&
+                         item.location.latitude !== 0 &&
+                         item.location.longitude !== 0;
       
       if (!hasLocation) {
-        console.log('Item without valid location:', {
-          id: item.id,
-          directLocation: item.location,
-          siteLocation: item.inputs?.site?.location,
-          inputsLocation: item.inputs?.location,
-          siteName: item.inputs?.site?.channelName
-        });
-      } else {
-        // Update item with found location for consistency
-        item.location = location;
+        console.log('Item without valid location:', item.id, item.location);
       }
       
       return hasLocation;
