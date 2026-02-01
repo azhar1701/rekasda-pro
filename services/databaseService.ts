@@ -27,22 +27,45 @@ export const databaseService = {
       return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
     }
 
-    console.log('Attempting to save calculation:', sanitizeForLog(data))
-    console.log('Location data in input_data:', sanitizeForLog(data.input_data?.location))
-    console.log('Site location data:', sanitizeForLog(data.input_data?.site?.location))
+    try {
+      // Clean and prepare data
+      const cleanData = {
+        site_name: data.site_name || 'Unknown Site',
+        calculation_type: data.calculation_type,
+        input_data: data.input_data || {},
+        result_data: data.result_data || {},
+        location: data.location || null,
+        photo_url: data.photo_url || null,
+        notes: data.notes || null
+      }
 
-    const { data: result, error } = await supabase!
-      .from('calculations')
-      .insert([data])
-      .select()
-    
-    if (error) {
-      console.error('Supabase save error:', error)
+      console.log('Attempting to save calculation:', sanitizeForLog(cleanData))
+
+      const { data: result, error } = await supabase!
+        .from('calculations')
+        .insert([cleanData])
+        .select()
+      
+      if (error) {
+        console.error('Supabase save error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw new Error(`Database save failed: ${error.message}`)
+      }
+      
+      if (!result || result.length === 0) {
+        throw new Error('No data returned from insert operation')
+      }
+      
+      console.log('Successfully saved to Supabase:', sanitizeForLog(result[0]))
+      return result[0]
+    } catch (error) {
+      console.error('Save calculation error:', error)
       throw error
     }
-    
-    console.log('Successfully saved to Supabase:', sanitizeForLog(result))
-    return result[0]
   },
 
   async getCalculations() {
@@ -80,16 +103,23 @@ export const databaseService = {
     }
 
     try {
-      const { error } = await supabase!
+      // Test basic connection
+      const { data, error } = await supabase!
         .from('calculations')
         .select('id')
         .limit(1)
       
       if (error) {
-        console.error('Supabase connection test failed:', error)
-        return { connected: false, error: error.message }
+        console.error('Supabase connection test failed:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        return { connected: false, error: `Connection failed: ${error.message}` }
       }
       
+      console.log('Connection test successful, found records:', data?.length || 0)
       return { connected: true, error: null }
     } catch (error) {
       console.error('Supabase connection error:', error)
