@@ -18,7 +18,10 @@ export const useDatabase = () => {
           location: result.location,
           photoUrl: result.photoUrl
         },
-        result_data: result.outputs
+        result_data: result.outputs,
+        location: result.location, // Store location in separate column
+        notes: result.notes,
+        photo_url: result.photoUrl
       })
       await loadCalculations()
       return record

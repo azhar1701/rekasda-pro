@@ -7,6 +7,7 @@ import { DetailModal } from './components/DetailModal';
 import { ManualEntryModal } from './components/ManualEntryModal';
 import { HistoryMap } from './components/HistoryMap';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LocationDebugger } from './components/LocationDebugger';
 import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
 import { Button } from './components/Button';
 import { calculateManning, calculateRational } from './services/calculationService';
@@ -45,16 +46,28 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Convert Supabase calculations to CalculationResult format
-    const convertedHistory = calculations.map(calc => ({
-      id: calc.id || `calc-${Date.now()}`,
-      type: calc.calculation_type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
-      date: calc.created_at || new Date().toISOString(),
-      inputs: calc.input_data,
-      outputs: calc.result_data,
-      // Fix location mapping - check both input_data.location and direct location field
-      location: calc.input_data?.location || calc.location,
-      notes: calc.input_data?.notes || calc.notes || ''
-    }));
+    const convertedHistory = calculations.map(calc => {
+      // Prioritize separate location column, then fallback to input_data
+      let location = null;
+      if (calc.location) {
+        location = calc.location;
+      } else if (calc.input_data?.location) {
+        location = calc.input_data.location;
+      } else if (calc.input_data?.site?.location) {
+        location = calc.input_data.site.location;
+      }
+      
+      return {
+        id: calc.id || `calc-${Date.now()}`,
+        type: calc.calculation_type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
+        date: calc.created_at || new Date().toISOString(),
+        inputs: calc.input_data,
+        outputs: calc.result_data,
+        location: location,
+        photoUrl: calc.photo_url || calc.input_data?.photoUrl || calc.input_data?.site?.photoUrl,
+        notes: calc.notes || calc.input_data?.notes || ''
+      };
+    });
     setHistory(convertedHistory);
   }, [calculations]);
 
@@ -339,6 +352,9 @@ const App: React.FC = () => {
       <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
       <DetailModal isOpen={!!viewDetailItem} data={viewDetailItem} onClose={() => setViewDetailItem(null)} />
       <ManualEntryModal isOpen={manualEntryModalOpen} onClose={() => setManualEntryModalOpen(false)} onSave={saveToHistory} />
+      
+      {/* Debug component - remove in production */}
+      <LocationDebugger />
 
       {/* --- Floating Navigation Dock --- */}
       {/* UPDATED: Floating style with padding bottom to avoid covering content */}

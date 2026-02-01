@@ -20,11 +20,31 @@ export const databaseService = {
       return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
     }
 
-    console.log('Attempting to save calculation:', data)
+    // Extract location from input_data for separate storage
+    let location = null;
+    if (data.input_data?.location) {
+      location = data.input_data.location;
+    } else if (data.input_data?.site?.location) {
+      location = data.input_data.site.location;
+    }
+
+    // Extract notes and photo_url from input_data
+    const notes = data.input_data?.notes || data.notes;
+    const photo_url = data.input_data?.photoUrl || data.input_data?.site?.photoUrl || data.photo_url;
+
+    const recordToSave = {
+      ...data,
+      location: location,
+      notes: notes,
+      photo_url: photo_url
+    };
+
+    console.log('Attempting to save calculation:', recordToSave)
+    console.log('Extracted location:', location)
 
     const { data: result, error } = await supabase!
       .from('calculations')
-      .insert([data])
+      .insert([recordToSave])
       .select()
     
     if (error) {
