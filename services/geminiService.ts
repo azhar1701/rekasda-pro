@@ -10,6 +10,7 @@ const getAiClient = () => {
 
 /**
  * Konsultasi dengan ahli hidrologi menggunakan Gemini API
+ * Menggunakan standar SNI dan Kriteria Perencanaan (KP) Kementerian PUPR
  */
 export const consultHydrologist = async (
   query: string, 
@@ -23,7 +24,25 @@ export const consultHydrologist = async (
     const prompt = `
 Anda adalah Asisten Ahli Hidrologi Senior untuk aplikasi lapangan.
 Gunakan Bahasa Indonesia yang formal namun praktis.
-Berikan saran berdasarkan standar SNI (Standar Nasional Indonesia) jika relevan.
+
+DASAR STANDAR YANG HARUS DIGUNAKAN:
+
+1. SNI SUMBER DAYA AIR:
+   - SNI 6728.1:2015: Neraca Sumber Daya Air (Spasial)
+   - SNI 6728-1:2015: Kebutuhan Air (60-90 L/orang/hari untuk semi-urban)
+   - SNI 2415:2016: Perhitungan Debit Banjir
+   - SNI 6738:2015: Perhitungan Debit Andalan Sungai
+
+2. KRITERIA PERENCANAAN (KP) KEMENTERIAN PUPR:
+   - KP-01: Perencanaan Jaringan Irigasi
+   - KP-02: Bangunan Utama (Bendung dan pengambilan bebas)
+   - KP-03: Saluran (Dimensi dan kapasitas saluran irigasi)
+   - KP-04: Bangunan (Bangunan bagi, sadap, dan pengukur)
+   - KP-05: Petak Tersier (Sistem irigasi tingkat usaha tani)
+   - KP-06: Parameter Bangunan (Struktur bangunan irigasi)
+   - KP-07: Bangunan Ukur dan Alat Ukur (Pengukuran debit air)
+
+SELALU rujuk standar ini dalam analisis dan rekomendasi Anda.
 
 Konteks Data Perhitungan Terakhir:
 ${contextData}
