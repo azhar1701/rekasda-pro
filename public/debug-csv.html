@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug CSV Loading</title>
+</head>
+<body>
+    <h1>CSV Debug Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function testCSV() {
+            const output = document.getElementById('output');
+            
+            try {
+                output.innerHTML += '<p>Fetching CSV...</p>';
+                const response = await fetch('/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const csvText = await response.text();
+                output.innerHTML += `<p>CSV loaded successfully. Length: ${csvText.length}</p>`;
+                
+                const lines = csvText.split('\n');
+                output.innerHTML += `<p>Total lines: ${lines.length}</p>`;
+                
+                // Show first few lines
+                output.innerHTML += '<h3>First 5 lines:</h3>';
+                for (let i = 0; i < Math.min(5, lines.length); i++) {
+                    output.innerHTML += `<p>Line ${i}: ${lines[i].substring(0, 100)}...</p>`;
+                }
+                
+                // Parse and show sample data
+                const sampleLine = lines[1]; // Skip header
+                if (sampleLine) {
+                    const values = sampleLine.split(',');
+                    output.innerHTML += `<h3>Sample parsed line (${values.length} columns):</h3>`;
+                    output.innerHTML += `<p>Provinsi (col 5): ${values[5]}</p>`;
+                    output.innerHTML += `<p>Kabupaten (col 6): ${values[6]}</p>`;
+                    output.innerHTML += `<p>Kecamatan (col 7): ${values[7]}</p>`;
+                    output.innerHTML += `<p>Desa (col 8): ${values[8]}</p>`;
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        testCSV();
+    </script>
+</body>
+</html>

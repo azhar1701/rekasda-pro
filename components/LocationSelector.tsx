@@ -29,9 +29,15 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   useEffect(() => {
     const initData = async () => {
-      await locationService.init();
-      setKabupatenList(locationService.getKabupaten());
-      setLoading(false);
+      try {
+        await locationService.init();
+        const kabupatenData = locationService.getKabupaten();
+        setKabupatenList(kabupatenData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error initializing location data:', error);
+        setLoading(false);
+      }
     };
     initData();
   }, []);

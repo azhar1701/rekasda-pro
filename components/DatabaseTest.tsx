@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { databaseService } from '../services/databaseService';
-import { isSupabaseEnabled } from '../lib/supabase';
 import { debugSupabase } from '../lib/debugSupabase';
 
 export const useDatabaseStatus = () => {

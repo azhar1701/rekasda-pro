@@ -20,21 +20,25 @@ export const locationService = {
   },
 
   getKabupaten(): string[] {
-    const kabupaten = [...new Set(westJavaData.map(item => item.kabupaten))];
-    return kabupaten.sort();
+    const kabupaten = [...new Set(westJavaData.map(item => item.kabupaten))]
+      .filter(k => k && k.trim() !== '') // Filter out empty values
+      .sort();
+    return kabupaten;
   },
 
   getKecamatan(kabupaten: string): string[] {
     const kecamatan = westJavaData
       .filter(item => item.kabupaten === kabupaten)
-      .map(item => item.kecamatan);
+      .map(item => item.kecamatan)
+      .filter(k => k && k.trim() !== ''); // Filter out empty values
     return [...new Set(kecamatan)].sort();
   },
 
   getDesa(kabupaten: string, kecamatan: string): string[] {
     const desa = westJavaData
       .filter(item => item.kabupaten === kabupaten && item.kecamatan === kecamatan)
-      .map(item => item.desa);
+      .map(item => item.desa)
+      .filter(d => d && d.trim() !== ''); // Filter out empty values
     return [...new Set(desa)].sort();
   },
 
