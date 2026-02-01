@@ -1,5 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
+import { Box, Card, CardContent, Typography, ToggleButton, ToggleButtonGroup, Select, MenuItem, FormControl, InputLabel, Grid, Chip, IconButton, Collapse } from '@mui/material';
+import { Calculate, Psychology, ExpandMore, ExpandLess } from '@mui/icons-material';
 import { MANNING_ROUGHNESS } from '../constants';
 import { calculateManning } from '../services/calculationService';
 import { ManningInputs, CalculationType, ChannelShape } from '../types';
@@ -83,227 +84,289 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   }, [inputs]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-28">
-      {/* --- LEFT COLUMN: INPUTS --- */}
-      <div className="lg:col-span-5 space-y-6 lg:space-y-8 animate-slide-up">
-        {/* Quick Action Mobile - Enhanced Visibility */}
-        <div className="bg-white/95 backdrop-blur-md p-3 px-4 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 flex justify-between items-center lg:hidden sticky top-20 z-30 transition-all duration-300 ring-1 ring-slate-100">
-           <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-safety-blue/10 flex items-center justify-center text-safety-blue">
-                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-              </div>
-              <div className="leading-tight">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 tracking-widest">Aksi Cepat</span>
-                  <span className="block text-xs font-bold text-slate-900">Isi Data Pilot</span>
-              </div>
-           </div>
-           <button 
-             onClick={loadPilotData} 
-             className="bg-safety-blue text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-safety-blue/30 active:scale-95 hover:bg-blue-700 transition-all flex items-center gap-2"
-           >
-             <span>Load Data</span>
-             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
-           </button>
-        </div>
+    <Grid container spacing={3} sx={{ pb: 10 }}>
+      {/* Left Column - Inputs */}
+      <Grid item xs={12} lg={5}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Quick Action Mobile */}
+          <Card sx={{ display: { xs: 'block', lg: 'none' }, position: 'sticky', top: 10, zIndex: 30 }}>
+            <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Calculate color="primary" />
+                <Box>
+                  <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>Aksi Cepat</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>Isi Data Pilot</Typography>
+                </Box>
+              </Box>
+              <Button onClick={loadPilotData} size="small">
+                Load Data
+              </Button>
+            </CardContent>
+          </Card>
 
-        <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={(s) => setInputs({...inputs, site: s})} />
-        
-        <div className="bg-white p-5 md:p-8 rounded-[2rem] shadow-soft border border-slate-100 relative overflow-hidden">
-             {/* Decorative Background Blob */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-safety-blue/5 rounded-full blur-3xl"></div>
+          <SiteIdentityForm 
+            value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} 
+            onChange={(s) => setInputs({...inputs, site: s})} 
+          />
+          
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Calculate color="primary" />
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Parameter Hidrolis</Typography>
+                    <Typography variant="caption" color="text.secondary">Dimensi Penampang</Typography>
+                  </Box>
+                </Box>
+                <Button 
+                  variant="outline" 
+                  size="small" 
+                  onClick={loadPilotData}
+                  sx={{ display: { xs: 'none', lg: 'flex' } }}
+                >
+                  Load Pilot
+                </Button>
+              </Box>
 
-            <div className="flex items-center gap-3 mb-6 md:mb-8 relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-safety-blue/10 flex items-center justify-center text-safety-blue">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                </div>
-                <div>
-                   <h3 className="text-sm font-bold text-slate-900">Parameter Hidrolis</h3>
-                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Dimensi Penampang</p>
-                </div>
-                <button onClick={loadPilotData} className="ml-auto hidden lg:flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-safety-blue transition-colors uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg hover:bg-blue-50">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    Load Pilot
-                </button>
-            </div>
+              {/* Shape Toggle */}
+              <ToggleButtonGroup
+                value={inputs.shape}
+                exclusive
+                onChange={(e, value) => value && handleInputChange('shape', value)}
+                fullWidth
+                sx={{ mb: 3 }}
+              >
+                <ToggleButton value={ChannelShape.TRAPEZOID}>Trapesium</ToggleButton>
+                <ToggleButton value={ChannelShape.CIRCULAR}>Lingkaran</ToggleButton>
+              </ToggleButtonGroup>
 
-            <div className="space-y-6 relative z-10">
-                {/* Shape Toggle */}
-                <div className="p-1.5 bg-slate-100 rounded-2xl flex">
-                     {[ChannelShape.TRAPEZOID, ChannelShape.CIRCULAR].map((s) => (
-                         <button 
-                            key={s}
-                            onClick={() => handleInputChange('shape', s)}
-                            className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold uppercase rounded-xl transition-all duration-300 ${inputs.shape === s ? 'bg-white text-slate-900 shadow-md transform scale-[1.02]' : 'text-slate-400 hover:text-slate-600'}`}
-                         >
-                            {s === ChannelShape.TRAPEZOID ? 'Trapesium' : 'Lingkaran'}
-                         </button>
-                     ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 md:gap-5">
-                     {inputs.shape === ChannelShape.TRAPEZOID ? (
-                         <>
-                            <InputGroup label="Lebar Bawah (b)" unit="m" value={inputs.width} onChange={e => handleInputChange('width', parseFloat(e.target.value)||0)} placeholder="1.5" helpText="Lebar dasar saluran pada bagian bawah" />
-                            <InputGroup label="Lebar Atas (B)" unit="m" value={inputs.topWidth} onChange={e => handleInputChange('topWidth', parseFloat(e.target.value)||0)} placeholder="2.0" helpText="Lebar saluran pada permukaan air" />
-                            <div className="col-span-2 md:col-span-1">
-                                <InputGroup label="Tinggi Total (H)" unit="m" value={inputs.totalDepth} onChange={e => handleInputChange('totalDepth', parseFloat(e.target.value)||0)} placeholder="1.5" helpText="Tinggi total saluran dari dasar ke puncak" />
-                            </div>
-                            <div className="col-span-2 md:col-span-1">
-                                <InputGroup label="Tinggi Air (h)" unit="m" value={inputs.depth} onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} placeholder="0.8" helpText="Kedalaman air dalam saluran" />
-                            </div>
-                         </>
-                     ) : (
-                         <div className="col-span-2 grid grid-cols-2 gap-5">
-                             <InputGroup label="Diameter (D)" unit="m" value={inputs.diameter} onChange={e => handleInputChange('diameter', parseFloat(e.target.value)||0)} placeholder="1.0" helpText="Diameter pipa/saluran lingkaran" />
-                             <InputGroup label="Tinggi Air (h)" unit="m" value={inputs.depth} onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} placeholder="0.8" helpText="Kedalaman air dalam pipa" />
-                         </div>
-                     )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <InputGroup label="Kemiringan Dasar (S)" unit="m/m" step="0.0001" value={inputs.slope} onChange={e => handleInputChange('slope', parseFloat(e.target.value)||0)} placeholder="0.002" description="Slope memanjang saluran" helpText="Kemiringan dasar saluran dalam arah aliran (rise/run)" />
-                    </div>
-                    <button 
-                      onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                      className="mt-6 p-3 text-orange-600 hover:bg-orange-50 rounded-xl transition-colors border border-orange-200 hover:border-orange-300" 
-                      title="Kalkulator Slope"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </button>
-                  </div>
-                  {showSlopeCalculator && (
-                    <div className="animate-slide-down">
-                      <SlopeCalculator 
-                        onSlopeCalculated={(slope) => handleInputChange('slope', slope)}
-                        onClose={() => setShowSlopeCalculator(false)}
+              <Grid container spacing={2}>
+                {inputs.shape === ChannelShape.TRAPEZOID ? (
+                  <>
+                    <Grid item xs={6}>
+                      <InputGroup 
+                        label="Lebar Bawah (b)" 
+                        unit="m" 
+                        value={inputs.width} 
+                        onChange={e => handleInputChange('width', parseFloat(e.target.value)||0)} 
+                        placeholder="1.5" 
+                        helpText="Lebar dasar saluran pada bagian bawah" 
                       />
-                    </div>
-                  )}
-                </div>
-                
-                <div className="group">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2 group-focus-within:text-safety-blue transition-colors">Kekasaran Manning (n)</label>
-                    <div className="relative">
-                        <select 
-                            className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-2xl p-4 outline-none focus:border-safety-blue focus:ring-4 focus:ring-safety-blue/10 transition-all cursor-pointer"
-                            value={inputs.roughness} 
-                            onChange={e => handleInputChange('roughness', parseFloat(e.target.value))}
-                        >
-                            {MANNING_ROUGHNESS.map((m, i) => <option key={i} value={m.value}>{m.name} (n={m.value})</option>)}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <InputGroup 
+                        label="Lebar Atas (B)" 
+                        unit="m" 
+                        value={inputs.topWidth} 
+                        onChange={e => handleInputChange('topWidth', parseFloat(e.target.value)||0)} 
+                        placeholder="2.0" 
+                        helpText="Lebar saluran pada permukaan air" 
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <InputGroup 
+                        label="Tinggi Total (H)" 
+                        unit="m" 
+                        value={inputs.totalDepth} 
+                        onChange={e => handleInputChange('totalDepth', parseFloat(e.target.value)||0)} 
+                        placeholder="1.5" 
+                        helpText="Tinggi total saluran dari dasar ke puncak" 
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <InputGroup 
+                        label="Tinggi Air (h)" 
+                        unit="m" 
+                        value={inputs.depth} 
+                        onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} 
+                        placeholder="0.8" 
+                        helpText="Kedalaman air dalam saluran" 
+                      />
+                    </Grid>
+                  </>
+                ) : (
+                  <>
+                    <Grid item xs={6}>
+                      <InputGroup 
+                        label="Diameter (D)" 
+                        unit="m" 
+                        value={inputs.diameter} 
+                        onChange={e => handleInputChange('diameter', parseFloat(e.target.value)||0)} 
+                        placeholder="1.0" 
+                        helpText="Diameter pipa/saluran lingkaran" 
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <InputGroup 
+                        label="Tinggi Air (h)" 
+                        unit="m" 
+                        value={inputs.depth} 
+                        onChange={e => handleInputChange('depth', parseFloat(e.target.value)||0)} 
+                        placeholder="0.8" 
+                        helpText="Kedalaman air dalam pipa" 
+                      />
+                    </Grid>
+                  </>
+                )}
+              </Grid>
 
-      {/* --- RIGHT COLUMN: VISUALIZATION & RESULTS --- */}
-      <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-24 transition-all">
-          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-float p-1 relative overflow-hidden group">
-              <div className="bg-slate-50/50 p-4 md:p-6 rounded-[1.8rem]">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest">Visualisasi Penampang</h3>
-                    {results && (
-                        <span className={`text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider ${results.SafetyStatus === 'Aman' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            Status: {results.SafetyStatus}
-                        </span>
-                    )}
-                </div>
-                <ChannelVisualizer inputs={inputs} results={results} />
-              </div>
-          </div>
+              <Box sx={{ mt: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <InputGroup 
+                      label="Kemiringan Dasar (S)" 
+                      unit="m/m" 
+                      step="0.0001" 
+                      value={inputs.slope} 
+                      onChange={e => handleInputChange('slope', parseFloat(e.target.value)||0)} 
+                      placeholder="0.002" 
+                      description="Slope memanjang saluran" 
+                      helpText="Kemiringan dasar saluran dalam arah aliran (rise/run)" 
+                    />
+                  </Box>
+                  <IconButton 
+                    onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
+                    color="secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    {showSlopeCalculator ? <ExpandLess /> : <ExpandMore />}
+                  </IconButton>
+                </Box>
+                
+                <Collapse in={showSlopeCalculator}>
+                  <Box sx={{ mt: 2 }}>
+                    <SlopeCalculator 
+                      onSlopeCalculated={(slope) => handleInputChange('slope', slope)}
+                      onClose={() => setShowSlopeCalculator(false)}
+                    />
+                  </Box>
+                </Collapse>
+              </Box>
+                
+              <FormControl fullWidth sx={{ mt: 3 }}>
+                <InputLabel>Kekasaran Manning (n)</InputLabel>
+                <Select 
+                  value={inputs.roughness} 
+                  onChange={e => handleInputChange('roughness', parseFloat(e.target.value as string))}
+                  label="Kekasaran Manning (n)"
+                >
+                  {MANNING_ROUGHNESS.map((m, i) => (
+                    <MenuItem key={i} value={m.value}>
+                      {m.name} (n={m.value})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </CardContent>
+          </Card>
+        </Box>
+      </Grid>
+
+      {/* Right Column - Visualization & Results */}
+      <Grid item xs={12} lg={7}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, position: { lg: 'sticky' }, top: { lg: 3 } }}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2 }}>Visualisasi Penampang</Typography>
+                {results && (
+                  <Chip 
+                    label={`Status: ${results.SafetyStatus}`}
+                    color={results.SafetyStatus === 'Aman' ? 'success' : 'error'}
+                    size="small"
+                  />
+                )}
+              </Box>
+              <ChannelVisualizer inputs={inputs} results={results} />
+            </CardContent>
+          </Card>
 
           {results && (
-            <div className="animate-fade-in space-y-6">
-                <FlowInsight discharge={parseFloat(results.Discharge)} velocity={parseFloat(results.Velocity)} type="MANNING" />
-                
-                {/* Result Dashboard Card */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden relative">
-                     {/* Decorative Elements */}
-                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <FlowInsight discharge={parseFloat(results.Discharge)} velocity={parseFloat(results.Velocity)} type="MANNING" />
+              
+              <Card>
+                <CardContent>
+                  <Box sx={{ mb: 4 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'flex-end' }, gap: 3 }}>
+                      <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: 'text.secondary' }}>Kapasitas Debit (Q)</Typography>
+                          <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
+                          <Typography variant="h2" sx={{ fontWeight: 800, mr: 1 }}>{results.Discharge}</Typography>
+                          <Typography variant="h5" color="text.secondary">m³/s</Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' } }}>
+                        <Card variant="outlined" sx={{ p: 2, textAlign: 'center', minWidth: 110 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>Kecepatan (V)</Typography>
+                            <HelpTooltip content="Kecepatan rata-rata aliran air dalam saluran" />
+                          </Box>
+                          <Typography variant="h6" sx={{ fontWeight: 800 }}>{results.Velocity} <Typography component="span" variant="caption" color="text.secondary">m/s</Typography></Typography>
+                        </Card>
+                        <Card variant="outlined" sx={{ p: 2, textAlign: 'center', minWidth: 110 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>Froude (Fr)</Typography>
+                            <HelpTooltip content="Bilangan Froude menunjukkan tipe aliran: <1 subkritis, >1 superkritis" />
+                          </Box>
+                          <Typography variant="h6" sx={{ fontWeight: 800, color: results.FlowType === 'Super-kritis' ? 'error.main' : 'success.main' }}>{results.Froude}</Typography>
+                        </Card>
+                      </Box>
+                    </Box>
+                  </Box>
+                  
+                  <Grid container spacing={2} sx={{ mb: 4 }}>
+                    {[
+                      { label: 'Luas Basah (A)', val: results.Area, unit: 'm²', help: 'Luas penampang basah yang bersentuhan dengan air' },
+                      { label: 'Keliling Basah (P)', val: results.Perimeter, unit: 'm', help: 'Panjang keliling penampang yang bersentuhan dengan air' },
+                      { label: 'Jari-jari (R)', val: results.Radius, unit: 'm', help: 'Jari-jari hidrolis = Luas basah / Keliling basah' },
+                      { label: 'Lebar Atas (T)', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air pada bagian atas' },
+                      { label: 'Energi Spesifik (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energi per unit berat air relatif terhadap dasar saluran' },
+                      { label: 'Tegangan Geser', val: results.ShearStress, unit: 'N/m²', help: 'Gaya geser yang bekerja pada dasar dan dinding saluran' },
+                      { label: 'Kedalaman Kritis', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Kedalaman air pada kondisi aliran kritis (Fr=1)' },
+                      { label: 'Slope Kritis', val: results.CriticalSlope, unit: '', highlight: true, help: 'Kemiringan minimum untuk mencapai aliran kritis' },
+                    ].map((item, i) => (
+                      <Grid item xs={6} sm={3} key={i}>
+                        <Card variant={item.highlight ? 'elevation' : 'outlined'} sx={{ p: 2, bgcolor: item.highlight ? 'primary.light' : 'background.paper', color: item.highlight ? 'primary.contrastText' : 'text.primary' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>{item.label}</Typography>
+                            <HelpTooltip content={item.help} />
+                          </Box>
+                          <Typography variant="body1" sx={{ fontWeight: 800 }}>
+                            {item.val} <Typography component="span" variant="caption" sx={{ ml: 0.5 }}>{item.unit}</Typography>
+                          </Typography>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
 
-                    {/* Header Result */}
-                    <div className="p-6 md:p-8 pb-0 relative z-10">
-                        {/* Modified flex alignment for mobile vs desktop */}
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">Kapasitas Debit (Q)</span>
-                                    <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
-                                </div>
-                                <div className="flex items-baseline">
-                                    {/* Responsive Text Size */}
-                                    <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900">{results.Discharge}</h3>
-                                    <span className="text-lg md:text-2xl font-bold text-slate-400 ml-2 md:ml-3">m³/s</span>
-                                </div>
-                            </div>
-                            <div className="flex gap-3 mb-2 w-full md:w-auto">
-                                <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right min-w-[110px]">
-                                    <div className="flex items-center justify-end gap-1 mb-1">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase">Kecepatan (V)</span>
-                                        <HelpTooltip content="Kecepatan rata-rata aliran air dalam saluran" />
-                                    </div>
-                                    <span className="text-lg md:text-xl font-black text-slate-800">{results.Velocity} <span className="text-[10px] text-slate-400">m/s</span></span>
-                                </div>
-                                <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right min-w-[110px]">
-                                    <div className="flex items-center justify-end gap-1 mb-1">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase">Froude (Fr)</span>
-                                        <HelpTooltip content="Bilangan Froude menunjukkan tipe aliran: <1 subkritis, >1 superkritis" />
-                                    </div>
-                                    <span className={`text-lg md:text-xl font-black ${results.FlowType === 'Super-kritis' ? 'text-red-500' : 'text-green-500'}`}>{results.Froude}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {/* Detailed Metrics Grid */}
-                    <div className="p-6 md:p-8 relative z-10">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-6">
-                            {[
-                                { label: 'Luas Basah (A)', val: results.Area, unit: 'm²', help: 'Luas penampang basah yang bersentuhan dengan air' },
-                                { label: 'Keliling Basah (P)', val: results.Perimeter, unit: 'm', help: 'Panjang keliling penampang yang bersentuhan dengan air' },
-                                { label: 'Jari-jari (R)', val: results.Radius, unit: 'm', help: 'Jari-jari hidrolis = Luas basah / Keliling basah' },
-                                { label: 'Lebar Atas (T)', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air pada bagian atas' },
-                                { label: 'Energi Spesifik (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energi per unit berat air relatif terhadap dasar saluran' },
-                                { label: 'Tegangan Geser', val: results.ShearStress, unit: 'N/m²', help: 'Gaya geser yang bekerja pada dasar dan dinding saluran' },
-                                { label: 'Kedalaman Kritis', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Kedalaman air pada kondisi aliran kritis (Fr=1)' },
-                                { label: 'Slope Kritis', val: results.CriticalSlope, unit: '', highlight: true, help: 'Kemiringan minimum untuk mencapai aliran kritis' },
-                            ].map((item, i) => (
-                                <div key={i} className={`flex flex-col ${item.highlight ? 'bg-safety-blue/5 p-3 -m-3 rounded-2xl border border-safety-blue/10' : ''}`}>
-                                    <div className="flex items-center gap-1 mb-1.5">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{item.label}</span>
-                                        <HelpTooltip content={item.help} />
-                                    </div>
-                                    <span className={`text-base md:text-lg font-bold ${item.highlight ? 'text-safety-blue' : 'text-slate-800'}`}>
-                                        {item.val} <span className="text-[10px] text-slate-400 font-bold ml-0.5">{item.unit}</span>
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-8 md:mt-10 pt-8 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
-                            <Button fullWidth onClick={() => onSave(CalculationType.MANNING, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>
-                                Simpan Laporan
-                            </Button>
-                            <Button variant="outline" onClick={() => onConsultAI(inputs, results)} className="sm:w-auto px-8 border-2 border-slate-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100">
-                                <span className="flex items-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                    Analisis AI
-                                </span>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                    <Button 
+                      fullWidth 
+                      onClick={() => onSave(CalculationType.MANNING, inputs, results)} 
+                      icon={<Calculate />}
+                    >
+                      Simpan Laporan
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => onConsultAI(inputs, results)}
+                      icon={<Psychology />}
+                      sx={{ minWidth: { sm: 200 } }}
+                    >
+                      Analisis AI
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           )}
-      </div>
-    </div>
+        </Box>
+      </Grid>
+    </Grid>
   );
 };
