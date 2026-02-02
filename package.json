@@ -10,11 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@google/generative-ai": "^0.21.0",
-    "@mui/icons-material": "^5.18.0",
-    "@mui/material": "^5.18.0",
     "@supabase/supabase-js": "^2.93.2",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",

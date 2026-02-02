@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button as MuiButton, ButtonProps as MuiButtonProps } from '@mui/material';
 
-interface ButtonProps extends Omit<MuiButtonProps, 'variant'> {
+import React from 'react';
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'outline';
   icon?: React.ReactNode;
   fullWidth?: boolean;
@@ -12,53 +12,27 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary', 
   icon, 
   fullWidth = false, 
+  className = '',
   ...props 
 }) => {
-  const getMuiVariant = () => {
-    switch (variant) {
-      case 'outline':
-        return 'outlined';
-      case 'secondary':
-      case 'danger':
-        return 'contained';
-      default:
-        return 'contained';
-    }
+  const baseStyle = "flex items-center justify-center gap-2.5 font-bold py-3.5 px-6 rounded-2xl text-sm md:text-base transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed";
+  
+  const variants = {
+    primary: "bg-safety-blue text-white shadow-lg shadow-safety-blue/20 hover:shadow-safety-blue/40 hover:-translate-y-0.5",
+    secondary: "bg-safety-orange text-white shadow-lg shadow-safety-orange/20 hover:shadow-safety-orange/40 hover:-translate-y-0.5",
+    danger: "bg-alert-red text-white shadow-lg shadow-alert-red/20 hover:shadow-alert-red/40 hover:-translate-y-0.5",
+    outline: "bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
   };
 
-  const getColor = () => {
-    switch (variant) {
-      case 'secondary':
-        return 'secondary';
-      case 'danger':
-        return 'error';
-      default:
-        return 'primary';
-    }
-  };
+  const widthClass = fullWidth ? "w-full" : "";
 
   return (
-    <MuiButton 
-      variant={getMuiVariant()}
-      color={getColor()}
-      fullWidth={fullWidth}
-      startIcon={icon}
-      sx={{
-        borderRadius: 4,
-        py: 1.5,
-        px: 3,
-        fontWeight: 700,
-        textTransform: 'none',
-        boxShadow: variant !== 'outline' ? 3 : 0,
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: variant !== 'outline' ? 6 : 2,
-        },
-        transition: 'all 0.2s ease-in-out',
-      }}
+    <button 
+      className={`${baseStyle} ${variants[variant]} ${widthClass} ${className}`}
       {...props}
     >
+      {icon && <span className="text-lg">{icon}</span>}
       {children}
-    </MuiButton>
+    </button>
   );
 };

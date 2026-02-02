@@ -1,8 +1,4 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box, AppBar, Toolbar, Typography, Container, Paper, BottomNavigation, BottomNavigationAction, Fab, Alert, LinearProgress } from '@mui/material';
-import { WaterDrop, Flood, History, Psychology, Add } from '@mui/icons-material';
-import { theme } from './theme';
 import { ManningCalculator } from './components/ManningCalculator';
 import { RationalCalculator } from './components/RationalCalculator';
 import { GeminiConsultant } from './components/GeminiConsultant';
@@ -233,170 +229,281 @@ const App: React.FC = () => {
   ];
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <EnhancedErrorBoundary>
-        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
-          {/* Pull to refresh indicator */}
-          {pullToRefresh && (
-            <Alert severity="info" sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, borderRadius: 0 }}>
-              Lepaskan untuk refresh
-            </Alert>
-          )}
-          
-          {/* Offline indicator */}
-          {!isOnline && (
-            <Alert severity="warning" sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40, borderRadius: 0 }}>
-              Mode Offline - Data akan disinkronkan saat online
-            </Alert>
-          )}
-          
-          {/* Sync indicator */}
-          {syncing && (
-            <Alert severity="info" sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40, borderRadius: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LinearProgress size={16} />
-                Menyinkronkan data...
-              </Box>
-            </Alert>
-          )}
+    <EnhancedErrorBoundary>
+    <div className="min-h-screen bg-slate-50 font-sans flex flex-col relative overflow-hidden">
+      {/* Pull to refresh indicator */}
+      {pullToRefresh && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-blue-500 text-white text-center py-2 text-sm font-medium">
+          Lepaskan untuk refresh
+        </div>
+      )}
+      
+      {/* Offline indicator */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-orange-500 text-white text-center py-1 text-xs font-medium">
+          Mode Offline - Data akan disinkronkan saat online
+        </div>
+      )}
+      
+      {/* Sync indicator */}
+      {syncing && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-blue-500 text-white text-center py-1 text-xs font-medium flex items-center justify-center gap-2">
+          <LoadingSpinner size="sm" />
+          Menyinkronkan data...
+        </div>
+      )}
+      {/* Decorative Background Gradients */}
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"></div>
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none z-0"></div>
 
-          {/* Header */}
-          <AppBar position="sticky" elevation={scrolled ? 4 : 0} sx={{ bgcolor: scrolled ? 'background.paper' : 'transparent', backdropFilter: scrolled ? 'blur(20px)' : 'none' }}>
-            <Toolbar>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
-                <Paper sx={{ p: 1, bgcolor: 'primary.main', color: 'white' }}>
-                  <WaterDrop />
-                </Paper>
-                <Box>
-                  <Typography variant="h6" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
-                    {APP_NAME} <Box component="span" sx={{ color: 'primary.main' }}>Pro</Box>
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    Field Engineering Tools
-                  </Typography>
-                </Box>
-              </Box>
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-                <Paper sx={{ px: 2, py: 1, bgcolor: 'background.default' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: getStatusColor(), animation: dbStatus === 'testing' ? 'pulse 2s infinite' : 'none' }} />
-                    <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>{dbMessage}</Typography>
-                    {!isOnline && <Typography variant="caption" sx={{ bgcolor: 'warning.light', color: 'warning.dark', px: 1, py: 0.5, borderRadius: 1 }}>OFFLINE</Typography>}
-                  </Box>
-                </Paper>
-                <Typography variant="caption" sx={{ bgcolor: 'background.default', px: 2, py: 1, borderRadius: 2, fontWeight: 700 }}>v2.0 Enhanced</Typography>
-              </Box>
-            </Toolbar>
-          </AppBar>
+      {/* --- Header --- */}
+      <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-20 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+                 <div className="bg-slate-900 text-white p-2 rounded-xl shadow-lg shadow-slate-900/20">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"/></svg>
+                 </div>
+                 <div>
+                    <h1 className="text-xl font-extrabold tracking-tight uppercase leading-none text-slate-900">
+                    {APP_NAME} <span className="text-safety-blue">Pro</span>
+                    </h1>
+                    <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Field Engineering Tools</span>
+                 </div>
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+                 <div className="flex items-center gap-2 bg-slate-100/60 px-3 py-1.5 rounded-full border border-slate-200">
+                   <div className={`w-2 h-2 rounded-full ${getStatusColor()} ${dbStatus === 'testing' ? 'animate-pulse' : ''}`}></div>
+                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{dbMessage}</span>
+                   {!isOnline && <span className="text-[8px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">OFFLINE</span>}
+                 </div>
+                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100/80 px-4 py-2 rounded-full border border-slate-200">v2.0 Enhanced</span>
+            </div>
+        </div>
+      </header>
 
-          {/* Main Content */}
-          <Container maxWidth="xl" sx={{ flex: 1, py: 4, pb: 12 }}>
-            <Box sx={{ transition: 'all 0.5s ease-out' }}>
-              {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-              {activeTab === Tab.BANJIR && <RationalCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.RATIONAL, i, o)} />}
-              {activeTab === Tab.AI && <Box sx={{ maxWidth: 'lg', mx: 'auto', pt: 2 }}><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></Box>}
-              
-              {activeTab === Tab.HISTORY && (
-                <Box sx={{ maxWidth: 'xl', mx: 'auto', space: 3 }}>
-                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 3 }}>
-                    <Box>
-                      <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 1 }}>Database Proyek</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2" color="text.secondary">Kelola dan analisis riwayat perhitungan lapangan</Typography>
-                        {history.length > 0 && (
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Paper sx={{ px: 1, py: 0.5, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
-                              <Typography variant="caption">{history.filter(h => h.type === CalculationType.MANNING).length} Manning</Typography>
-                            </Paper>
-                            <Paper sx={{ px: 1, py: 0.5, bgcolor: 'error.light', color: 'error.contrastText' }}>
-                              <Typography variant="caption">{history.filter(h => h.type === CalculationType.RATIONAL).length} Rational</Typography>
-                            </Paper>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                    
-                    <Paper sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CompactExport data={history} />
-                      <Fab size="small" color="primary" onClick={() => setManualEntryModalOpen(true)} disabled={loading}>
-                        <Add />
-                      </Fab>
-                    </Paper>
-                  </Box>
+      {/* --- Main Content --- */}
+      {/* INCREASED BOTTOM PADDING to ensure footer doesn't cover content */}
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-8 pb-40 lg:pb-32 z-10 relative">
+          <div className="transition-all duration-500 ease-out transform">
+          {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
+          {activeTab === Tab.BANJIR && <RationalCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.RATIONAL, i, o)} />}
+          {activeTab === Tab.AI && <div className="max-w-4xl mx-auto pt-4 animate-slide-up"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
+          
+          {activeTab === Tab.HISTORY && (
+               <div className="max-w-6xl mx-auto space-y-6 animate-slide-up">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                      <div className="w-full md:w-auto">
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Database Proyek</h2>
+                        <div className="flex items-center gap-4 mt-2">
+                          <p className="text-slate-500 text-xs md:text-sm font-medium">Kelola dan analisis riwayat perhitungan lapangan</p>
+                          {history.length > 0 && (
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                {history.filter(h => h.type === CalculationType.MANNING).length} Manning
+                              </span>
+                              <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                {history.filter(h => h.type === CalculationType.RATIONAL).length} Rational
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Unified Toolbar */}
+                      <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm w-full md:w-auto">
+                        <div className="flex bg-slate-100 p-1 rounded-xl flex-1 md:flex-none">
+                            <button 
+                                onClick={() => setHistoryViewMode('LIST')}
+                                className={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all ${historyViewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <svg className="w-4 h-4 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                                <span className="hidden md:inline">Daftar</span>
+                            </button>
+                            <button 
+                                onClick={() => setHistoryViewMode('MAP')}
+                                className={`flex-1 md:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all ${historyViewMode === 'MAP' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <svg className="w-4 h-4 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <span className="hidden md:inline">Peta</span>
+                            </button>
+                        </div>
+                        
+                        <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                        
+                        {/* Export Button */}
+                        <CompactExport data={history} />
+                        
+                        <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                        
+                        {/* Add Button */}
+                        <button 
+                            onClick={() => setManualEntryModalOpen(true)}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 disabled:opacity-50 text-xs font-bold"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                            <span className="hidden md:inline">{loading ? 'Loading...' : 'Tambah'}</span>
+                        </button>
+                      </div>
+                  </div>
                   
                   {history.length === 0 ? (
-                    <Paper sx={{ p: 8, textAlign: 'center', border: '2px dashed', borderColor: 'divider' }}>
-                      <WaterDrop sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                      <Typography variant="h6" sx={{ mb: 1 }}>Belum Ada Data</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Mulai dengan membuat perhitungan baru atau generate data contoh</Typography>
-                      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        <Button variant="outline" onClick={seedPilotData} disabled={loading}>
-                          {loading ? 'Menyimpan...' : '+ Generate Data Contoh'}
-                        </Button>
-                        <Button onClick={() => setManualEntryModalOpen(true)}>
-                          + Tambah Data Manual
-                        </Button>
-                      </Box>
-                    </Paper>
+                      <div className="flex flex-col items-center justify-center py-16 bg-gradient-to-br from-slate-50 to-white rounded-3xl border-2 border-dashed border-slate-200 text-center">
+                          <div className="flex justify-center mb-4">
+                             <div className="p-4 bg-slate-100 rounded-2xl">
+                                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                             </div>
+                          </div>
+                          <h3 className="text-lg font-semibold text-slate-700 mb-2">Belum Ada Data</h3>
+                          <p className="text-slate-500 font-medium mb-6 max-w-sm">Mulai dengan membuat perhitungan baru atau generate data contoh untuk melihat database beraksi.</p>
+                          <div className="flex gap-3">
+                            <Button variant="outline" onClick={seedPilotData} disabled={loading} className="text-xs py-2 px-6 border-dashed bg-white hover:bg-slate-50">
+                              {loading ? 'Menyimpan...' : '+ Generate Data Contoh'}
+                            </Button>
+                            <button 
+                              onClick={() => setManualEntryModalOpen(true)}
+                              className="text-xs py-2 px-6 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+                            >
+                              + Tambah Data Manual
+                            </button>
+                          </div>
+                      </div>
                   ) : (
-                    <ProgressiveHistory
-                      data={history}
-                      loading={loading}
-                      renderItem={(item, index) => (
-                        <Paper sx={{ p: 3, '&:hover': { boxShadow: 4 } }}>
-                          <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Paper sx={{ display: 'inline-block', px: 1, py: 0.5, mb: 2, bgcolor: item.type === CalculationType.MANNING ? 'primary.light' : 'error.light', color: 'white' }}>
-                                <Typography variant="caption" sx={{ fontWeight: 700 }}>{item.type}</Typography>
-                              </Paper>
-                              <Typography variant="h6" sx={{ mb: 1 }}>{item.inputs.site?.channelName || 'Tanpa Nama'}</Typography>
-                              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                {new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})}
-                                {item.location && ' • GPS'}
-                              </Typography>
-                              <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Button size="small" onClick={() => setViewDetailItem(item)}>Detail</Button>
-                                <Button size="small" variant="outline" onClick={() => copyToClipboard(item)}>Salin</Button>
-                                <Button size="small" variant="outline" onClick={() => handleConsultAI(item.type, item.inputs, item.outputs)}>AI Analisis</Button>
-                              </Box>
-                            </Box>
-                            <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
-                              <Typography variant="caption" color="text.secondary">Debit</Typography>
-                              <Typography variant="h5" sx={{ fontWeight: 800 }}>{item.outputs.Discharge}</Typography>
-                              <Typography variant="caption" color="text.secondary">m³/s</Typography>
-                            </Paper>
-                          </Box>
-                        </Paper>
-                      )}
-                      className="flex flex-col gap-4"
-                    />
+                      <>
+                        {historyViewMode === 'MAP' ? (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                                <div className="p-4 border-b border-slate-100 bg-slate-50">
+                                  <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold text-slate-900">Peta Lokasi Pengukuran</h3>
+                                    <span className="text-xs text-slate-500 bg-white px-2 py-1 rounded-full">
+                                      {history.filter(h => h.location).length} lokasi
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="p-2">
+                                  <HistoryMap data={history} />
+                                </div>
+                                <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                                    <p className="text-xs text-slate-500 font-medium">Menampilkan {history.filter(h => h.location).length} dari {history.length} data dengan koordinat GPS</p>
+                                    {loading && <div className="flex items-center gap-2 text-blue-500"><div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div><span className="text-xs">Sync...</span></div>}
+                                    {!loading && <div className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div><span className="text-xs text-slate-500">Tersinkron</span></div>}
+                                </div>
+                            </div>
+                        ) : (
+                            <ProgressiveHistory
+                              data={history}
+                              loading={loading}
+                              renderItem={(item, index) => (
+                                <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md border border-slate-100 transition-all duration-300 group">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${item.type === CalculationType.MANNING ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
+                                                    {item.type}
+                                                </div>
+                                                <button 
+                                                    onClick={(e) => deleteHistoryItem(e, item.id)} 
+                                                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                    title="Hapus Data"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                            
+                                            <h3 className="font-bold text-slate-900 text-base mb-2">
+                                                {item.inputs.site?.channelName || 'Tanpa Nama'}
+                                            </h3>
+                                            
+                                            <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
+                                                <div className="flex items-center gap-1">
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                    <span>{new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})}</span>
+                                                </div>
+                                                {item.location && (
+                                                    <div className="flex items-center gap-1">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                                                        <span>GPS</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={() => setViewDetailItem(item)} 
+                                                    className="flex-1 py-2 text-xs font-bold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                                                >
+                                                    Detail
+                                                </button>
+                                                <button 
+                                                    onClick={() => copyToClipboard(item)} 
+                                                    className="p-2 text-slate-400 bg-white border border-slate-200 rounded-lg hover:text-blue-600 hover:border-blue-200 transition-colors" 
+                                                    title="Salin"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1" /></svg>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleConsultAI(item.type, item.inputs, item.outputs)} 
+                                                    className="p-2 text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors" 
+                                                    title="AI Analisis"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-slate-50 rounded-xl p-3 text-center min-w-[120px]">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Debit</div>
+                                            <div className="text-xl font-black text-slate-900">{item.outputs.Discharge}</div>
+                                            <div className="text-xs text-slate-500">m³/s</div>
+                                        </div>
+                                    </div>
+                                </div>
+                              )}
+                              className="flex flex-col gap-4"
+                            />
+                        )}
+                      </>
                   )}
-                </Box>
-              )}
-            </Box>
-          </Container>
+               </div>
+          )}
+          </div>
+      </main>
 
-          <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
-          <DetailModal isOpen={!!viewDetailItem} data={viewDetailItem} onClose={() => setViewDetailItem(null)} />
-          <ManualEntryModal isOpen={manualEntryModalOpen} onClose={() => setManualEntryModalOpen(false)} onSave={saveToHistory} />
+      <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
+      <DetailModal isOpen={!!viewDetailItem} data={viewDetailItem} onClose={() => setViewDetailItem(null)} />
+      <ManualEntryModal isOpen={manualEntryModalOpen} onClose={() => setManualEntryModalOpen(false)} onSave={saveToHistory} />
 
-          {/* Bottom Navigation */}
-          <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50 }} elevation={8}>
-            <BottomNavigation
-              value={activeTab}
-              onChange={(event, newValue) => setActiveTab(newValue)}
-              sx={{ height: 80 }}
-            >
-              <BottomNavigationAction label="Saluran" value={Tab.SALURAN} icon={<WaterDrop />} />
-              <BottomNavigationAction label="Banjir" value={Tab.BANJIR} icon={<Flood />} />
-              <BottomNavigationAction label="Data" value={Tab.HISTORY} icon={<History />} />
-              <BottomNavigationAction label="AI" value={Tab.AI} icon={<Psychology />} />
-            </BottomNavigation>
-          </Paper>
-        </Box>
-      </EnhancedErrorBoundary>
-    </ThemeProvider>
+      {/* --- Floating Navigation Dock --- */}
+      {/* UPDATED: Floating style with padding bottom to avoid covering content */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-4 lg:pb-8">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgba(0,0,0,0.12)] w-[92%] max-w-lg lg:w-auto rounded-[2rem] lg:rounded-[2.5rem] pointer-events-auto transition-all duration-300">
+            <div className="flex justify-around items-center px-2 py-3 lg:px-6 lg:py-4 gap-1 lg:gap-4 min-w-[320px]">
+            {navigationItems.map(item => (
+                <button
+                    key={item.tab}
+                    onClick={() => setActiveTab(item.tab)}
+                    className={`
+                        relative flex flex-col lg:flex-row items-center justify-center p-3 lg:px-6 lg:py-3 rounded-2xl lg:rounded-[1.2rem] transition-all duration-300 group
+                        ${activeTab === item.tab ? item.activeColor + ' scale-100 lg:scale-105' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}
+                    `}
+                >
+                    <div className={`transition-transform duration-300 ${activeTab === item.tab ? '-translate-y-1 lg:translate-y-0 lg:scale-110' : 'group-hover:-translate-y-1 lg:group-hover:translate-y-0'}`}>
+                    {item.icon}
+                    </div>
+                    <span className={`text-[10px] md:text-xs font-bold mt-1 lg:mt-0 lg:ml-2 transition-all duration-300 ${activeTab === item.tab ? 'opacity-100 max-w-[100px]' : 'opacity-100 lg:opacity-0 lg:max-w-0 overflow-hidden'}`}>{item.label}</span>
+                    
+                    {/* Active Indicator Dot (Mobile Only) */}
+                    {activeTab === item.tab && (
+                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-current rounded-full lg:hidden"></span>
+                    )}
+                </button>
+            ))}
+            </div>
+        </div>
+      </div>
+      
+    </div>
+    </EnhancedErrorBoundary>
   );
 };
 
