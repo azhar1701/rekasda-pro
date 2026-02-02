@@ -5,9 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
-    host: true,
-    strictPort: false
+    port: 3000
   },
   // Ensure static assets are properly served
   publicDir: 'public',
