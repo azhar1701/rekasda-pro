@@ -128,8 +128,8 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
                 </div>
                 <div>
-                   <h3 className="text-sm font-bold text-slate-900">Channel Geometry</h3>
-                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Cross-Section Parameters</p>
+                   <h3 className="text-sm font-bold text-slate-900">Geometri Saluran</h3>
+                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Parameter Penampang Melintang</p>
                 </div>
                 <button onClick={loadPilotData} className="ml-auto hidden lg:flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-teal-600 transition-colors uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg hover:bg-teal-50">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -156,7 +156,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                             onClick={() => handleInputChange('shape', s)}
                             className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold uppercase rounded-lg transition-all duration-300 ${inputs.shape === s ? 'bg-white text-teal-600 shadow-soft font-semibold' : 'text-slate-400 hover:text-slate-600'}`}
                          >
-                            {s === ChannelShape.TRAPEZOID ? 'Trapezoid' : 'Circular'}
+                            {s === ChannelShape.TRAPEZOID ? 'Trapesium' : 'Lingkaran'}
                          </button>
                      ))}
                 </div>
@@ -207,7 +207,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                 </div>
                 
                 <div className="group">
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block mb-2 group-focus-within:text-teal-600 transition-colors">Manning Roughness (n)</label>
+                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block mb-2 group-focus-within:text-teal-600 transition-colors">Kekasaran Manning (n)</label>
                     <div className="relative">
                         <select 
                             className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-lg p-4 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all cursor-pointer"
@@ -230,7 +230,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
           <Card className="overflow-hidden">
               <div className="bg-slate-50 p-4 md:p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest">Cross-Section View</h3>
+                    <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest">Tampilan Penampang Melintang</h3>
                     {results && (
                         <span className={`text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider ${results.SafetyStatus === 'Safe' ? 'bg-emerald-100 text-emerald-700' : 'bg-error/20 text-error'}`}>
                             Status: {results.SafetyStatus}

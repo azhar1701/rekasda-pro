@@ -82,7 +82,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
         <div className="bg-slate-900 text-white p-5 flex justify-between items-center shrink-0">
             <div>
                 <h3 className="text-xl font-black italic uppercase tracking-tighter">Input Data Baru</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Database Manual Entry</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Manual Entry ke Database</p>
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">&times;</button>
         </div>
@@ -141,7 +141,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                                     <InputGroup label="Tinggi Air (h)" value={manningInputs.depth} onChange={e => setManningInputs({...manningInputs, depth: parseFloat(e.target.value)||0})} />
                                 </>
                             )}
-                            <InputGroup label="Slope (S)" value={manningInputs.slope} onChange={e => setManningInputs({...manningInputs, slope: parseFloat(e.target.value)||0})} />
+                            <InputGroup label="Kemiringan Dasar (S)" value={manningInputs.slope} onChange={e => setManningInputs({...manningInputs, slope: parseFloat(e.target.value)||0})} />
                             
                             <div className="group">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Kekasaran (n)</label>
@@ -169,7 +169,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                              <InputGroup label="Luas DAS (A)" unit="km²" value={rationalInputs.area} onChange={e => setRationalInputs({...rationalInputs, area: parseFloat(e.target.value)||0})} />
                              <InputGroup label="Hujan (R24)" unit="mm" value={rationalInputs.rainfallDesign} onChange={e => setRationalInputs({...rationalInputs, rainfallDesign: parseFloat(e.target.value)||0})} />
                              <InputGroup label="Panjang (L)" unit="km" value={rationalInputs.flowLength} onChange={e => setRationalInputs({...rationalInputs, flowLength: parseFloat(e.target.value)||0})} />
-                             <InputGroup label="Slope (S)" unit="-" value={rationalInputs.catchmentSlope} onChange={e => setRationalInputs({...rationalInputs, catchmentSlope: parseFloat(e.target.value)||0})} />
+                            <InputGroup label="Kemiringan Lahan (S)" unit="-" value={rationalInputs.catchmentSlope} onChange={e => setRationalInputs({...rationalInputs, catchmentSlope: parseFloat(e.target.value)||0})} />
                         </div>
                         <div className="group">
                             <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Koefisien (C)</label>

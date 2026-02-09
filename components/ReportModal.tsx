@@ -111,7 +111,7 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
                             <div className="text-[10px] text-green-600 font-black mt-1 uppercase">Sinyal GPS Akurat (±{location.accuracy.toFixed(1)}m)</div>
                         </div>
                     ) : (
-                        <span className="text-red-500 text-sm font-bold">GPS Tidak Terdeteksi</span>
+                    <span className="text-red-500 text-sm font-bold">GPS Tidak Terdeteksi</span>
                     )}
                 </div>
                 <button onClick={getLocation} className="p-3 bg-gray-50 border border-gray-200 rounded-xl shadow-sm text-safety-blue active:bg-gray-100 transition-colors">

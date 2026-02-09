@@ -76,7 +76,7 @@ export const SlopeCalculator: React.FC<Props> = ({ onSlopeCalculated, onClose })
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={calculateSlope} className="flex-1">
-          Hitung Slope
+          Hitung Kemiringan
         </Button>
       </div>
 

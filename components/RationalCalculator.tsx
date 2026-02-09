@@ -62,24 +62,24 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
             <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={s => setInputs({...inputs, site: s})} />
 
             <Card
-              title="Rainfall Parameters"
-              description="Catchment & Design Rainfall Data"
+              title="Parameter Curah Hujan"
+              description="Data DAS & Hujan Rencana"
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
               }
             >
               <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4 md:gap-5">
-                         <InputGroup label="Catchment Area (A)" unit="km²" value={inputs.area} onChange={e => setInputs({...inputs, area: parseFloat(e.target.value)||0})} placeholder="0.50" helpText="Area of the catchment contributing to flow" />
-                         <InputGroup label="Design Rainfall" unit="mm" value={inputs.rainfallDesign} onChange={e => setInputs({...inputs, rainfallDesign: parseFloat(e.target.value)||0})} placeholder="100" helpText="24-hour design rainfall depth" />
+                         <InputGroup label="Luas DAS (A)" unit="km²" value={inputs.area} onChange={e => setInputs({...inputs, area: parseFloat(e.target.value)||0})} placeholder="0.50" helpText="Luas Daerah Aliran Sungai yang berkontribusi pada aliran" />
+                         <InputGroup label="Hujan Rencana" unit="mm" value={inputs.rainfallDesign} onChange={e => setInputs({...inputs, rainfallDesign: parseFloat(e.target.value)||0})} placeholder="100" helpText="Curah hujan rancangan 24 jam" />
                     </div>
                     
-                    <InputGroup label="Flow Path Length (L)" unit="km" value={inputs.flowLength} onChange={e => setInputs({...inputs, flowLength: parseFloat(e.target.value)||0})} placeholder="1.5" helpText="Main channel length from headwaters to outlet" />
+                    <InputGroup label="Panjang Alur Aliran (L)" unit="km" value={inputs.flowLength} onChange={e => setInputs({...inputs, flowLength: parseFloat(e.target.value)||0})} placeholder="1.5" helpText="Panjang saluran utama dari sumber hingga outlet" />
                     
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
-                          <InputGroup label="Catchment Slope (S)" unit="m/m" value={inputs.catchmentSlope} onChange={e => setInputs({...inputs, catchmentSlope: parseFloat(e.target.value)||0})} placeholder="0.005" helpText="Average slope of catchment or main channel" />
+                          <InputGroup label="Kemiringan Lahan (S)" unit="m/m" value={inputs.catchmentSlope} onChange={e => setInputs({...inputs, catchmentSlope: parseFloat(e.target.value)||0})} placeholder="0.005" helpText="Rata-rata kemiringan DAS atau saluran utama" />
                         </div>
                         <button 
                           onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
@@ -102,7 +102,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                     </div>
 
                     <div className="group">
-                        <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block mb-2 group-focus-within:text-emerald-600 transition-colors">Runoff Coefficient (C)</label>
+                        <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block mb-2 group-focus-within:text-emerald-600 transition-colors">Koefisien Limpasan (C)</label>
                         <div className="relative">
                             <select 
                                 className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-lg p-4 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-colors cursor-pointer"
@@ -130,7 +130,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
         <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-24 transition-all">
             {results && (
                 <div className="animate-fade-in space-y-6">
-                    <FlowInsight discharge={parseFloat(results.Discharge)} type="RATIONAL" label="Estimated Flood Runoff" />
+                    <FlowInsight discharge={parseFloat(results.Discharge)} type="RATIONAL" label="Estimasi Debit Banjir" />
                     
                     <Card className="overflow-hidden">
                          {/* Header Result */}
@@ -139,8 +139,8 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                              
                              <div className="relative z-10">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/80">Design Flood Discharge (Q)</span>
-                                    <HelpTooltip content="Peak discharge estimated from design rainfall event" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/80">Debit Banjir Rencana (Q)</span>
+                                    <HelpTooltip content="Debit puncak yang diperkirakan dari peristiwa curah hujan rancangan" />
                                 </div>
                                 <div className="flex items-baseline mt-2 mb-8">
                                     <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-white">{results.Discharge}</h3>
@@ -150,15 +150,15 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-black/20 backdrop-blur-md p-4 rounded-lg border border-white/10">
                                         <div className="flex items-center gap-1 mb-1">
-                                            <span className="text-[9px] font-black text-white/60 uppercase">Est. Volume</span>
-                                            <HelpTooltip content="Estimated total volume during flood event" />
+                                            <span className="text-[9px] font-black text-white/60 uppercase">Volume Est.</span>
+                                            <HelpTooltip content="Volume total yang diperkirakan selama peristiwa banjir" />
                                         </div>
                                         <span className="text-lg md:text-xl font-bold text-white">{results.TotalVolume} <span className="text-[10px]">m³</span></span>
                                     </div>
                                     <div className="bg-black/20 backdrop-blur-md p-4 rounded-lg border border-white/10">
                                         <div className="flex items-center gap-1 mb-1">
-                                            <span className="text-[9px] font-black text-white/60 uppercase">Spec. Discharge</span>
-                                            <HelpTooltip content="Discharge per unit catchment area (m³/s/km²)" />
+                                            <span className="text-[9px] font-black text-white/60 uppercase">Debit Spesifik</span>
+                                            <HelpTooltip content="Debit per unit luas daerah aliran (m³/s/km²)" />
                                         </div>
                                         <span className="text-lg md:text-xl font-bold text-white">{results.SpecificDischarge}</span>
                                     </div>
@@ -169,10 +169,10 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                         <div className="p-6 md:p-8 bg-white">
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-6 mb-8">
                                 {[
-                                    { l: 'Intensity (I)', v: results.Intensity, u: 'mm/h', h: 'Rainfall intensity based on concentration time' },
-                                    { l: 'Concentration Time', v: results.Tc, u: 'min', h: 'Time for water to reach outlet from farthest point' },
-                                    { l: 'Lag Time', v: results.LagTime, u: 'min', h: 'Time between peak rainfall and peak discharge' },
-                                    { l: 'Excess Rainfall', v: results.ExcessRain, u: 'mm', h: 'Rainfall portion becoming surface runoff (after infiltration)' }
+                                    { l: 'Intensitas Hujan (I)', v: results.Intensity, u: 'mm/h', h: 'Intensitas curah hujan berdasarkan waktu konsentrasi' },
+                                    { l: 'Waktu Konsentrasi', v: results.Tc, u: 'menit', h: 'Waktu perjalanan air dari titik terjauh ke outlet' },
+                                    { l: 'Waktu Tunda', v: results.LagTime, u: 'menit', h: 'Waktu antara puncak hujan dan puncak debit' },
+                                    { l: 'Hujan Efektif', v: results.ExcessRain, u: 'mm', h: 'Bagian curah hujan yang menjadi aliran permukaan (setelah infiltrasi)' }
                                 ].map((item, i) => (
                                     <div key={i}>
                                         <div className="flex items-center gap-1 mb-1.5">
@@ -185,9 +185,9 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                             </div>
 
                             <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row gap-4">
-                                <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.RATIONAL, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>Save Results</Button>
+                                <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.RATIONAL, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>Simpan Hasil</Button>
                                 <Button variant="outline" onClick={() => onConsultAI(inputs, results)} className="sm:w-auto px-8">
-                                    AI Review
+                                    Konsultasi AI
                                 </Button>
                             </div>
                         </div>
