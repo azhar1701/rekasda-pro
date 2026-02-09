@@ -10,6 +10,8 @@ import { FlowInsight } from './FlowInsight';
 import { SiteIdentityForm } from './SiteIdentityForm';
 import { SlopeCalculator } from './SlopeCalculator';
 import { HelpTooltip } from './HelpTooltip';
+import { Card } from './ui/Card';
+import { Alert } from './ui/Alert';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -33,6 +35,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   // const [errors, setErrors] = useState<Partial<Record<keyof ManningInputs, string>>>({});
   const [results, setResults] = useState<any>(null);
   const [showSlopeCalculator, setShowSlopeCalculator] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const loadPilotData = () => {
     setInputs({
@@ -60,12 +63,20 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   };
 
   const validate = (newInputs: ManningInputs) => {
-    // const newErrors: Partial<Record<keyof ManningInputs, string>> = {};
-    // if (newInputs.roughness <= 0) newErrors.roughness = "n > 0";
-    // if (newInputs.slope <= 0) newErrors.slope = "S > 0";
-    // setErrors(newErrors);
-    // return Object.keys(newErrors).length === 0;
-    return newInputs.roughness > 0 && newInputs.slope > 0;
+    const newErrors: Record<string, string> = {};
+    if (newInputs.roughness <= 0) newErrors.roughness = "Manning coefficient must be > 0";
+    if (newInputs.slope <= 0) newErrors.slope = "Slope must be > 0";
+    if (newInputs.slope > 0.1) newErrors.slope = "Slope seems unusually high (> 0.1)";
+    if (newInputs.shape === ChannelShape.TRAPEZOID) {
+      if (newInputs.width <= 0) newErrors.width = "Bottom width must be > 0";
+      if (newInputs.depth <= 0) newErrors.depth = "Water depth must be > 0";
+    } else {
+      if (newInputs.diameter <= 0) newErrors.diameter = "Diameter must be > 0";
+      if (newInputs.depth <= 0 || newInputs.depth > newInputs.diameter) 
+        newErrors.depth = "Water depth must be between 0 and diameter";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field: keyof ManningInputs, value: any) => {
@@ -87,55 +98,65 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
       {/* --- LEFT COLUMN: INPUTS --- */}
       <div className="lg:col-span-5 space-y-6 lg:space-y-8 animate-slide-up">
         {/* Quick Action Mobile - Enhanced Visibility */}
-        <div className="bg-white/95 backdrop-blur-md p-3 px-4 rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 flex justify-between items-center lg:hidden sticky top-20 z-30 transition-all duration-300 ring-1 ring-slate-100">
+        <div className="bg-white/95 backdrop-blur-md p-3 px-4 rounded-xl shadow-card border border-slate-200 flex justify-between items-center lg:hidden sticky top-20 z-30 transition-all duration-300 ring-1 ring-slate-100">
            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-safety-blue/10 flex items-center justify-center text-safety-blue">
+              <div className="w-8 h-8 rounded-full bg-teal-600/10 flex items-center justify-center text-teal-600">
                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
               </div>
               <div className="leading-tight">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 tracking-widest">Aksi Cepat</span>
-                  <span className="block text-xs font-bold text-slate-900">Isi Data Pilot</span>
+                  <span className="block text-[9px] font-black uppercase text-slate-400 tracking-widest">Quick Action</span>
+                  <span className="block text-xs font-bold text-slate-900">Load Pilot Data</span>
               </div>
            </div>
            <button 
              onClick={loadPilotData} 
-             className="bg-safety-blue text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-safety-blue/30 active:scale-95 hover:bg-blue-700 transition-all flex items-center gap-2"
+             className="bg-teal-600 text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase shadow-card active:scale-95 hover:bg-teal-700 transition-all flex items-center gap-2"
            >
-             <span>Load Data</span>
+             <span>Load</span>
              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
            </button>
         </div>
 
         <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={(s) => setInputs({...inputs, site: s})} />
         
-        <div className="bg-white p-5 md:p-8 rounded-[2rem] shadow-soft border border-slate-100 relative overflow-hidden">
+        <div className="bg-white p-5 md:p-8 rounded-xl shadow-card border border-slate-200 relative overflow-hidden">
              {/* Decorative Background Blob */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-safety-blue/5 rounded-full blur-3xl"></div>
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-teal-600/5 rounded-full blur-3xl"></div>
 
             <div className="flex items-center gap-3 mb-6 md:mb-8 relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-safety-blue/10 flex items-center justify-center text-safety-blue">
+                <div className="w-10 h-10 rounded-xl bg-teal-600/10 flex items-center justify-center text-teal-600">
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
                 </div>
                 <div>
-                   <h3 className="text-sm font-bold text-slate-900">Parameter Hidrolis</h3>
-                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Dimensi Penampang</p>
+                   <h3 className="text-sm font-bold text-slate-900">Channel Geometry</h3>
+                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Cross-Section Parameters</p>
                 </div>
-                <button onClick={loadPilotData} className="ml-auto hidden lg:flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-safety-blue transition-colors uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg hover:bg-blue-50">
+                <button onClick={loadPilotData} className="ml-auto hidden lg:flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-teal-600 transition-colors uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg hover:bg-teal-50">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                     Load Pilot
                 </button>
             </div>
 
+            {Object.keys(errors).length > 0 && (
+              <div className="mb-6">
+                <Alert 
+                  type="error" 
+                  title="Validation Errors"
+                  message={Object.values(errors).join(', ')}
+                />
+              </div>
+            )}
+
             <div className="space-y-6 relative z-10">
                 {/* Shape Toggle */}
-                <div className="p-1.5 bg-slate-100 rounded-2xl flex">
+                <div className="p-1.5 bg-slate-100 rounded-lg flex">
                      {[ChannelShape.TRAPEZOID, ChannelShape.CIRCULAR].map((s) => (
                          <button 
                             key={s}
                             onClick={() => handleInputChange('shape', s)}
-                            className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold uppercase rounded-xl transition-all duration-300 ${inputs.shape === s ? 'bg-white text-slate-900 shadow-md transform scale-[1.02]' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`flex-1 py-2.5 text-[10px] md:text-xs font-bold uppercase rounded-lg transition-all duration-300 ${inputs.shape === s ? 'bg-white text-teal-600 shadow-soft font-semibold' : 'text-slate-400 hover:text-slate-600'}`}
                          >
-                            {s === ChannelShape.TRAPEZOID ? 'Trapesium' : 'Lingkaran'}
+                            {s === ChannelShape.TRAPEZOID ? 'Trapezoid' : 'Circular'}
                          </button>
                      ))}
                 </div>
@@ -167,8 +188,8 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                     </div>
                     <button 
                       onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                      className="mt-6 p-3 text-orange-600 hover:bg-orange-50 rounded-xl transition-colors border border-orange-200 hover:border-orange-300" 
-                      title="Kalkulator Slope"
+                      className="mt-6 p-3 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200 hover:border-teal-300" 
+                      title="Slope Calculator"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -186,10 +207,10 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                 </div>
                 
                 <div className="group">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2 group-focus-within:text-safety-blue transition-colors">Kekasaran Manning (n)</label>
+                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block mb-2 group-focus-within:text-teal-600 transition-colors">Manning Roughness (n)</label>
                     <div className="relative">
                         <select 
-                            className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-2xl p-4 outline-none focus:border-safety-blue focus:ring-4 focus:ring-safety-blue/10 transition-all cursor-pointer"
+                            className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-lg p-4 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 transition-all cursor-pointer"
                             value={inputs.roughness} 
                             onChange={e => handleInputChange('roughness', parseFloat(e.target.value))}
                         >
@@ -206,28 +227,28 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
 
       {/* --- RIGHT COLUMN: VISUALIZATION & RESULTS --- */}
       <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-24 transition-all">
-          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-float p-1 relative overflow-hidden group">
-              <div className="bg-slate-50/50 p-4 md:p-6 rounded-[1.8rem]">
+          <Card className="overflow-hidden">
+              <div className="bg-slate-50 p-4 md:p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest">Visualisasi Penampang</h3>
+                    <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest">Cross-Section View</h3>
                     {results && (
-                        <span className={`text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider ${results.SafetyStatus === 'Aman' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        <span className={`text-[10px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider ${results.SafetyStatus === 'Safe' ? 'bg-emerald-100 text-emerald-700' : 'bg-error/20 text-error'}`}>
                             Status: {results.SafetyStatus}
                         </span>
                     )}
                 </div>
                 <ChannelVisualizer inputs={inputs} results={results} />
               </div>
-          </div>
+          </Card>
 
           {results && (
             <div className="animate-fade-in space-y-6">
                 <FlowInsight discharge={parseFloat(results.Discharge)} velocity={parseFloat(results.Velocity)} type="MANNING" />
                 
                 {/* Result Dashboard Card */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden relative">
+                <Card className="overflow-hidden">
                      {/* Decorative Elements */}
-                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-teal-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
 
                     {/* Header Result */}
                     <div className="p-6 md:p-8 pb-0 relative z-10">
@@ -235,8 +256,8 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 block">Kapasitas Debit (Q)</span>
-                                    <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Discharge Capacity (Q)</span>
+                                    <HelpTooltip content="Volume of water flowing per unit time through the channel cross-section" />
                                 </div>
                                 <div className="flex items-baseline">
                                     {/* Responsive Text Size */}
@@ -245,19 +266,19 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                                 </div>
                             </div>
                             <div className="flex gap-3 mb-2 w-full md:w-auto">
-                                <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right min-w-[110px]">
+                                <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-lg border border-slate-200 text-right min-w-[110px]">
                                     <div className="flex items-center justify-end gap-1 mb-1">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase">Kecepatan (V)</span>
-                                        <HelpTooltip content="Kecepatan rata-rata aliran air dalam saluran" />
+                                        <span className="text-[9px] font-black text-slate-500 uppercase">Velocity (V)</span>
+                                        <HelpTooltip content="Average velocity of water flow in the channel" />
                                     </div>
                                     <span className="text-lg md:text-xl font-black text-slate-800">{results.Velocity} <span className="text-[10px] text-slate-400">m/s</span></span>
                                 </div>
-                                <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-2xl border border-slate-100 text-right min-w-[110px]">
+                                <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-lg border border-slate-200 text-right min-w-[110px]">
                                     <div className="flex items-center justify-end gap-1 mb-1">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase">Froude (Fr)</span>
-                                        <HelpTooltip content="Bilangan Froude menunjukkan tipe aliran: <1 subkritis, >1 superkritis" />
+                                        <span className="text-[9px] font-black text-slate-500 uppercase">Froude (Fr)</span>
+                                        <HelpTooltip content="Froude number indicates flow type: <1 subcritical, >1 supercritical" />
                                     </div>
-                                    <span className={`text-lg md:text-xl font-black ${results.FlowType === 'Super-kritis' ? 'text-red-500' : 'text-green-500'}`}>{results.Froude}</span>
+                                    <span className={`text-lg md:text-xl font-black ${results.FlowType === 'Supercritical' ? 'text-error' : 'text-emerald-600'}`}>{results.Froude}</span>
                                 </div>
                             </div>
                         </div>
@@ -267,40 +288,40 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                     <div className="p-6 md:p-8 relative z-10">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-6">
                             {[
-                                { label: 'Luas Basah (A)', val: results.Area, unit: 'm²', help: 'Luas penampang basah yang bersentuhan dengan air' },
-                                { label: 'Keliling Basah (P)', val: results.Perimeter, unit: 'm', help: 'Panjang keliling penampang yang bersentuhan dengan air' },
-                                { label: 'Jari-jari (R)', val: results.Radius, unit: 'm', help: 'Jari-jari hidrolis = Luas basah / Keliling basah' },
-                                { label: 'Lebar Atas (T)', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air pada bagian atas' },
-                                { label: 'Energi Spesifik (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energi per unit berat air relatif terhadap dasar saluran' },
-                                { label: 'Tegangan Geser', val: results.ShearStress, unit: 'N/m²', help: 'Gaya geser yang bekerja pada dasar dan dinding saluran' },
-                                { label: 'Kedalaman Kritis', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Kedalaman air pada kondisi aliran kritis (Fr=1)' },
-                                { label: 'Slope Kritis', val: results.CriticalSlope, unit: '', highlight: true, help: 'Kemiringan minimum untuk mencapai aliran kritis' },
+                                { label: 'Wet Area (A)', val: results.Area, unit: 'm²', help: 'Area of cross-section in contact with water' },
+                                { label: 'Wet Perimeter (P)', val: results.Perimeter, unit: 'm', help: 'Length of perimeter in contact with water' },
+                                { label: 'Hydraulic Radius (R)', val: results.Radius, unit: 'm', help: 'Hydraulic radius = Wet area / Wet perimeter' },
+                                { label: 'Top Width (T)', val: results.TopWidth, unit: 'm', help: 'Width of water surface at the top' },
+                                { label: 'Specific Energy (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energy per unit weight relative to channel bed' },
+                                { label: 'Shear Stress', val: results.ShearStress, unit: 'N/m²', help: 'Shear force acting on bed and walls' },
+                                { label: 'Critical Depth', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Water depth at critical flow condition (Fr=1)' },
+                                { label: 'Critical Slope', val: results.CriticalSlope, unit: '', highlight: true, help: 'Minimum slope for critical flow' },
                             ].map((item, i) => (
-                                <div key={i} className={`flex flex-col ${item.highlight ? 'bg-safety-blue/5 p-3 -m-3 rounded-2xl border border-safety-blue/10' : ''}`}>
+                                <div key={i} className={`flex flex-col ${item.highlight ? 'bg-teal-600/5 p-3 -m-3 rounded-lg border border-teal-600/10' : ''}`}>
                                     <div className="flex items-center gap-1 mb-1.5">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{item.label}</span>
+                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{item.label}</span>
                                         <HelpTooltip content={item.help} />
                                     </div>
-                                    <span className={`text-base md:text-lg font-bold ${item.highlight ? 'text-safety-blue' : 'text-slate-800'}`}>
+                                    <span className={`text-base md:text-lg font-bold ${item.highlight ? 'text-teal-600' : 'text-slate-800'}`}>
                                         {item.val} <span className="text-[10px] text-slate-400 font-bold ml-0.5">{item.unit}</span>
                                     </span>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="mt-8 md:mt-10 pt-8 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
-                            <Button fullWidth onClick={() => onSave(CalculationType.MANNING, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>
-                                Simpan Laporan
+                        <div className="mt-8 md:mt-10 pt-8 border-t border-slate-200 flex flex-col sm:flex-row gap-4">
+                            <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.MANNING, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>
+                                Save Report
                             </Button>
-                            <Button variant="outline" onClick={() => onConsultAI(inputs, results)} className="sm:w-auto px-8 border-2 border-slate-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100">
+                            <Button variant="outline" onClick={() => onConsultAI(inputs, results)} className="sm:w-auto px-8">
                                 <span className="flex items-center gap-2">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                    Analisis AI
+                                    AI Analysis
                                 </span>
                             </Button>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
           )}
       </div>

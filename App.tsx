@@ -9,6 +9,7 @@ import { HistoryMap } from './components/HistoryMap';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
 import { Button } from './components/Button';
+import { Header } from './components/ui/Header';
 import { calculateManning, calculateRational } from './services/calculationService';
 import { useDatabase } from './lib/useDatabase';
 import { useDatabaseStatus } from './components/DatabaseTest';
@@ -161,42 +162,47 @@ const App: React.FC = () => {
   };
 
   const navigationItems = [
-    { tab: Tab.SALURAN, label: 'Saluran', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 10l8-8m0 0l8 8M12 2v20" /></svg>, activeColor: 'text-safety-blue bg-safety-blue/10 shadow-[0_0_15px_rgba(0,98,204,0.3)]' },
-    { tab: Tab.BANJIR, label: 'Banjir', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>, activeColor: 'text-alert-red bg-alert-red/10 shadow-[0_0_15px_rgba(211,47,47,0.3)]' },
-    { tab: Tab.HISTORY, label: 'Data', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM4 10h16M10 4v16" /></svg>, activeColor: 'text-slate-900 bg-slate-200' },
-    { tab: Tab.AI, label: 'Konsultan', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>, activeColor: 'text-indigo-600 bg-indigo-50 shadow-[0_0_15px_rgba(79,70,229,0.3)]' }
+    { 
+      tab: Tab.SALURAN, 
+      label: 'Saluran', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 10l8-8m0 0l8 8M12 2v20" /></svg>,
+    },
+    { 
+      tab: Tab.BANJIR, 
+      label: 'Banjir', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>,
+    },
+    { 
+      tab: Tab.HISTORY, 
+      label: 'Data', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM4 10h16M10 4v16" /></svg>,
+    },
+    { 
+      tab: Tab.AI, 
+      label: 'Konsultan', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>,
+    }
   ];
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans flex flex-col relative overflow-hidden">
       {/* Decorative Background Gradients */}
-      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"></div>
-      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-indigo-200/20 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none z-0"></div>
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"></div>
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none z-0"></div>
 
       {/* --- Header --- */}
-      <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-20 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-                 <div className="bg-slate-900 text-white p-2 rounded-xl shadow-lg shadow-slate-900/20">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"/></svg>
-                 </div>
-                 <div>
-                    <h1 className="text-xl font-extrabold tracking-tight uppercase leading-none text-slate-900">
-                    {APP_NAME} <span className="text-safety-blue">Pro</span>
-                    </h1>
-                    <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Field Engineering Tools</span>
-                 </div>
-            </div>
-            <div className="hidden md:flex items-center gap-3">
-                 <div className="flex items-center gap-2 bg-slate-100/60 px-3 py-1.5 rounded-full border border-slate-200">
-                   <div className={`w-2 h-2 rounded-full ${getStatusColor()} ${dbStatus === 'testing' ? 'animate-pulse' : ''}`}></div>
-                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{dbMessage}</span>
-                 </div>
-                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100/80 px-4 py-2 rounded-full border border-slate-200">v1.0 Stable Build</span>
-            </div>
-        </div>
-      </header>
+      <Header 
+        appName={APP_NAME}
+        appSubtitle="Water Resources Engineering Tools"
+        statusBadge={{
+          label: dbMessage,
+          color: getStatusColor(),
+          isLoading: dbStatus === 'testing'
+        }}
+        version="1.0"
+        isScrolled={scrolled}
+      />
 
       {/* --- Main Content --- */}
       {/* INCREASED BOTTOM PADDING to ensure footer doesn't cover content */}
@@ -287,7 +293,7 @@ const App: React.FC = () => {
                                 <div key={item.id} className="bg-white rounded-[2rem] p-6 shadow-soft hover:shadow-float border border-slate-100 transition-all duration-300 flex flex-col justify-between h-full group">
                                     <div>
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide ${item.type === CalculationType.MANNING ? 'bg-blue-50 text-safety-blue' : 'bg-red-50 text-alert-red'}`}>
+                                            <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide ${item.type === CalculationType.MANNING ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}`}>
                                                 {item.type}
                                             </div>
                                             <button 
@@ -344,18 +350,28 @@ const App: React.FC = () => {
       {/* --- Floating Navigation Dock --- */}
       {/* UPDATED: Floating style with padding bottom to avoid covering content */}
       <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-4 lg:pb-8">
-        <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgba(0,0,0,0.12)] w-[92%] max-w-lg lg:w-auto rounded-[2rem] lg:rounded-[2.5rem] pointer-events-auto transition-all duration-300">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-card w-[92%] max-w-lg lg:w-auto rounded-2xl lg:rounded-2xl pointer-events-auto transition-all duration-300">
             <div className="flex justify-around items-center px-2 py-3 lg:px-6 lg:py-4 gap-1 lg:gap-4 min-w-[320px]">
-            {navigationItems.map(item => (
+            {navigationItems.map((item, idx) => (
                 <button
                     key={item.tab}
                     onClick={() => setActiveTab(item.tab)}
                     className={`
-                        relative flex flex-col lg:flex-row items-center justify-center p-3 lg:px-6 lg:py-3 rounded-2xl lg:rounded-[1.2rem] transition-all duration-300 group
-                        ${activeTab === item.tab ? item.activeColor + ' scale-100 lg:scale-105' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}
+                        relative flex flex-col lg:flex-row items-center justify-center p-3 lg:px-6 lg:py-3 rounded-xl lg:rounded-lg transition-all duration-300 group
+                        ${
+                          activeTab === item.tab
+                            ? idx === 0
+                              ? 'bg-teal-600 text-white shadow-card'
+                              : idx === 1
+                              ? 'bg-emerald-600 text-white shadow-card'
+                              : idx === 2
+                              ? 'bg-slate-700 text-white shadow-card'
+                              : 'bg-blue-600 text-white shadow-card'
+                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                        }
                     `}
                 >
-                    <div className={`transition-transform duration-300 ${activeTab === item.tab ? '-translate-y-1 lg:translate-y-0 lg:scale-110' : 'group-hover:-translate-y-1 lg:group-hover:translate-y-0'}`}>
+                    <div className={`transition-transform duration-300`}>
                     {item.icon}
                     </div>
                     <span className={`text-[10px] md:text-xs font-bold mt-1 lg:mt-0 lg:ml-2 transition-all duration-300 ${activeTab === item.tab ? 'opacity-100 max-w-[100px]' : 'opacity-100 lg:opacity-0 lg:max-w-0 overflow-hidden'}`}>{item.label}</span>

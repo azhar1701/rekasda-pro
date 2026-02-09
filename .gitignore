@@ -70,7 +70,8 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+# .env is committed as template (see .env file for setup instructions)
+# .env.local is for local development with actual credentials (git-ignored)
 .env.local
 .env.development.local
 .env.test.local
