@@ -136,11 +136,21 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"></div>
                              
                              <div className="relative z-10">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/80">Debit Banjir Rencana (Q)</span>
-                                    <HelpTooltip content="Debit puncak yang diperkirakan dari peristiwa curah hujan rancangan" />
+                                {/* Title with Reference Badge */}
+                                <div className="mb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/80">Debit Banjir Rencana (Q)</span>
+                                        <HelpTooltip content="Debit puncak yang diperkirakan dari peristiwa curah hujan rancangan" />
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <svg className="w-4 h-4 text-teal-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                                        <span className="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium px-3 py-1 rounded-full">
+                                            Ref: SNI 2415:2016 (Tata Cara Perhitungan Debit Banjir)
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex items-baseline mt-2 mb-8">
+                                
+                                <div className="flex items-baseline mb-8">
                                     <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-white">{results.Discharge}</h3>
                                     <span className="text-lg md:text-2xl font-bold text-emerald-100 ml-2 md:ml-3">m³/s</span>
                                 </div>

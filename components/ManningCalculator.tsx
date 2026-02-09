@@ -256,13 +256,23 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
 
                     {/* Header Result */}
                     <div className="p-6 md:p-8 pb-0 relative z-10">
+                        {/* Title with Reference Badge */}
+                        <div className="mb-6">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Kapasitas Debit (Q)</span>
+                                <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                                <span className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium px-3 py-1 rounded-full">
+                                    Ref: KP-03 Irigasi & SNI 03-2414-1991
+                                </span>
+                            </div>
+                        </div>
+                        
                         {/* Modified flex alignment for mobile vs desktop */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Kapasitas Debit (Q)</span>
-                                    <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
-                                </div>
                                 <div className="flex items-baseline">
                                     {/* Responsive Text Size */}
                                     <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900">{results.Discharge}</h3>

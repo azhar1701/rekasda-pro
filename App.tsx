@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ManningCalculator } from './components/ManningCalculator';
 import { RationalCalculator } from './components/RationalCalculator';
+import { WaterBalanceTab } from './components/WaterBalanceTab';
 import { GeminiConsultant } from './components/GeminiConsultant';
 import { ReportModal } from './components/ReportModal';
 import { DetailModal } from './components/DetailModal';
@@ -17,6 +18,7 @@ import { APP_NAME } from './constants';
 enum Tab {
   SALURAN = 'SALURAN',
   BANJIR = 'BANJIR',
+  NERACA = 'NERACA',
   HISTORY = 'HISTORY',
   AI = 'AI'
 }
@@ -171,6 +173,11 @@ const App: React.FC = () => {
       icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>,
     },
     { 
+      tab: Tab.NERACA, 
+      label: 'Neraca', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>,
+    },
+    { 
       tab: Tab.HISTORY, 
       label: 'Data', 
       icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM4 10h16M10 4v16" /></svg>,
@@ -208,6 +215,7 @@ const App: React.FC = () => {
           <div className="transition-all duration-500 ease-out transform">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
           {activeTab === Tab.BANJIR && <RationalCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.RATIONAL, i, o)} />}
+          {activeTab === Tab.NERACA && <WaterBalanceTab />}
           {activeTab === Tab.AI && <div className="max-w-4xl mx-auto pt-4 animate-slide-up"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
           
           {activeTab === Tab.HISTORY && (
@@ -347,8 +355,10 @@ const App: React.FC = () => {
                               : idx === 1
                               ? 'bg-emerald-600 text-white shadow-card'
                               : idx === 2
+                              ? 'bg-blue-600 text-white shadow-card'
+                              : idx === 3
                               ? 'bg-slate-700 text-white shadow-card'
-                              : 'bg-blue-600 text-white shadow-card'
+                              : 'bg-indigo-600 text-white shadow-card'
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                         }
                     `}

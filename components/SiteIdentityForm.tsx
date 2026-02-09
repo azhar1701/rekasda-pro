@@ -58,27 +58,25 @@ export const SiteIdentityForm: React.FC<Props> = ({ value, onChange }) => {
     desa: string;
     coordinates?: { latitude: number; longitude: number };
   }) => {
-    onChange(prev => {
-      const updatedValue = {
-        ...prev,
-        regency: location.kabupaten,
-        district: location.kecamatan,
-        village: location.desa
+    const updatedValue: SiteIdentity = {
+      ...value,
+      regency: location.kabupaten,
+      district: location.kecamatan,
+      village: location.desa
+    };
+    
+    // Auto-set GPS coordinates if available
+    if (location.coordinates && !value.location) {
+      updatedValue.location = {
+        latitude: location.coordinates.latitude,
+        longitude: location.coordinates.longitude,
+        accuracy: 10,
+        timestamp: Date.now()
       };
-      
-      // Auto-set GPS coordinates if available
-      if (location.coordinates && !prev.location) {
-        updatedValue.location = {
-          latitude: location.coordinates.latitude,
-          longitude: location.coordinates.longitude,
-          accuracy: 10,
-          timestamp: Date.now()
-        };
-      }
-      
-      return updatedValue;
-    });
-  }, [onChange]);
+    }
+    
+    onChange(updatedValue);
+  }, [value, onChange]);
 
   return (
     <div className="bg-white p-5 md:p-8 rounded-[2rem] shadow-soft border border-slate-100 space-y-6">
