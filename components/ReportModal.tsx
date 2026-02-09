@@ -86,12 +86,12 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="bg-gray-900 text-white p-5 flex justify-between items-center">
+        <div className="bg-gray-900 text-white p-5 flex justify-between items-center shrink-0">
             <h3 className="text-xl font-black italic uppercase tracking-tighter">Konfirmasi Laporan</h3>
             <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">&times;</button>
         </div>
         
-        <div className="p-6 space-y-5 overflow-y-auto">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
             {site && (
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                 <span className="block font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Lokasi Proyek</span>
@@ -149,7 +149,9 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
                     onChange={(e) => setNotes(e.target.value)}
                 ></textarea>
             </div>
+        </div>
 
+        <div className="p-6 border-t border-gray-100 bg-white shrink-0">
             <Button fullWidth onClick={handleSave} className="py-4 text-sm shadow-xl shadow-safety-blue/30 rounded-2xl border-none">Simpan Permanen ke Database</Button>
         </div>
       </div>
