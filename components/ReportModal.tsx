@@ -96,7 +96,10 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                 <span className="block font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Lokasi Proyek</span>
                 <p className="text-xs font-black text-gray-800">{site.channelName || 'Tanpa Nama'}</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase">{site.village}, {site.district}, {site.regency}</p>
+                {(() => {
+                  const fullAddress = [site.village, site.district, site.regency].filter(Boolean).join(', ');
+                  return fullAddress && <p className="text-[10px] text-gray-500 font-bold uppercase">{fullAddress}</p>;
+                })()}
               </div>
             )}
 

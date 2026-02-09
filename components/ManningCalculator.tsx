@@ -260,8 +260,8 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Discharge Capacity (Q)</span>
-                                    <HelpTooltip content="Volume of water flowing per unit time through the channel cross-section" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">Kapasitas Debit (Q)</span>
+                                    <HelpTooltip content="Volume air yang mengalir per satuan waktu melalui penampang saluran" />
                                 </div>
                                 <div className="flex items-baseline">
                                     {/* Responsive Text Size */}
@@ -272,15 +272,15 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                             <div className="flex gap-3 mb-2 w-full md:w-auto">
                                 <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-lg border border-slate-200 text-right min-w-[110px]">
                                     <div className="flex items-center justify-end gap-1 mb-1">
-                                        <span className="text-[9px] font-black text-slate-500 uppercase">Velocity (V)</span>
-                                        <HelpTooltip content="Average velocity of water flow in the channel" />
+                                        <span className="text-[9px] font-black text-slate-500 uppercase">Kecepatan Aliran (V)</span>
+                                        <HelpTooltip content="Kecepatan rata-rata aliran air dalam saluran" />
                                     </div>
                                     <span className="text-lg md:text-xl font-black text-slate-800">{results.Velocity} <span className="text-[10px] text-slate-400">m/s</span></span>
                                 </div>
                                 <div className="flex-1 md:flex-none bg-slate-50 p-4 rounded-lg border border-slate-200 text-right min-w-[110px]">
                                     <div className="flex items-center justify-end gap-1 mb-1">
-                                        <span className="text-[9px] font-black text-slate-500 uppercase">Froude (Fr)</span>
-                                        <HelpTooltip content="Froude number indicates flow type: <1 subcritical, >1 supercritical" />
+                                        <span className="text-[9px] font-black text-slate-500 uppercase">Bilangan Froude (Fr)</span>
+                                        <HelpTooltip content="Bilangan Froude menunjukkan tipe aliran: <1 subkritis, >1 superkritis" />
                                     </div>
                                     <span className={`text-lg md:text-xl font-black ${results.FlowType === 'Supercritical' ? 'text-error' : 'text-emerald-600'}`}>{results.Froude}</span>
                                 </div>
@@ -292,14 +292,14 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                     <div className="p-6 md:p-8 relative z-10">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4 md:gap-x-6">
                             {[
-                                { label: 'Wet Area (A)', val: results.Area, unit: 'm²', help: 'Area of cross-section in contact with water' },
-                                { label: 'Wet Perimeter (P)', val: results.Perimeter, unit: 'm', help: 'Length of perimeter in contact with water' },
-                                { label: 'Hydraulic Radius (R)', val: results.Radius, unit: 'm', help: 'Hydraulic radius = Wet area / Wet perimeter' },
-                                { label: 'Top Width (T)', val: results.TopWidth, unit: 'm', help: 'Width of water surface at the top' },
-                                { label: 'Specific Energy (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energy per unit weight relative to channel bed' },
-                                { label: 'Shear Stress', val: results.ShearStress, unit: 'N/m²', help: 'Shear force acting on bed and walls' },
-                                { label: 'Critical Depth', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Water depth at critical flow condition (Fr=1)' },
-                                { label: 'Critical Slope', val: results.CriticalSlope, unit: '', highlight: true, help: 'Minimum slope for critical flow' },
+                                { label: 'Luas Penampang Basah (A)', val: results.Area, unit: 'm²', help: 'Luas penampang yang bersentuhan dengan air' },
+                                { label: 'Keliling Basah (P)', val: results.Perimeter, unit: 'm', help: 'Panjang keliling yang bersentuhan dengan air' },
+                                { label: 'Jari-jari Hidrolis (R)', val: results.Radius, unit: 'm', help: 'Jari-jari hidrolis = Luas basah / Keliling basah' },
+                                { label: 'Lebar Atas (T)', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air di bagian atas' },
+                                { label: 'Energi Spesifik (E)', val: results.SpecificEnergy, unit: 'm', help: 'Total energi per satuan berat relatif terhadap dasar saluran' },
+                                { label: 'Tegangan Geser Dasar', val: results.ShearStress, unit: 'N/m²', help: 'Gaya geser yang bekerja pada dasar dan dinding saluran' },
+                                { label: 'Kedalaman Kritis (yc)', val: results.CriticalDepth, unit: 'm', highlight: true, help: 'Kedalaman air pada kondisi aliran kritis (Fr=1)' },
+                                { label: 'Kemiringan Kritis (Ic)', val: results.CriticalSlope, unit: '', highlight: true, help: 'Kemiringan minimum untuk aliran kritis' },
                             ].map((item, i) => (
                                 <div key={i} className={`flex flex-col ${item.highlight ? 'bg-teal-600/5 p-3 -m-3 rounded-lg border border-teal-600/10' : ''}`}>
                                     <div className="flex items-center gap-1 mb-1.5">
@@ -315,12 +315,12 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
 
                         <div className="mt-8 md:mt-10 pt-8 border-t border-slate-200 flex flex-col sm:flex-row gap-4">
                             <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.MANNING, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>
-                                Save Report
+                                Simpan Laporan
                             </Button>
                             <Button variant="outline" onClick={() => onConsultAI(inputs, results)} className="sm:w-auto px-8">
                                 <span className="flex items-center gap-2">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                    AI Analysis
+                                    Analisis AI
                                 </span>
                             </Button>
                         </div>

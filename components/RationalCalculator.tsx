@@ -120,12 +120,6 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                             </div>
                         </div>
                     </div>
-                    
-                    <div>
-                      <button onClick={loadPilotData} className="w-full text-teal-600 hover:text-teal-700 text-sm font-bold uppercase tracking-wider py-2 px-3 rounded-lg hover:bg-teal-50 transition-colors">
-                        ↻ Load Pilot Data
-                      </button>
-                    </div>
               </div>
             </Card>
         </div>

@@ -21,12 +21,12 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
       district: "Kecamatan",
       village: "Desa/Kelurahan",
       shape: "Bentuk Penampang",
-      roughness: "Kekasaran Manning (n)",
-      slope: "Kemiringan Dasar (S)",
+      roughness: "Koefisien Kekasaran (n)",
+      slope: "Kemiringan Saluran (S)",
       width: "Lebar Dasar (b)",
       topWidth: "Lebar Atas (B)",
       diameter: "Diameter (D)",
-      depth: "Tinggi Air (h)",
+      depth: "Tinggi Muka Air (h)",
       totalDepth: "Tinggi Total (H)",
       sideSlope: "Kemiringan Tebing (z)",
       runoffCoefficient: "Koefisien Limpasan (C)",
@@ -34,13 +34,20 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
       rainfallDesign: "Hujan Rencana (R24)",
       flowLength: "Panjang Alur (L)",
       catchmentSlope: "Kemiringan Lahan (S)",
-      Discharge: "Debit (Q)",
-      Velocity: "Kecepatan (V)",
+      Discharge: "Kapasitas Debit (Q)",
+      Velocity: "Kecepatan Aliran (V)",
       Froude: "Bilangan Froude (Fr)",
       FlowType: "Tipe Aliran",
       Freeboard: "Tinggi Jagaan",
       SafetyStatus: "Status Keamanan",
-      ShearStress: "Tegangan Geser",
+      ShearStress: "Tegangan Geser Dasar",
+      Area: "Luas Penampang Basah (A)",
+      Perimeter: "Keliling Basah (P)",
+      Radius: "Jari-jari Hidrolis (R)",
+      TopWidth: "Lebar Atas (T)",
+      SpecificEnergy: "Energi Spesifik (E)",
+      CriticalDepth: "Kedalaman Kritis (yc)",
+      CriticalSlope: "Kemiringan Kritis (Ic)",
       Tc: "Waktu Konsentrasi (Tc)",
       Intensity: "Intensitas Hujan (I)"
     };
@@ -58,14 +65,14 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 pb-2">
           {title}
         </h4>
-        <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-4">
           {Object.entries(obj).map(([key, val]) => {
-            // Skip complex objects like 'site' inside inputs as it's handled separately
-            if (key === 'site' || typeof val === 'object') return null;
+            // Skip complex objects and photoUrl
+            if (key === 'site' || key === 'photoUrl' || typeof val === 'object') return null;
             return (
               <div key={key} className="flex flex-col">
-                <span className="text-[10px] text-slate-500 font-medium uppercase">{formatLabel(key)}</span>
-                <span className="text-sm font-bold text-slate-800 break-words">{val?.toString()}</span>
+                <span className="text-[10px] text-slate-500 font-medium uppercase truncate">{formatLabel(key)}</span>
+                <span className="text-sm font-bold text-slate-800 truncate" title={val?.toString()}>{val?.toString()}</span>
               </div>
             );
           })}
@@ -90,9 +97,10 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
             <h3 className="text-xl md:text-2xl font-black leading-tight">
                 {data.inputs.site?.channelName || 'Tanpa Nama Proyek'}
             </h3>
-            <p className="text-sm text-slate-300 font-medium mt-1">
-                {data.inputs.site?.village}, {data.inputs.site?.district}, {data.inputs.site?.regency}
-            </p>
+            {(() => {
+              const fullAddress = [data.inputs.site?.village, data.inputs.site?.district, data.inputs.site?.regency].filter(Boolean).join(', ');
+              return fullAddress && <p className="text-sm text-slate-300 font-medium mt-1">{fullAddress}</p>;
+            })()}
           </div>
           <button onClick={onClose} className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors z-10">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -104,7 +112,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
             
             {/* Visuals Grid */}
             {(data.location || data.photoUrl) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className={`grid gap-4 mb-6 ${data.location && data.photoUrl ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                     {data.location && (
                         <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 h-40 relative group overflow-hidden">
                              {/* Simple Static Map Placeholder */}
@@ -122,17 +130,12 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
                             </div>
                         </div>
                     )}
-                    {data.photoUrl ? (
-                        <div className="h-40 rounded-2xl overflow-hidden border border-slate-200 relative group">
+                    {data.photoUrl && (
+                        <div className="h-48 md:h-40 rounded-2xl overflow-hidden border border-slate-200 relative group">
                             <img src={data.photoUrl} alt="Dokumentasi" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <a href={data.photoUrl} download="dokumentasi_lapangan.jpg" className="bg-white/90 text-slate-900 px-3 py-1 rounded-full text-[10px] font-bold uppercase shadow-lg">Unduh Foto</a>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="h-40 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
-                             <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                             <span className="text-[10px] font-bold uppercase">Tidak ada foto</span>
                         </div>
                     )}
                 </div>
@@ -140,8 +143,8 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
 
             {/* Main Data */}
             <div className="space-y-2">
-                {renderSection("Parameter Input", data.inputs)}
-                {renderSection("Hasil Analisis (Output)", data.outputs, "bg-blue-50/50")}
+                {renderSection("Data Masukan", data.inputs)}
+                {renderSection("Hasil Analisis", data.outputs, "bg-blue-50/50")}
             </div>
 
             {/* Notes */}
@@ -161,7 +164,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
         {/* Footer Actions */}
         <div className="p-4 border-t border-slate-100 bg-white shrink-0">
              <Button fullWidth onClick={onClose} variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">
-                Tutup Laporan
+                Tutup Detail
              </Button>
         </div>
       </div>
