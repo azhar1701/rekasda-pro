@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RUNOFF_COEFFICIENTS } from '../constants';
 import { calculateRational } from '../services/calculationService';
 import { RationalInputs, CalculationType } from '../types';
@@ -40,6 +40,10 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
     });
   };
 
+  const handleSiteChange = useCallback((site: any) => {
+    setInputs(prev => ({ ...prev, site }));
+  }, []);
+
   useEffect(() => {
     setResults(calculateRational(inputs));
   }, [inputs]);
@@ -59,7 +63,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                 <button onClick={loadPilotData} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-700 transition-colors">Load</button>
             </div>
 
-            <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={s => setInputs({...inputs, site: s})} />
+            <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={handleSiteChange} />
 
             <Card
               title="Parameter Curah Hujan"

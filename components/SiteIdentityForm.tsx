@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SiteIdentity, GeoLocationData } from '../types';
 import { InputGroup } from './InputGroup';
 import { LocationSelector } from './LocationSelector';
@@ -52,7 +52,7 @@ export const SiteIdentityForm: React.FC<Props> = ({ value, onChange }) => {
     }
   };
 
-  const handleLocationChange = (location: {
+  const handleLocationChange = useCallback((location: {
     kabupaten: string;
     kecamatan: string;
     desa: string;
@@ -76,7 +76,7 @@ export const SiteIdentityForm: React.FC<Props> = ({ value, onChange }) => {
     }
     
     onChange(updatedValue);
-  };
+  }, [value, onChange]);
 
   return (
     <div className="bg-white p-5 md:p-8 rounded-[2rem] shadow-soft border border-slate-100 space-y-6">

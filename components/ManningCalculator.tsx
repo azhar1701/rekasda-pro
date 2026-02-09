@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MANNING_ROUGHNESS } from '../constants';
 import { calculateManning } from '../services/calculationService';
 import { ManningInputs, CalculationType, ChannelShape } from '../types';
@@ -88,6 +88,10 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
     validate(updatedInputs as ManningInputs);
   };
 
+  const handleSiteChange = useCallback((site: any) => {
+    setInputs(prev => ({ ...prev, site }));
+  }, []);
+
   useEffect(() => {
     if (validate(inputs)) setResults(calculateManning(inputs));
     else setResults(null);
@@ -117,7 +121,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
            </button>
         </div>
 
-        <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={(s) => setInputs({...inputs, site: s})} />
+        <SiteIdentityForm value={inputs.site || { channelName: '', regency: '', district: '', village: '' }} onChange={handleSiteChange} />
         
         <div className="bg-white p-5 md:p-8 rounded-xl shadow-card border border-slate-200 relative overflow-hidden">
              {/* Decorative Background Blob */}

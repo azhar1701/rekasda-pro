@@ -12,12 +12,21 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
   const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
+    // Cleanup previous map instance safely
     if (mapInstanceRef.current) {
+      try {
         mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+      } catch (error) {
+        console.warn('Error removing previous map:', error);
+      }
+      mapInstanceRef.current = null;
     }
 
-    if (!mapContainerRef.current) return;
+    // Validate container exists
+    if (!mapContainerRef.current) {
+      console.warn('HistoryMap: Container ref not available');
+      return;
+    }
 
     const validData = data.filter(item => {
       const hasLocation = item.location && 
@@ -40,35 +49,27 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
       console.log('First valid location:', validData[0].location);
     }
     
-    const defaultCenter: [number, number] = [-6.9175, 107.6191]; 
-    const initialCenter = validData.length > 0 
-      ? [validData[0].location!.latitude, validData[0].location!.longitude] as [number, number]
-      : defaultCenter;
+    try {
+      const defaultCenter: [number, number] = [-6.9175, 107.6191]; 
+      const initialCenter = validData.length > 0 
+        ? [validData[0].location!.latitude, validData[0].location!.longitude] as [number, number]
+        : defaultCenter;
 
-    const map = L.map(mapContainerRef.current, {
-        zoomControl: false
-    }).setView(initialCenter, 13);
-    
-    mapInstanceRef.current = map;
-    
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+      const map = L.map(mapContainerRef.current, {
+          zoomControl: false
+      }).setView(initialCenter, 13);
+      
+      mapInstanceRef.current = map;
+      
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
 
-    const blueIcon = L.icon({
-      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    });
-
-    const redIcon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+      const blueIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -76,48 +77,106 @@ export const HistoryMap: React.FC<Props> = ({ data }) => {
         shadowSize: [41, 41]
       });
 
-    const bounds = L.latLngBounds([]);
+      const redIcon = L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
 
-    validData.forEach(item => {
-        if (!item.location) return;
+      const bounds = L.latLngBounds([]);
+
+      validData.forEach(item => {
+          if (!item.location) return;
+          
+          const { latitude, longitude } = item.location;
+          
+          // Validate coordinates one more time
+          if (typeof latitude !== 'number' || typeof longitude !== 'number' || 
+              isNaN(latitude) || isNaN(longitude)) {
+            console.warn('Skipping item with invalid coordinates:', item.id);
+            return;
+          }
+
+          const icon = item.type === CalculationType.MANNING ? blueIcon : redIcon;
+          const colorClass = item.type === CalculationType.MANNING ? 'text-blue-600' : 'text-red-600';
+
+          try {
+            L.marker([latitude, longitude], { icon })
+              .addTo(map)
+              .bindPopup(`
+                  <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 200px;">
+                      <div style="margin-bottom: 4px;">
+                          <span class="text-[10px] font-bold uppercase tracking-widest ${colorClass} bg-gray-100 px-2 py-0.5 rounded">${item.type}</span>
+                      </div>
+                      <h3 style="font-weight: 800; font-size: 14px; color: #111; margin: 0 0 4px 0;">${item.inputs.site?.channelName || 'Tanpa Nama'}</h3>
+                      <p style="font-size: 11px; color: #666; margin: 0 0 8px 0;">
+                          ${new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
+                      </p>
+                      <div style="background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                          <strong style="display:block; font-size: 10px; color: #94a3b8; text-transform: uppercase;">Output Utama</strong>
+                          <span style="font-size: 16px; font-weight: 900; color: #0f172a;">${item.outputs.Discharge} m³/s</span>
+                      </div>
+                  </div>
+              `);
+            
+            bounds.extend([latitude, longitude]);
+          } catch (markerError) {
+            console.error('Error adding marker for item:', item.id, markerError);
+          }
+      });
+
+      // Only fit bounds if we have valid markers
+      if (validData.length > 0 && bounds.isValid?.()) {
+        try {
+          map.fitBounds(bounds, { padding: [50, 50] });
+        } catch (boundsError) {
+          console.warn('Error fitting bounds:', boundsError);
+        }
+      }
+
+      // Invalidate size with safety check
+      const timeoutId = setTimeout(() => {
+          if (mapInstanceRef.current && mapInstanceRef.current.getContainer()) {
+            try {
+              mapInstanceRef.current.invalidateSize();
+            } catch (sizeError) {
+              console.warn('Error invalidating map size:', sizeError);
+            }
+          }
+      }, 200);
+
+      // Cleanup function
+      return () => {
+        clearTimeout(timeoutId);
         
-        const { latitude, longitude } = item.location;
-        const icon = item.type === CalculationType.MANNING ? blueIcon : redIcon;
-        const colorClass = item.type === CalculationType.MANNING ? 'text-blue-600' : 'text-red-600';
-
-        L.marker([latitude, longitude], { icon })
-        .addTo(map)
-        .bindPopup(`
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 200px;">
-                <div style="margin-bottom: 4px;">
-                    <span class="text-[10px] font-bold uppercase tracking-widest ${colorClass} bg-gray-100 px-2 py-0.5 rounded">${item.type}</span>
-                </div>
-                <h3 style="font-weight: 800; font-size: 14px; color: #111; margin: 0 0 4px 0;">${item.inputs.site?.channelName || 'Tanpa Nama'}</h3>
-                <p style="font-size: 11px; color: #666; margin: 0 0 8px 0;">
-                    ${new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
-                </p>
-                <div style="background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                    <strong style="display:block; font-size: 10px; color: #94a3b8; text-transform: uppercase;">Output Utama</strong>
-                    <span style="font-size: 16px; font-weight: 900; color: #0f172a;">${item.outputs.Discharge} m³/s</span>
-                </div>
-            </div>
-        `);
+        try {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+          }
+        } catch (cleanupError) {
+          console.warn('Error in cleanup:', cleanupError);
+        }
         
-        bounds.extend([latitude, longitude]);
-    });
-
-    if (validData.length > 0) {
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 200);
-
-    return () => {
-        map.remove();
         mapInstanceRef.current = null;
-    };
+      };
+    } catch (error) {
+      console.error('Fatal error initializing HistoryMap:', error);
+      
+      return () => {
+        try {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+          }
+        } catch (cleanupError) {
+          console.warn('Error in cleanup:', cleanupError);
+        }
+        
+        mapInstanceRef.current = null;
+      };
+    }
   }, [data]);
 
   return (

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from './Button';
 import { InputGroup } from './InputGroup';
 import { SiteIdentityForm } from './SiteIdentityForm';
@@ -40,6 +40,14 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
   });
 
   if (!isOpen) return null;
+
+  const handleManningFormChange = useCallback((site: any) => {
+    setManningInputs(prev => ({ ...prev, site }));
+  }, []);
+
+  const handleRationalFormChange = useCallback((site: any) => {
+    setRationalInputs(prev => ({ ...prev, site }));
+  }, []);
 
   const handleSave = () => {
     const timestamp = Date.now();
@@ -103,7 +111,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                     className={`flex-1 py-3 text-xs font-bold uppercase rounded-xl transition-all ${activeType === CalculationType.RATIONAL ? 'bg-white text-alert-red shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     Banjir (Rational)
-                </button>
+                </button>handleManningFormChange
             </div>
 
             {/* Forms */}
@@ -111,7 +119,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                 <div className="space-y-6 animate-fade-in">
                     <SiteIdentityForm 
                         value={manningInputs.site || { channelName: '', regency: '', district: '', village: '' }} 
-                        onChange={(s) => setManningInputs({...manningInputs, site: s})} 
+                        onChange={handleManningFormChange} 
                     />
                     
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4">
@@ -160,7 +168,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                 <div className="space-y-6 animate-fade-in">
                      <SiteIdentityForm 
                         value={rationalInputs.site || { channelName: '', regency: '', district: '', village: '' }} 
-                        onChange={(s) => setRationalInputs({...rationalInputs, site: s})} 
+                        onChange={handleRationalFormChange} 
                     />
 
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4">
