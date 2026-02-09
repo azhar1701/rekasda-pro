@@ -7,10 +7,8 @@ import React from 'react';
 import { ManningInputs, ChannelShape } from '../../types';
 import { FormField } from '../ui/FormField';
 import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
 import { Card } from '../ui/Card';
 import { Alert } from '../ui/Alert';
-import { HelpTooltip } from '../HelpTooltip';
 import { classNames } from '../../utils/classNames';
 
 interface ChannelParameterFormProps {
@@ -114,7 +112,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
                   step="0.01"
                   min="0"
                   value={inputs.width || ''}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onChange('width', parseFloat(e.target.value) || 0)
                   }
                   disabled={disabled}
@@ -135,7 +133,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
                   step="0.01"
                   min="0"
                   value={inputs.depth || ''}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onChange('depth', parseFloat(e.target.value) || 0)
                   }
                   disabled={disabled}
@@ -156,7 +154,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
                   step="0.1"
                   min="0"
                   value={inputs.sideSlope || ''}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     onChange('sideSlope', parseFloat(e.target.value) || 0)
                   }
                   disabled={disabled}
@@ -190,7 +188,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
                 step="0.01"
                 min="0"
                 value={inputs.diameter || ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   onChange('diameter', parseFloat(e.target.value) || 0)
                 }
                 disabled={disabled}
@@ -227,7 +225,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
               min="0"
               max="1"
               value={inputs.slope || ''}
-              onChange={(e) => onChange('slope', parseFloat(e.target.value) || 0)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('slope', parseFloat(e.target.value) || 0)}
               disabled={disabled}
               placeholder="0.001"
             />
@@ -247,7 +245,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
               min="0"
               max="0.15"
               value={inputs.roughness || ''}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 onChange('roughness', parseFloat(e.target.value) || 0)
               }
               disabled={disabled}
@@ -257,17 +255,11 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
 
           {/* Warning Messages */}
           {inputs.slope > 0.1 && (
-            <Alert type="warning" className="text-sm">
-              ⚠️ Kemiringan sangat curam (S &gt; 0.1). Pemeriksaan ulang
-              diperlukan.
-            </Alert>
+            <Alert type="warning" className="text-sm" message="⚠️ Kemiringan sangat curam (S > 0.1). Pemeriksaan ulang diperlukan." />
           )}
 
           {inputs.roughness < 0.010 && inputs.roughness > 0 && (
-            <Alert type="info" className="text-sm">
-              ℹ️ Koefisien Manning sangat rendah. Pastikan material permukaan
-              sangat halus.
-            </Alert>
+            <Alert type="info" className="text-sm" message="ℹ️ Koefisien Manning sangat rendah. Pastikan material permukaan sangat halus." />
           )}
         </div>
       </Card>

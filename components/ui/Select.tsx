@@ -3,7 +3,7 @@
  * Reusable dropdown select field with professional styling
  */
 
-import React, { SelectHTMLAttributes, forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { classNames } from '../../utils/classNames';
 
 interface Option {
@@ -12,11 +12,14 @@ interface Option {
   disabled?: boolean;
 }
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps {
   options: Option[];
   error?: string;
   placeholder?: string;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  disabled?: boolean;
+  [key: string]: any;
 }
 
 /**
@@ -68,7 +71,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           disabled={disabled}
           className={classNames(
             baseClasses,
-            sizeClasses[size],
+            sizeClasses[size as keyof typeof sizeClasses],
             stateClasses,
             disabledClasses,
             'pr-9',
@@ -81,7 +84,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               {placeholder}
             </option>
           )}
-          {options.map((option) => (
+          {options.map((option: Option) => (
             <option
               key={option.value}
               value={option.value}

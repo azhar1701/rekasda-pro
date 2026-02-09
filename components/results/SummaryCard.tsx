@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { Badge } from './Badge';
-import { Card } from './Card';
+import { Badge } from '../ui/Badge';
+import { Card } from '../ui/Card';
 import { classNames } from '../../utils/classNames';
 
 interface Metric {
@@ -88,7 +88,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
               className={classNames(
                 'p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md',
                 baseStyle,
-                isHighlight && 'ring-2 ring-offset-2 ring-primary-500'
+                isHighlight ? 'ring-2 ring-offset-2 ring-primary-500' : undefined
               )}
             >
               {/* Icon */}
@@ -119,7 +119,12 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
               {metric.status && metric.status !== 'neutral' && (
                 <div className="mt-2 pt-2 border-t border-opacity-20">
                   <Badge
-                    variant={metric.status}
+                    variant={
+                      metric.status === 'critical' ? 'danger'
+                      : metric.status === 'safe' ? 'success'
+                      : metric.status === 'warning' ? 'warning'
+                      : 'primary'
+                    }
                     size="sm"
                     className="w-full justify-center"
                   >

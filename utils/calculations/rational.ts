@@ -23,7 +23,6 @@ import { RationalInputs } from '../../types';
 import { HydraulicFormatter } from '../formatting/numbers';
 
 const RATIONAL_CONSTANT = 0.278; // Conversion factor for metric units
-const GRAVITY = 9.81; // m/s²
 
 /**
  * Calculate time of concentration
@@ -139,9 +138,6 @@ function calculateRunoffVolume(
  * Estimate critical rainfall duration
  * For Rational Method, Tc is critical
  */
-function estimateCriticalDuration(flowLength: number, slope: number): number {
-  return calculateTimeOfConcentration(flowLength, slope);
-}
 
 /**
  * Calculate peak discharge characteristics

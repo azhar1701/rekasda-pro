@@ -11,6 +11,48 @@ export default defineConfig({
   publicDir: 'public',
   build: {
     // Copy public directory to dist
-    copyPublicDir: true
+    copyPublicDir: true,
+    // Adjust chunk size warning limit
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase'
+            }
+            if (id.includes('@google/generative-ai')) {
+              return 'vendor-google'
+            }
+            if (id.includes('react')) {
+              return 'vendor-react'
+            }
+            if (id.includes('leaflet')) {
+              return 'vendor-leaflet'
+            }
+            // Other vendors in a common chunk
+            return 'vendor-common'
+          }
+          
+          // Application chunks - organized by feature
+          if (id.includes('calculationService') || id.includes('manning') || id.includes('rational')) {
+            return 'calculations'
+          }
+          if (id.includes('locationService') || id.includes('LocationSelector')) {
+            return 'location'
+          }
+          if (id.includes('databaseService') || id.includes('DatabaseTest')) {
+            return 'database'
+          }
+          if (id.includes('geminiService') || id.includes('GeminiConsultant')) {
+            return 'gemini'
+          }
+          if (id.includes('components/ui')) {
+            return 'ui'
+          }
+        }
+      }
+    }
   }
 })

@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { Badge } from '../ui/Badge';
-import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
 import { classNames } from '../../utils/classNames';
 
@@ -68,7 +67,11 @@ export const DetailedResults: React.FC<DetailedResultsProps> = ({
   className = '',
   printable = true,
 }) => {
-  const [expandedSection, setExpandedSection] = useState<number>(0);
+  const [expandedSection, setExpandedSection] = useState<string>(() => {
+    return sections.length > 0
+      ? sections[0].title.toLowerCase().replace(/\s+/g, '-')
+      : '';
+  });
 
   const tabs = sections.map((section) => ({
     id: section.title.toLowerCase().replace(/\s+/g, '-'),
@@ -108,62 +111,69 @@ export const DetailedResults: React.FC<DetailedResultsProps> = ({
       </div>
 
       {/* Tabs Navigation */}
-      <Tabs tabs={tabs} activeTab={expandedSection} onChange={setExpandedSection}>
+      <Tabs
+        tabs={tabs}
+        activeTab={expandedSection}
+        onChange={setExpandedSection}
+      >
         {/* Tab Content */}
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            className={classNames(
-              expandedSection === index ? 'block' : 'hidden',
-              'space-y-3 animate-fade-in'
-            )}
-          >
-            {section.items.map((item, itemIndex) => (
-              <div
-                key={itemIndex}
-                className={classNames(
-                  'p-4 rounded-lg',
-                  sectionColorStyles[section.color || 'slate']
-                )}
-              >
-                <div className="flex items-start justify-between mb-1">
-                  <label
-                    className={classNames(
-                      'font-semibold text-sm',
-                      sectionHeaderStyles[section.color || 'slate']
+        {sections.map((section) => {
+          const tabId = section.title.toLowerCase().replace(/\s+/g, '-');
+          return (
+            <div
+              key={tabId}
+              className={classNames(
+                expandedSection === tabId ? 'block' : 'hidden',
+                'space-y-3 animate-fade-in'
+              )}
+            >
+              {section.items.map((item, itemIndex) => (
+                <div
+                  key={itemIndex}
+                  className={classNames(
+                    'p-4 rounded-lg',
+                    sectionColorStyles[section.color || 'slate']
+                  )}
+                >
+                  <div className="flex items-start justify-between mb-1">
+                    <label
+                      className={classNames(
+                        'font-semibold text-sm',
+                        sectionHeaderStyles[section.color || 'slate']
+                      )}
+                    >
+                      {item.label}
+                    </label>
+                    {item.highlight && (
+                      <Badge variant="primary" size="sm">
+                        ★ Key Value
+                      </Badge>
                     )}
-                  >
-                    {item.label}
-                  </label>
-                  {item.highlight && (
-                    <Badge variant="primary" size="sm">
-                      ★ Key Value
-                    </Badge>
+                  </div>
+
+                  {/* Value */}
+                  <div className="mt-2">
+                    <p className={classNames('text-lg font-bold', sectionHeaderStyles[section.color || 'slate'])}>
+                      {item.value}
+                      {item.unit && (
+                        <span className="text-sm font-normal text-slate-600 ml-1">
+                          {item.unit}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Description */}
+                  {item.description && (
+                    <p className="text-xs text-slate-600 mt-2 italic">
+                      {item.description}
+                    </p>
                   )}
                 </div>
-
-                {/* Value */}
-                <div className="mt-2">
-                  <p className={classNames('text-lg font-bold', sectionHeaderStyles[section.color || 'slate'])}>
-                    {item.value}
-                    {item.unit && (
-                      <span className="text-sm font-normal text-slate-600 ml-1">
-                        {item.unit}
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                {/* Description */}
-                {item.description && (
-                  <p className="text-xs text-slate-600 mt-2 italic">
-                    {item.description}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          );
+        })}
       </Tabs>
 
       {/* Export & Actions */}

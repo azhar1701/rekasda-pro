@@ -4,14 +4,17 @@
  * Supports: text, number, email, password types with error states
  */
 
-import React, { InputHTMLAttributes, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { classNames } from '../../utils/classNames';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps {
   error?: string;
   icon?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'default' | 'subtle';
+  className?: string;
+  disabled?: boolean;
+  [key: string]: any;
 }
 
 /**
@@ -69,10 +72,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           disabled={disabled}
           className={classNames(
             baseClasses,
-            sizeClasses[size],
+            sizeClasses[size as keyof typeof sizeClasses],
             stateClasses,
             disabledClasses,
-            icon && 'pl-9',
+            icon ? 'pl-9' : undefined,
             className
           )}
           {...props}
