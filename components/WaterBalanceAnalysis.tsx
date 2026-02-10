@@ -55,7 +55,7 @@ export const WaterBalanceAnalysis: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const { data, error } = await saveWaterBalance({
+      const { error } = await saveWaterBalance({
         projectName,
         monthlyInputs: { ...inputs, site: locationData },
         monthlyResults: results,

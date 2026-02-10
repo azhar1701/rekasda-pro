@@ -175,7 +175,7 @@ export const FloodDischargeCalculator: React.FC = () => {
         hydrographData
       };
 
-      const { data, error } = await saveFloodCalculation({
+      const { error } = await saveFloodCalculation({
         method,
         projectName,
         inputs,

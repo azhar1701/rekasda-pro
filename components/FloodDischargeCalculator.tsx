@@ -184,7 +184,7 @@ export const FloodDischargeCalculator: React.FC = () => {
       const inputs = method === 'RATIONAL' ? { ...rationalInputs, location: locationData } : { ...nakayasuInputs, location: locationData };
       const results = { qPeak, tPeak, volume, returnPeriods, hydrographData };
 
-      const { data, error } = await saveFloodCalculation({ method, projectName, inputs, results });
+      const { error } = await saveFloodCalculation({ method, projectName, inputs, results });
 
       if (error) {
         setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
