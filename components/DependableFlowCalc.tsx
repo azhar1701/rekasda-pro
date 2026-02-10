@@ -26,11 +26,10 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
   }, [runoffCoef, catchmentArea, monthlyData]);
 
   const calculateFlow = () => {
-    const flows = monthlyData.map((data, index) => {
+    const flows = monthlyData.map((data) => {
       if (data.rainyDays === 0) return 0;
       
       // Calculate intensity (mm/hour) - simplified approach
-      const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][index];
       const intensity = data.rainfall / (data.rainyDays * 24); // mm/hour
       
       // Q = 0.278 * C * I * A (m³/s)

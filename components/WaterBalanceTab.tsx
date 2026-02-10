@@ -3,7 +3,6 @@ import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, Wate
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { DependableFlowCalc } from './DependableFlowCalc';
 import { InputGroup } from './InputGroup';
-import { HelpTooltip } from './HelpTooltip';
 
 type InputTab = 'demand' | 'supply';
 
