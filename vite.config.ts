@@ -14,6 +14,11 @@ export default defineConfig({
     copyPublicDir: true,
     // Adjust chunk size warning limit
     chunkSizeWarningLimit: 600,
+    commonjsOptions: {
+      // PENTING: Ini memaksa Rollup untuk memperbaiki interop module Recharts
+      include: [/recharts/], 
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -54,5 +59,9 @@ export default defineConfig({
         }
       }
     }
-  }
+  },
+  optimizeDeps: {
+    // PENTING: Pre-bundle Recharts agar stabil
+    include: ["recharts"],
+  },
 })
