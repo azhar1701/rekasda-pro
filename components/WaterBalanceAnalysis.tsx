@@ -65,14 +65,18 @@ export const WaterBalanceAnalysis: React.FC = () => {
         >
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
-              <InputGroup 
+              <InputGroup
+                id="input-population"
+                name="population"
                 label="Jumlah Penduduk" 
                 unit="jiwa" 
                 value={inputs.population} 
                 onChange={e => setInputs({...inputs, population: parseFloat(e.target.value) || 0})}
                 helpText="Total populasi yang dilayani"
               />
-              <InputGroup 
+              <InputGroup
+                id="input-domestic-standard"
+                name="domesticStandard"
                 label="Standar Domestik" 
                 unit="L/org/hari" 
                 value={inputs.domesticStandard} 
@@ -81,14 +85,18 @@ export const WaterBalanceAnalysis: React.FC = () => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <InputGroup 
+              <InputGroup
+                id="input-agriculture-area"
+                name="agricultureArea"
                 label="Luas Pertanian" 
                 unit="Ha" 
                 value={inputs.agricultureArea} 
                 onChange={e => setInputs({...inputs, agricultureArea: parseFloat(e.target.value) || 0})}
                 helpText="Luas lahan irigasi"
               />
-              <InputGroup 
+              <InputGroup
+                id="input-irrigation-demand"
+                name="irrigationDemand"
                 label="Kebutuhan Irigasi" 
                 unit="L/s/Ha" 
                 value={inputs.irrigationDemand} 
@@ -112,6 +120,9 @@ export const WaterBalanceAnalysis: React.FC = () => {
                 <input
                   type="number"
                   step="0.1"
+                  id={`supply-${index}`}
+                  name={`supply-${month}`}
+                  aria-label={`Debit andalan bulan ${month}`}
                   value={inputs.monthlySupply[index]}
                   onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"

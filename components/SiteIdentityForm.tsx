@@ -90,7 +90,9 @@ export const SiteIdentityForm: React.FC<Props> = ({ value, onChange }) => {
         </div>
       </div>
 
-      <InputGroup 
+      <InputGroup
+        id="input-channel-name"
+        name="channelName"
         label="Nama Saluran / Sungai" 
         placeholder="Contoh: Saluran Sekunder Citarum"
         value={value.channelName}

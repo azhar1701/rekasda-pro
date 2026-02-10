@@ -49,14 +49,18 @@ export const SlopeCalculator: React.FC<Props> = ({ onSlopeCalculated, onClose })
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        <InputGroup 
+        <InputGroup
+          id="input-elevation-start"
+          name="elevationStart"
           label="Elevasi Awal" 
           unit="m" 
           value={elevationStart} 
           onChange={e => setElevationStart(parseFloat(e.target.value) || 0)} 
           placeholder="100.0" 
         />
-        <InputGroup 
+        <InputGroup
+          id="input-elevation-end"
+          name="elevationEnd"
           label="Elevasi Akhir" 
           unit="m" 
           value={elevationEnd} 
@@ -64,7 +68,9 @@ export const SlopeCalculator: React.FC<Props> = ({ onSlopeCalculated, onClose })
           placeholder="99.5" 
         />
         <div className="sm:col-span-2 lg:col-span-1">
-          <InputGroup 
+          <InputGroup
+            id="input-distance"
+            name="distance"
             label="Jarak Horizontal" 
             unit="m" 
             value={distance} 

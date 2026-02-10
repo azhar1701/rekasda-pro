@@ -140,20 +140,22 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                         <div className="grid grid-cols-2 gap-4">
                             {manningInputs.shape === ChannelShape.TRAPEZOID ? (
                                 <>
-                                    <InputGroup label="Lebar Bawah (b)" value={manningInputs.width} onChange={e => setManningInputs({...manningInputs, width: parseFloat(e.target.value)||0})} />
-                                    <InputGroup label="Tinggi Air (h)" value={manningInputs.depth} onChange={e => setManningInputs({...manningInputs, depth: parseFloat(e.target.value)||0})} />
+                                    <InputGroup id="input-manual-width" name="width" label="Lebar Bawah (b)" value={manningInputs.width} onChange={e => setManningInputs({...manningInputs, width: parseFloat(e.target.value)||0})} />
+                                    <InputGroup id="input-manual-depth" name="depth" label="Tinggi Air (h)" value={manningInputs.depth} onChange={e => setManningInputs({...manningInputs, depth: parseFloat(e.target.value)||0})} />
                                 </>
                             ) : (
                                 <>
-                                    <InputGroup label="Diameter (D)" value={manningInputs.diameter} onChange={e => setManningInputs({...manningInputs, diameter: parseFloat(e.target.value)||0})} />
-                                    <InputGroup label="Tinggi Air (h)" value={manningInputs.depth} onChange={e => setManningInputs({...manningInputs, depth: parseFloat(e.target.value)||0})} />
+                                    <InputGroup id="input-manual-diameter" name="diameter" label="Diameter (D)" value={manningInputs.diameter} onChange={e => setManningInputs({...manningInputs, diameter: parseFloat(e.target.value)||0})} />
+                                    <InputGroup id="input-manual-depth" name="depth" label="Tinggi Air (h)" value={manningInputs.depth} onChange={e => setManningInputs({...manningInputs, depth: parseFloat(e.target.value)||0})} />
                                 </>
                             )}
-                            <InputGroup label="Kemiringan Dasar (S)" value={manningInputs.slope} onChange={e => setManningInputs({...manningInputs, slope: parseFloat(e.target.value)||0})} />
+                            <InputGroup id="input-manual-slope" name="slope" label="Kemiringan Dasar (S)" value={manningInputs.slope} onChange={e => setManningInputs({...manningInputs, slope: parseFloat(e.target.value)||0})} />
                             
                             <div className="group">
-                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Kekasaran (n)</label>
-                                <select 
+                                <label htmlFor="select-manual-roughness" className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Kekasaran (n)</label>
+                                <select
+                                    id="select-manual-roughness"
+                                    name="roughness"
                                     className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-2xl p-3 outline-none"
                                     value={manningInputs.roughness} 
                                     onChange={e => setManningInputs({...manningInputs, roughness: parseFloat(e.target.value)})}
@@ -174,14 +176,16 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4">
                         <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Parameter Hidrologi</h4>
                         <div className="grid grid-cols-2 gap-4">
-                             <InputGroup label="Luas DAS (A)" unit="km²" value={rationalInputs.area} onChange={e => setRationalInputs({...rationalInputs, area: parseFloat(e.target.value)||0})} />
-                             <InputGroup label="Hujan (R24)" unit="mm" value={rationalInputs.rainfallDesign} onChange={e => setRationalInputs({...rationalInputs, rainfallDesign: parseFloat(e.target.value)||0})} />
-                             <InputGroup label="Panjang (L)" unit="km" value={rationalInputs.flowLength} onChange={e => setRationalInputs({...rationalInputs, flowLength: parseFloat(e.target.value)||0})} />
-                            <InputGroup label="Kemiringan Lahan (S)" unit="-" value={rationalInputs.catchmentSlope} onChange={e => setRationalInputs({...rationalInputs, catchmentSlope: parseFloat(e.target.value)||0})} />
+                             <InputGroup id="input-manual-area" name="area" label="Luas DAS (A)" unit="km²" value={rationalInputs.area} onChange={e => setRationalInputs({...rationalInputs, area: parseFloat(e.target.value)||0})} />
+                             <InputGroup id="input-manual-rainfall" name="rainfallDesign" label="Hujan (R24)" unit="mm" value={rationalInputs.rainfallDesign} onChange={e => setRationalInputs({...rationalInputs, rainfallDesign: parseFloat(e.target.value)||0})} />
+                             <InputGroup id="input-manual-flow-length" name="flowLength" label="Panjang (L)" unit="km" value={rationalInputs.flowLength} onChange={e => setRationalInputs({...rationalInputs, flowLength: parseFloat(e.target.value)||0})} />
+                            <InputGroup id="input-manual-catchment-slope" name="catchmentSlope" label="Kemiringan Lahan (S)" unit="-" value={rationalInputs.catchmentSlope} onChange={e => setRationalInputs({...rationalInputs, catchmentSlope: parseFloat(e.target.value)||0})} />
                         </div>
                         <div className="group">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Koefisien (C)</label>
-                            <select 
+                            <label htmlFor="select-manual-runoff" className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Koefisien (C)</label>
+                            <select
+                                id="select-manual-runoff"
+                                name="runoffCoefficient"
                                 className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-2xl p-3 outline-none"
                                 value={rationalInputs.runoffCoefficient} 
                                 onChange={e => setRationalInputs({...rationalInputs, runoffCoefficient: parseFloat(e.target.value)})}

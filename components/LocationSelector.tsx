@@ -63,21 +63,6 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     }
   }, [selectedKabupaten, selectedKecamatan]);
 
-  useEffect(() => {
-    if (selectedKabupaten && selectedKecamatan && selectedDesa) {
-      const locationData = locationService.getLocationData(selectedKabupaten, selectedKecamatan, selectedDesa);
-      onLocationChange({
-        kabupaten: selectedKabupaten,
-        kecamatan: selectedKecamatan,
-        desa: selectedDesa,
-        coordinates: locationData ? {
-          latitude: locationData.latitude!,
-          longitude: locationData.longitude!
-        } : undefined
-      });
-    }
-  }, [selectedKabupaten, selectedKecamatan, selectedDesa, onLocationChange]);
-
   const handleKabupatenChange = (value: string) => {
     setSelectedKabupaten(value);
     setSelectedKecamatan('');
@@ -89,14 +74,33 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     setSelectedDesa('');
   };
 
+  const handleDesaChange = (value: string) => {
+    setSelectedDesa(value);
+    
+    if (value && selectedKabupaten && selectedKecamatan) {
+      const locationData = locationService.getLocationData(selectedKabupaten, selectedKecamatan, value);
+      onLocationChange({
+        kabupaten: selectedKabupaten,
+        kecamatan: selectedKecamatan,
+        desa: value,
+        coordinates: locationData ? {
+          latitude: locationData.latitude!,
+          longitude: locationData.longitude!
+        } : undefined
+      });
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Kabupaten/Kota */}
       <div>
-        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+        <label htmlFor="select-kabupaten" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
           Kabupaten/Kota
         </label>
         <select
+          id="select-kabupaten"
+          name="kabupaten"
           value={selectedKabupaten}
           onChange={(e) => handleKabupatenChange(e.target.value)}
           disabled={loading || error !== null}
@@ -120,10 +124,12 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
       {/* Kecamatan */}
       <div>
-        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+        <label htmlFor="select-kecamatan" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
           Kecamatan
         </label>
         <select
+          id="select-kecamatan"
+          name="kecamatan"
           value={selectedKecamatan}
           onChange={(e) => handleKecamatanChange(e.target.value)}
           disabled={!selectedKabupaten}
@@ -140,12 +146,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
       {/* Desa/Kelurahan */}
       <div>
-        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+        <label htmlFor="select-desa" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
           Desa/Kelurahan
         </label>
         <select
+          id="select-desa"
+          name="desa"
           value={selectedDesa}
-          onChange={(e) => setSelectedDesa(e.target.value)}
+          onChange={(e) => handleDesaChange(e.target.value)}
           disabled={!selectedKecamatan}
           className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-slate-50 disabled:text-slate-400"
         >

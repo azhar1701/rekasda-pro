@@ -15,9 +15,10 @@ export default defineConfig({
     // Adjust chunk size warning limit
     chunkSizeWarningLimit: 600,
     commonjsOptions: {
-      // PENTING: Ini memaksa Rollup untuk memperbaiki interop module Recharts
-      include: [/recharts/], 
+      // PENTING: Ini memaksa Rollup untuk memperbaiki interop module Recharts dan dependencies
+      include: [/node_modules/], 
       transformMixedEsModules: true,
+      defaultIsModuleExports: true,
     },
     rollupOptions: {
       output: {
@@ -30,11 +31,11 @@ export default defineConfig({
             if (id.includes('@google/generative-ai')) {
               return 'vendor-google'
             }
-            if (id.includes('react')) {
-              return 'vendor-react'
-            }
             if (id.includes('leaflet')) {
               return 'vendor-leaflet'
+            }
+            if (id.includes('react') || id.includes('scheduler') || id.includes('recharts') || id.includes('prop-types')) {
+              return 'vendor-react'
             }
             // Other vendors in a common chunk
             return 'vendor-common'
@@ -62,6 +63,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     // PENTING: Pre-bundle Recharts agar stabil
-    include: ["recharts"],
+    include: ["recharts", "react", "react-dom"],
   },
 })

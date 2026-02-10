@@ -17,7 +17,7 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
   const [runoffCoef, setRunoffCoef] = useState(0.6);
   const [catchmentArea, setCatchmentArea] = useState(10); // km²
   const [monthlyData, setMonthlyData] = useState<MonthlyRainfall[]>(
-    Array(12).fill({ rainfall: 100, rainyDays: 10 })
+    Array.from({ length: 12 }, () => ({ rainfall: 100, rainyDays: 10 }))
   );
   const [calculatedFlow, setCalculatedFlow] = useState<number[]>([]);
 
@@ -108,6 +108,10 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
                   </div>
                   <input
                     type="number"
+                    min="0"
+                    id={`rainfall-${index}`}
+                    name={`rainfall-${month}`}
+                    aria-label={`Curah hujan bulan ${month}`}
                     value={monthlyData[index].rainfall}
                     onChange={e => handleDataChange(index, 'rainfall', parseFloat(e.target.value) || 0)}
                     className="w-full pl-7 pr-8 py-1.5 text-xs border border-slate-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white"
@@ -122,6 +126,10 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
                   </div>
                   <input
                     type="number"
+                    min="0"
+                    id={`rainyDays-${index}`}
+                    name={`rainyDays-${month}`}
+                    aria-label={`Hari hujan bulan ${month}`}
                     value={monthlyData[index].rainyDays}
                     onChange={e => handleDataChange(index, 'rainyDays', parseFloat(e.target.value) || 0)}
                     className="w-full pl-7 pr-10 py-1.5 text-xs border border-slate-200 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"

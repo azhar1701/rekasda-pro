@@ -10,9 +10,13 @@ interface InputGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
   helpText?: string;
 }
 
-export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, description, helpText, value, onChange, ...props }) => {
+export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, description, helpText, value, onChange, id, name, ...props }) => {
   // Local state to handle decimal typing (prevents "1." turning into "1" immediately)
   const [localValue, setLocalValue] = useState<string>(value?.toString() ?? '');
+  
+  // Generate unique ID if not provided
+  const inputId = id || `input-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  const inputName = name || inputId;
 
   useEffect(() => {
     const currentNum = parseFloat(localValue);
@@ -39,7 +43,7 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
     <div className="group w-full">
       <div className="flex justify-between items-baseline mb-2">
         <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-focus-within:text-safety-blue transition-colors duration-200">
+          <label htmlFor={inputId} className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-focus-within:text-safety-blue transition-colors duration-200">
             {label}
           </label>
           {helpText && <HelpTooltip content={helpText} />}
@@ -55,6 +59,8 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
         }
       `}>
         <input
+          id={inputId}
+          name={inputName}
           className="w-full bg-transparent py-3.5 px-4 text-base font-bold text-slate-900 placeholder-slate-300 outline-none font-mono"
           step="any"
           autoComplete="off"

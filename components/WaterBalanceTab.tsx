@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '../services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
-import { DependableFlowCalc } from './DependableFlowCalc';
-import { InputGroup } from './InputGroup';
-
-type InputTab = 'demand' | 'supply';
+import { DependableFlowModal } from './DependableFlowModal';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
 export const WaterBalanceTab: React.FC = () => {
-  const [activeInputTab, setActiveInputTab] = useState<InputTab>('demand');
-  const [showDetailTable, setShowDetailTable] = useState(false);
-  const [showInfoAlert, setShowInfoAlert] = useState(false);
+  const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
+  const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
@@ -38,315 +34,318 @@ export const WaterBalanceTab: React.FC = () => {
 
   const handleUseCalculatedFlow = (flow: number[]) => {
     setInputs({ ...inputs, monthlySupply: flow });
-    setActiveInputTab('demand');
   };
 
+  const totalSupply = inputs.monthlySupply.reduce((a, b) => a + b, 0);
+  const totalDemand = results.reduce((a, b) => a + parseFloat(b.totalDemand), 0);
+  const netBalance = totalSupply - totalDemand;
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-32">
+    <div className="min-h-screen bg-slate-50 p-6">
       
-      {/* LEFT COLUMN: INPUT & CONTROL (35%) */}
-      <div className="lg:col-span-4 lg:sticky lg:top-4 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-4 animate-slide-up">
+      <div className="max-w-[1600px] mx-auto">
         
-        {/* Tab Switcher */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5">
-          <div className="grid grid-cols-2 gap-1">
-            <button
-              onClick={() => setActiveInputTab('demand')}
-              className={`py-3 px-4 rounded-lg text-xs font-bold uppercase transition-all ${
-                activeInputTab === 'demand'
-                  ? 'bg-orange-500 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Kebutuhan
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveInputTab('supply')}
-              className={`py-3 px-4 rounded-lg text-xs font-bold uppercase transition-all ${
-                activeInputTab === 'supply'
-                  ? 'bg-blue-500 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                </svg>
-                Ketersediaan
-              </div>
-            </button>
-          </div>
+        {/* HEADER */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-slate-800">Analisis Neraca Air</h1>
+          <p className="text-sm text-slate-500 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
         </div>
 
-        {/* Input Content */}
-        {activeInputTab === 'demand' ? (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
-              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Parameter Kebutuhan Air</h3>
-                <p className="text-[10px] text-slate-500 uppercase font-medium">Domestik & Pertanian</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <InputGroup
-                  label="Populasi"
-                  unit="jiwa"
-                  value={inputs.population}
-                  onChange={e => setInputs({ ...inputs, population: parseFloat(e.target.value) || 0 })}
-                />
-                <InputGroup
-                  label="Standar"
-                  unit="L/org/hr"
-                  value={inputs.domesticStandard}
-                  onChange={e => setInputs({ ...inputs, domesticStandard: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <InputGroup
-                  label="Luas Irigasi"
-                  unit="Ha"
-                  value={inputs.agricultureArea}
-                  onChange={e => setInputs({ ...inputs, agricultureArea: parseFloat(e.target.value) || 0 })}
-                />
-                <InputGroup
-                  label="Kebutuhan"
-                  unit="L/s/Ha"
-                  value={inputs.irrigationDemand}
-                  onChange={e => setInputs({ ...inputs, irrigationDemand: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-200">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-              </svg>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Debit Andalan (Q80)</h3>
-                <p className="text-[10px] text-slate-500 uppercase font-medium">Ketersediaan Air Bulanan</p>
-              </div>
-            </div>
-
-            {/* Toggle between Calculator and Manual */}
-            <div className="space-y-3">
-              {/* Inline Info Alert */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowInfoAlert(!showInfoAlert)}
-                  className="text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-                <span className="text-xs text-slate-500">Klik ikon untuk info input</span>
-              </div>
+        <div className="grid grid-cols-12 gap-6">
+          
+          {/* LEFT SIDEBAR - 30% */}
+          <div className="col-span-12 lg:col-span-4 xl:col-span-3">
+            <div className="sticky top-4 space-y-6">
               
-              {showInfoAlert && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-700 leading-relaxed">
-                    Masukkan <span className="font-bold">Rata-rata Curah Hujan (mm)</span> pada kolom atas, dan <span className="font-bold">Jumlah Hari Hujan (hari)</span> pada kolom bawah.
-                  </p>
+              {/* SECTION 1: PARAMETER GLOBAL */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
+                  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Parameter Masukan</h2>
                 </div>
-              )}
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="text-xs font-bold text-blue-700 mb-2">Opsi Input:</div>
-                <div className="space-y-2">
-                  <details className="group">
-                    <summary className="cursor-pointer text-xs font-bold text-blue-600 hover:text-blue-700 list-none flex items-center gap-2">
-                      <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                      Hitung dari Curah Hujan
-                    </summary>
-                    <div className="mt-3 pl-6">
-                      <DependableFlowCalc onUseData={handleUseCalculatedFlow} />
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                      Jumlah Penduduk
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={inputs.population}
+                        onChange={e => setInputs({ ...inputs, population: parseFloat(e.target.value) || 0 })}
+                        className="w-full h-11 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">jiwa</span>
                     </div>
-                  </details>
-                </div>
-              </div>
+                  </div>
 
-              {/* Manual Input Grid */}
-              <div>
-                <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Input Manual (m³/s)</label>
-                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
-                  {MONTHS.map((month, index) => (
-                    <div key={month}>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{month}</label>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                      Luas Lahan Irigasi
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={inputs.agricultureArea}
+                        onChange={e => setInputs({ ...inputs, agricultureArea: parseFloat(e.target.value) || 0 })}
+                        className="w-full h-11 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">Ha</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                      Standar Kebutuhan Air
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={inputs.domesticStandard}
+                        onChange={e => setInputs({ ...inputs, domesticStandard: parseFloat(e.target.value) || 0 })}
+                        className="w-full h-11 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/org/hr</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                      Kebutuhan Irigasi
+                    </label>
+                    <div className="relative">
                       <input
                         type="number"
                         step="0.1"
-                        value={inputs.monthlySupply[index]}
-                        onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                        value={inputs.irrigationDemand}
+                        onChange={e => setInputs({ ...inputs, irrigationDemand: parseFloat(e.target.value) || 0 })}
+                        className="w-full h-11 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/s/Ha</span>
                     </div>
-                  ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: DEBIT ANDALAN */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-2 h-8 bg-cyan-500 rounded-full"></div>
+                  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Debit Andalan</h2>
+                </div>
+
+                <button
+                  onClick={() => setIsCalcModalOpen(true)}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  Kalkulator Hujan
+                </button>
+
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data Bulanan (m³/s)</span>
+                    <button
+                      onClick={() => setIsInputModalOpen(true)}
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {MONTHS.map((month, index) => (
+                      <div key={month} className="bg-white rounded-md px-2 py-2 border border-slate-200 text-center">
+                        <div className="text-[10px] font-semibold text-slate-400 uppercase">{month}</div>
+                        <div className="text-sm font-bold text-slate-700 font-mono">{inputs.monthlySupply[index]}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Reference Badge */}
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <span className="text-xs text-slate-600 font-medium">
-              <span className="font-bold">Ref:</span> SNI 6728.1:2015
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN: VISUALIZATION & RESULTS (65%) */}
-      <div className="lg:col-span-8 space-y-4 animate-fade-in">
-        
-        {/* Hero Chart Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Grafik Neraca Air</h3>
-              <p className="text-[10px] text-slate-500 uppercase font-medium">Analisis Supply vs Demand</p>
-            </div>
-            {summary?.criticalMonth && (
-              <div className="bg-red-50 px-3 py-2 rounded-lg border border-red-200">
-                <span className="text-[9px] font-black text-red-600 uppercase block">Bulan Kritis</span>
-                <span className="text-sm font-bold text-red-700">{summary.criticalMonth.month}</span>
+          {/* MAIN CONTENT - 70% */}
+          <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-6">
+            
+            {/* KPI CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Ketersediaan</span>
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-blue-600 font-mono">{totalSupply.toFixed(1)}</div>
+                <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
-            )}
-          </div>
-          <div className="h-[400px]">
-            <WaterBalanceChart data={results} />
-          </div>
-        </div>
 
-        {/* Summary Cards Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-[9px] font-black text-green-600 uppercase">Surplus</span>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Kebutuhan</span>
+                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-orange-600 font-mono">{totalDemand.toFixed(1)}</div>
+                <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
+              </div>
+
+              <div className={`bg-white rounded-xl shadow-sm border ${netBalance >= 0 ? 'border-emerald-200' : 'border-rose-200'} p-5`}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status Neraca</span>
+                  <div className={`w-10 h-10 rounded-lg ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
+                    <svg className={`w-5 h-5 ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={netBalance >= 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+                    </svg>
+                  </div>
+                </div>
+                <div className={`text-3xl font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono`}>
+                  {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
+                </div>
+                <div className={`text-xs font-semibold mt-1 ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {netBalance >= 0 ? 'SURPLUS' : 'DEFISIT'}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-rose-200 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Bulan Kritis</span>
+                  <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-rose-600">{summary?.criticalMonth?.month || '-'}</div>
+                <div className="text-xs text-slate-500 font-medium mt-1">
+                  {summary?.criticalMonth ? `${summary.criticalMonth.deficit} m³/s` : 'Tidak ada'}
+                </div>
+              </div>
             </div>
-            <div className="text-2xl font-black text-green-700">{summary?.surplusMonths}</div>
-            <div className="text-[10px] text-green-600 font-medium">Bulan</div>
-          </div>
 
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span className="text-[9px] font-black text-red-600 uppercase">Defisit</span>
+            {/* CHART SECTION */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-800">Grafik Neraca Air Bulanan</h2>
+                <p className="text-xs text-slate-500 mt-1">Perbandingan Ketersediaan vs Kebutuhan Air</p>
+              </div>
+              <div className="h-96">
+                <WaterBalanceChart data={results} />
+              </div>
             </div>
-            <div className="text-2xl font-black text-red-700">{summary?.deficitMonths}</div>
-            <div className="text-[10px] text-red-600 font-medium">Bulan</div>
-          </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-              <span className="text-[9px] font-black text-blue-600 uppercase">Total Surplus</span>
-            </div>
-            <div className="text-lg font-black text-blue-700">{summary?.totalSurplus}</div>
-            <div className="text-[10px] text-blue-600 font-medium">m³/s</div>
-          </div>
-
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-              </svg>
-              <span className="text-[9px] font-black text-orange-600 uppercase">Total Defisit</span>
-            </div>
-            <div className="text-lg font-black text-orange-700">{summary?.totalDeficit}</div>
-            <div className="text-[10px] text-orange-600 font-medium">m³/s</div>
-          </div>
-        </div>
-
-        {/* Collapsible Detail Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <button
-            onClick={() => setShowDetailTable(!showDetailTable)}
-            className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-t-xl"
-          >
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <span className="text-sm font-bold text-slate-900">Tabel Detail Neraca Air</span>
-            </div>
-            <svg
-              className={`w-5 h-5 text-slate-400 transition-transform ${showDetailTable ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {showDetailTable && (
-            <div className="p-4 border-t border-slate-200 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b-2 border-slate-200">
-                    <th className="text-left py-2 px-2 text-[10px] font-black text-slate-500 uppercase">Bulan</th>
-                    <th className="text-right py-2 px-2 text-[10px] font-black text-blue-600 uppercase">Supply</th>
-                    <th className="text-right py-2 px-2 text-[10px] font-black text-slate-500 uppercase">Domestik</th>
-                    <th className="text-right py-2 px-2 text-[10px] font-black text-slate-500 uppercase">Pertanian</th>
-                    <th className="text-right py-2 px-2 text-[10px] font-black text-orange-600 uppercase">Total Demand</th>
-                    <th className="text-right py-2 px-2 text-[10px] font-black text-slate-500 uppercase">Neraca</th>
-                    <th className="text-center py-2 px-2 text-[10px] font-black text-slate-500 uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((row, i) => (
-                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-2 px-2 font-bold text-slate-700">{row.month}</td>
-                      <td className="py-2 px-2 text-right font-semibold text-blue-600">{row.supply}</td>
-                      <td className="py-2 px-2 text-right text-slate-600">{row.domesticDemand}</td>
-                      <td className="py-2 px-2 text-right text-slate-600">{row.agricultureDemand}</td>
-                      <td className="py-2 px-2 text-right font-semibold text-orange-600">{row.totalDemand}</td>
-                      <td className={`py-2 px-2 text-right font-bold ${row.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {row.balance >= 0 ? '+' : ''}{row.balance}
-                      </td>
-                      <td className="py-2 px-2 text-center">
-                        <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase ${
-                          row.status === 'Surplus' ? 'bg-green-100 text-green-700' :
-                          row.status === 'Defisit' ? 'bg-red-100 text-red-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {row.status}
-                        </span>
-                      </td>
+            {/* TABLE SECTION */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-200">
+                <h2 className="text-lg font-bold text-slate-800">Tabel Detail Bulanan</h2>
+                <p className="text-xs text-slate-500 mt-1">Data lengkap neraca air per bulan</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Bulan</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-blue-600 uppercase tracking-wide">Supply</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Domestik</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Pertanian</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-orange-600 uppercase tracking-wide">Total Demand</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Neraca</th>
+                      <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {results.map((row, i) => (
+                      <tr key={i} className={`border-b border-slate-100 ${row.balance < 0 ? 'bg-rose-50/30' : ''} even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors`}>
+                        <td className="py-3 px-4 font-bold text-slate-700">{row.month}</td>
+                        <td className="py-3 px-4 text-right font-semibold text-blue-600 font-mono">{row.supply}</td>
+                        <td className="py-3 px-4 text-right text-slate-600 font-mono">{row.domesticDemand}</td>
+                        <td className="py-3 px-4 text-right text-slate-600 font-mono">{row.agricultureDemand}</td>
+                        <td className="py-3 px-4 text-right font-semibold text-orange-600 font-mono">{row.totalDemand}</td>
+                        <td className={`py-3 px-4 text-right font-bold font-mono ${row.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {row.balance >= 0 ? '+' : ''}{row.balance}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                            row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                            row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* MODALS */}
+      <DependableFlowModal
+        isOpen={isCalcModalOpen}
+        onClose={() => setIsCalcModalOpen(false)}
+        onApply={handleUseCalculatedFlow}
+      />
+
+      {isInputModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsInputModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Input Data Debit Bulanan</h3>
+                <p className="text-xs text-slate-500 mt-1">Ketersediaan Air (m³/s)</p>
+              </div>
+              <button onClick={() => setIsInputModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              {MONTHS.map((month, index) => (
+                <div key={month} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">{month}</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={inputs.monthlySupply[index]}
+                      onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
+                      className="w-full h-12 px-4 pr-16 text-lg bg-white border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">m³/s</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsInputModalOpen(false)}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Simpan & Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
