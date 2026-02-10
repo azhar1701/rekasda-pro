@@ -85,25 +85,9 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
       </div>
 
       {/* Monthly Data Grid */}
-      <div>
+      <div className="relative z-10">
         <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-600 uppercase">Data Curah Hujan Bulanan</label>
-            <div className="relative group">
-              <svg className="w-4 h-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-72 z-50">
-                <div className="bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl">
-                  <p className="leading-relaxed">
-                    Masukkan data <span className="font-bold">Curah Hujan Rata-rata Bulanan</span> (R80 atau Rrat) dalam satuan milimeter (mm). 
-                    Data ini biasanya didapat dari rata-rata pencatatan stasiun hujan minimal <span className="font-bold">10 tahun terakhir</span> untuk mendapatkan debit andalan yang akurat.
-                  </p>
-                  <div className="absolute bottom-0 left-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-slate-800"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <label className="text-xs font-bold text-slate-600 uppercase">Data Curah Hujan Bulanan</label>
           <button
             onClick={loadSampleData}
             className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
@@ -116,20 +100,34 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
             <div key={month} className="bg-slate-50 p-3 rounded-lg border border-slate-200">
               <div className="text-[10px] font-black text-slate-500 uppercase mb-2">{month}</div>
               <div className="space-y-2">
-                <input
-                  type="number"
-                  placeholder="Hujan (mm)"
-                  value={monthlyData[index].rainfall}
-                  onChange={e => handleDataChange(index, 'rainfall', parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Hari hujan"
-                  value={monthlyData[index].rainyDays}
-                  onChange={e => handleDataChange(index, 'rainyDays', parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                />
+                <div className="relative">
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="number"
+                    value={monthlyData[index].rainfall}
+                    onChange={e => handleDataChange(index, 'rainfall', parseFloat(e.target.value) || 0)}
+                    className="w-full pl-7 pr-8 py-1.5 text-xs border border-slate-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium">mm</span>
+                </div>
+                <div className="relative">
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <svg className="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="number"
+                    value={monthlyData[index].rainyDays}
+                    onChange={e => handleDataChange(index, 'rainyDays', parseFloat(e.target.value) || 0)}
+                    className="w-full pl-7 pr-10 py-1.5 text-xs border border-slate-200 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium">hari</span>
+                </div>
               </div>
             </div>
           ))}

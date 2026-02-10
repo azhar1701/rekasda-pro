@@ -11,6 +11,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', '
 export const WaterBalanceTab: React.FC = () => {
   const [activeInputTab, setActiveInputTab] = useState<InputTab>('demand');
   const [showDetailTable, setShowDetailTable] = useState(false);
+  const [showInfoAlert, setShowInfoAlert] = useState(false);
   
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
@@ -41,10 +42,10 @@ export const WaterBalanceTab: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-28">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-32">
       
       {/* LEFT COLUMN: INPUT & CONTROL (35%) */}
-      <div className="lg:col-span-4 space-y-4 animate-slide-up">
+      <div className="lg:col-span-4 lg:sticky lg:top-4 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-4 animate-slide-up">
         
         {/* Tab Switcher */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5">
@@ -140,6 +141,27 @@ export const WaterBalanceTab: React.FC = () => {
 
             {/* Toggle between Calculator and Manual */}
             <div className="space-y-3">
+              {/* Inline Info Alert */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowInfoAlert(!showInfoAlert)}
+                  className="text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+                <span className="text-xs text-slate-500">Klik ikon untuk info input</span>
+              </div>
+              
+              {showInfoAlert && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    Masukkan <span className="font-bold">Rata-rata Curah Hujan (mm)</span> pada kolom atas, dan <span className="font-bold">Jumlah Hari Hujan (hari)</span> pada kolom bawah.
+                  </p>
+                </div>
+              )}
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <div className="text-xs font-bold text-blue-700 mb-2">Opsi Input:</div>
                 <div className="space-y-2">
@@ -160,7 +182,7 @@ export const WaterBalanceTab: React.FC = () => {
               {/* Manual Input Grid */}
               <div>
                 <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Input Manual (m³/s)</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                   {MONTHS.map((month, index) => (
                     <div key={month}>
                       <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{month}</label>
