@@ -2,12 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '../services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { DependableFlowModal } from './DependableFlowModal';
+import { LocationIdentity } from './LocationIdentity';
+import { saveWaterBalance } from '../services/calculationService';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+interface LocationData {
+  channelName: string;
+  kabupaten: string;
+  kecamatan: string;
+  desa: string;
+  coordinates?: { lat: number; lng: number };
+  photoUrl?: string;
+}
 
 export const WaterBalanceTab: React.FC = () => {
   const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
@@ -37,8 +51,41 @@ export const WaterBalanceTab: React.FC = () => {
   };
 
   const totalSupply = inputs.monthlySupply.reduce((a, b) => a + b, 0);
-  const totalDemand = results.reduce((a, b) => a + parseFloat(b.totalDemand), 0);
+  const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);
   const netBalance = totalSupply - totalDemand;
+
+  const handleSaveWaterBalance = async () => {
+    const projectName = locationData?.channelName;
+    if (!projectName) {
+      setSaveMessage({ type: 'error', text: 'Mohon isi Nama Saluran di Identitas Lokasi terlebih dahulu' });
+      setTimeout(() => setSaveMessage(null), 3000);
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      const { data, error } = await saveWaterBalance({
+        projectName,
+        monthlyInputs: { ...inputs, location: locationData },
+        monthlyResults: results,
+        summary
+      });
+
+      if (error) {
+        setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
+      } else {
+        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan neraca air!' });
+      }
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
+      setSaveMessage({ type: 'error', text: 'Error: ' + errorMessage });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -55,7 +102,10 @@ export const WaterBalanceTab: React.FC = () => {
           
           {/* LEFT SIDEBAR - 30% */}
           <div className="col-span-12 lg:col-span-4 xl:col-span-3">
-            <div className="sticky top-4 space-y-6">
+            <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-6">
+              
+              {/* Location Identity */}
+              <LocationIdentity onLocationChange={setLocationData} />
               
               {/* SECTION 1: PARAMETER GLOBAL */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -174,6 +224,22 @@ export const WaterBalanceTab: React.FC = () => {
           {/* MAIN CONTENT - 70% */}
           <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-6">
             
+            {/* Save Message Toast */}
+            {saveMessage && (
+              <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg border-2 flex items-center gap-3 animate-fade-in ${
+                saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
+              }`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {saveMessage.type === 'success' ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  )}
+                </svg>
+                <span className="font-semibold">{saveMessage.text}</span>
+              </div>
+            )}
+            
             {/* KPI CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
@@ -237,9 +303,21 @@ export const WaterBalanceTab: React.FC = () => {
 
             {/* CHART SECTION */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <div className="mb-4">
-                <h2 className="text-lg font-bold text-slate-800">Grafik Neraca Air Bulanan</h2>
-                <p className="text-xs text-slate-500 mt-1">Perbandingan Ketersediaan vs Kebutuhan Air</p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800">Grafik Neraca Air Bulanan</h2>
+                  <p className="text-xs text-slate-500 mt-1">Perbandingan Ketersediaan vs Kebutuhan Air</p>
+                </div>
+                <button
+                  onClick={handleSaveWaterBalance}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  {isSaving ? 'Menyimpan...' : 'Simpan Neraca'}
+                </button>
               </div>
               <div className="h-96">
                 <WaterBalanceChart data={results} />

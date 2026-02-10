@@ -1,5 +1,21 @@
 
 import { ManningInputs, RationalInputs, ChannelShape } from '../types';
+import { supabase } from '../lib/supabase';
+
+// Interfaces untuk data perhitungan
+export interface FloodCalcData {
+  method: string;
+  projectName: string;
+  inputs: any;
+  results: any;
+}
+
+export interface WaterBalanceData {
+  projectName: string;
+  monthlyInputs: any;
+  monthlyResults: any;
+  summary: any;
+}
 
 /**
  * Menghitung Debit Saluran Terbuka menggunakan Rumus Manning dengan Output yang Sangat Detail
@@ -138,4 +154,48 @@ export const calculateRational = (inputs: RationalInputs) => {
     LagTime: lagTime.toFixed(2),
     ExcessRain: excessRain.toFixed(2)
   };
+};
+
+/**
+ * Menyimpan data perhitungan banjir ke Supabase
+ */
+export const saveFloodCalculation = async (data: FloodCalcData) => {
+  if (!supabase) {
+    return { data: null, error: { message: 'Supabase not configured' } };
+  }
+
+  const { data: result, error } = await supabase
+    .from('flood_calculations')
+    .insert({
+      method: data.method,
+      project_name: data.projectName,
+      inputs: data.inputs,
+      results: data.results
+    })
+    .select()
+    .single();
+
+  return { data: result, error };
+};
+
+/**
+ * Menyimpan data neraca air ke Supabase
+ */
+export const saveWaterBalance = async (data: WaterBalanceData) => {
+  if (!supabase) {
+    return { data: null, error: { message: 'Supabase not configured' } };
+  }
+
+  const { data: result, error } = await supabase
+    .from('water_balance_calculations')
+    .insert({
+      project_name: data.projectName,
+      monthly_inputs: data.monthlyInputs,
+      monthly_results: data.monthlyResults,
+      summary: data.summary
+    })
+    .select()
+    .single();
+
+  return { data: result, error };
 };

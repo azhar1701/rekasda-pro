@@ -64,7 +64,10 @@ export default function ChannelCapacity() {
   };
 
   const updateParam = (key: keyof ChannelParams, value: string | number) => {
-    setParams((prev) => ({ ...prev, [key]: typeof value === 'string' ? parseFloat(value) || 0 : value }));
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (!isNaN(numValue)) {
+      setParams((prev) => ({ ...prev, [key]: numValue }));
+    }
   };
 
   const renderChannelSVG = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ManningCalculator } from './components/ManningCalculator';
-import { RationalCalculator } from './components/RationalCalculator';
+import { FloodDischargeCalculator } from './components/FloodDischargeCalculator';
 import { WaterBalanceTab } from './components/WaterBalanceTab';
 import { GeminiConsultant } from './components/GeminiConsultant';
 import { ReportModal } from './components/ReportModal';
@@ -214,7 +214,7 @@ const App: React.FC = () => {
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-8 pb-40 lg:pb-32 z-10 relative">
           <div className="transition-all duration-500 ease-out transform">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-          {activeTab === Tab.BANJIR && <RationalCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.RATIONAL, i, o)} />}
+          {activeTab === Tab.BANJIR && <FloodDischargeCalculator />}
           {activeTab === Tab.NERACA && <WaterBalanceTab />}
           {activeTab === Tab.AI && <div className="max-w-4xl mx-auto pt-4 animate-slide-up"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
           

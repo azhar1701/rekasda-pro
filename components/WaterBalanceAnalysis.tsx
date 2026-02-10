@@ -4,8 +4,17 @@ import { WaterBalanceChart } from './WaterBalanceChart';
 import { InputGroup } from './InputGroup';
 import { Card } from './ui/Card';
 import { HelpTooltip } from './HelpTooltip';
+import { saveWaterBalance } from '../services/calculationService';
+import { SiteIdentityForm } from './SiteIdentityForm';
+import { SiteIdentity } from '../types';
 
 export const WaterBalanceAnalysis: React.FC = () => {
+  const [locationData, setLocationData] = useState<SiteIdentity>({
+    channelName: '',
+    regency: '',
+    district: '',
+    village: ''
+  });
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
     agricultureArea: 100,
@@ -16,6 +25,7 @@ export const WaterBalanceAnalysis: React.FC = () => {
 
   const [results, setResults] = useState<WaterBalanceResult[]>([]);
   const [summary, setSummary] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const balanceResults = calculateWaterBalance(inputs);
@@ -39,12 +49,40 @@ export const WaterBalanceAnalysis: React.FC = () => {
     });
   };
 
+  const handleSaveWaterBalance = async () => {
+    const projectName = window.prompt('Masukkan Nama Proyek/Lokasi:');
+    if (!projectName) return;
+
+    setIsSaving(true);
+    try {
+      const { data, error } = await saveWaterBalance({
+        projectName,
+        monthlyInputs: { ...inputs, site: locationData },
+        monthlyResults: results,
+        summary
+      });
+
+      if (error) {
+        alert('Gagal menyimpan: ' + error.message);
+      } else {
+        alert('✓ Berhasil menyimpan neraca air!');
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-28">
       {/* LEFT COLUMN: INPUTS */}
       <div className="lg:col-span-5 space-y-6 lg:space-y-8 animate-slide-up">
+        
+        {/* Site Identity Form */}
+        <SiteIdentityForm value={locationData} onChange={setLocationData} />
         
         {/* Quick Action Mobile */}
         <div className="bg-white/95 backdrop-blur-md p-3 px-4 rounded-xl shadow-card border border-slate-200 flex justify-between items-center lg:hidden sticky top-20 z-30">
@@ -168,6 +206,20 @@ export const WaterBalanceAnalysis: React.FC = () => {
                 </div>
                 <p className="text-lg font-black text-orange-700">{summary?.totalDeficit} m³/s</p>
               </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleSaveWaterBalance}
+                disabled={isSaving}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-sm font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                {isSaving ? 'Menyimpan...' : 'Simpan Neraca'}
+              </button>
             </div>
 
             {/* Chart */}
