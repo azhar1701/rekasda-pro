@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card } from './ui/Card';
+import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, IntensityCalculator, FrequencyAnalysisCalculator, EffectiveRainfallCalculator } from './MiniCalculators';
 import { saveFloodCalculation } from '../services/calculationService';
 import { LocationIdentity } from './LocationIdentity';
@@ -477,18 +477,15 @@ export const FloodDischargeCalculator: React.FC = () => {
         </div>
 
         {/* Chart */}
-        <Card title="Hidrograf Banjir Rencana" className="bg-white">
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={hydrographData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="time" label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5 }} stroke="#64748b" style={{ fontSize: '12px', fontWeight: 600 }} />
-              <YAxis label={{ value: 'Debit (m³/s)', angle: -90, position: 'insideLeft' }} stroke="#64748b" style={{ fontSize: '12px', fontWeight: 600 }} />
-              <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }} />
-              <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
-              <Line type="monotone" dataKey="discharge" stroke="#10b981" strokeWidth={3} name="Debit" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+        <FloodHydrographChart 
+          data={hydrographData}
+          qPeak={qPeak}
+          tPeak={tPeak}
+          volume={volume}
+          title="Hidrograf Banjir Rencana"
+          primaryColor="#0d9488"
+          height={400}
+        />
 
         {/* Return Period Table */}
         <Card title="Analisis Kala Ulang" className="bg-white">
