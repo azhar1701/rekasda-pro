@@ -7,8 +7,9 @@ import { ReportModal } from './components/ReportModal';
 import { DetailModal } from './components/DetailModal';
 import { HistoryMap } from './components/HistoryMap';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ToastContainer } from './components/ui/Toast';
 import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
-import { Button } from './components/Button';
+import { Button } from './components/ui/Button';
 import { Header } from './components/ui/Header';
 import { calculateManning, calculateRational } from './services/calculationService';
 import { useDatabase } from './lib/useDatabase';
@@ -45,18 +46,19 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Convert Supabase calculations to CalculationResult format
-    const convertedHistory = calculations.map(calc => ({
-      id: calc.id || `calc-${Date.now()}`,
-      type: calc.calculation_type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
-      date: calc.created_at || new Date().toISOString(),
-      inputs: calc.input_data,
-      outputs: calc.result_data,
-      // Fix location mapping - check both input_data.location and direct location field
-      location: calc.input_data?.location || calc.location,
-      notes: calc.input_data?.notes || calc.notes || '',
-      photoUrl: calc.photo_url || calc.input_data?.photoUrl || calc.input_data?.site?.photoUrl
-    }));
+    const convertedHistory: CalculationResult[] = calculations.map(calc => {
+      const result: CalculationResult = {
+        id: calc.id || `calc-${Date.now()}`,
+        type: calc.calculation_type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
+        date: calc.created_at || new Date().toISOString(),
+        inputs: calc.input_data as any,
+        outputs: calc.result_data as any,
+        location: calc.input_data?.location || calc.location,
+        notes: calc.input_data?.notes || calc.notes || '',
+        photoUrl: calc.photo_url || calc.input_data?.photoUrl || calc.input_data?.site?.photoUrl
+      };
+      return result;
+    });
     setHistory(convertedHistory);
   }, [calculations]);
 
@@ -191,6 +193,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
+    <ToastContainer />
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans flex flex-col relative overflow-hidden">
       {/* Decorative Background Gradients */}
       <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"></div>
@@ -210,8 +213,7 @@ const App: React.FC = () => {
       />
 
       {/* --- Main Content --- */}
-      {/* INCREASED BOTTOM PADDING to ensure footer doesn't cover content */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-8 pb-40 lg:pb-32 z-10 relative">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pt-4 lg:pt-6 pb-32 z-10 relative">
           <div className="transition-all duration-500 ease-out transform">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
           {activeTab === Tab.BANJIR && <FloodDischargeCalculator />}
@@ -263,8 +265,8 @@ const App: React.FC = () => {
                              </span>
                           </div>
                           <p className="text-slate-400 font-medium mb-8 max-w-sm">Belum ada data tersimpan. Mulai dengan membuat data baru atau generate data contoh.</p>
-                          <Button variant="outline" onClick={seedPilotData} disabled={loading} className="mx-auto text-xs py-3 px-8 border-dashed bg-white hover:bg-slate-50">
-                            {loading ? 'Menyimpan...' : '+ Generate Pilot Data'}
+                          <Button variant="outline" onClick={seedPilotData} disabled={loading} isLoading={loading}>
+                            + Generate Pilot Data
                           </Button>
                       </div>
                   ) : (
@@ -338,40 +340,32 @@ const App: React.FC = () => {
       <DetailModal isOpen={!!viewDetailItem} data={viewDetailItem} onClose={() => setViewDetailItem(null)} />
 
       {/* --- Floating Navigation Dock --- */}
-      {/* UPDATED: Floating style with padding bottom to avoid covering content */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-4 lg:pb-8">
-        <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-card w-[92%] max-w-lg lg:w-auto rounded-2xl lg:rounded-2xl pointer-events-auto transition-all duration-300">
-            <div className="flex justify-around items-center px-2 py-3 lg:px-6 lg:py-4 gap-1 lg:gap-4 min-w-[320px]">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        <div className="bg-white/95 backdrop-blur-xl border border-slate-200/50 shadow-2xl rounded-3xl pointer-events-auto">
+            <div className="flex items-center px-3 py-2.5 gap-2">
             {navigationItems.map((item, idx) => (
                 <button
                     key={item.tab}
                     onClick={() => setActiveTab(item.tab)}
                     className={`
-                        relative flex flex-col lg:flex-row items-center justify-center p-3 lg:px-6 lg:py-3 rounded-xl lg:rounded-lg transition-all duration-300 group
+                        flex flex-col items-center justify-center px-5 py-2.5 rounded-2xl transition-all duration-200
                         ${
                           activeTab === item.tab
                             ? idx === 0
-                              ? 'bg-teal-600 text-white shadow-card'
+                              ? 'bg-teal-600 text-white shadow-lg scale-105'
                               : idx === 1
-                              ? 'bg-emerald-600 text-white shadow-card'
+                              ? 'bg-emerald-600 text-white shadow-lg scale-105'
                               : idx === 2
-                              ? 'bg-blue-600 text-white shadow-card'
+                              ? 'bg-blue-600 text-white shadow-lg scale-105'
                               : idx === 3
-                              ? 'bg-slate-700 text-white shadow-card'
-                              : 'bg-indigo-600 text-white shadow-card'
-                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                              ? 'bg-slate-700 text-white shadow-lg scale-105'
+                              : 'bg-indigo-600 text-white shadow-lg scale-105'
+                            : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
                         }
                     `}
                 >
-                    <div className={`transition-transform duration-300`}>
                     {item.icon}
-                    </div>
-                    <span className={`text-[10px] md:text-xs font-bold mt-1 lg:mt-0 lg:ml-2 transition-all duration-300 ${activeTab === item.tab ? 'opacity-100 max-w-[100px]' : 'opacity-100 lg:opacity-0 lg:max-w-0 overflow-hidden'}`}>{item.label}</span>
-                    
-                    {/* Active Indicator Dot (Mobile Only) */}
-                    {activeTab === item.tab && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-current rounded-full lg:hidden"></span>
-                    )}
+                    <span className="text-[10px] font-bold mt-1">{item.label}</span>
                 </button>
             ))}
             </div>

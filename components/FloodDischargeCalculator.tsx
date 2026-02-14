@@ -5,6 +5,8 @@ import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, IntensityCalculator, FrequencyAnalysisCalculator, EffectiveRainfallCalculator } from './MiniCalculators';
 import { saveFloodCalculation } from '../services/calculationService';
 import { LocationIdentity } from './LocationIdentity';
+import { PilotDataLoader } from './PilotDataLoader';
+import { PilotDataRational, PilotDataNakayasu } from '../data/floodPilotData';
 
 type MethodType = 'RATIONAL' | 'NAKAYASU';
 
@@ -80,6 +82,7 @@ export const FloodDischargeCalculator: React.FC = () => {
   const [showEffRainCalc, setShowEffRainCalc] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
   const calculateRationalDischarge = (C: number, I: number, A: number): number => {
     return 0.278 * C * I * A;
@@ -202,6 +205,30 @@ export const FloodDischargeCalculator: React.FC = () => {
     }
   };
 
+  const handleLoadRationalPilot = (data: PilotDataRational) => {
+    setRationalInputs(data.inputs);
+    setLocationData(data.location);
+    const updated = returnPeriods.map((rp, idx) => ({
+      ...rp,
+      rainfall: data.returnPeriods[idx]?.rainfall || rp.rainfall
+    }));
+    setReturnPeriods(updated);
+    setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
+    setTimeout(() => setLoadMessage(null), 3000);
+  };
+
+  const handleLoadNakayasuPilot = (data: PilotDataNakayasu) => {
+    setNakayasuInputs(data.inputs);
+    setLocationData(data.location);
+    const updated = returnPeriods.map((rp, idx) => ({
+      ...rp,
+      rainfall: data.returnPeriods[idx]?.rainfall || rp.rainfall
+    }));
+    setReturnPeriods(updated);
+    setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
+    setTimeout(() => setLoadMessage(null), 3000);
+  };
+
   const TooltipIcon = ({ text }: { text: string }) => (
     <div className="group relative inline-block ml-1">
       <svg className="w-4 h-4 text-slate-400 hover:text-emerald-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,10 +242,17 @@ export const FloodDischargeCalculator: React.FC = () => {
   );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 pb-20 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* LEFT SIDEBAR - 30% */}
-      <div className="lg:col-span-3 space-y-6">
-        <div className="lg:sticky lg:top-24 space-y-6">
+      <div className="lg:col-span-4 space-y-4">
+        <div className="space-y-4">
+          {/* Pilot Data Loader */}
+          <PilotDataLoader
+            method={method}
+            onLoadRational={handleLoadRationalPilot}
+            onLoadNakayasu={handleLoadNakayasuPilot}
+          />
+
           {/* Location Identity */}
           <LocationIdentity onLocationChange={setLocationData} />
 
@@ -428,20 +462,29 @@ export const FloodDischargeCalculator: React.FC = () => {
       </div>
 
       {/* RIGHT PANEL - 70% */}
-      <div className="lg:col-span-7 space-y-6">
+      <div className="lg:col-span-8 space-y-6">
+        {/* Load Message Toast */}
+        {loadMessage && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-xl shadow-2xl border-2 bg-purple-50 border-purple-500 text-purple-800 flex items-center gap-3 animate-fade-in max-w-md">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <span className="font-semibold text-sm">{loadMessage}</span>
+          </div>
+        )}
         {/* Save Message Toast */}
         {saveMessage && (
-          <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg border-2 flex items-center gap-3 animate-fade-in ${
+          <div className={`fixed top-24 right-6 z-[110] px-6 py-3 rounded-xl shadow-2xl border-2 flex items-center gap-3 animate-fade-in max-w-md ${
             saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
           }`}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {saveMessage.type === 'success' ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               )}
             </svg>
-            <span className="font-semibold">{saveMessage.text}</span>
+            <span className="font-semibold text-sm">{saveMessage.text}</span>
           </div>
         )}
         {/* KPI Cards */}

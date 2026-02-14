@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { databaseService, CalculationRecord } from '../services/databaseService'
+import { apiService } from '../services/api.service'
+import { CalculationRecord } from '../types/database.types'
 import { CalculationResult, CalculationType } from '../types'
+import { toast } from '../hooks/useToast'
 
 export const useDatabase = () => {
   const [loading, setLoading] = useState(false)
@@ -9,19 +11,24 @@ export const useDatabase = () => {
   const saveCalculation = async (result: CalculationResult) => {
     setLoading(true)
     try {
-      const record = await databaseService.saveCalculation({
+      const response = await apiService.saveCalculation({
         site_name: result.inputs.site?.channelName || 'Unknown Site',
         calculation_type: result.type === CalculationType.MANNING ? 'manning' : 'rational',
-        input_data: {
-          ...result.inputs,
-          notes: result.notes,
-          location: result.location,
-          photoUrl: result.photoUrl
-        },
-        result_data: result.outputs
+        input_data: result.inputs,
+        result_data: result.outputs,
+        location: result.location || null,
+        photo_url: result.photoUrl || null,
+        notes: result.notes || null
       })
+      
+      if (response.error) {
+        toast.error(response.error.message)
+        throw new Error(response.error.message)
+      }
+      
+      toast.success('Data berhasil disimpan')
       await loadCalculations()
-      return record
+      return response.data
     } catch (error) {
       console.error('Error saving calculation:', error)
       throw error
@@ -33,10 +40,16 @@ export const useDatabase = () => {
   const loadCalculations = async () => {
     setLoading(true)
     try {
-      const data = await databaseService.getCalculations()
-      setCalculations(data)
+      const response = await apiService.getCalculations()
+      if (response.error) {
+        console.error('Error loading calculations:', response.error)
+        setCalculations([])
+        return
+      }
+      setCalculations(response.data || [])
     } catch (error) {
       console.error('Error loading calculations:', error)
+      setCalculations([])
     } finally {
       setLoading(false)
     }
@@ -45,7 +58,14 @@ export const useDatabase = () => {
   const deleteCalculation = async (id: string) => {
     setLoading(true)
     try {
-      await databaseService.deleteCalculation(id)
+      const response = await apiService.deleteCalculation(id)
+      
+      if (response.error) {
+        toast.error(response.error.message)
+        throw new Error(response.error.message)
+      }
+      
+      toast.success('Data berhasil dihapus')
       await loadCalculations()
     } catch (error) {
       console.error('Error deleting calculation:', error)

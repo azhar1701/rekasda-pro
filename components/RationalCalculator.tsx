@@ -3,13 +3,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { calculateRational } from '../services/calculationService';
 import { RationalInputs, CalculationType } from '../types';
 import { InputGroup } from './InputGroup';
-import { Button } from './Button';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
 import { FlowInsight } from './FlowInsight';
 import { SiteIdentityForm } from './SiteIdentityForm';
 import { SlopeCalculator } from './SlopeCalculator';
 import { HelpTooltip } from './HelpTooltip';
 import { RunoffCoefficientInput } from './RunoffCoefficientInput';
-import { Card } from './ui/Card';
 
 interface Props {
   onSave: (type: CalculationType, inputs: RationalInputs, outputs: any) => void;
@@ -185,7 +185,10 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                             </div>
 
                             <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row gap-4">
-                                <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.RATIONAL, inputs, results)} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>}>Simpan Hasil</Button>
+                                <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.RATIONAL, inputs, results)}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                    Simpan Hasil
+                                </Button>
                                 <Button variant="outline" onClick={() => onConsultAI(inputs, results)} className="sm:w-auto px-8">
                                     Konsultasi AI
                                 </Button>
