@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
+import RunoffCoefficientInput from './RunoffCoefficientInput';
 import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, IntensityCalculator, FrequencyAnalysisCalculator, EffectiveRainfallCalculator } from './MiniCalculators';
 import { saveFloodCalculation } from '../services/calculationService';
@@ -297,19 +298,11 @@ export const FloodDischargeCalculator: React.FC = () => {
               <Card title="Parameter Hidrologi" className="bg-white">
                 <div className="space-y-4">
                   <div>
-                    <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                      Koefisien Limpasan (C)
-                      <TooltipIcon text={TOOLTIPS.C} />
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={rationalInputs.C}
-                        onChange={e => setRationalInputs({...rationalInputs, C: parseFloat(e.target.value) || 0})}
-                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-4 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10"
-                      />
-                    </div>
+                    <RunoffCoefficientInput
+                      value={rationalInputs.C}
+                      onChange={(v) => setRationalInputs({ ...rationalInputs, C: v || 0 })}
+                      required={true}
+                    />
                   </div>
                   <div>
                     <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">

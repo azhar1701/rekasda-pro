@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { RUNOFF_COEFFICIENTS } from '../constants';
 import { calculateRational } from '../services/calculationService';
 import { RationalInputs, CalculationType } from '../types';
 import { InputGroup } from './InputGroup';
@@ -9,6 +8,7 @@ import { FlowInsight } from './FlowInsight';
 import { SiteIdentityForm } from './SiteIdentityForm';
 import { SlopeCalculator } from './SlopeCalculator';
 import { HelpTooltip } from './HelpTooltip';
+import { RunoffCoefficientInput } from './RunoffCoefficientInput';
 import { Card } from './ui/Card';
 
 interface Props {
@@ -106,21 +106,11 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                     </div>
 
                     <div className="group">
-                        <label htmlFor="select-runoff-coefficient" className="text-xs font-semibold text-slate-600 uppercase tracking-wide block mb-2 group-focus-within:text-emerald-600 transition-colors">Koefisien Limpasan (C)</label>
-                        <div className="relative">
-                            <select
-                                id="select-runoff-coefficient"
-                                name="runoffCoefficient"
-                                className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-900 text-sm font-bold rounded-lg p-4 outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 transition-colors cursor-pointer"
-                                value={inputs.runoffCoefficient} 
-                                onChange={e => setInputs({...inputs, runoffCoefficient: parseFloat(e.target.value)})}
-                            >
-                                {RUNOFF_COEFFICIENTS.map((m, i) => <option key={i} value={m.value}>{m.name} (C={m.value})</option>)}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                            </div>
-                        </div>
+                        <RunoffCoefficientInput
+                            value={inputs.runoffCoefficient}
+                            onChange={(value) => setInputs({...inputs, runoffCoefficient: value || 0.70})}
+                            required={true}
+                        />
                     </div>
               </div>
             </Card>
