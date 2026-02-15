@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { ManningInputs, ChannelShape } from '../types';
-// import { MANNING_ROUGHNESS } from '../constants';
+import { MANNING_ROUGHNESS } from '../constants';
 
 interface Props {
   inputs: ManningInputs;
@@ -9,17 +8,28 @@ interface Props {
 }
 
 export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
-  const [hoveredPart, setHoveredPart] = useState<string | null>(null);
-
+  const [hoveredPart, setHoveredPart] = useState<'water' | 'channel' | null>(null);
+  
   const viewBoxW = 400;
-  const viewBoxH = 280; // Increased height to accommodate top dimensions
-  const padding = 60;
+  const viewBoxH = 250;
+  const padding = 50;
   const drawAreaW = viewBoxW - padding * 2;
   const drawAreaH = viewBoxH - padding * 2;
   const centerX = viewBoxW / 2;
   const bottomY = viewBoxH - padding;
 
-  // const material = MANNING_ROUGHNESS.find(m => m.value === inputs.roughness);
+  const getMaterialName = () => {
+    const material = MANNING_ROUGHNESS.find(m => m.value === inputs.roughness);
+    return material ? material.name : `n = ${inputs.roughness}`;
+  };
+
+  const getStatusColor = () => {
+    if (!results?.SafetyStatus) return 'bg-slate-100 text-slate-700';
+    const status = results.SafetyStatus.toLowerCase();
+    if (status === 'safe' || status === 'aman') return 'bg-emerald-100 text-emerald-700';
+    if (status === 'warning' || status === 'peringatan') return 'bg-amber-100 text-amber-700';
+    return 'bg-red-100 text-red-700';
+  };
 
   const renderCircular = () => {
     const D = inputs.diameter || 1;
@@ -27,7 +37,7 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
     const scale = Math.min(drawAreaW / D, drawAreaH / D);
     const rPx = (D / 2) * scale;
     const hPx = h * scale;
-    const centerY = bottomY - rPx; // Geometric center of the circle
+    const centerY = bottomY - rPx;
 
     const isOverflow = h > D;
     const waterHeight = Math.min(h, D);
@@ -50,52 +60,37 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
     }
 
     return (
-      <g className="transition-all duration-500 ease-in-out">
-        {/* Main Circle */}
+      <g className="transition-all duration-500 ease-out">
         <circle 
           cx={centerX} cy={centerY} r={rPx} 
-          className={`fill-none stroke-gray-700 stroke-[4] transition-colors cursor-pointer ${hoveredPart === 'wall' ? 'stroke-safety-blue' : ''}`}
-          onMouseEnter={() => setHoveredPart('wall')}
+          fill="none"
+          stroke="#334155"
+          strokeWidth="3"
+          className="cursor-help transition-all duration-500 ease-out"
+          onMouseEnter={() => setHoveredPart('channel')}
           onMouseLeave={() => setHoveredPart(null)}
         />
         
-        {/* Water Fill */}
         {waterPath && (
           <path 
             d={waterPath}
-            className={`transition-all duration-500 fill-safety-blue/60 hover:fill-safety-blue/80 cursor-pointer ${isOverflow ? 'fill-red-500/70 animate-pulse' : ''}`}
+            fill={isOverflow ? '#ef4444' : '#0d9488'}
+            opacity="0.7"
+            className="cursor-help transition-all duration-500 ease-out"
             onMouseEnter={() => setHoveredPart('water')}
             onMouseLeave={() => setHoveredPart(null)}
           />
         )}
 
-        <g className="text-[10px] font-black fill-gray-500 select-none pointer-events-none">
-          
-          {/* --- LABEL DIAMETER (Outside Top) --- */}
-          {/* Extension lines going up */}
-          <path d={`M ${centerX - rPx} ${centerY} L ${centerX - rPx} ${centerY - rPx - 25}`} stroke="#cbd5e1" strokeWidth="1.5" strokeDasharray="3 3" />
-          <path d={`M ${centerX + rPx} ${centerY} L ${centerX + rPx} ${centerY - rPx - 25}`} stroke="#cbd5e1" strokeWidth="1.5" strokeDasharray="3 3" />
-          
-          {/* Dimension Line */}
-          <path d={`M ${centerX - rPx} ${centerY - rPx - 15} L ${centerX + rPx} ${centerY - rPx - 15}`} stroke="#64748b" markerStart="url(#tick)" markerEnd="url(#tick)" />
-          
-          {/* Text D */}
-          <rect x={centerX - 20} y={centerY - rPx - 28} width="40" height="14" fill="white" rx="4" className="opacity-80" />
-          <text x={centerX} y={centerY - rPx - 18} textAnchor="middle" className="fill-slate-600 font-bold">D: {D}m</text>
+        <g className="text-xs font-semibold fill-slate-600 transition-all duration-500 ease-out">
+          <line x1={centerX - rPx} y1={centerY - rPx - 15} x2={centerX + rPx} y2={centerY - rPx - 15} stroke="#94a3b8" strokeWidth="1.5" markerStart="url(#arrow)" markerEnd="url(#arrow)" className="transition-all duration-500 ease-out" />
+          <text x={centerX} y={centerY - rPx - 20} textAnchor="middle" className="fill-slate-700 font-bold text-[11px] transition-all duration-500 ease-out">D: {D}m</text>
 
-
-          {/* --- LABEL WATER HEIGHT (Inside Center) --- */}
           {h > 0 && (
-            <g>
-               {/* Vertical Line */}
-               <path d={`M ${centerX} ${centerY + rPx} L ${centerX} ${centerY + rPx - (isOverflow ? D*scale : hPx)}`} stroke="#0057b7" strokeWidth="2" />
-               
-               {/* Text h with background for legibility */}
-               <g transform={`translate(${centerX + 6}, ${centerY + rPx - hPx/2})`}>
-                  <rect x="-2" y="-7" width="38" height="14" fill="white" rx="3" className="opacity-70" />
-                  <text x="0" y="3" textAnchor="start" className="fill-safety-blue font-black">h: {h}m</text>
-               </g>
-            </g>
+            <>
+              <line x1={centerX} y1={centerY + rPx} x2={centerX} y2={centerY + rPx - hPx} stroke="#0d9488" strokeWidth="2" strokeDasharray="3 2" className="transition-all duration-500 ease-out" />
+              <text x={centerX + 8} y={centerY + rPx - hPx/2 + 4} textAnchor="start" className="fill-teal-700 font-bold text-[11px] transition-all duration-500 ease-out">h: {h}m</text>
+            </>
           )}
         </g>
       </g>
@@ -132,45 +127,40 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
     const isOverflow = h > H;
 
     return (
-      <g className="transition-all duration-500 ease-in-out">
-        {/* Penampang Fisik */}
+      <g className="transition-all duration-500 ease-out">
         <path 
-          d={`M ${xTL-20} ${yTop} L ${xTL} ${yTop} L ${xBL} ${bottomY} L ${xBR} ${bottomY} L ${xTR} ${yTop} L ${xTR+20} ${yTop}`}
+          d={`M ${xTL-15} ${yTop} L ${xTL} ${yTop} L ${xBL} ${bottomY} L ${xBR} ${bottomY} L ${xTR} ${yTop} L ${xTR+15} ${yTop}`}
           fill="none"
-          stroke="#4b5563"
-          strokeWidth="4"
+          stroke="#334155"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`transition-colors duration-300 cursor-pointer ${hoveredPart === 'wall' ? 'stroke-safety-blue' : ''}`}
-          onMouseEnter={() => setHoveredPart('wall')}
+          className="cursor-help transition-all duration-500 ease-out"
+          onMouseEnter={() => setHoveredPart('channel')}
           onMouseLeave={() => setHoveredPart(null)}
         />
 
-        {/* Air */}
         <path 
           d={`M ${xBL} ${bottomY} L ${xBR} ${bottomY} L ${xWR} ${yWater} L ${xWL} ${yWater} Z`}
-          className={`transition-all duration-500 fill-safety-blue/50 hover:fill-safety-blue/70 cursor-pointer ${isOverflow ? 'fill-red-500/60 animate-pulse' : ''}`}
+          fill={isOverflow ? '#ef4444' : '#0d9488'}
+          opacity="0.7"
+          className="cursor-help transition-all duration-500 ease-out"
           onMouseEnter={() => setHoveredPart('water')}
           onMouseLeave={() => setHoveredPart(null)}
         />
 
-        <g className="text-[10px] font-black fill-gray-500 select-none pointer-events-none">
-          {/* Label Lebar Bawah */}
-          <path d={`M ${xBL} ${bottomY + 10} L ${xBR} ${bottomY + 10}`} stroke="#94a3b8" markerStart="url(#tick)" markerEnd="url(#tick)" />
-          <text x={centerX} y={bottomY + 22} textAnchor="middle">b: {b}m</text>
+        <g className="text-xs font-semibold fill-slate-600 transition-all duration-500 ease-out">
+          <line x1={xBL} y1={bottomY + 12} x2={xBR} y2={bottomY + 12} stroke="#94a3b8" strokeWidth="1.5" markerStart="url(#arrow)" markerEnd="url(#arrow)" className="transition-all duration-500 ease-out" />
+          <text x={centerX} y={bottomY + 24} textAnchor="middle" className="fill-slate-700 font-bold text-[11px] transition-all duration-500 ease-out">b: {b}m</text>
 
-          {/* Label Lebar Atas */}
-          <path d={`M ${xTL} ${yTop - 10} L ${xTR} ${yTop - 10}`} stroke="#94a3b8" markerStart="url(#tick)" markerEnd="url(#tick)" />
-          <text x={centerX} y={yTop - 18} textAnchor="middle">B: {B}m</text>
+          <line x1={xTL} y1={yTop - 12} x2={xTR} y2={yTop - 12} stroke="#94a3b8" strokeWidth="1.5" markerStart="url(#arrow)" markerEnd="url(#arrow)" className="transition-all duration-500 ease-out" />
+          <text x={centerX} y={yTop - 16} textAnchor="middle" className="fill-slate-700 font-bold text-[11px] transition-all duration-500 ease-out">B: {B}m</text>
 
           {h > 0 && (
-            <g>
-              <path d={`M ${centerX - bPx/4} ${bottomY} L ${centerX - bPx/4} ${yWater}`} stroke="#0057b7" strokeDasharray="2 2" />
-              <g transform={`translate(${centerX - bPx/4 - 6}, ${yWater + hPx/2})`}>
-                 <rect x="-30" y="-7" width="35" height="14" fill="white" rx="3" className="opacity-70" />
-                 <text x="0" y="3" textAnchor="end" className="fill-safety-blue font-black">h: {h}m</text>
-              </g>
-            </g>
+            <>
+              <line x1={centerX} y1={bottomY} x2={centerX} y2={yWater} stroke="#0d9488" strokeWidth="2" strokeDasharray="3 2" className="transition-all duration-500 ease-out" />
+              <text x={centerX + 8} y={yWater + hPx/2 + 4} textAnchor="start" className="fill-teal-700 font-bold text-[11px] transition-all duration-500 ease-out">h: {h}m</text>
+            </>
           )}
         </g>
       </g>
@@ -178,34 +168,55 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
   };
 
   return (
-    <div className="relative group bg-white p-2 rounded-2xl">
-      <div className="absolute top-2 left-2 right-2 pointer-events-none z-20 flex justify-center">
-        {hoveredPart === 'water' && results && (
-          <div className="bg-safety-blue/95 backdrop-blur-md text-white p-4 rounded-2xl text-[10px] font-bold shadow-2xl border border-white/20 animate-in fade-in slide-in-from-top-2 duration-300 min-w-[220px]">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between gap-4 border-b border-white/20 pb-1.5 mb-1">
-                <span className="opacity-70 uppercase tracking-tighter font-black">DATA HIDROLIKA AIR</span>
-                <span className="font-black">h={inputs.depth}m</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="opacity-70 uppercase tracking-tighter">Luas Basah (A)</span>
-                <span className="font-black">{results.Area} m²</span>
-              </div>
+    <div className="bg-slate-50 rounded-lg p-4 relative">
+      {/* Tooltip */}
+      {hoveredPart && results && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium shadow-lg whitespace-nowrap animate-in fade-in slide-in-from-top-2 duration-200">
+          {hoveredPart === 'water' ? (
+            <div className="space-y-1">
+              <div className="font-bold text-teal-300">Badan Air</div>
+              <div>Luas: {results.Area} m²</div>
+              <div>Keliling Basah: {results.Perimeter} m</div>
+              <div>Debit: {results.Discharge} m³/s</div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <div className="font-bold text-slate-300">Saluran</div>
+              <div>Material: {getMaterialName()}</div>
+              <div>Kemiringan: {inputs.slope} m/m</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-auto">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <circle cx="4" cy="4" r="2" fill="#94a3b8" />
+          </marker>
+        </defs>
+        <g className="animate-in fade-in zoom-in-95 duration-500">
+          {inputs.shape === ChannelShape.CIRCULAR ? renderCircular() : renderTrapezoid()}
+        </g>
+      </svg>
+      
+      {results && (
+        <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200">
+          <div className="grid grid-cols-2 gap-2 text-xs flex-1">
+            <div className="bg-white rounded px-3 py-2 border border-slate-200 transition-all hover:shadow-md hover:border-teal-300">
+              <div className="text-slate-500 font-medium">Luas Basah</div>
+              <div className="text-slate-900 font-bold">{results.Area} m²</div>
+            </div>
+            <div className="bg-white rounded px-3 py-2 border border-slate-200 transition-all hover:shadow-md hover:border-teal-300">
+              <div className="text-slate-500 font-medium">Keliling Basah</div>
+              <div className="text-slate-900 font-bold">{results.Perimeter} m</div>
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="w-full flex justify-center items-center bg-gray-50/50 rounded-xl border border-gray-100/50">
-        <svg viewBox={`0 0 ${viewBoxW} ${viewBoxH}`} className="w-full h-auto max-w-[400px]" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <marker id="tick" markerWidth="1" markerHeight="10" refX="0.5" refY="5" orient="auto">
-              <line x1="0.5" y1="0" x2="0.5" y2="10" stroke="#94a3b8" strokeWidth="1" />
-            </marker>
-          </defs>
-          {inputs.shape === ChannelShape.CIRCULAR ? renderCircular() : renderTrapezoid()}
-        </svg>
-      </div>
+          <div className={`ml-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${getStatusColor()}`}>
+            {results.SafetyStatus}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

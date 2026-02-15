@@ -16,12 +16,18 @@ interface LocationData {
   photoUrl?: string;
 }
 
-export const WaterBalanceTab: React.FC = () => {
+interface Props {
+  onConsultAI?: () => void;
+}
+
+export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(35);
+  const [isResizing, setIsResizing] = useState(false);
   
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
@@ -33,6 +39,30 @@ export const WaterBalanceTab: React.FC = () => {
 
   const [results, setResults] = useState<WaterBalanceResult[]>([]);
   const [summary, setSummary] = useState<any>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('waterbalance-sidebar-width');
+    if (saved) setSidebarWidth(parseFloat(saved));
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      const clampedWidth = Math.min(Math.max(newWidth, 25), 50);
+      setSidebarWidth(clampedWidth);
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      localStorage.setItem('waterbalance-sidebar-width', sidebarWidth.toString());
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, sidebarWidth]);
 
   useEffect(() => {
     const balanceResults = calculateWaterBalance(inputs);
@@ -93,15 +123,15 @@ export const WaterBalanceTab: React.FC = () => {
       <div className="max-w-[1600px] mx-auto">
         
         {/* HEADER */}
-        <div className="mb-6">
+        <div className="mb-4">
           <h1 className="text-3xl font-bold text-slate-800">Analisis Neraca Air</h1>
           <p className="text-sm text-slate-500 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 gap-6" style={{ display: 'flex' }}>
           
-          {/* LEFT SIDEBAR - 30% */}
-          <div className="col-span-12 lg:col-span-4 xl:col-span-3">
+          {/* LEFT SIDEBAR */}
+          <div style={{ width: `${sidebarWidth}%`, position: 'relative' }}>
             <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-6">
               
               {/* Location Identity */}
@@ -220,9 +250,16 @@ export const WaterBalanceTab: React.FC = () => {
               </div>
             </div>
           </div>
+          <div
+            onMouseDown={() => setIsResizing(true)}
+            className={`w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
+            style={{ userSelect: 'none' }}
+          >
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-teal-500 transition-colors"></div>
+          </div>
 
-          {/* MAIN CONTENT - 70% */}
-          <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-6">
+          {/* MAIN CONTENT */}
+          <div style={{ width: `${100 - sidebarWidth}%` }} className="space-y-6">
             
             {/* Save Message Toast */}
             {saveMessage && (
@@ -242,9 +279,17 @@ export const WaterBalanceTab: React.FC = () => {
             
             {/* KPI CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Ketersediaan</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                    Total Ketersediaan
+                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                      Total ketersediaan air dari sumber (debit andalan)
+                    </div>
+                  </span>
                   <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
@@ -255,9 +300,17 @@ export const WaterBalanceTab: React.FC = () => {
                 <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Kebutuhan</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                    Total Kebutuhan
+                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                      Total kebutuhan air domestik dan pertanian
+                    </div>
+                  </span>
                   <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -268,9 +321,17 @@ export const WaterBalanceTab: React.FC = () => {
                 <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
 
-              <div className={`bg-white rounded-xl shadow-sm border ${netBalance >= 0 ? 'border-emerald-200' : 'border-rose-200'} p-5`}>
+              <div className={`bg-white rounded-xl shadow-sm border ${netBalance >= 0 ? 'border-emerald-200' : 'border-rose-200'} p-5 group relative`}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status Neraca</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                    Status Neraca
+                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                      Selisih antara ketersediaan dan kebutuhan air
+                    </div>
+                  </span>
                   <div className={`w-10 h-10 rounded-lg ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
                     <svg className={`w-5 h-5 ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={netBalance >= 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
@@ -285,9 +346,17 @@ export const WaterBalanceTab: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-rose-200 p-5">
+              <div className="bg-white rounded-xl shadow-sm border border-rose-200 p-5 group relative">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Bulan Kritis</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                    Bulan Kritis
+                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                      Bulan dengan defisit air terbesar
+                    </div>
+                  </span>
                   <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -308,16 +377,29 @@ export const WaterBalanceTab: React.FC = () => {
                   <h2 className="text-lg font-bold text-slate-800">Grafik Neraca Air Bulanan</h2>
                   <p className="text-xs text-slate-500 mt-1">Perbandingan Ketersediaan vs Kebutuhan Air</p>
                 </div>
-                <button
-                  onClick={handleSaveWaterBalance}
-                  disabled={isSaving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  {isSaving ? 'Menyimpan...' : 'Simpan Neraca'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveWaterBalance}
+                    disabled={isSaving}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    {isSaving ? 'Menyimpan...' : 'Simpan Neraca'}
+                  </button>
+                  {onConsultAI && (
+                    <button
+                      onClick={onConsultAI}
+                      className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-bold flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Analisis AI
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="h-96">
                 <WaterBalanceChart data={results} />
@@ -381,7 +463,7 @@ export const WaterBalanceTab: React.FC = () => {
       />
 
       {isInputModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsInputModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent" onClick={() => setIsInputModalOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
               <div>

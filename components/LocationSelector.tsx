@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { locationService } from '../services/locationService';
+import { SelectWithSearch } from './ui/SelectWithSearch';
 
 interface LocationSelectorProps {
   onLocationChange: (location: {
@@ -49,7 +50,8 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   useEffect(() => {
     if (selectedKabupaten) {
-      setKecamatanList(locationService.getKecamatan(selectedKabupaten));
+      const allKecamatan = locationService.getKecamatan(selectedKabupaten);
+      setKecamatanList(allKecamatan.filter(k => k !== 'BELUM TERIDENTIFIKASI'));
     } else {
       setKecamatanList([]);
     }
@@ -57,7 +59,8 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
   useEffect(() => {
     if (selectedKabupaten && selectedKecamatan) {
-      setDesaList(locationService.getDesa(selectedKabupaten, selectedKecamatan));
+      const allDesa = locationService.getDesa(selectedKabupaten, selectedKecamatan);
+      setDesaList(allDesa.filter(d => d !== 'BELUM TERIDENTIFIKASI'));
     } else {
       setDesaList([]);
     }
@@ -92,79 +95,39 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Kabupaten/Kota */}
-      <div>
-        <label htmlFor="select-kabupaten" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-          Kabupaten/Kota
-        </label>
-        <select
-          id="select-kabupaten"
-          name="kabupaten"
-          value={selectedKabupaten}
-          onChange={(e) => handleKabupatenChange(e.target.value)}
-          disabled={loading || error !== null}
-          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-slate-50 disabled:text-slate-400"
-        >
-          <option value="">
-            {loading ? 'Loading...' : error ? 'Error loading data' : 'Pilih Kabupaten/Kota'}
-          </option>
-          {!error && kabupatenList.map((kabupaten) => (
-            <option key={kabupaten} value={kabupaten}>
-              {kabupaten}
-            </option>
-          ))}
-        </select>
-        {error && (
-          <div className="mt-2 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-      </div>
+    <div className="space-y-3">
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      
+      <SelectWithSearch
+        label="Kabupaten/Kota"
+        options={kabupatenList.filter(k => k !== 'BELUM TERIDENTIFIKASI').map(k => ({ value: k, label: k }))}
+        value={selectedKabupaten}
+        onChange={handleKabupatenChange}
+        placeholder={loading ? 'Memuat...' : 'Pilih Kabupaten/Kota'}
+        disabled={loading || error !== null}
+      />
 
-      {/* Kecamatan */}
-      <div>
-        <label htmlFor="select-kecamatan" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-          Kecamatan
-        </label>
-        <select
-          id="select-kecamatan"
-          name="kecamatan"
-          value={selectedKecamatan}
-          onChange={(e) => handleKecamatanChange(e.target.value)}
-          disabled={!selectedKabupaten}
-          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-slate-50 disabled:text-slate-400"
-        >
-          <option value="">Pilih Kecamatan</option>
-          {kecamatanList.map((kecamatan) => (
-            <option key={kecamatan} value={kecamatan}>
-              {kecamatan}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SelectWithSearch
+        label="Kecamatan"
+        options={kecamatanList.map(k => ({ value: k, label: k }))}
+        value={selectedKecamatan}
+        onChange={handleKecamatanChange}
+        placeholder="Pilih Kecamatan"
+        disabled={!selectedKabupaten}
+      />
 
-      {/* Desa/Kelurahan */}
-      <div>
-        <label htmlFor="select-desa" className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-          Desa/Kelurahan
-        </label>
-        <select
-          id="select-desa"
-          name="desa"
-          value={selectedDesa}
-          onChange={(e) => handleDesaChange(e.target.value)}
-          disabled={!selectedKecamatan}
-          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-slate-50 disabled:text-slate-400"
-        >
-          <option value="">Pilih Desa/Kelurahan</option>
-          {desaList.map((desa) => (
-            <option key={desa} value={desa}>
-              {desa}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SelectWithSearch
+        label="Desa/Kelurahan"
+        options={desaList.map(d => ({ value: d, label: d }))}
+        value={selectedDesa}
+        onChange={handleDesaChange}
+        placeholder="Pilih Desa/Kelurahan"
+        disabled={!selectedKecamatan}
+      />
     </div>
   );
 };

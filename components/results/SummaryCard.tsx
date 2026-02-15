@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Badge } from '../ui/Badge';
-import { Card } from '../ui/Card';
+import { CardLegacy as Card } from '../ui/CardNew';
 import { classNames } from '../../utils/classNames';
 
 interface Metric {

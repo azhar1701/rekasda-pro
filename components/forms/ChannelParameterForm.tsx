@@ -6,8 +6,8 @@
 import React from 'react';
 import { ManningInputs, ChannelShape } from '../../types';
 import { FormField } from '../ui/FormField';
-import { Input } from '../ui/Input';
-import { Card } from '../ui/Card';
+import { Input } from '../ui/InputNew';
+import { CardLegacy as Card } from '../ui/CardNew';
 import { Alert } from '../ui/Alert';
 import { classNames } from '../../utils/classNames';
 

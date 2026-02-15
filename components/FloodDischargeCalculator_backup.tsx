@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card } from './ui/Card';
+import { CardLegacy as Card } from './ui/CardNew';
 import { TcCalculator, IntensityCalculator, FrequencyAnalysisCalculator, EffectiveRainfallCalculator } from './MiniCalculators';
 import { saveFloodCalculation } from '../services/calculationService';
 import { SiteIdentityForm } from './SiteIdentityForm';

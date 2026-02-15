@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, AlertCircle, Info } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
+import { SelectWithSearch } from './ui/SelectWithSearch';
 
 interface RunoffCoefficientInputProps {
   value?: number;
@@ -124,21 +125,12 @@ export const RunoffCoefficientInput: React.FC<RunoffCoefficientInputProps> = ({
           Langkah 1: Pilih Tata Guna Lahan
         </label>
 
-        <div className="relative">
-          <select
-            value={selectedCategoryId}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-full px-4 py-3 border border-slate-200 rounded-lg appearance-none bg-white text-slate-900 font-medium hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-          >
-            <option value="">-- Pilih kategori tata guna lahan --</option>
-            {LAND_USE_CATEGORIES.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
+        <SelectWithSearch
+          options={LAND_USE_CATEGORIES.map(cat => ({ value: cat.id, label: cat.name }))}
+          value={selectedCategoryId}
+          onChange={handleCategoryChange}
+          placeholder="-- Pilih kategori tata guna lahan --"
+        />
 
         {selectedCategory && (
           <p className="text-xs text-slate-600 mt-2 font-medium flex items-start gap-2">

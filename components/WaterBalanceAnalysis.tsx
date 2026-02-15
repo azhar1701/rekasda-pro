@@ -1,300 +1,374 @@
-import React, { useState, useEffect } from 'react';
-import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '../services/waterBalanceEngine';
+import React, { useState, useCallback, useEffect } from 'react';
 import { WaterBalanceChart } from './WaterBalanceChart';
+import { PageHeader, PageContent, Section } from './ui/Layout';
+import { Button } from './ui/Button';
+import { CardLegacy as Card, CardContent } from './ui/CardNew';
 import { InputGroup } from './InputGroup';
-import { Card } from './ui/Card';
 import { HelpTooltip } from './HelpTooltip';
-import { saveWaterBalance } from '../services/calculationService';
-import { SiteIdentityForm } from './SiteIdentityForm';
-import { SiteIdentity } from '../types';
+import { supabase } from '../lib/supabase';
 
-export const WaterBalanceAnalysis: React.FC = () => {
-  const [locationData, setLocationData] = useState<SiteIdentity>({
-    channelName: '',
-    regency: '',
-    district: '',
-    village: ''
+interface WaterBalanceData {
+  site: { channelName: string; regency: string; district: string; village: string };
+  population: number;
+  agricultureArea: number;
+  domesticStandard: number;
+  irrigationDemand: number;
+  monthlySupply: number[];
+}
+
+interface Props {
+  onSave?: (data: WaterBalanceData, results: any) => void;
+  onConsultAI?: (data: WaterBalanceData, results: any) => void;
+}
+
+export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  
+  const [data, setData] = useState<WaterBalanceData>({
+    site: { channelName: 'DAS Analisa', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
+    population: 50000,
+    agricultureArea: 500,
+    domesticStandard: 80,
+    irrigationDemand: 0.5,
+    monthlySupply: [150, 160, 180, 200, 220, 210, 180, 170, 160, 150, 140, 130]
   });
-  const [inputs, setInputs] = useState<WaterBalanceInputs>({
-    population: 5000,
-    agricultureArea: 100,
-    domesticStandard: 100,
-    irrigationDemand: 1.0,
-    monthlySupply: [2.5, 2.3, 2.0, 1.8, 1.5, 1.2, 1.0, 0.9, 1.1, 1.4, 1.8, 2.2]
-  });
-
-  const [results, setResults] = useState<WaterBalanceResult[]>([]);
-  const [summary, setSummary] = useState<any>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const balanceResults = calculateWaterBalance(inputs);
-    setResults(balanceResults);
-    setSummary(getWaterBalanceSummary(balanceResults));
-  }, [inputs]);
-
-  const handleSupplyChange = (index: number, value: number) => {
-    const newSupply = [...inputs.monthlySupply];
-    newSupply[index] = value;
-    setInputs({ ...inputs, monthlySupply: newSupply });
-  };
+  
+  const [results, setResults] = useState<any>(null);
+  const [projectName, setProjectName] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const loadPilotData = () => {
-    setInputs({
-      population: 8500,
-      agricultureArea: 150,
+    setData({
+      site: { channelName: 'DAS Perumahan Soreang', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
+      population: 75000,
+      agricultureArea: 800,
       domesticStandard: 100,
       irrigationDemand: 1.2,
-      monthlySupply: [3.2, 2.8, 2.5, 2.0, 1.6, 1.2, 0.9, 0.8, 1.0, 1.5, 2.1, 2.8]
+      monthlySupply: [200, 210, 240, 280, 300, 290, 260, 250, 230, 200, 180, 160]
     });
   };
 
-  const handleSaveWaterBalance = async () => {
-    const projectName = window.prompt('Masukkan Nama Proyek/Lokasi:');
-    if (!projectName) return;
+  // Calculate water balance
+  useEffect(() => {
+    const domesticDemand = (data.population * data.domesticStandard) / (24 * 3600) / 1000; // L to m³/s
+    const agricultureDemand = (data.agricultureArea * 2.5) / (365 * 24 * 3600); // 2.5 m³/ha/day
+    const totalDemand = domesticDemand + agricultureDemand + data.irrigationDemand;
+    
+    const monthlyBalance = data.monthlySupply.map((supply) => ({
+      supply,
+      demand: totalDemand,
+      balance: supply - totalDemand
+    }));
 
-    setIsSaving(true);
+    const avgBalance = monthlyBalance.reduce((sum, m) => sum + m.balance, 0) / 12;
+    const minBalance = Math.min(...monthlyBalance.map(m => m.balance));
+    const maxBalance = Math.max(...monthlyBalance.map(m => m.balance));
+
+    setResults({
+      domesticDemand: domesticDemand.toFixed(3),
+      agricultureDemand: agricultureDemand.toFixed(3),
+      irrigationDemand: data.irrigationDemand.toFixed(3),
+      totalDemand: totalDemand.toFixed(3),
+      monthlyBalance,
+      avgBalance: avgBalance.toFixed(3),
+      minBalance: minBalance.toFixed(3),
+      maxBalance: maxBalance.toFixed(3),
+      criticalMonths: monthlyBalance.filter(m => m.balance < 0)
+    });
+  }, [data]);
+
+  const handleMonthlySupplyChange = (index: number, value: number) => {
+    const newSupply = [...data.monthlySupply];
+    newSupply[index] = value;
+    setData(prev => ({ ...prev, monthlySupply: newSupply }));
+  };
+
+  const handleSiteChange = useCallback((site: any) => {
+    setData(prev => ({ ...prev, site }));
+  }, []);
+
+  const saveToDatabase = async () => {
+    if (!projectName.trim()) {
+      alert('Masukkan nama proyek');
+      return;
+    }
+    
+    setSaving(true);
     try {
-      const { error } = await saveWaterBalance({
-        projectName,
-        monthlyInputs: { ...inputs, site: locationData },
-        monthlyResults: results,
-        summary
-      });
-
-      if (error) {
-        alert('Gagal menyimpan: ' + error.message);
-      } else {
-        alert('✓ Berhasil menyimpan neraca air!');
+      if (!supabase) {
+        alert('Database tidak tersedia');
+        return;
       }
-    } catch (err: any) {
-      alert('Error: ' + err.message);
+      
+      const { error } = await supabase.from('water_balance_analysis').insert({
+        project_name: projectName,
+        data: JSON.stringify(data),
+        results: JSON.stringify(results),
+        created_at: new Date().toISOString()
+      });
+      
+      if (error) throw error;
+      
+      alert(`Analisis "${projectName}" berhasil disimpan!`);
+      setProjectName('');
+      onSave?.(data, results);
+    } catch (error) {
+      alert(`Error: ${error}`);
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start pb-28">
-      {/* LEFT COLUMN: INPUTS */}
-      <div className="lg:col-span-5 space-y-6 lg:space-y-8 animate-slide-up">
-        
-        {/* Site Identity Form */}
-        <SiteIdentityForm value={locationData} onChange={setLocationData} />
-        
-        {/* Quick Action Mobile */}
-        <div className="bg-white/95 backdrop-blur-md p-3 px-4 rounded-xl shadow-card border border-slate-200 flex justify-between items-center lg:hidden sticky top-20 z-30">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            </div>
-            <span className="text-[9px] font-black uppercase text-slate-900 tracking-widest">Load Pilot Data</span>
-          </div>
-          <button onClick={loadPilotData} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-blue-700 transition-colors">Load</button>
-        </div>
+    <div className="space-y-8">
+      {/* Page Header */}
+      <PageHeader
+        title="Analisis Keseimbangan Air"
+        subtitle="Evaluasi keseimbangan antara ketersediaan dan kebutuhan air bulanan"
+        icon={<span className="text-2xl">💧</span>}
+      />
 
-        {/* Parameter Kebutuhan Air */}
-        <Card
-          title="Parameter Kebutuhan Air"
-          description="Data Populasi & Lahan"
-          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-        >
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <InputGroup
-                id="input-population"
-                name="population"
-                label="Jumlah Penduduk" 
-                unit="jiwa" 
-                value={inputs.population} 
-                onChange={e => setInputs({...inputs, population: parseFloat(e.target.value) || 0})}
-                helpText="Total populasi yang dilayani"
-              />
-              <InputGroup
-                id="input-domestic-standard"
-                name="domesticStandard"
-                label="Standar Domestik" 
-                unit="L/org/hari" 
-                value={inputs.domesticStandard} 
-                onChange={e => setInputs({...inputs, domesticStandard: parseFloat(e.target.value) || 0})}
-                helpText="SNI 6728.1:2015 (60-120 L/capita/day)"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <InputGroup
-                id="input-agriculture-area"
-                name="agricultureArea"
-                label="Luas Pertanian" 
-                unit="Ha" 
-                value={inputs.agricultureArea} 
-                onChange={e => setInputs({...inputs, agricultureArea: parseFloat(e.target.value) || 0})}
-                helpText="Luas lahan irigasi"
-              />
-              <InputGroup
-                id="input-irrigation-demand"
-                name="irrigationDemand"
-                label="Kebutuhan Irigasi" 
-                unit="L/s/Ha" 
-                value={inputs.irrigationDemand} 
-                onChange={e => setInputs({...inputs, irrigationDemand: parseFloat(e.target.value) || 0})}
-                helpText="Kebutuhan air per hektar"
-              />
-            </div>
-          </div>
-        </Card>
+      <PageContent>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT COLUMN - INPUTS (33%) */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Section title="Tindakan Cepat">
+              <div className="flex gap-2">
+                <button
+                  onClick={loadPilotData}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold text-sm flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                  Load Pilot
+                </button>
+              </div>
+            </Section>
 
-        {/* Debit Andalan Bulanan */}
-        <Card
-          title="Debit Andalan Bulanan (Q80)"
-          description="Ketersediaan Air 12 Bulan"
-          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>}
-        >
-          <div className="grid grid-cols-3 gap-3">
-            {MONTHS.map((month, index) => (
-              <div key={month}>
-                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{month}</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  id={`supply-${index}`}
-                  name={`supply-${month}`}
-                  aria-label={`Debit andalan bulan ${month}`}
-                  value={inputs.monthlySupply[index]}
-                  onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* RIGHT COLUMN: RESULTS */}
-      <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-24">
-        {results.length > 0 && (
-          <div className="animate-fade-in space-y-6">
-            
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[9px] font-black text-green-600 uppercase">Bulan Surplus</span>
-                  <HelpTooltip content="Jumlah bulan dengan ketersediaan air berlebih" />
-                </div>
-                <p className="text-2xl font-black text-green-700">{summary?.surplusMonths}</p>
-              </div>
-              <div className="bg-red-50 p-4 rounded-xl border border-red-200">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[9px] font-black text-red-600 uppercase">Bulan Defisit</span>
-                  <HelpTooltip content="Jumlah bulan dengan kekurangan air" />
-                </div>
-                <p className="text-2xl font-black text-red-700">{summary?.deficitMonths}</p>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[9px] font-black text-blue-600 uppercase">Total Surplus</span>
-                  <HelpTooltip content="Total kelebihan air sepanjang tahun" />
-                </div>
-                <p className="text-lg font-black text-blue-700">{summary?.totalSurplus} m³/s</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[9px] font-black text-orange-600 uppercase">Total Defisit</span>
-                  <HelpTooltip content="Total kekurangan air sepanjang tahun" />
-                </div>
-                <p className="text-lg font-black text-orange-700">{summary?.totalDeficit} m³/s</p>
-              </div>
-            </div>
-
-            {/* Save Button */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleSaveWaterBalance}
-                disabled={isSaving}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-sm font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
-                {isSaving ? 'Menyimpan...' : 'Simpan Neraca'}
-              </button>
-            </div>
-
-            {/* Chart */}
-            <Card className="overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">Grafik Neraca Air</h3>
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Analisis Supply vs Demand</p>
+            {/* Site Identity */}
+            <Section title="Identitas Lokasi">
+              <Card>
+                <CardContent>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      placeholder="Nama DAS / Lokasi"
+                      value={data.site.channelName}
+                      onChange={(e) => handleSiteChange({...data.site, channelName: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Kabupaten"
+                      value={data.site.regency}
+                      onChange={(e) => handleSiteChange({...data.site, regency: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Kecamatan"
+                      value={data.site.district}
+                      onChange={(e) => handleSiteChange({...data.site, district: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
-                  {summary?.criticalMonth && (
-                    <div className="bg-red-50 px-3 py-2 rounded-lg border border-red-200">
-                      <span className="text-[9px] font-black text-red-600 uppercase block">Bulan Kritis</span>
-                      <span className="text-sm font-bold text-red-700">{summary.criticalMonth.month}</span>
-                    </div>
-                  )}
-                </div>
-                <WaterBalanceChart data={results} />
-              </div>
-            </Card>
+                </CardContent>
+              </Card>
+            </Section>
 
-            {/* Detailed Table */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Tabel Detail Neraca Air</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b-2 border-slate-200">
-                        <th className="text-left py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Bulan</th>
-                        <th className="text-right py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Supply (m³/s)</th>
-                        <th className="text-right py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Domestik (m³/s)</th>
-                        <th className="text-right py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Pertanian (m³/s)</th>
-                        <th className="text-right py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Total Demand (m³/s)</th>
-                        <th className="text-right py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Neraca (m³/s)</th>
-                        <th className="text-center py-3 px-2 text-[10px] font-black text-slate-500 uppercase">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((row, i) => (
-                        <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 px-2 font-bold text-slate-700">{row.month}</td>
-                          <td className="py-3 px-2 text-right font-semibold text-blue-600">{row.supply}</td>
-                          <td className="py-3 px-2 text-right text-slate-600">{row.domesticDemand}</td>
-                          <td className="py-3 px-2 text-right text-slate-600">{row.agricultureDemand}</td>
-                          <td className="py-3 px-2 text-right font-semibold text-orange-600">{row.totalDemand}</td>
-                          <td className={`py-3 px-2 text-right font-bold ${row.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {row.balance >= 0 ? '+' : ''}{row.balance}
-                          </td>
-                          <td className="py-3 px-2 text-center">
-                            <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase ${
-                              row.status === 'Surplus' ? 'bg-green-100 text-green-700' : 
-                              row.status === 'Defisit' ? 'bg-red-100 text-red-700' : 
-                              'bg-slate-100 text-slate-700'
-                            }`}>
-                              {row.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </Card>
+            {/* Demand Parameters */}
+            <Section title="Parameter Kebutuhan">
+              <Card>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <InputGroup
+                      label="Populasi"
+                      unit="jiwa"
+                      value={data.population}
+                      onChange={(e) => setData({...data, population: parseFloat(e.target.value) || 0})}
+                      placeholder="50000"
+                      helpText="Jumlah penduduk"
+                    />
+                    <InputGroup
+                      label="Std Domestik"
+                      unit="L/org/hr"
+                      value={data.domesticStandard}
+                      onChange={(e) => setData({...data, domesticStandard: parseFloat(e.target.value) || 0})}
+                      placeholder="80"
+                      helpText="Kebutuhan per orang"
+                    />
+                  </div>
 
-            {/* Reference */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <p className="text-xs text-slate-600">
-                <span className="font-bold">Referensi:</span> SNI 6728.1:2015 - Penyusunan Neraca Spasial Sumber Daya Air
-              </p>
-            </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <InputGroup
+                      label="Luas Pertanian"
+                      unit="ha"
+                      value={data.agricultureArea}
+                      onChange={(e) => setData({...data, agricultureArea: parseFloat(e.target.value) || 0})}
+                      placeholder="500"
+                      helpText="Area pertanian"
+                    />
+                    <InputGroup
+                      label="Irigasi"
+                      unit="m³/s"
+                      value={data.irrigationDemand}
+                      onChange={(e) => setData({...data, irrigationDemand: parseFloat(e.target.value) || 0})}
+                      placeholder="0.5"
+                      helpText="Kebutuhan irigasi"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </Section>
+
+            {/* Save Section */}
+            <Section title="Simpan Analisis">
+              <Card>
+                <CardContent className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Nama Proyek"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                  <Button
+                    fullWidth
+                    variant="primary"
+                    onClick={saveToDatabase}
+                    disabled={saving || !projectName.trim()}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    {saving ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </Section>
           </div>
-        )}
-      </div>
+
+          {/* RIGHT COLUMN - VISUALIZATION & RESULTS (67%) */}
+          <div className="lg:col-span-2 space-y-6">
+            {results && (
+              <div className="animate-fade-in space-y-6">
+                {/* Chart */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <WaterBalanceChart data={results.monthlyBalance} />
+                  </CardContent>
+                </Card>
+
+                {/* Summary Metrics */}
+                <Card>
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 md:p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"></div>
+                    
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-bold mb-6">Ringkasan Keseimbangan</h3>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-black text-blue-100 uppercase">Rata-rata</span>
+                            <HelpTooltip content="Rata-rata keseimbangan bulanan" />
+                          </div>
+                          <span className="text-2xl font-bold">{results.avgBalance}</span>
+                          <span className="text-xs text-blue-100 block">m³/s</span>
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-black text-blue-100 uppercase">Minimum</span>
+                            <HelpTooltip content="Keseimbangan terendah" />
+                          </div>
+                          <span className={`text-2xl font-bold ${parseFloat(results.minBalance) < 0 ? 'text-red-300' : 'text-green-300'}`}>
+                            {results.minBalance}
+                          </span>
+                          <span className="text-xs text-blue-100 block">m³/s</span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-black text-blue-100 uppercase">Maksimum</span>
+                            <HelpTooltip content="Keseimbangan tertinggi" />
+                          </div>
+                          <span className="text-2xl font-bold text-green-300">{results.maxBalance}</span>
+                          <span className="text-xs text-blue-100 block">m³/s</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Demand Breakdown */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="font-bold text-lg mb-4 text-slate-800">Rincian Kebutuhan Air</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-6 border-b border-slate-200">
+                      {[
+                        { label: 'Domestik', value: results.domesticDemand, unit: 'm³/s', color: 'bg-amber-50 border-amber-200' },
+                        { label: 'Pertanian', value: results.agricultureDemand, unit: 'm³/s', color: 'bg-green-50 border-green-200' },
+                        { label: 'Irigasi', value: results.irrigationDemand, unit: 'm³/s', color: 'bg-blue-50 border-blue-200' },
+                        { label: 'Total', value: results.totalDemand, unit: 'm³/s', color: 'bg-slate-100 border-slate-300' }
+                      ].map((item, i) => (
+                        <div key={i} className={`p-4 rounded-lg border ${item.color}`}>
+                          <div className="text-xs font-bold text-slate-600 uppercase mb-2">{item.label}</div>
+                          <div className="text-xl font-bold text-slate-800">{item.value}</div>
+                          <div className="text-xs text-slate-500">{item.unit}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Critical months warning */}
+                    {results.criticalMonths.length > 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 className="font-bold text-red-800 mb-2 flex items-center gap-2">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                          Bulan Kritis Terdeteksi
+                        </h4>
+                        <p className="text-sm text-red-700">
+                          Keseimbangan negatif pada: {results.criticalMonths.map((m: any) => months[data.monthlySupply.indexOf(m.supply)]).join(', ')}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Monthly Supply Inputs */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="font-bold text-lg mb-4 text-slate-800">Ketersediaan Air Bulanan</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                      {months.map((month, index) => (
+                        <div key={index}>
+                          <label className="text-xs font-bold text-slate-600 block mb-2">{month}</label>
+                          <input
+                            type="number"
+                            value={data.monthlySupply[index]}
+                            onChange={(e) => handleMonthlySupplyChange(index, parseFloat(e.target.value) || 0)}
+                            className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Action buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button fullWidth variant="primary" onClick={() => onSave?.(data, results)}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                    Simpan Hasil
+                  </Button>
+                  <Button variant="outline" onClick={() => onConsultAI?.(data, results)}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Konsultasi AI
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </PageContent>
     </div>
   );
 };

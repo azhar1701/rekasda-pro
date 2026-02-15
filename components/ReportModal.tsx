@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Dialog } from '@headlessui/react';
 import { Button } from './Button';
 import { CalculationResult, GeoLocationData } from '../types';
 
@@ -15,6 +16,8 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
   const [location, setLocation] = useState<GeoLocationData | null>(null);
   const [loadingGeo, setLoadingGeo] = useState(false);
   const [notes, setNotes] = useState('');
+
+  if (!data) return null;
 
   useEffect(() => {
     if (isOpen && data) {
@@ -79,13 +82,13 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
     onConfirmSave(finalRecord);
   };
 
-  if (!isOpen || !data) return null;
-
-  const site = (data.inputs as any)?.site;
+  const site = data?.inputs ? (data.inputs as any).site : null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <Dialog open={isOpen && !!data} onClose={onClose} className="relative z-[100]">
+      <div className="fixed inset-0" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4">
+        <Dialog.Panel className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="bg-gray-900 text-white p-5 flex justify-between items-center shrink-0">
             <h3 className="text-xl font-black italic uppercase tracking-tighter">Konfirmasi Laporan</h3>
             <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -157,7 +160,8 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
         <div className="p-6 border-t border-gray-100 bg-white shrink-0">
             <Button fullWidth onClick={handleSave} className="py-4 text-sm shadow-xl shadow-safety-blue/30 rounded-2xl border-none">Simpan Permanen ke Database</Button>
         </div>
+        </Dialog.Panel>
       </div>
-    </div>
+    </Dialog>
   );
 };

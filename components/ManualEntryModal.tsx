@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
+import { Dialog } from '@headlessui/react';
 import { Button } from './Button';
 import { InputGroup } from './InputGroup';
 import { SiteIdentityForm } from './SiteIdentityForm';
@@ -38,8 +39,6 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
     flowLength: 0.8,
     catchmentSlope: 0.01
   });
-
-  if (!isOpen) return null;
 
   const handleManningFormChange = useCallback((site: any) => {
     setManningInputs(prev => ({ ...prev, site }));
@@ -84,8 +83,10 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <Dialog open={isOpen} onClose={onClose} className="relative z-[100]">
+      <div className="fixed inset-0" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4">
+        <Dialog.Panel className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="bg-slate-900 text-white p-5 flex justify-between items-center shrink-0">
             <div>
@@ -203,7 +204,8 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                 Simpan ke Database
              </Button>
         </div>
+        </Dialog.Panel>
       </div>
-    </div>
+    </Dialog>
   );
 };

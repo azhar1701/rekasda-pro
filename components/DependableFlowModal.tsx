@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Dialog } from '@headlessui/react';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -31,11 +32,11 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      <div className="fixed inset-0" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-center justify-center">
+        <Dialog.Panel className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
@@ -150,7 +151,8 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
             Hitung & Terapkan
           </button>
         </div>
+        </Dialog.Panel>
       </div>
-    </div>
+    </Dialog>
   );
 };

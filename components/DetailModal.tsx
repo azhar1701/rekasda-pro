@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Dialog } from '@headlessui/react';
 import { CalculationResult, CalculationType } from '../types';
 import { Button } from './Button';
 
@@ -10,9 +11,8 @@ interface Props {
 }
 
 export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
-  if (!isOpen || !data) return null;
+  if (!data) return null;
 
-  // Helper to format labels from camelCase/PascalCase to readable text
   const formatLabel = (key: string): string => {
     // Dictionary for specific technical terms
     const dictionary: Record<string, string> = {
@@ -82,23 +82,25 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <Dialog open={isOpen && !!data} onClose={onClose} className="relative z-[100]">
+      <div className="fixed inset-0" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4">
+        <Dialog.Panel className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="bg-slate-900 text-white p-5 md:p-6 flex justify-between items-start shrink-0 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
           <div className="relative z-10">
              <div className="flex items-center gap-2 mb-2">
-                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wide ${data.type === CalculationType.MANNING ? 'bg-blue-500/20 text-blue-100' : 'bg-red-500/20 text-red-100'}`}>
-                    {data.type}
+                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wide ${data?.type === CalculationType.MANNING ? 'bg-blue-500/20 text-blue-100' : 'bg-red-500/20 text-red-100'}`}>
+                    {data?.type}
                 </span>
-                <span className="text-slate-400 text-[10px] font-mono">{new Date(data.date).toLocaleString('id-ID')}</span>
+                <span className="text-slate-400 text-[10px] font-mono">{data?.date ? new Date(data.date).toLocaleString('id-ID') : '-'}</span>
              </div>
             <h3 className="text-xl md:text-2xl font-black leading-tight">
-                {data.inputs.site?.channelName || 'Tanpa Nama Proyek'}
+                {data?.inputs?.site?.channelName || 'Tanpa Nama Proyek'}
             </h3>
             {(() => {
-              const fullAddress = [data.inputs.site?.village, data.inputs.site?.district, data.inputs.site?.regency].filter(Boolean).join(', ');
+              const fullAddress = [data?.inputs?.site?.village, data?.inputs?.site?.district, data?.inputs?.site?.regency].filter(Boolean).join(', ');
               return fullAddress && <p className="text-sm text-slate-300 font-medium mt-1">{fullAddress}</p>;
             })()}
           </div>
@@ -111,9 +113,9 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
         <div className="p-5 md:p-6 overflow-y-auto no-scrollbar">
             
             {/* Visuals Grid */}
-            {(data.location || data.photoUrl) && (
-                <div className={`grid gap-4 mb-6 ${data.location && data.photoUrl ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-                    {data.location && (
+            {(data?.location || data?.photoUrl) && (
+                <div className={`grid gap-4 mb-6 ${data?.location && data?.photoUrl ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                    {data?.location && (
                         <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 h-40 relative group overflow-hidden">
                              {/* Simple Static Map Placeholder */}
                             <div className="w-full h-full bg-slate-200 rounded-xl flex items-center justify-center flex-col">
@@ -130,7 +132,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
                             </div>
                         </div>
                     )}
-                    {data.photoUrl && (
+                    {data?.photoUrl && (
                         <div className="h-48 md:h-40 rounded-2xl overflow-hidden border border-slate-200 relative group">
                             <img src={data.photoUrl} alt="Dokumentasi" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -143,12 +145,12 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
 
             {/* Main Data */}
             <div className="space-y-2">
-                {renderSection("Data Masukan", data.inputs)}
-                {renderSection("Hasil Analisis", data.outputs, "bg-blue-50/50")}
+                {renderSection("Data Masukan", data?.inputs)}
+                {renderSection("Hasil Analisis", data?.outputs, "bg-blue-50/50")}
             </div>
 
             {/* Notes */}
-            {data.notes && (
+            {data?.notes && (
                 <div className="mt-6 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
                     <h4 className="text-[10px] font-black text-yellow-600 uppercase tracking-widest mb-2">Catatan Lapangan</h4>
                     <p className="text-sm text-slate-700 italic leading-relaxed">"{data.notes}"</p>
@@ -157,7 +159,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
 
              {/* Footer ID */}
             <div className="mt-8 pt-4 border-t border-slate-100 text-center">
-                <p className="text-[10px] text-slate-300 font-mono">ID Laporan: {data.id}</p>
+                <p className="text-[10px] text-slate-300 font-mono">ID Laporan: {data?.id}</p>
             </div>
         </div>
         
@@ -167,7 +169,8 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
                 Tutup Detail
              </Button>
         </div>
+        </Dialog.Panel>
       </div>
-    </div>
+    </Dialog>
   );
 };

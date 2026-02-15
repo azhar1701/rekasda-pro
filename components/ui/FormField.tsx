@@ -44,55 +44,28 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className={classNames('space-y-1.5', className)}>
-      {/* Label with unit and required indicator */}
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-slate-700">
           {label}
           {unit && (
-            <span className="text-xs font-normal text-slate-500 ml-1">
-              ({unit})
-            </span>
+            <span className="text-xs text-slate-500 ml-1">({unit})</span>
           )}
+          {required && <span className="text-red-600 ml-1">*</span>}
         </label>
-        {required && (
-          <span
-            className="text-danger-600 font-bold text-sm"
-            title="Required field"
-          >
-            *
-          </span>
-        )}
       </div>
 
-      {/* Hint text (secondary label) */}
       {hint && !error && (
-        <p className="text-xs text-slate-500 font-normal">{hint}</p>
+        <p className="text-xs text-slate-500">{hint}</p>
       )}
 
-      {/* Input field */}
       <div>{children}</div>
 
-      {/* Error message with icon */}
       {error && (
-        <div className="flex items-start gap-2 mt-2">
-          <svg
-            className="w-4 h-4 text-danger-600 flex-shrink-0 mt-0.5"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M18.101 12.93a10 10 0 10-19.202 0A10 10 0 0018.101 12.93z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <p className="text-sm font-medium text-danger-600">{error}</p>
-        </div>
+        <p className="text-xs text-red-600">{error}</p>
       )}
 
-      {/* Helper text (alternative to hint if no error) */}
       {helperText && !error && (
-        <p className="text-xs text-slate-500 italic">{helperText}</p>
+        <p className="text-xs text-slate-500">{helperText}</p>
       )}
     </div>
   );
