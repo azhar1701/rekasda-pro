@@ -17,7 +17,7 @@ interface Props {
   onConsultAI: (inputs: ManningInputs, outputs: any) => void;
 }
 
-export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
+export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [, setLocationData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -41,20 +41,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   const [isResizing, setIsResizing] = useState(false);
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
-  const loadPilotData = () => {
-    setInputs({
-      site: { channelName: 'Saluran Sekunder Soreang (Pilot)', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
-      shape: ChannelShape.TRAPEZOID,
-      roughness: 0.015,
-      slope: 0.002,
-      width: 1.2,
-      topWidth: 2.0,
-      diameter: 1.0,
-      depth: 0.45,
-      totalDepth: 1.0,
-      sideSlope: 0.4,
-    });
-  };
+
 
   const handleLoadPilotData = (data: any) => {
     setInputs({
@@ -77,7 +64,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   };
 
   const handleSaveToDatabase = async () => {
-    const projectName = inputs.site.channelName;
+    const projectName = inputs.site?.channelName;
     if (!projectName) {
       setSaveMessage({ type: 'error', text: 'Mohon isi Nama Saluran di Identitas Lokasi terlebih dahulu' });
       setTimeout(() => setSaveMessage(null), 3000);
@@ -194,50 +181,53 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   }, [inputs]);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-6">
       <div className="max-w-[1600px] mx-auto">
         
         {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-slate-800">Analisis Saluran Manning</h1>
-          <p className="text-sm text-slate-500 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
+        <div className="mb-3 sm:mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Analisis Saluran Manning</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
         </div>
 
         {/* Load Message Toast */}
         {loadMessage && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-2xl shadow-lg border border-slate-200 bg-teal-50 text-teal-800 flex items-center gap-3 animate-fade-in max-w-md">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[110] px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 bg-teal-50 text-teal-800 flex items-center gap-2 sm:gap-3 animate-fade-in max-w-[90%] sm:max-w-md">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
-            <span className="font-medium text-sm">{loadMessage}</span>
+            <span className="font-medium text-xs sm:text-sm">{loadMessage}</span>
           </div>
         )}
 
         {/* Save Message Toast */}
         {saveMessage && (
-          <div className={`fixed top-24 right-6 z-[110] px-6 py-3 rounded-2xl shadow-lg border flex items-center gap-3 animate-fade-in max-w-md ${
+          <div className={`fixed top-20 sm:top-24 right-3 sm:right-6 z-[110] px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg border flex items-center gap-2 sm:gap-3 animate-fade-in max-w-[90%] sm:max-w-md ${
             saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'
           }`}>
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {saveMessage.type === 'success' ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               )}
             </svg>
-            <span className="font-medium text-sm">{saveMessage.text}</span>
+            <span className="font-medium text-xs sm:text-sm">{saveMessage.text}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6" style={{ display: 'flex' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-6">
+          
+          {/* Mobile: Stack vertically, Desktop: Side by side with resizer */}
+          <div className="lg:flex lg:gap-0">
           
           {/* LEFT SIDEBAR */}
-          <div style={{ width: `${sidebarWidth}%`, position: 'relative' }}>
-            <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-4">
+          <div className="lg:block" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%' }}>
+            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-3 sm:space-y-4">
               
               {/* Pilot Data Loader */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Pilot</h2>
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
+                <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Data Pilot</h2>
                 <ManningPilotDataLoader onLoad={handleLoadPilotData} />
               </div>
 
@@ -245,8 +235,8 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
               <LocationIdentity onLocationChange={handleLocationChange} />
 
               {/* Geometry Section */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Geometri Saluran</h2>
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
+                <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Geometri Saluran</h2>
                 
                 {Object.keys(errors).length > 0 && (
                   <div className="mb-4">
@@ -325,20 +315,23 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
               </div>
             </div>
           </div>
+          
+          {/* Resizer - Desktop only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
           >
             <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-teal-500 transition-colors"></div>
           </div>
 
           {/* MAIN CONTENT */}
-          <div style={{ width: `${100 - sidebarWidth}%` }} className="space-y-6">
+          <div className="mt-4 lg:mt-0" style={{ width: window.innerWidth >= 1024 ? `${100 - sidebarWidth}%` : '100%' }}>
+            <div className="space-y-4 sm:space-y-6">
             
             {/* Visualization */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-bold text-slate-800 mb-4">Tampilan Penampang Melintang</h2>
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-3 sm:mb-4">Tampilan Penampang Melintang</h2>
               <ChannelVisualizer inputs={inputs} results={results} />
             </div>
 
@@ -366,10 +359,10 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                 <FlowInsight discharge={parseFloat(results.Discharge)} velocity={parseFloat(results.Velocity)} type="MANNING" />
 
                 {/* Detailed Results */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                  <h2 className="text-lg font-bold text-slate-800 mb-4">Rincian Hasil Perhitungan</h2>
+                <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-3 sm:mb-4">Rincian Hasil Perhitungan</h2>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {[
                         { label: 'Jari-jari Hidrolis', val: results.Radius, unit: 'm', help: 'Rasio luas penampang terhadap keliling basah' },
                         { label: 'Lebar Permukaan', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air di bagian atas' },
@@ -394,7 +387,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                       ))}
                     </div>
                     
-                    <div className="flex gap-3 pt-4 border-t border-slate-200">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-slate-200">
                       <Button fullWidth variant="primary" onClick={handleSaveToDatabase} disabled={isSaving}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                         {isSaving ? 'Menyimpan...' : 'Simpan Hasil'}
@@ -408,6 +401,9 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                 </div>
               </>
             )}
+            </div>
+          </div>
+          
           </div>
         </div>
       </div>

@@ -10,10 +10,10 @@ import { AllDataDetailModal } from './components/AllDataDetailModal';
 import { AllCalculationsData } from './services/allCalculationsService';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/ui/Toast';
-import { CalculationType, CalculationResult, ChannelShape, ManningInputs, RationalInputs } from './types';
-import { Button } from './components/ui/Button';
+import { CalculationType, CalculationResult } from './types';
+
 import { Header } from './components/ui/Header';
-import { calculateManning, calculateRational } from './services/calculationService';
+
 import { useDatabase } from './lib/useDatabase';
 import { useDatabaseStatus } from './components/DatabaseTest';
 import { APP_NAME } from './constants';
@@ -26,11 +26,8 @@ enum Tab {
   AI = 'AI'
 }
 
-type ViewMode = 'LIST' | 'MAP';
-
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.SALURAN);
-  const [historyViewMode, setHistoryViewMode] = useState<ViewMode>('LIST');
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [tempCalculation, setTempCalculation] = useState<Partial<CalculationResult> | null>(null);
   const [history, setHistory] = useState<CalculationResult[]>([]);
@@ -39,7 +36,7 @@ const App: React.FC = () => {
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
   const [scrolled, setScrolled] = useState(false);
-  const { calculations, saveCalculation, deleteCalculation, loading } = useDatabase();
+  const { calculations, saveCalculation } = useDatabase();
   const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
 
   useEffect(() => {
@@ -65,59 +62,7 @@ const App: React.FC = () => {
     setHistory(convertedHistory);
   }, [calculations]);
 
-  const seedPilotData = async () => {
-    const timestamp = Date.now();
-    const manningInput: ManningInputs = {
-      site: { channelName: 'Sekunder Soreang (Pilot)', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
-      shape: ChannelShape.TRAPEZOID,
-      roughness: 0.015,
-      slope: 0.002,
-      width: 1.2,
-      topWidth: 2.0,
-      diameter: 1.0,
-      depth: 0.45,
-      totalDepth: 1.0,
-      sideSlope: 0.4,
-    };
-    const manningOutput = calculateManning(manningInput);
-    const manningRecord: CalculationResult = {
-      id: `pilot-manning-${timestamp}`,
-      type: CalculationType.MANNING,
-      date: new Date(timestamp - 86400000).toISOString(),
-      inputs: manningInput,
-      outputs: manningOutput,
-      location: { latitude: -7.0223, longitude: 107.5198, accuracy: 10, timestamp: timestamp },
-      notes: "Kondisi dinding beton baik. Sedimen minimal."
-    };
 
-    const rationalInput: RationalInputs = {
-      site: { channelName: 'DAS Soreang Indah (Pilot)', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
-      runoffCoefficient: 0.75,
-      rainfallDesign: 145,
-      area: 0.25,
-      flowLength: 0.6,
-      catchmentSlope: 0.02
-    };
-    const rationalOutput = calculateRational(rationalInput);
-    const rationalRecord: CalculationResult = {
-      id: `pilot-rational-${timestamp}`,
-      type: CalculationType.RATIONAL,
-      date: new Date(timestamp - 172800000).toISOString(),
-      inputs: rationalInput,
-      outputs: rationalOutput,
-      location: { latitude: -7.0250, longitude: 107.5250, accuracy: 15, timestamp: timestamp },
-      notes: "Kawasan pemukiman padat."
-    };
-
-    try {
-      await saveCalculation(manningRecord);
-      await saveCalculation(rationalRecord);
-      alert("2 Rekaman Pilot berhasil ditambahkan ke Database!");
-    } catch (error) {
-      console.error('Error saving pilot data:', error);
-      alert("Gagal menyimpan ke database. Cek koneksi Supabase.");
-    }
-  };
 
   const saveToHistory = async (record: CalculationResult) => {
     try {
@@ -136,23 +81,7 @@ const App: React.FC = () => {
     }
   };
 
-  const deleteHistoryItem = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); 
-    if (window.confirm("Hapus rekaman ini secara permanen?")) {
-      try {
-        await deleteCalculation(id);
-      } catch (error) {
-        console.error('Error deleting from database:', error);
-        alert('Gagal menghapus dari database.');
-      }
-    }
-  };
 
-  const copyToClipboard = (item: CalculationResult) => {
-    const typeLabel = item.type === CalculationType.MANNING ? 'Saluran Manning' : 'Debit Rasional';
-    const text = `LAPORAN ${typeLabel}\nLokasi: ${item.inputs.site?.channelName}\nQ: ${item.outputs.Discharge} m3/s\nSumber: TirtaSakti Pro`;
-    navigator.clipboard.writeText(text).then(() => alert("Disalin!")).catch(console.error);
-  };
 
   const handleConsultAI = (type: CalculationType, inputs: any, outputs: any) => {
     const contextStr = `Tipe: ${type}\nIdentitas: ${JSON.stringify(inputs.site)}\nInput: ${JSON.stringify(inputs)}\nOutput: ${JSON.stringify(outputs)}`;
@@ -213,7 +142,7 @@ const App: React.FC = () => {
       />
 
       {/* --- Main Content --- */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-8 pb-32">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-28 sm:pb-32">
           <div className="transition-opacity duration-300">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
           {activeTab === Tab.BANJIR && <FloodDischargeCalculator onConsultAI={() => {
@@ -245,21 +174,21 @@ const App: React.FC = () => {
       <AllDataDetailModal isOpen={!!viewAllDataDetail} data={viewAllDataDetail} onClose={() => setViewAllDataDetail(null)} />
 
       {/* --- Navigation Bar --- */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="bg-white border border-slate-200 shadow-lg rounded-full px-2 py-2">
-            <div className="flex items-center gap-1">
+      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] sm:w-auto max-w-full">
+        <div className="bg-white border border-slate-200 shadow-lg rounded-full px-1 sm:px-2 py-1.5 sm:py-2">
+            <div className="flex items-center gap-0.5 sm:gap-1">
             {navigationItems.map((item) => (
                 <button
                     key={item.tab}
                     onClick={() => setActiveTab(item.tab)}
-                    className={`flex flex-col items-center justify-center px-4 py-2 rounded-full transition-all ${
+                    className={`flex flex-col items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all ${
                           activeTab === item.tab
                             ? 'bg-slate-900 text-white'
                             : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                         }`}
                 >
-                    {item.icon}
-                    <span className="text-xs font-medium mt-0.5">{item.label}</span>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5">{item.icon}</div>
+                    <span className="text-[10px] sm:text-xs font-medium mt-0.5">{item.label}</span>
                 </button>
             ))}
             </div>

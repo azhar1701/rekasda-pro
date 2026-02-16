@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '../services/allCalculationsService';
 import { HistoryMap } from './HistoryMap';
-import { CalculationResult, CalculationType } from '../types';
+import { CalculationType, ChannelShape } from '../types';
 
 type ViewMode = 'LIST' | 'MAP';
 
@@ -64,23 +64,44 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
   };
 
   // Convert to CalculationResult format for map
-  const mapData: CalculationResult[] = data
-    .filter(item => item.location)
+  const mapData = data
+    .filter(item => item.location && item.location.latitude && item.location.longitude)
     .map(item => ({
       id: item.id,
       type: item.type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
       date: item.created_at,
-      inputs: { site: { channelName: item.project_name } },
+      inputs: { 
+        site: { 
+          channelName: item.project_name,
+          regency: '',
+          district: '',
+          village: ''
+        },
+        shape: ChannelShape.TRAPEZOID,
+        roughness: 0,
+        slope: 0,
+        width: 0,
+        topWidth: 0,
+        diameter: 0,
+        depth: 0,
+        totalDepth: 0,
+        sideSlope: 0
+      },
       outputs: { Discharge: getMainValue(item) },
-      location: item.location
+      location: {
+        latitude: item.location!.latitude,
+        longitude: item.location!.longitude,
+        accuracy: 10,
+        timestamp: Date.now()
+      }
     }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">Database Proyek</h1>
-        <p className="text-sm text-slate-500 mt-1">Kelola dan analisis riwayat perhitungan</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Database Proyek</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">Kelola dan analisis riwayat perhitungan</p>
       </div>
 
       {/* View Mode Toggle */}
@@ -88,7 +109,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
         <div className="flex gap-2 p-2 bg-slate-100 rounded-xl">
           <button 
             onClick={() => setViewMode('LIST')}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs font-bold transition-all ${
               viewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -96,7 +117,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
           </button>
           <button 
             onClick={() => setViewMode('MAP')}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs font-bold transition-all ${
               viewMode === 'MAP' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -129,7 +150,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {data.map((item) => (
                 <div key={item.id} className="bg-white rounded-lg p-5 border border-slate-200 hover:border-slate-300 transition-colors flex flex-col h-full">
                   <div>
