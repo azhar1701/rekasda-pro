@@ -157,6 +157,27 @@ export const calculateRational = (inputs: RationalInputs) => {
 };
 
 /**
+ * Menyimpan data perhitungan Manning ke Supabase
+ */
+export const saveManningCalculation = async (data: { projectName: string; inputs: any; results: any }) => {
+  if (!supabase) {
+    return { data: null, error: { message: 'Supabase not configured' } };
+  }
+
+  const { data: result, error } = await supabase
+    .from('manning_calculations')
+    .insert({
+      project_name: data.projectName,
+      inputs: data.inputs,
+      results: data.results
+    })
+    .select()
+    .single();
+
+  return { data: result, error };
+};
+
+/**
  * Menyimpan data perhitungan banjir ke Supabase
  */
 export const saveFloodCalculation = async (data: FloodCalcData) => {

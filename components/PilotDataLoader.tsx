@@ -86,78 +86,71 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
                     onClick={() => setSelectedIndex(index)}
                     className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
                       selectedIndex === index
-                        ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-600'
-                        : 'border-slate-200 hover:border-purple-400 hover:ring-2 hover:ring-purple-300'
+                        ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-200'
+                        : 'border-slate-200 hover:border-purple-300 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Left: Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-bold text-slate-900 text-sm leading-tight">
-                            {data.name}
-                          </h3>
-                          {selectedIndex === index && (
-                            <div className="ml-2 bg-purple-600 text-white rounded-full p-1 flex-shrink-0">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-slate-900 text-sm mb-1">{data.name}</h3>
                         <p className="text-xs text-slate-600 mb-2">{data.description}</p>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                          <svg className="w-3 h-3 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                          <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                          <span className="font-semibold text-slate-900">{data.location.channelName}</span>
-                          <span>• {data.location.desa}</span>
+                          <span className="font-medium">{data.location.channelName}</span>
+                          <span>•</span>
+                          <span>{data.location.desa}</span>
                         </div>
                       </div>
-
-                      {/* Right: Parameters */}
-                      <div className="flex-shrink-0">
-                        {method === 'RATIONAL' ? (
-                          <div className="grid grid-cols-2 gap-1.5 text-xs">
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">C</div>
-                              <div className="font-bold text-emerald-600">{(data as PilotDataRational).inputs.C}</div>
-                            </div>
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">A</div>
-                              <div className="font-bold text-emerald-600">{(data as PilotDataRational).inputs.A}</div>
-                            </div>
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">tc</div>
-                              <div className="font-bold text-emerald-600">{(data as PilotDataRational).inputs.tc}</div>
-                            </div>
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">I</div>
-                              <div className="font-bold text-emerald-600">{(data as PilotDataRational).inputs.I}</div>
-                            </div>
+                      {selectedIndex === index && (
+                        <div className="ml-3 bg-purple-600 text-white rounded-full p-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {method === 'RATIONAL' ? (
+                        <>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">C</div>
+                            <div className="text-xs font-bold text-emerald-600">{(data as PilotDataRational).inputs.C}</div>
                           </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-1.5 text-xs">
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">A</div>
-                              <div className="font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.A}</div>
-                            </div>
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">L</div>
-                              <div className="font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.L}</div>
-                            </div>
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">Ro</div>
-                              <div className="font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.Ro}</div>
-                            </div>
-                            <div className="bg-slate-50 rounded px-2 py-1 border border-slate-200">
-                              <div className="text-slate-500 text-[10px]">α</div>
-                              <div className="font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.Alpha}</div>
-                            </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">A (km²)</div>
+                            <div className="text-xs font-bold text-emerald-600">{(data as PilotDataRational).inputs.A}</div>
                           </div>
-                        )}
-                      </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">tc (min)</div>
+                            <div className="text-xs font-bold text-emerald-600">{(data as PilotDataRational).inputs.tc}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">I (mm/h)</div>
+                            <div className="text-xs font-bold text-emerald-600">{(data as PilotDataRational).inputs.I}</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">A (km²)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.A}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">L (km)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.L}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">Ro (mm)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.Ro}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">α</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.Alpha}</div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

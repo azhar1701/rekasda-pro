@@ -4,6 +4,7 @@ import { WaterBalanceChart } from './WaterBalanceChart';
 import { DependableFlowModal } from './DependableFlowModal';
 import { LocationIdentity } from './LocationIdentity';
 import { saveWaterBalance } from '../services/calculationService';
+import { WaterBalancePilotDataLoader } from './WaterBalancePilotDataLoader';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -28,6 +29,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
+  const [loadMessage, setLoadMessage] = useState<string | null>(null);
   
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
@@ -84,6 +86,25 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);
   const netBalance = totalSupply - totalDemand;
 
+  const handleLoadPilotData = (data: any) => {
+    setInputs({
+      population: data.inputs.population,
+      agricultureArea: data.inputs.agricultureArea,
+      domesticStandard: data.inputs.domesticStandard,
+      irrigationDemand: data.inputs.irrigationDemand,
+      monthlySupply: data.inputs.monthlySupply
+    });
+    setLocationData({
+      channelName: data.location.channelName,
+      kabupaten: data.location.kabupaten,
+      kecamatan: data.location.kecamatan,
+      desa: data.location.desa,
+      coordinates: data.location.coordinates
+    });
+    setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
+    setTimeout(() => setLoadMessage(null), 3000);
+  };
+
   const handleSaveWaterBalance = async () => {
     const projectName = locationData?.channelName;
     if (!projectName) {
@@ -128,11 +149,27 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           <p className="text-sm text-slate-500 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
         </div>
 
+        {/* Load Message Toast */}
+        {loadMessage && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-2xl shadow-lg border border-slate-200 bg-blue-50 text-blue-800 flex items-center gap-3 animate-fade-in max-w-md">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <span className="font-medium text-sm">{loadMessage}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6" style={{ display: 'flex' }}>
           
           {/* LEFT SIDEBAR */}
           <div style={{ width: `${sidebarWidth}%`, position: 'relative' }}>
             <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-6">
+              
+              {/* Pilot Data Loader */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Pilot</h2>
+                <WaterBalancePilotDataLoader onLoad={handleLoadPilotData} />
+              </div>
               
               {/* Location Identity */}
               <LocationIdentity onLocationChange={setLocationData} />
@@ -278,7 +315,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             )}
             
             {/* KPI CARDS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
@@ -365,7 +402,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
                 <div className="text-2xl font-bold text-rose-600">{summary?.criticalMonth?.month || '-'}</div>
                 <div className="text-xs text-slate-500 font-medium mt-1">
-                  {summary?.criticalMonth ? `${summary.criticalMonth.deficit} m³/s` : 'Tidak ada'}
+                  {summary?.criticalMonth ? `${Math.abs(summary.criticalMonth.balance).toFixed(1)} m³/s` : 'Tidak ada'}
                 </div>
               </div>
             </div>

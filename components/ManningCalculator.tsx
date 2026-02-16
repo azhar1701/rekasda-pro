@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MANNING_ROUGHNESS } from '../constants';
-import { calculateManning } from '../services/calculationService';
+import { calculateManning, saveManningCalculation } from '../services/calculationService';
 import { ManningInputs, CalculationType, ChannelShape } from '../types';
 import { InputGroup } from './InputGroup';
 import { Button } from './ui/Button';
@@ -10,6 +10,7 @@ import { FlowInsight } from './FlowInsight';
 import { LocationIdentity } from './LocationIdentity';
 import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from './ui/SelectWithSearch';
+import { ManningPilotDataLoader } from './ManningPilotDataLoader';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -18,6 +19,8 @@ interface Props {
 
 export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   const [, setLocationData] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [inputs, setInputs] = useState<ManningInputs>({
     site: { channelName: '', regency: '', district: '', village: '' },
     shape: ChannelShape.TRAPEZOID,
@@ -36,6 +39,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
+  const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
   const loadPilotData = () => {
     setInputs({
@@ -50,6 +54,58 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
       totalDepth: 1.0,
       sideSlope: 0.4,
     });
+  };
+
+  const handleLoadPilotData = (data: any) => {
+    setInputs({
+      site: {
+        channelName: data.location.channelName,
+        regency: data.location.kabupaten,
+        district: data.location.kecamatan,
+        village: data.location.desa,
+        location: data.location.coordinates ? {
+          latitude: data.location.coordinates.lat,
+          longitude: data.location.coordinates.lng,
+          accuracy: 10,
+          timestamp: Date.now()
+        } : undefined
+      },
+      ...data.inputs
+    });
+    setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
+    setTimeout(() => setLoadMessage(null), 3000);
+  };
+
+  const handleSaveToDatabase = async () => {
+    const projectName = inputs.site.channelName;
+    if (!projectName) {
+      setSaveMessage({ type: 'error', text: 'Mohon isi Nama Saluran di Identitas Lokasi terlebih dahulu' });
+      setTimeout(() => setSaveMessage(null), 3000);
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      const { error } = await saveManningCalculation({
+        projectName,
+        inputs,
+        results
+      });
+
+      if (error) {
+        setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
+      } else {
+        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan perhitungan!' });
+      }
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
+      setSaveMessage({ type: 'error', text: 'Error: ' + errorMessage });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const updateGeometricParams = (newInputs: ManningInputs) => {
@@ -147,22 +203,42 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
           <p className="text-sm text-slate-500 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
         </div>
 
+        {/* Load Message Toast */}
+        {loadMessage && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-2xl shadow-lg border border-slate-200 bg-teal-50 text-teal-800 flex items-center gap-3 animate-fade-in max-w-md">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <span className="font-medium text-sm">{loadMessage}</span>
+          </div>
+        )}
+
+        {/* Save Message Toast */}
+        {saveMessage && (
+          <div className={`fixed top-24 right-6 z-[110] px-6 py-3 rounded-2xl shadow-lg border flex items-center gap-3 animate-fade-in max-w-md ${
+            saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {saveMessage.type === 'success' ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              )}
+            </svg>
+            <span className="font-medium text-sm">{saveMessage.text}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6" style={{ display: 'flex' }}>
           
           {/* LEFT SIDEBAR */}
           <div style={{ width: `${sidebarWidth}%`, position: 'relative' }}>
             <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-4">
               
-              {/* Quick Actions */}
+              {/* Pilot Data Loader */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Tindakan Cepat</h2>
-                <button 
-                  onClick={loadPilotData}
-                  className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-sm flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                  Muat Data Pilot
-                </button>
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Pilot</h2>
+                <ManningPilotDataLoader onLoad={handleLoadPilotData} />
               </div>
 
               {/* Location Identity */}
@@ -269,7 +345,7 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
             {results && (
               <>
                 {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-md">
                     <div className="text-xs font-bold uppercase tracking-wider opacity-90 mb-2">Kapasitas Debit</div>
                     <div className="flex items-baseline gap-2">
@@ -319,9 +395,9 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                     </div>
                     
                     <div className="flex gap-3 pt-4 border-t border-slate-200">
-                      <Button fullWidth variant="primary" onClick={() => onSave(CalculationType.MANNING, inputs, results)}>
+                      <Button fullWidth variant="primary" onClick={handleSaveToDatabase} disabled={isSaving}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                        Simpan Laporan
+                        {isSaving ? 'Menyimpan...' : 'Simpan Hasil'}
                       </Button>
                       <Button variant="outline" onClick={() => onConsultAI(inputs, results)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
