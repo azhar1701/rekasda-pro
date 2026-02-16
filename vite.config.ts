@@ -34,8 +34,11 @@ export default defineConfig({
             if (id.includes('leaflet')) {
               return 'vendor-leaflet'
             }
-            if (id.includes('react') || id.includes('scheduler') || id.includes('recharts') || id.includes('prop-types')) {
+            if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react'
+            }
+            if (id.includes('recharts')) {
+              return 'vendor-recharts'
             }
             // Other vendors in a common chunk
             return 'vendor-common'
@@ -62,7 +65,9 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    // PENTING: Pre-bundle Recharts agar stabil
     include: ["recharts", "react", "react-dom"],
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom']
   },
 })
