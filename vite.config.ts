@@ -34,7 +34,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ["recharts", "react", "react-dom"],
+    include: ["recharts", "react", "react-dom", "prop-types"],
     exclude: ['react-smooth']
   },
   resolve: {
