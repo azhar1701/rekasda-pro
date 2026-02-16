@@ -15,7 +15,7 @@ export default defineConfig({
     // Adjust chunk size warning limit
     chunkSizeWarningLimit: 600,
     commonjsOptions: {
-      // PENTING: Ini memaksa Rollup untuk memperbaiki interop module Recharts dan dependencies
+      // IMPORTANT: This forces Rollup to fix interop for Recharts modules and dependencies
       include: [/node_modules/], 
       transformMixedEsModules: true,
       defaultIsModuleExports: true,
@@ -23,42 +23,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Vendor chunks
           if (id.includes('node_modules')) {
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase'
-            }
-            if (id.includes('@google/generative-ai')) {
-              return 'vendor-google'
-            }
-            if (id.includes('leaflet')) {
-              return 'vendor-leaflet'
-            }
-            if (id.includes('recharts') || id.includes('react-smooth')) {
-              return 'vendor-recharts'
-            }
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-              return 'vendor-react'
-            }
-            // Other vendors in a common chunk
-            return 'vendor-common'
-          }
-          
-          // Application chunks - organized by feature
-          if (id.includes('calculationService') || id.includes('manning') || id.includes('rational')) {
-            return 'calculations'
-          }
-          if (id.includes('locationService') || id.includes('LocationSelector')) {
-            return 'location'
-          }
-          if (id.includes('databaseService') || id.includes('DatabaseTest')) {
-            return 'database'
-          }
-          if (id.includes('geminiService') || id.includes('GeminiConsultant')) {
-            return 'gemini'
-          }
-          if (id.includes('components/ui')) {
-            return 'ui'
+            if (id.includes('@supabase')) return 'vendor-supabase'
+            if (id.includes('@google/generative-ai')) return 'vendor-google'
+            if (id.includes('leaflet')) return 'vendor-leaflet'
+            return 'vendor'
           }
         }
       }
@@ -66,6 +35,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ["recharts", "react", "react-dom"],
+    exclude: ['react-smooth']
   },
   resolve: {
     dedupe: ['react', 'react-dom']
