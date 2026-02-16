@@ -34,11 +34,11 @@ export default defineConfig({
             if (id.includes('leaflet')) {
               return 'vendor-leaflet'
             }
-            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-              return 'vendor-react'
-            }
-            if (id.includes('recharts')) {
+            if (id.includes('recharts') || id.includes('react-smooth')) {
               return 'vendor-recharts'
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react'
             }
             // Other vendors in a common chunk
             return 'vendor-common'
@@ -68,10 +68,6 @@ export default defineConfig({
     include: ["recharts", "react", "react-dom"],
   },
   resolve: {
-    dedupe: ['react', 'react-dom'],
-    alias: {
-      'react': 'react',
-      'react-dom': 'react-dom'
-    }
+    dedupe: ['react', 'react-dom']
   },
 })
