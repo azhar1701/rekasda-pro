@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "index.tsx",
+    "App.tsx",
+    "vite.config.ts",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ],
+  "project": [
+    "**/*.{js,jsx,ts,tsx}"
+  ],
+  "ignore": [
+    "**/*.d.ts",
+    "dist/**",
+    "node_modules/**",
+    "*.config.js",
+    "*.config.ts"
+  ],
+  "ignoreDependencies": [
+    "@types/*"
+  ]
+}

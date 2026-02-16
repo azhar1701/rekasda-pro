@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -7,15 +8,11 @@ export default defineConfig({
   server: {
     port: 3000
   },
-  // Ensure static assets are properly served
   publicDir: 'public',
   build: {
-    // Copy public directory to dist
     copyPublicDir: true,
-    // Adjust chunk size warning limit
     chunkSizeWarningLimit: 600,
     commonjsOptions: {
-      // IMPORTANT: Forces Rollup to fix interop for Recharts modules and dependencies
       include: [/node_modules/], 
       transformMixedEsModules: true,
       defaultIsModuleExports: true,
@@ -38,6 +35,15 @@ export default defineConfig({
     exclude: ['react-smooth']
   },
   resolve: {
-    dedupe: ['react', 'react-dom']
+    dedupe: ['react', 'react-dom'],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@/components': path.resolve(__dirname, './src/components'),
+      '@/features': path.resolve(__dirname, './src/features'),
+      '@/hooks': path.resolve(__dirname, './src/hooks'),
+      '@/lib': path.resolve(__dirname, './src/lib'),
+      '@/services': path.resolve(__dirname, './src/services'),
+      '@/types': path.resolve(__dirname, './src/types'),
+    },
   },
 })

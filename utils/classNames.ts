@@ -1,24 +1,12 @@
-/**
- * ClassNames Utility
- * Helper for conditionally joining classnames
- */
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-export function classNames(
-  ...classes: (string | undefined | null | Record<string, boolean>)[]
-): string {
-  return classes
-    .flat()
-    .map((cls) => {
-      if (typeof cls === 'object' && cls !== null) {
-        return Object.entries(cls)
-          .filter(([, value]) => value)
-          .map(([key]) => key)
-          .join(' ');
-      }
-      return cls || '';
-    })
-    .filter(Boolean)
-    .join(' ');
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}
+
+export function classNames(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
 }
 
 export default classNames;
