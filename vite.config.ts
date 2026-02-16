@@ -15,7 +15,7 @@ export default defineConfig({
     // Adjust chunk size warning limit
     chunkSizeWarningLimit: 600,
     commonjsOptions: {
-      // IMPORTANT: This forces Rollup to fix interop for Recharts modules and dependencies
+      // IMPORTANT: Forces Rollup to fix interop for Recharts modules and dependencies
       include: [/node_modules/], 
       transformMixedEsModules: true,
       defaultIsModuleExports: true,
