@@ -1,0 +1,6 @@
+@echo off
+echo Clearing Vite cache...
+if exist .vite rmdir /s /q .vite
+echo Cache cleared!
+echo Starting dev server...
+npm run dev
