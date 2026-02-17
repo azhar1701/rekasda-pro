@@ -19,16 +19,14 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react'
-            if (id.includes('recharts')) return 'vendor-charts'
-            if (id.includes('@supabase')) return 'vendor-supabase'
-            if (id.includes('@google/generative-ai')) return 'vendor-google'
-            if (id.includes('leaflet')) return 'vendor-leaflet'
-            if (id.includes('lucide-react')) return 'vendor-icons'
-            return 'vendor'
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', '@headlessui/react'],
+          'vendor-charts': ['recharts', 'recharts-scale'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-google': ['@google/generative-ai'],
+          'vendor-leaflet': ['leaflet'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-utils': ['clsx', 'tailwind-merge', 'zod'],
         }
       }
     }
