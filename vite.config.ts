@@ -12,28 +12,47 @@ export default defineConfig({
   build: {
     copyPublicDir: true,
     chunkSizeWarningLimit: 600,
-    commonjsOptions: {
-      include: [/node_modules/], 
-      transformMixedEsModules: true,
-      defaultIsModuleExports: true,
-    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', '@headlessui/react'],
-          'vendor-charts': ['recharts', 'recharts-scale'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-google': ['@google/generative-ai'],
-          'vendor-leaflet': ['leaflet'],
-          'vendor-icons': ['lucide-react'],
-          'vendor-utils': ['clsx', 'tailwind-merge', 'zod'],
+        manualChunks(id) {
+          // Separate large vendor libraries
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) {
+              return 'vendor-react';
+            } else if (id.includes('recharts')) {
+              return 'vendor-charts';
+            } else if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            } else if (id.includes('leaflet')) {
+              return 'vendor-leaflet';
+            } else if (id.includes('@google/generative-ai')) {
+              return 'vendor-google';
+            }
+          }
         }
       }
     }
   },
   optimizeDeps: {
-    include: ["recharts", "react", "react-dom", "prop-types"],
-    exclude: ['react-smooth']
+    include: [
+      'react',
+      'react-dom',
+      'recharts',
+      '@supabase/supabase-js',
+      '@google/generative-ai',
+      'leaflet',
+      'lucide-react',
+      '@headlessui/react',
+      'clsx',
+      'tailwind-merge',
+      'zod',
+      'prop-types'
+    ],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    }
   },
   resolve: {
     dedupe: ['react', 'react-dom'],
