@@ -1,5 +1,8 @@
 // Design System Components - Centralized Exports
 
+// Branding
+export { BrandLogo } from './BrandLogo';
+
 // Forms
 export { Button } from './forms/Button';
 export { Input } from './forms/InputNew';

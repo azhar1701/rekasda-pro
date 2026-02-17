@@ -8,24 +8,30 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Semantic Brand Colors
+        primary: '#2563eb',      // blue-600 - Main actions/brand
+        secondary: '#06b6d4',    // cyan-500 - Accents/water theme
+        surface: '#f8fafc',      // slate-50 - Backgrounds
+        'surface-highlight': '#ffffff', // white - Cards/elevated surfaces
+        
+        // Legacy colors (keep for compatibility)
         'safety-orange': '#ff5722',
         'safety-blue': '#0062cc',
         'safety-blue-light': '#e6f0fa',
         'field-green': '#2e7d32',
         'alert-red': '#d32f2f',
-        'surface': '#ffffff',
         'background': '#f8fafc',
         primary: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',  // Main brand color
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
         },
       },
       fontFamily: {

@@ -364,10 +364,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-md">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="text-xs font-bold uppercase tracking-wider opacity-90">Kapasitas Debit</div>
-                      <SNIBadge standard="Manning" size="sm" />
-                    </div>
+                    <div className="text-xs font-bold uppercase tracking-wider opacity-90 mb-2">Kapasitas Debit</div>
                     <div className="flex items-baseline gap-2">
                       <div className="text-3xl font-black">{results.Discharge}</div>
                       <div className="text-sm font-bold opacity-80">m³/s</div>

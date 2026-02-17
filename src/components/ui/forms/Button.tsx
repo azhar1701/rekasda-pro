@@ -29,12 +29,12 @@ export const Button: React.FC<ButtonProps> = ({
   };
   
   const variants = {
-    primary: "bg-teal-600 text-white shadow-card hover:bg-teal-700 hover:shadow-card-hover",
-    secondary: "bg-blue-600 text-white shadow-card hover:bg-blue-700 hover:shadow-card-hover",
-    danger: "bg-error text-white shadow-card hover:bg-red-600 hover:shadow-card-hover",
-    success: "bg-success text-white shadow-card hover:bg-emerald-600 hover:shadow-card-hover",
-    outline: "bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50",
-    ghost: "bg-transparent text-slate-600 hover:bg-slate-50"
+    primary: "bg-blue-600 text-white shadow-card hover:bg-blue-700 hover:shadow-card-hover active:bg-blue-800",
+    secondary: "bg-cyan-500 text-white shadow-card hover:bg-cyan-600 hover:shadow-card-hover active:bg-cyan-700",
+    danger: "bg-error text-white shadow-card hover:bg-red-600 hover:shadow-card-hover active:bg-red-700",
+    success: "bg-success text-white shadow-card hover:bg-emerald-600 hover:shadow-card-hover active:bg-emerald-700",
+    outline: "bg-white border-2 border-slate-200 text-slate-700 hover:border-blue-600 hover:bg-blue-50 active:bg-blue-100",
+    ghost: "bg-transparent text-slate-600 hover:bg-slate-50 active:bg-slate-100"
   };
 
   const widthClass = fullWidth ? "w-full" : "";

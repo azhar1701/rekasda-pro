@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Waves, CloudRain, Scale, Database, Sparkles } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
 import { FloodDischargeCalculator } from '@/features/flood-analysis/components/FloodDischargeCalculator';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
@@ -97,27 +98,37 @@ const App: React.FC = () => {
     { 
       tab: Tab.SALURAN, 
       label: 'Saluran', 
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 10l8-8m0 0l8 8M12 2v20" /></svg>,
+      icon: <Waves strokeWidth={2} />,
+      color: 'bg-cyan-500',
+      textColor: 'text-cyan-600'
     },
     { 
       tab: Tab.BANJIR, 
       label: 'Banjir', 
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>,
+      icon: <CloudRain strokeWidth={2} />,
+      color: 'bg-blue-500',
+      textColor: 'text-blue-600'
     },
     { 
       tab: Tab.NERACA, 
       label: 'Neraca', 
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>,
+      icon: <Scale strokeWidth={2} />,
+      color: 'bg-emerald-500',
+      textColor: 'text-emerald-600'
     },
     { 
       tab: Tab.HISTORY, 
       label: 'Data', 
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zM4 10h16M10 4v16" /></svg>,
+      icon: <Database strokeWidth={2} />,
+      color: 'bg-purple-500',
+      textColor: 'text-purple-600'
     },
     { 
       tab: Tab.AI, 
       label: 'Konsultan', 
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>,
+      icon: <Sparkles strokeWidth={2} />,
+      color: 'bg-amber-500',
+      textColor: 'text-amber-600'
     }
   ];
 
@@ -180,12 +191,18 @@ const App: React.FC = () => {
                     onClick={() => setActiveTab(item.tab)}
                     className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 md:px-4 py-2 rounded-xl md:rounded-full transition-all ${
                           activeTab === item.tab
-                            ? 'bg-slate-900 text-white'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100'
+                            ? `${item.color} text-white shadow-md`
+                            : `text-slate-400 hover:${item.textColor} hover:bg-blue-50 active:bg-blue-100`
                         }`}
                 >
-                    <div className="w-5 h-5">{item.icon}</div>
-                    <span className="text-[10px] md:text-xs font-medium mt-0.5">{item.label}</span>
+                    <div className="w-5 h-5 flex items-center justify-center">
+                      {React.cloneElement(item.icon as React.ReactElement, {
+                        className: 'w-5 h-5',
+                        stroke: 'currentColor',
+                        fill: 'none'
+                      })}
+                    </div>
+                    <span className="text-[10px] md:text-xs font-medium mt-0.5 text-current">{item.label}</span>
                 </button>
             ))}
             </div>
