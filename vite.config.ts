@@ -15,17 +15,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Separate large vendor libraries
           if (id.includes('node_modules')) {
-            if (id.includes('react')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
               return 'vendor-react';
-            } else if (id.includes('recharts')) {
+            }
+            if (id.includes('recharts')) {
               return 'vendor-charts';
-            } else if (id.includes('@supabase')) {
+            }
+            if (id.includes('@supabase')) {
               return 'vendor-supabase';
-            } else if (id.includes('leaflet')) {
+            }
+            if (id.includes('leaflet')) {
               return 'vendor-leaflet';
-            } else if (id.includes('@google/generative-ai')) {
+            }
+            if (id.includes('@google/generative-ai')) {
               return 'vendor-google';
             }
           }
