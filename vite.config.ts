@@ -14,25 +14,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-              return 'vendor-react';
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase';
-            }
-            if (id.includes('leaflet')) {
-              return 'vendor-leaflet';
-            }
-            if (id.includes('@google/generative-ai')) {
-              return 'vendor-google';
-            }
-          }
-        }
+        manualChunks: undefined
       }
     }
   },
