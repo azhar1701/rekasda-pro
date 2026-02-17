@@ -11,36 +11,9 @@ export default defineConfig({
   publicDir: 'public',
   build: {
     copyPublicDir: true,
-    chunkSizeWarningLimit: 600,
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
-      }
-    }
-  },
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'recharts',
-      '@supabase/supabase-js',
-      '@google/generative-ai',
-      'leaflet',
-      'lucide-react',
-      '@headlessui/react',
-      'clsx',
-      'tailwind-merge',
-      'zod',
-      'prop-types'
-    ],
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'
-      }
-    }
+    chunkSizeWarningLimit: 1000
   },
   resolve: {
-    dedupe: ['react', 'react-dom'],
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@/components': path.resolve(__dirname, './src/components'),
