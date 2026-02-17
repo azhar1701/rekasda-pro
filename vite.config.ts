@@ -15,15 +15,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Vendor chunks - group all vendor code together to avoid circular deps
-          if (id.includes('node_modules')) {
-            // Separate React core from other vendors
-            if (id.includes('react') && !id.includes('node_modules/.pnpm')) {
-              return 'vendor-react';
-            }
-            // All other vendors in one chunk
-            return 'vendor';
-          }
+          // Only chunk app-level code, let Rollup handle vendor dependencies
+          // to avoid initialization order issues
           
           // App services - shared across features
           if (id.includes('src/services')) {
@@ -44,7 +37,7 @@ export default defineConfig({
             return 'lib-api';
           }
           
-          // Shared hooks and types - prevent them from being bundled in each feature
+          // Shared hooks and types
           if (id.includes('src/hooks')) {
             return 'hooks';
           }
