@@ -5,10 +5,16 @@ export const MANNING_ROUGHNESS: RoughnessMaterial[] = [
   { name: 'Beton Halus (Finishing Sendok)', value: 0.013, category: 'Buatan' },
   { name: 'Beton Kasar', value: 0.015, category: 'Buatan' },
   { name: 'Pasangan Batu Kali (Semen)', value: 0.025, category: 'Buatan' },
+  { name: 'Pasangan Batu Tidak Beraturan', value: 0.035, category: 'Buatan' },
+  { name: 'Gorong-gorong Beton', value: 0.013, category: 'Buatan' },
+  { name: 'Pipa PVC/HDPE', value: 0.010, category: 'Buatan' },
+  { name: 'Pipa Baja', value: 0.012, category: 'Buatan' },
   { name: 'Saluran Tanah Bersih', value: 0.022, category: 'Alami' },
   { name: 'Saluran Tanah Berkerikil', value: 0.030, category: 'Alami' },
+  { name: 'Saluran Tanah dengan Vegetasi Ringan', value: 0.027, category: 'Alami' },
   { name: 'Saluran Alami Berumput', value: 0.035, category: 'Alami' },
   { name: 'Sungai Alami Berliku', value: 0.045, category: 'Alami' },
+  { name: 'Sungai dengan Vegetasi Lebat', value: 0.050, category: 'Alami' },
 ];
 
 export const RUNOFF_COEFFICIENTS: RunoffSurface[] = [
@@ -18,6 +24,7 @@ export const RUNOFF_COEFFICIENTS: RunoffSurface[] = [
   { name: 'Taman / Ruang Terbuka', value: 0.15, category: 'Perkotaan' },
   { name: 'Hutan Lebat', value: 0.15, category: 'Rural' },
   { name: 'Lahan Pertanian', value: 0.30, category: 'Rural' },
+  { name: 'Sawah', value: 0.25, category: 'Rural' },
   { name: 'Tanah Terbuka / Gundul', value: 0.60, category: 'Rural' },
 ];
 

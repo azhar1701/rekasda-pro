@@ -116,8 +116,15 @@ export const calculateRational = (inputs: RationalInputs) => {
   const L_meters = flowLength * 1000;
   const S_land = Math.max(0.0001, catchmentSlope);
   
-  // Tc Kirpich
-  const Tc_minutes = 0.0195 * Math.pow(L_meters, 0.77) * Math.pow(S_land, -0.385);
+  // Tc calculation with slope validation (Ven Te Chow)
+  let Tc_minutes;
+  if (S_land < 0.003) {
+    // SCS method for flat terrain (S < 0.3%)
+    Tc_minutes = 0.057 * Math.pow(L_meters, 0.8) * Math.pow(S_land, -0.5);
+  } else {
+    // Kirpich method for steeper slopes (S >= 0.3%)
+    Tc_minutes = 0.0195 * Math.pow(L_meters, 0.77) * Math.pow(S_land, -0.385);
+  }
   const Tc_hours = Tc_minutes / 60;
 
   // Intensitas Mononobe (mm/jam)

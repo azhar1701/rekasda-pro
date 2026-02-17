@@ -13,6 +13,7 @@ export interface WaterBalanceResult {
   supply: number; // m³/s
   domesticDemand: number; // m³/s
   agricultureDemand: number; // m³/s
+  environmentalFlow: number; // m³/s (UU 17/2019)
   totalDemand: number; // m³/s
   balance: number; // m³/s
   status: 'Surplus' | 'Defisit' | 'Seimbang';
@@ -53,7 +54,9 @@ export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceR
   const agricultureDemand = calculateAgricultureDemand(inputs.agricultureArea, inputs.irrigationDemand);
   
   return inputs.monthlySupply.map((supply, index) => {
-    const totalDemand = domesticDemand + agricultureDemand;
+    // UU No. 17/2019 Pasal 22: Minimum 10% untuk Debit Lingkungan
+    const environmentalFlow = supply * 0.10;
+    const totalDemand = domesticDemand + agricultureDemand + environmentalFlow;
     const balance = supply - totalDemand;
     
     let status: 'Surplus' | 'Defisit' | 'Seimbang';
@@ -66,6 +69,7 @@ export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceR
       supply: parseFloat(supply.toFixed(3)),
       domesticDemand: parseFloat(domesticDemand.toFixed(3)),
       agricultureDemand: parseFloat(agricultureDemand.toFixed(3)),
+      environmentalFlow: parseFloat(environmentalFlow.toFixed(3)),
       totalDemand: parseFloat(totalDemand.toFixed(3)),
       balance: parseFloat(balance.toFixed(3)),
       status

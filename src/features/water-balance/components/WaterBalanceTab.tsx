@@ -475,9 +475,10 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
                       <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Bulan</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-blue-600 uppercase tracking-wide">Supply</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-blue-600 uppercase tracking-wide">Debit Andalan</th>
                       <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Domestik</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Pertanian</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Irigasi</th>
+                      <th className="text-right py-3 px-4 text-xs font-bold text-emerald-600 uppercase tracking-wide">Debit Lingkungan</th>
                       <th className="text-right py-3 px-4 text-xs font-bold text-orange-600 uppercase tracking-wide">Total Demand</th>
                       <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Neraca</th>
                       <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Status</th>
@@ -490,6 +491,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         <td className="py-3 px-4 text-right font-semibold text-blue-600 font-mono">{row.supply}</td>
                         <td className="py-3 px-4 text-right text-slate-600 font-mono">{row.domesticDemand}</td>
                         <td className="py-3 px-4 text-right text-slate-600 font-mono">{row.agricultureDemand}</td>
+                        <td className="py-3 px-4 text-right text-emerald-600 font-mono">{row.environmentalFlow}</td>
                         <td className="py-3 px-4 text-right font-semibold text-orange-600 font-mono">{row.totalDemand}</td>
                         <td className={`py-3 px-4 text-right font-bold font-mono ${row.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {row.balance >= 0 ? '+' : ''}{row.balance}
@@ -539,6 +541,10 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       <div>
                         <div className="text-xs text-slate-500 font-medium mb-1">Pertanian</div>
                         <div className="font-semibold text-slate-700">{row.agricultureDemand} m³/s</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Debit Lingkungan</div>
+                        <div className="font-semibold text-emerald-700">{row.environmentalFlow} m³/s</div>
                       </div>
                     </div>
                     <div className="pt-2 border-t border-slate-200">

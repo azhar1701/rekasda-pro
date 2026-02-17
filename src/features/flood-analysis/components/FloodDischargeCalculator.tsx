@@ -9,6 +9,7 @@ import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { Info, AlertTriangle } from 'lucide-react';
+import { RETURN_PERIOD_GUIDANCE } from '@/constants/returnPeriodGuidance';
 
 type MethodType = 'RATIONAL' | 'NAKAYASU';
 
@@ -799,9 +800,14 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {returnPeriods.map((rp, idx) => (
+                          {returnPeriods.map((rp, idx) => {
+                            const guidance = RETURN_PERIOD_GUIDANCE[rp.period];
+                            return (
                             <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                              <td className="py-2.5 px-3 font-bold text-slate-900">{rp.period}</td>
+                              <td className="py-2.5 px-3">
+                                <div className="font-bold text-slate-900">{rp.period}</div>
+                                <div className={`text-[10px] ${guidance?.color || 'text-slate-500'} font-medium mt-0.5`}>{guidance?.infrastructure}</div>
+                              </td>
                               <td className="py-2.5 px-3 text-right">
                                 <input
                                   type="number"
@@ -816,17 +822,22 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                               </td>
                               <td className="py-2.5 px-3 text-right font-bold text-teal-600">{rp.qPeak.toFixed(2)}</td>
                             </tr>
-                          ))}
+                          );})}
                         </tbody>
                       </table>
                     </div>
                     
                     {/* Mobile Card View */}
                     <div className="md:hidden space-y-3">
-                      {returnPeriods.map((rp, idx) => (
+                      {returnPeriods.map((rp, idx) => {
+                        const guidance = RETURN_PERIOD_GUIDANCE[rp.period];
+                        return (
                         <div key={idx} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-base font-bold text-slate-900">{rp.period}</span>
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <span className="text-base font-bold text-slate-900">{rp.period}</span>
+                              <div className={`text-xs ${guidance?.color || 'text-slate-500'} font-medium mt-0.5`}>{guidance?.infrastructure}</div>
+                            </div>
                             <span className="text-lg font-bold text-teal-600">{rp.qPeak.toFixed(2)} m³/s</span>
                           </div>
                           <div>
@@ -843,7 +854,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                             />
                           </div>
                         </div>
-                      ))}
+                      );})}
                     </div>
                     <div className="flex flex-col md:flex-row gap-2 pt-2">
                       <button
