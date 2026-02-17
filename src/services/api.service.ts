@@ -1,7 +1,6 @@
-import { supabase, isSupabaseEnabled } from '@/lib/api/supabase';
-import type { ApiResponse } from '@/types/api.types';
-import type { CalculationRecord } from '@/types/database.types';
-import { isValidCalculationRecord } from '@/types/database.types';
+import { supabase, isSupabaseEnabled } from '@/lib/supabase';
+import { ApiResponse } from '@/types/api.types';
+import { CalculationRecord, isValidCalculationRecord } from '@/types/database.types';
 
 class ApiService {
   private async handleResponse<T>(
