@@ -11,7 +11,7 @@ import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
 import { ManningPilotDataLoader } from './ManningPilotDataLoader';
-import { SNIBadge, SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
+import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
