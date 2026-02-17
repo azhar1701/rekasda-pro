@@ -45,28 +45,43 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
       // Remove double and single dollar signs used for math mode
       .replace(/\$\$(.*?)\$\$/g, '$1')
       .replace(/\$(.*?)\$/g, '$1')
-      // Handle \text{...} and \mathrm{...} - typically source of "text{ m}" artifacts
-      .replace(/\\(text|mathrm)\{([^}]+)\}/g, '$2') 
-      .replace(/(text|mathrm)\{([^}]+)\}/g, '$2') // Handle case if backslash was already stripped
+      // Handle \text{...} and \mathrm{...}
+      .replace(/\\(text|mathrm|frac)\{([^}]+)\}/g, '$2')
+      .replace(/(text|mathrm|frac)\{([^}]+)\}/g, '$2')
       // Common Math Symbols
       .replace(/\\approx/g, '≈')
       .replace(/\\times/g, '×')
-      .replace(/\s\*\s/g, ' × ') // Standalone stars as multiplication
+      .replace(/\\cdot/g, '·')
+      .replace(/\s\*\s/g, ' × ')
       .replace(/\\le/g, '≤')
       .replace(/\\ge/g, '≥')
       .replace(/\\pm/g, '±')
       .replace(/\\alpha/g, 'α')
       .replace(/\\beta/g, 'β')
       .replace(/\\Delta/g, 'Δ')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\pi/g, 'π')
       // Superscripts and Subscripts
       .replace(/\^2/g, '²')
       .replace(/\^3/g, '³')
-      .replace(/_\{([^}]+)\}/g, ' $1') // Subscripts like Q_{min} -> Q min
-      // Remove remaining LaTeX junk
+      .replace(/_\{([^}]+)\}/g, '$1')
+      .replace(/_(\w+)/g, '$1')
+      // Remove LaTeX commands
+      .replace(/\\(left|right|big|Big)/g, '')
       .replace(/\\,/g, ' ')
-      .replace(/\\/g, '')  // Remove all remaining backslashes
-      .replace(/\{/g, '')  // Remove left braces
-      .replace(/\}/g, ''); // Remove right braces
+      .replace(/\\;/g, ' ')
+      .replace(/\\:/g, ' ')
+      // Clean up brackets and braces
+      .replace(/\\\[/g, '')
+      .replace(/\\\]/g, '')
+      .replace(/\\\\/g, '')
+      // Remove remaining backslashes and braces
+      .replace(/\\/g, '')
+      .replace(/\{/g, '')
+      .replace(/\}/g, '')
+      // Clean multiple spaces
+      .replace(/\s+/g, ' ')
+      .trim();
 
     return cleaned;
   };
@@ -190,15 +205,27 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
       </div>
       
       <div className="p-6 flex-1 flex flex-col gap-6 bg-slate-50/30">
-        {response ? (
-            <div className="bg-white border border-slate-100 p-8 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-50">
-                    <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        {loading ? (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-6">
+                    <div className="relative inline-block">
+                        <div className="w-16 h-16 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
                     </div>
                     <div>
-                        <span className="block font-black text-[10px] text-slate-400 uppercase tracking-widest">Status Analisis</span>
-                        <span className="font-bold text-xs text-slate-900">Selesai • Mengacu Standar SNI</span>
+                        <h3 className="text-lg font-semibold text-slate-800 mb-1">Menganalisis...</h3>
+                        <p className="text-sm text-slate-500">Memproses dengan referensi SNI terbaru</p>
+                    </div>
+                </div>
+            </div>
+        ) : response ? (
+            <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div>
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Analisis Selesai</span>
+                        <p className="text-xs text-slate-400 mt-0.5">Mengacu SNI 2415:2016 & UU 17/2019</p>
                     </div>
                 </div>
                 <div className="prose prose-sm max-w-none text-slate-600">
@@ -206,13 +233,22 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                 </div>
             </div>
         ) : (
-            <div className="flex-1 flex flex-col items-center justify-center py-10 text-center space-y-4">
-                <div className="bg-white p-6 rounded-[2rem] shadow-soft mb-2 group transition-all duration-500 hover:shadow-glow">
-                    <svg className="w-12 h-12 text-slate-300 group-hover:text-safety-blue transition-colors duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                </div>
-                <div>
-                    <h3 className="text-slate-900 font-bold text-lg">Asisten Cerdas Siap Membantu</h3>
-                    <p className="text-slate-500 text-sm mt-1 max-w-xs mx-auto">Tanyakan tentang analisis debit, validasi metode SNI, atau saran desain penampang.</p>
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-6 max-w-md">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+                        <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-800 mb-2">Asisten Cerdas Siap Membantu</h3>
+                        <p className="text-sm text-slate-500 leading-relaxed">Tanyakan tentang analisis debit, validasi metode SNI, atau saran desain penampang.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">SNI 2415:2016</span>
+                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">UU 17/2019</span>
+                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">Permen PUPR</span>
+                    </div>
                 </div>
             </div>
         )}
