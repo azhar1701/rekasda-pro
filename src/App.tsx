@@ -140,7 +140,7 @@ const App: React.FC = () => {
       />
 
       {/* --- Main Content --- */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-28 sm:pb-32">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-24 md:pb-32">
           <div className="transition-opacity duration-300">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
           {activeTab === Tab.BANJIR && <FloodDischargeCalculator onConsultAI={() => {
@@ -170,27 +170,27 @@ const App: React.FC = () => {
       <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
       <AllDataDetailModal isOpen={!!viewAllDataDetail} data={viewAllDataDetail} onClose={() => setViewAllDataDetail(null)} />
 
-      {/* --- Navigation Bar --- */}
-      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] sm:w-auto max-w-full">
-        <div className="bg-white border border-slate-200 shadow-lg rounded-full px-1 sm:px-2 py-1.5 sm:py-2">
-            <div className="flex items-center gap-0.5 sm:gap-1">
+      {/* --- Navigation Bar (Mobile-First Bottom Nav) --- */}
+      <nav className="fixed bottom-0 left-0 right-0 md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">
+        <div className="bg-white border-t md:border md:border-slate-200 md:shadow-lg md:rounded-full px-2 md:px-2 py-2 md:py-2 safe-area-inset-bottom">
+            <div className="flex items-center justify-around md:gap-1">
             {navigationItems.map((item) => (
                 <button
                     key={item.tab}
                     onClick={() => setActiveTab(item.tab)}
-                    className={`flex flex-col items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all ${
+                    className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 md:px-4 py-2 rounded-xl md:rounded-full transition-all ${
                           activeTab === item.tab
                             ? 'bg-slate-900 text-white'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100'
                         }`}
                 >
-                    <div className="w-4 h-4 sm:w-5 sm:h-5">{item.icon}</div>
-                    <span className="text-[10px] sm:text-xs font-medium mt-0.5">{item.label}</span>
+                    <div className="w-5 h-5">{item.icon}</div>
+                    <span className="text-[10px] md:text-xs font-medium mt-0.5">{item.label}</span>
                 </button>
             ))}
             </div>
         </div>
-      </div>
+      </nav>
       
     </div>
     </ErrorBoundary>

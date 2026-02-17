@@ -186,7 +186,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
       <div className="max-w-[1600px] mx-auto">
         
         {/* Header */}
-        <div className="mb-3 sm:mb-4">
+        <div className="mb-2 md:mb-3">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Analisis Saluran Manning</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
         </div>

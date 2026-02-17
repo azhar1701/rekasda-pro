@@ -274,13 +274,13 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-slate-50 p-3 md:p-5">
       <div className="max-w-[1600px] mx-auto">
         
         {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-slate-800">Analisis Banjir & Hidrologi</h1>
-          <p className="text-sm text-slate-500 mt-1">Perhitungan debit puncak • Metode Rasional & Nakayasu</p>
+        <div className="mb-2 md:mb-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Analisis Banjir & Hidrologi</h1>
+          <p className="text-xs md:text-sm text-slate-500 mt-1">Perhitungan debit puncak • Metode Rasional & Nakayasu</p>
         </div>
 
       {/* Messages Toast */}
@@ -307,11 +307,11 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
         </div>
       )}
 
-        <div className="grid grid-cols-1 gap-6 relative z-0" style={{ display: 'flex' }}>
+        <div className="flex flex-col lg:flex-row gap-6 relative z-0">
           
           {/* LEFT SIDEBAR */}
-          <div style={{ width: `${sidebarWidth}%`, position: 'relative' }}>
-            <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-4">
+          <div className="w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%', position: 'relative' }}>
+            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-3 md:space-y-4">
               {/* Pilot Data Loader */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Pilot</h2>
@@ -563,16 +563,16 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
           </div>
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
           >
             <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-teal-500 transition-colors"></div>
           </div>
 
           {/* MAIN CONTENT */}
-          <div style={{ width: `${100 - sidebarWidth}%` }} className="space-y-6">
+          <div className="w-full lg:w-auto space-y-3 md:space-y-4" style={{ width: window.innerWidth >= 1024 ? `${100 - sidebarWidth}%` : '100%' }}>
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 relative z-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3 relative z-0">
                 {method === 'RATIONAL' ? (
                   <>
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative">
@@ -767,7 +767,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     volume={volume}
                     title="Hidrograf Banjir Rencana"
                     primaryColor="#0d9488"
-                    height={350}
+                    height={window.innerWidth < 768 ? 250 : 350}
               />
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <p className="text-xs text-slate-600">
@@ -789,7 +789,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         Analisis Frekuensi
                       </button>
                     </div>
-                    <div className="overflow-x-auto">
+                    <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-slate-200 bg-slate-50">
@@ -820,11 +820,36 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         </tbody>
                       </table>
                     </div>
-                    <div className="flex gap-2 pt-2">
+                    
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-3">
+                      {returnPeriods.map((rp, idx) => (
+                        <div key={idx} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-base font-bold text-slate-900">{rp.period}</span>
+                            <span className="text-lg font-bold text-teal-600">{rp.qPeak.toFixed(2)} m³/s</span>
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-500 font-medium mb-1 block">Hujan (mm)</label>
+                            <input
+                              type="number"
+                              value={rp.rainfall}
+                              onChange={e => {
+                                const updated = [...returnPeriods];
+                                updated[idx].rainfall = parseFloat(e.target.value) || 0;
+                                setReturnPeriods(updated);
+                              }}
+                              className="w-full text-base bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 outline-none"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-2 pt-2">
                       <button
                         onClick={handleSaveToDB}
                         disabled={isSaving}
-                        className="flex-1 px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 min-h-[44px] px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 active:bg-teal-800 transition-colors font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -834,7 +859,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                       {onConsultAI && (
                         <button
                           onClick={onConsultAI}
-                          className="px-4 py-2.5 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors font-bold text-sm flex items-center justify-center gap-2"
+                          className="w-full md:w-auto min-h-[44px] px-4 py-2.5 bg-slate-700 text-white rounded-lg hover:bg-slate-800 active:bg-slate-900 transition-colors font-bold text-sm flex items-center justify-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

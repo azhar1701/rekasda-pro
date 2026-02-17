@@ -140,14 +140,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-slate-50 p-3 md:p-5">
       
       <div className="max-w-[1600px] mx-auto">
         
         {/* HEADER */}
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-slate-800">Analisis Neraca Air</h1>
-          <p className="text-sm text-slate-500 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
+        <div className="mb-2 md:mb-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Analisis Neraca Air</h1>
+          <p className="text-xs md:text-sm text-slate-500 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
         </div>
 
         {/* Load Message Toast */}
@@ -160,29 +160,31 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6" style={{ display: 'flex' }}>
+        <div className="flex flex-col lg:flex-row gap-6">
           
           {/* LEFT SIDEBAR */}
-          <div style={{ width: `${sidebarWidth}%`, position: 'relative' }}>
-            <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-6">
+          <div className="w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%', position: 'relative' }}>
+            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-3 md:space-y-4">
               
               {/* Pilot Data Loader */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Pilot</h2>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Data Pilot</h2>
                 <WaterBalancePilotDataLoader onLoad={handleLoadPilotData} />
               </div>
               
               {/* Location Identity */}
-              <LocationIdentity onLocationChange={setLocationData} />
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
+                <LocationIdentity onLocationChange={setLocationData} />
+              </div>
               
               {/* SECTION 1: PARAMETER GLOBAL */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div className="flex items-center gap-2 mb-5">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
+                <div className="flex items-center gap-2 mb-4">
                   <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
                   <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Parameter Masukan</h2>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
                       Jumlah Penduduk
@@ -192,7 +194,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.population}
                         onChange={e => setInputs({ ...inputs, population: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-11 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">jiwa</span>
                     </div>
@@ -207,7 +209,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.agricultureArea}
                         onChange={e => setInputs({ ...inputs, agricultureArea: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-11 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">Ha</span>
                     </div>
@@ -224,7 +226,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.domesticStandard}
                         onChange={e => setInputs({ ...inputs, domesticStandard: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-11 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/org/hr</span>
                     </div>
@@ -240,7 +242,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         step="0.1"
                         value={inputs.irrigationDemand}
                         onChange={e => setInputs({ ...inputs, irrigationDemand: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-11 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/s/Ha</span>
                     </div>
@@ -249,8 +251,8 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </div>
 
               {/* SECTION 2: DEBIT ANDALAN */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div className="flex items-center justify-between mb-5">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-8 bg-cyan-500 rounded-full"></div>
                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Debit Andalan</h2>
@@ -260,7 +262,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
                 <button
                   onClick={() => setIsCalcModalOpen(true)}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
+                  className="w-full min-h-[44px] py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -293,16 +295,17 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </div>
             </div>
           </div>
+          {/* Resizer - Desktop Only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
           >
             <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-teal-500 transition-colors"></div>
           </div>
 
           {/* MAIN CONTENT */}
-          <div style={{ width: `${100 - sidebarWidth}%` }} className="space-y-6">
+          <div className="w-full lg:w-auto space-y-3 md:space-y-4" style={{ width: window.innerWidth >= 1024 ? `${100 - sidebarWidth}%` : '100%' }}>
             
             {/* Save Message Toast */}
             {saveMessage && (
@@ -321,7 +324,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             )}
             
             {/* KPI CARDS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
@@ -417,7 +420,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             </div>
 
             {/* CHART SECTION */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-3">
@@ -430,7 +433,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   <button
                     onClick={handleSaveWaterBalance}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full md:w-auto min-h-[44px] px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -440,7 +443,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   {onConsultAI && (
                     <button
                       onClick={onConsultAI}
-                      className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-bold flex items-center gap-2"
+                      className="w-full md:w-auto min-h-[44px] px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 active:bg-slate-900 transition-colors text-sm font-bold flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -450,7 +453,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   )}
                 </div>
               </div>
-              <div className="h-96">
+              <div className="h-64 md:h-96">
                 <WaterBalanceChart data={results} />
               </div>
               <div className="mt-4 pt-4 border-t border-slate-200">
@@ -462,11 +465,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* TABLE SECTION */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-200">
+              <div className="p-3 md:p-5 border-b border-slate-200">
                 <h2 className="text-lg font-bold text-slate-800">Tabel Detail Bulanan</h2>
                 <p className="text-xs text-slate-500 mt-1">Data lengkap neraca air per bulan</p>
               </div>
-              <div className="overflow-x-auto">
+              {/* Mobile: Card View, Desktop: Table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -503,6 +507,48 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {results.map((row, i) => (
+                  <div key={i} className={`p-4 space-y-3 ${row.balance < 0 ? 'bg-rose-50/30' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-bold text-slate-900">{row.month}</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                        row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                        row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {row.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Supply</div>
+                        <div className="font-bold text-blue-600">{row.supply} m³/s</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Total Demand</div>
+                        <div className="font-bold text-orange-600">{row.totalDemand} m³/s</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Domestik</div>
+                        <div className="font-semibold text-slate-700">{row.domesticDemand} m³/s</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500 font-medium mb-1">Pertanian</div>
+                        <div className="font-semibold text-slate-700">{row.agricultureDemand} m³/s</div>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-200">
+                      <div className="text-xs text-slate-500 font-medium mb-1">Neraca</div>
+                      <div className={`text-lg font-bold ${row.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {row.balance >= 0 ? '+' : ''}{row.balance} m³/s
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
