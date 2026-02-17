@@ -1,22 +1,29 @@
 // Design System Components - Centralized Exports
 
-// Core Components
-export { Button } from './Button';
-export { Input } from './InputNew';
-export { LoadingState } from './LoadingState';
-export { EmptyState } from './EmptyState';
-export { ToastContainer } from './Toast';
-export { Alert } from './Alert';
-export { Badge } from './Badge';
-export { Tabs } from './Tabs';
-export { Accordion } from './Accordion';
-export { Header } from './Header';
-export { Select } from './Select';
-export { FormField } from './FormField';
-export { Tooltip } from './Tooltip';
-export { Stepper } from './Stepper';
+// Forms
+export { Button } from './forms/Button';
+export { Input } from './forms/InputNew';
+export { Select } from './forms/Select';
+export { FormField } from './forms/FormField';
 
-// Enhanced Card System
+// Feedback
+export { LoadingState } from './feedback/LoadingState';
+export { EmptyState } from './feedback/EmptyState';
+export { ToastContainer } from './feedback/Toast';
+export { Alert } from './feedback/Alert';
+
+// Data Display
+export { Badge } from './data-display/Badge';
+export { Tooltip } from './data-display/Tooltip';
+
+// Navigation
+export { Tabs } from './navigation/Tabs';
+export { Header } from './navigation/Header';
+export { Stepper } from './navigation/Stepper';
+export { Sidebar, NavBadge, SidebarSection } from './navigation/Sidebar';
+
+// Layout
+export { Accordion } from './layout/Accordion';
 export {
   Card as CardNew,
   CardHeader,
@@ -27,20 +34,11 @@ export {
   CardGrid,
   SectionCard,
   CardLegacy as Card,
-} from './CardNew';
-
-// New Layout System
+} from './layout/CardNew';
 export {
   AppLayout,
   PageHeader,
   PageContent,
   Section,
   ContentGrid,
-} from './Layout';
-
-// New Navigation System
-export {
-  Sidebar,
-  NavBadge,
-  SidebarSection,
-} from './Sidebar';
+} from './layout/Layout';

@@ -21,9 +21,12 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react'
+            if (id.includes('recharts')) return 'vendor-charts'
             if (id.includes('@supabase')) return 'vendor-supabase'
             if (id.includes('@google/generative-ai')) return 'vendor-google'
             if (id.includes('leaflet')) return 'vendor-leaflet'
+            if (id.includes('lucide-react')) return 'vendor-icons'
             return 'vendor'
           }
         }

@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { ManningCalculator } from '@/components/ManningCalculator';
-import { FloodDischargeCalculator } from '@/components/FloodDischargeCalculator';
-import { WaterBalanceTab } from '@/components/WaterBalanceTab';
-import { GeminiConsultant } from '@/components/GeminiConsultant';
-import { ReportModal } from '@/components/ReportModal';
-import { AllDataTab } from '@/components/AllDataTab';
-import { AllDataDetailModal } from '@/components/AllDataDetailModal';
+import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
+import { FloodDischargeCalculator } from '@/features/flood-analysis/components/FloodDischargeCalculator';
+import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
+import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
+import { ReportModal } from '@/components/ui/modals/ReportModal';
+import { AllDataTab } from '@/features/history/components/AllDataTab';
+import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
 import { AllCalculationsData } from '@/services/allCalculationsService';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ToastContainer } from '@/components/ui/Toast';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ToastContainer } from '@/components/ui/feedback/Toast';
 import { CalculationType, CalculationResult } from '@/types/types';
 
-import { Header } from '@/components/ui/Header';
+import { Header } from '@/components/ui/navigation/Header';
 
 import { useDatabase } from '@/lib/useDatabase';
-import { useDatabaseStatus } from '@/components/DatabaseTest';
+import { useDatabaseStatus } from '@/features/history/components/DatabaseTest';
 import { APP_NAME } from '@/constants';
 
 enum Tab {
