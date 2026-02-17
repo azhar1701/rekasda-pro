@@ -72,6 +72,9 @@ Berikan jawaban yang praktis, akurat, dan sesuai standar Indonesia.
       if (error.message.includes('API_KEY')) {
         return "Error: API Key tidak valid atau tidak ditemukan. Periksa konfigurasi VITE_API_KEY di file .env";
       }
+      if (error.message.includes('503') || error.message.includes('high demand')) {
+        return "⚠️ Layanan AI sedang mengalami lonjakan permintaan. Silakan coba lagi dalam beberapa saat.";
+      }
       return `Error: ${error.message}`;
     }
     return "Terjadi kesalahan saat menghubungi layanan AI. Pastikan koneksi internet tersedia.";
