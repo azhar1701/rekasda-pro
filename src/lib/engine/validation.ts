@@ -3,8 +3,6 @@
  * Sesuai SNI 2415:2016, SNI 6738:2015, dan SK Menteri PU No. 306/1989
  */
 
-import { z } from 'zod';
-
 /**
  * Validasi Koefisien Pengaliran (C)
  * Sesuai Permen PU No. 12/2014
@@ -165,7 +163,6 @@ export const validateWaterBalance = (supply: number, demand: number): {
   status: string;
   recommendation: string;
 } => {
-  const balance = supply - demand;
   const ratio = supply / demand;
 
   if (ratio >= 1.2) {

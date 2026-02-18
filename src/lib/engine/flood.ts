@@ -116,12 +116,12 @@ export const calculateHSSNakayasu = (input: HSSNakayasuInput): HSSNakayasuOutput
 
   // Validasi Tr: 0.5Tr ≤ tr ≤ Tr
   if (Tr < 0.5 * Tg_used || Tr > Tg_used) {
-    console.warn(`Tr (${Tr}) harus antara 0.5×Tg (${0.5*Tg_used.toFixed(2)}) dan Tg (${Tg_used.toFixed(2)})`);
+    console.warn(`Tr (${Tr}) harus antara 0.5×Tg (${(0.5*Tg_used).toFixed(2)}) dan Tg (${Tg_used.toFixed(2)})`);
   }
 
   const Tp = Tg_used + 0.8 * Tr;
   const T03 = Alpha * Tg_used;
-  const Qp = (Alpha * Ro * A) / (3.6 * (0.3 * Tp + T03));
+  const Qp = (A * Ro) / (3.6 * (0.3 * Tp + T03));
   const Tb = Tp + 2.5 * T03;
 
   const hydrograph: Array<{ time: number; discharge: number }> = [];

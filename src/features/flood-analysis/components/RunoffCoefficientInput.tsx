@@ -21,11 +21,8 @@ const LAND_USE_OPTIONS = Object.entries(SNI_RUNOFF_COEFFICIENTS).map(([key, data
 }));
 
 export const RunoffCoefficientInput: React.FC<RunoffCoefficientInputProps> = ({
-  value,
   onChange,
-  label = 'Koefisien Pengaliran (C)',
   error: externalError,
-  required = true,
 }) => {
   const [selectedId, setSelectedId] = useState<string>('');
 

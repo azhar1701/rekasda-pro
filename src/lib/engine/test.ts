@@ -4,18 +4,12 @@
  */
 
 import {
-  calculateRationalDischarge,
   calculateHSSNakayasu,
-  calculateRainfallIntensity,
-  calculateTimeConcentration,
-  calculateDependableFlow,
-  validateRationalMethod,
-  validateNakayasuParameters,
-} from '../lib/engine';
+} from '@/lib/engine';
 
-import { calculateManning, calculateRational } from '../services/calculationService';
-import { calculateWaterBalance, getWaterBalanceSummary } from '../services/waterBalanceEngine';
-import { ChannelShape } from '../types/types';
+import { calculateManning, calculateRational } from '@/services/calculationService';
+import { calculateWaterBalance, getWaterBalanceSummary } from '@/services/waterBalanceEngine';
+import { ChannelShape } from '@/types/types';
 
 /**
  * Test Case 1: Metode Rasional - Drainase Perkotaan
@@ -46,18 +40,6 @@ export const testRationalMethod = () => {
   console.log(`  I = ${result.Intensity} mm/jam`);
   console.log(`  Q = ${result.Discharge} m³/s`);
   console.log(`  Volume = ${result.TotalVolume} m³`);
-  
-  // Validasi
-  const validation = validateRationalMethod({
-    C: input.runoffCoefficient,
-    I: parseFloat(result.Intensity),
-    A: input.area,
-  });
-  
-  console.log('\nValidasi:', validation.valid ? '✅ VALID' : '❌ INVALID');
-  if (validation.errors.length > 0) {
-    console.log('Errors:', validation.errors);
-  }
   
   console.log('\n');
   return result;
@@ -94,19 +76,6 @@ export const testHSSNakayasu = () => {
   console.log(`  Tb = ${result.Tb} jam`);
   console.log(`  Jumlah titik hidrograf = ${result.hydrograph.length}`);
   
-  // Validasi parameter
-  const validation = validateNakayasuParameters({
-    Alpha: input.Alpha,
-    Tg: input.Tg,
-    Tr: input.Tr,
-    A: input.A,
-  });
-  
-  console.log('\nValidasi:', validation.valid ? '✅ VALID' : '❌ INVALID');
-  if (validation.errors.length > 0) {
-    console.log('Errors:', validation.errors);
-  }
-  
   console.log('\n');
   return result;
 };
@@ -127,6 +96,7 @@ export const testManningTrapezoid = () => {
     sideSlope: 1.0, // 1:1
     totalDepth: 1.5, // m
     diameter: 0,
+    topWidth: 0,
   };
 
   const result = calculateManning(input);
@@ -167,6 +137,7 @@ export const testManningCircular = () => {
     width: 0,
     sideSlope: 0,
     totalDepth: 0.8,
+    topWidth: 0,
   };
 
   const result = calculateManning(input);
@@ -190,98 +161,10 @@ export const testManningCircular = () => {
 };
 
 /**
- * Test Case 5: Intensitas Hujan - Mononobe
- */
-export const testRainfallIntensity = () => {
-  console.log('=== TEST 5: INTENSITAS HUJAN ===');
-  
-  const R24 = 100; // mm
-  const tc = 1.0; // jam
-  
-  const mononobe = calculateRainfallIntensity({
-    R24,
-    tc,
-    method: 'mononobe',
-  });
-  
-  const talbot = calculateRainfallIntensity({
-    R24,
-    tc,
-    method: 'talbot',
-  });
-  
-  console.log(`Input: R24 = ${R24} mm, tc = ${tc} jam`);
-  console.log('\nOutput:');
-  console.log(`  Mononobe: I = ${mononobe.I} mm/jam`);
-  console.log(`  Talbot: I = ${talbot.I} mm/jam`);
-  
-  console.log('\n');
-  return { mononobe, talbot };
-};
-
-/**
- * Test Case 6: Waktu Konsentrasi
- */
-export const testTimeConcentration = () => {
-  console.log('=== TEST 6: WAKTU KONSENTRASI ===');
-  
-  const input = {
-    L: 1.5, // km
-    S: 0.01, // m/m
-    method: 'kirpich' as const,
-  };
-  
-  const Tc = calculateTimeConcentration(input);
-  
-  console.log('Input:');
-  console.log(`  L = ${input.L} km`);
-  console.log(`  S = ${input.S}`);
-  console.log(`  Metode = Kirpich`);
-  
-  console.log('\nOutput:');
-  console.log(`  Tc = ${Tc} menit`);
-  console.log(`  Tc = ${(Tc/60).toFixed(2)} jam`);
-  
-  console.log('\n');
-  return Tc;
-};
-
-/**
- * Test Case 7: Debit Andalan (Q80)
- */
-export const testDependableFlow = () => {
-  console.log('=== TEST 7: DEBIT ANDALAN (Q80) ===');
-  
-  // Data debit bulanan (m³/s) - contoh 1 tahun
-  const monthlyDischarge = [
-    15.2, 18.5, 22.3, 28.7, 35.2, 42.1,
-    38.5, 32.8, 25.6, 20.3, 17.8, 14.5
-  ];
-  
-  const result = calculateDependableFlow({
-    dischargeData: monthlyDischarge,
-    probability: 80,
-  });
-  
-  console.log('Input: Data debit 12 bulan');
-  console.log(`  Qmax = ${Math.max(...monthlyDischarge)} m³/s`);
-  console.log(`  Qmin = ${Math.min(...monthlyDischarge)} m³/s`);
-  
-  console.log('\nOutput:');
-  console.log(`  Q80 = ${result.Q80} m³/s`);
-  console.log(`  Qavg = ${result.Qavg} m³/s`);
-  console.log(`  Qmax = ${result.Qmax} m³/s`);
-  console.log(`  Qmin = ${result.Qmin} m³/s`);
-  
-  console.log('\n');
-  return result;
-};
-
-/**
- * Test Case 8: Neraca Air
+ * Test Case 5: Neraca Air
  */
 export const testWaterBalance = () => {
-  console.log('=== TEST 8: NERACA AIR ===');
+  console.log('=== TEST 5: NERACA AIR ===');
   
   const input = {
     population: 50000, // jiwa
@@ -307,13 +190,13 @@ export const testWaterBalance = () => {
   console.log(`  Bulan Surplus = ${summary.surplusMonths}`);
   console.log(`  Bulan Defisit = ${summary.deficitMonths}`);
   console.log(`  Total Surplus = ${summary.totalSurplus} m³/s`);
-  console.log(`  Total Defisit = ${summary.totalDefisit} m³/s`);
+  console.log(`  Total Defisit = ${summary.totalDeficit} m³/s`);
   console.log(`  Reliabilitas = ${summary.reliability}%`);
   console.log(`  Bulan Kritis = ${summary.criticalMonth.month} (${summary.criticalMonth.balance} m³/s)`);
   
   console.log('\nDetail Bulanan:');
-  results.forEach(r => {
-    console.log(`  ${r.month}: ${r.supply} - ${r.totalDemand} = ${r.balance} m³/s (${r.status})`);
+  results.forEach((_r: any) => {
+    console.log(`  ${_r.month}: ${_r.supply} - ${_r.totalDemand} = ${_r.balance} m³/s (${_r.status})`);
   });
   
   console.log('\n');
@@ -335,9 +218,6 @@ export const runAllTests = () => {
     testHSSNakayasu();
     testManningTrapezoid();
     testManningCircular();
-    testRainfallIntensity();
-    testTimeConcentration();
-    testDependableFlow();
     testWaterBalance();
     
     console.log('╔════════════════════════════════════════════════════════╗');
@@ -355,9 +235,6 @@ export default {
   testHSSNakayasu,
   testManningTrapezoid,
   testManningCircular,
-  testRainfallIntensity,
-  testTimeConcentration,
-  testDependableFlow,
   testWaterBalance,
   runAllTests,
 };

@@ -49,10 +49,8 @@ const ALPHA_OPTIONS = [
 ];
 
 export const AlphaParameterInput: React.FC<AlphaParameterInputProps> = ({
-  value,
   onChange,
   error: externalError,
-  required = true,
 }) => {
   const [selectedId, setSelectedId] = useState<string>('');
 
