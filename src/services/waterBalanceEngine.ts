@@ -1,4 +1,4 @@
-// Water Balance Calculation Engine - SNI 6728.1:2015
+// Water Balance Calculation Engine - SNI 6738:2015 & UU No. 17/2019
 
 export interface WaterBalanceInputs {
   population: number;
@@ -22,43 +22,61 @@ export interface WaterBalanceResult {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
 /**
- * Calculate domestic water demand (SNI 6728-1:2015)
+ * Menghitung Kebutuhan Air Domestik
+ * Sesuai SNI 6728.1:2015 Pasal 5.2
+ * 
  * @param population - Jumlah penduduk (jiwa)
- * @param standard - Standar kebutuhan air (L/capita/day), default 60-120
+ * @param standard - Standar kebutuhan (L/capita/day)
+ *   - Kota Besar: 120-150 L/capita/day
+ *   - Kota Sedang: 100-120 L/capita/day
+ *   - Kota Kecil: 80-100 L/capita/day
+ *   - Pedesaan: 60-80 L/capita/day
  * @returns Kebutuhan air domestik (m³/s)
  */
 export const calculateDomesticDemand = (population: number, standard: number = 100): number => {
-  // Convert L/capita/day to m³/s
-  // Formula: (population × standard) / (1000 × 86400)
+  // Konversi: (jiwa × L/capita/day) / (1000 L/m³ × 86400 s/day)
   return (population * standard) / 86400000;
 };
 
 /**
- * Calculate agriculture water demand
+ * Menghitung Kebutuhan Air Pertanian
+ * Sesuai SNI 6738:2015 Pasal 6.3
+ * 
  * @param area - Luas lahan pertanian (Ha)
- * @param demand - Kebutuhan irigasi (L/s/Ha), default 1.0
+ * @param demand - Kebutuhan irigasi (L/s/Ha)
+ *   - Padi: 1.0-1.5 L/s/Ha
+ *   - Palawija: 0.5-0.8 L/s/Ha
+ *   - Perkebunan: 0.3-0.5 L/s/Ha
  * @returns Kebutuhan air pertanian (m³/s)
  */
 export const calculateAgricultureDemand = (area: number, demand: number = 1.0): number => {
-  // Convert L/s/Ha to m³/s
+  // Konversi: (Ha × L/s/Ha) / (1000 L/m³)
   return (area * demand) / 1000;
 };
 
 /**
- * Calculate water balance for 12 months
- * @param inputs - Water balance inputs
- * @returns Array of monthly water balance results
+ * Menghitung Neraca Air Bulanan
+ * Sesuai SNI 6738:2015 & UU No. 17/2019 Pasal 22
+ * 
+ * @param inputs - Parameter neraca air
+ * @returns Array hasil neraca air 12 bulan
  */
 export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceResult[] => {
   const domesticDemand = calculateDomesticDemand(inputs.population, inputs.domesticStandard);
   const agricultureDemand = calculateAgricultureDemand(inputs.agricultureArea, inputs.irrigationDemand);
   
   return inputs.monthlySupply.map((supply, index) => {
-    // UU No. 17/2019 Pasal 22: Minimum 10% untuk Debit Lingkungan
+    // Debit Lingkungan (Environmental Flow) - UU No. 17/2019 Pasal 22
+    // Minimum 10% dari debit tersedia untuk ekosistem
     const environmentalFlow = supply * 0.10;
+    
+    // Total kebutuhan air
     const totalDemand = domesticDemand + agricultureDemand + environmentalFlow;
+    
+    // Neraca air (surplus/defisit)
     const balance = supply - totalDemand;
     
+    // Status neraca
     let status: 'Surplus' | 'Defisit' | 'Seimbang';
     if (balance > 0.01) status = 'Surplus';
     else if (balance < -0.01) status = 'Defisit';
@@ -78,19 +96,27 @@ export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceR
 };
 
 /**
- * Get summary statistics
+ * Mendapatkan Ringkasan Statistik Neraca Air
+ * 
+ * @param results - Hasil perhitungan neraca air
+ * @returns Ringkasan statistik
  */
 export const getWaterBalanceSummary = (results: WaterBalanceResult[]) => {
   const surplusMonths = results.filter(r => r.status === 'Surplus').length;
   const deficitMonths = results.filter(r => r.status === 'Defisit').length;
   const totalDeficit = results.reduce((sum, r) => sum + (r.balance < 0 ? Math.abs(r.balance) : 0), 0);
   const totalSurplus = results.reduce((sum, r) => sum + (r.balance > 0 ? r.balance : 0), 0);
+  const criticalMonth = results.reduce((min, r) => r.balance < min.balance ? r : min, results[0]);
+  
+  // Reliabilitas pasokan air (% bulan surplus)
+  const reliability = (surplusMonths / 12) * 100;
   
   return {
     surplusMonths,
     deficitMonths,
     totalDeficit: parseFloat(totalDeficit.toFixed(3)),
     totalSurplus: parseFloat(totalSurplus.toFixed(3)),
-    criticalMonth: results.reduce((min, r) => r.balance < min.balance ? r : min, results[0])
+    criticalMonth,
+    reliability: parseFloat(reliability.toFixed(1))
   };
 };

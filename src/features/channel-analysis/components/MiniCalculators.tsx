@@ -200,15 +200,17 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
 };
 
 // 4. Kalkulator Hujan Efektif
-export const EffectiveRainfallCalculator: React.FC<{ onApply: (Ro: number) => void; onClose: () => void }> = ({ onApply, onClose }) => {
+export const EffectiveRainfallCalculator: React.FC<{ C: number; onApply: (Ro: number) => void; onClose: () => void }> = ({ C, onApply, onClose }) => {
   const [Rplan, setRplan] = useState(100);
-  const [C, setC] = useState(0.7);
   
   const Reff = Rplan * C;
   
   return (
     <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
       <div className="text-xs font-bold text-purple-900 mb-2">Hujan Efektif: Reff = C × Rplan</div>
+      <div className="p-2 bg-purple-100 rounded-lg mb-2">
+        <p className="text-xs text-purple-800">Koefisien C = <span className="font-bold">{C.toFixed(2)}</span> (dari input utama)</p>
+      </div>
       <div>
         <label className="text-xs font-semibold text-slate-600 block mb-1">Hujan Rencana (Rplan)</label>
         <div className="relative">
@@ -220,16 +222,6 @@ export const EffectiveRainfallCalculator: React.FC<{ onApply: (Ro: number) => vo
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
         </div>
-      </div>
-      <div>
-        <label className="text-xs font-semibold text-slate-600 block mb-1">Koefisien Limpasan (C)</label>
-        <input
-          type="number"
-          step="0.01"
-          value={C}
-          onChange={e => setC(parseFloat(e.target.value) || 0)}
-          className="w-full bg-white border border-purple-300 text-sm font-bold rounded-lg p-3"
-        />
       </div>
       <button
         onClick={() => {

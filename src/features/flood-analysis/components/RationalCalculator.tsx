@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { calculateRational } from '@/services/calculationService';
+import { calculateRainfallIntensity, calculateTimeConcentration } from '@/lib/engine';
 import { RationalInputs, CalculationType } from '@/types/types';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { Button } from '@/components/ui/forms/Button';

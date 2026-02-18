@@ -27,37 +27,37 @@ export interface NakayasuResults {
 
 /**
  * Hitung waktu konsentrasi (Tg)
- * Tg = 0.21 × L^0.7
+ * Tg = 0.4 + 0.058 × L
  * 
  * @param L - Panjang sungai utama (km)
  * @returns Waktu konsentrasi (jam)
  */
 export function calculateTg(L: number): number {
   if (L <= 0) return 0;
-  return 0.21 * Math.pow(L, 0.7);
+  return 0.4 + 0.058 * L;
 }
 
 /**
  * Hitung waktu dari puncak hujan sampai puncak hidrograf (Tp)
  * Tp = Tg + 0.8 × tr
- * dimana tr = 0.5 × Tg sampai Tg (biasanya diambil tr = Alpha × Tg)
+ * dimana tr = waktu hujan satuan, umumnya 0.5Tg ≤ tr ≤ Tg
  * 
  * @param Tg - Waktu konsentrasi (jam)
- * @param Alpha - Koefisien karakteristik DAS
+ * @param tr - Waktu hujan satuan (jam), default = 0.5 * Tg
  * @returns Waktu puncak (jam)
  */
-export function calculateTp(Tg: number, Alpha: number): number {
-  const tr = Alpha * Tg;
-  return Tg + 0.8 * tr;
+export function calculateTp(Tg: number, tr?: number): number {
+  const trValue = tr ?? (0.5 * Tg);
+  return Tg + 0.8 * trValue;
 }
 
 /**
- * Hitung waktu dasar hidrograf (T03)
- * T03 = Alpha × Tg
+ * Hitung waktu penurunan (T0.3)
+ * T0.3 = α × Tg
  * 
- * @param Alpha - Koefisien karakteristik DAS
+ * @param Alpha - Koefisien karakteristik DAS (umumnya 2 untuk DAS biasa)
  * @param Tg - Waktu konsentrasi (jam)
- * @returns Waktu dasar (jam)
+ * @returns Waktu penurunan (jam)
  */
 export function calculateT03(Alpha: number, Tg: number): number {
   return Alpha * Tg;
@@ -65,16 +65,17 @@ export function calculateT03(Alpha: number, Tg: number): number {
 
 /**
  * Hitung debit puncak (Qp)
- * Qp = (0.278 × A × Ro) / (3.6 × Tp)
+ * Qp = (A × Ro) / (3.6 × (0.3Tp + T0.3))
  * 
  * @param A - Luas DAS (km²)
  * @param Ro - Hujan satuan (mm)
  * @param Tp - Waktu puncak (jam)
+ * @param T03 - Waktu penurunan (jam)
  * @returns Debit puncak (m³/s)
  */
-export function calculateQp(A: number, Ro: number, Tp: number): number {
-  if (A <= 0 || Ro <= 0 || Tp <= 0) return 0;
-  return (0.278 * A * Ro) / (3.6 * Tp);
+export function calculateQp(A: number, Ro: number, Tp: number, T03: number): number {
+  if (A <= 0 || Ro <= 0 || Tp <= 0 || T03 <= 0) return 0;
+  return (A * Ro) / (3.6 * (0.3 * Tp + T03));
 }
 
 /**
@@ -154,9 +155,10 @@ export function calculateNakayasu(params: NakayasuParams): NakayasuResults {
   
   // Perhitungan
   const Tg = calculateTg(L);
-  const Tp = calculateTp(Tg, Alpha);
+  const tr = 0.5 * Tg; // Waktu hujan satuan (bisa disesuaikan antara 0.5Tg - Tg)
+  const Tp = calculateTp(Tg, tr);
   const T03 = calculateT03(Alpha, Tg);
-  const Qp = calculateQp(A, Ro, Tp);
+  const Qp = calculateQp(A, Ro, Tp, T03);
   
   return { Tg, Tp, T03, Qp };
 }

@@ -94,72 +94,53 @@ export const calculateRationalDischarge = (input: RationalMethodInput): Rational
 
 /**
  * HSS Nakayasu - Perhitungan Hidrograf Satuan Sintetik
- * 
- * Metode Nakayasu untuk DAS di Indonesia
+ * Sesuai rumus terlampir dan SNI 2415:2016 Pasal 6.3
  * 
  * Parameter:
- * - Qp = (Alpha * Ro * A) / (3.6 * (0.3 * Tp + Tg))
- * - Tp = Tg + 0.8 * Tr
- * - Tb = Tp + 1.5 * Tg
+ * - Tg = 0.4 + 0.058L (Time lag)
+ * - Tp = Tg + 0.8tr (Waktu puncak)
+ * - T0.3 = α · Tg (Waktu penurunan)
+ * - Qp = (A · Ro) / (3.6 × (0.3Tp + T0.3)) (Debit puncak)
  * 
  * Kurva Hidrograf:
- * - Rising Limb (0 < t < Tp): Q = Qp * (t/Tp)^2.4
- * - Recession Limb 1 (Tp < t < Tp+1.5Tg): Q = Qp * exp(-0.3 * (t-Tp) / Tg)
- * - Recession Limb 2 (t > Tp+1.5Tg): Q = Qp * exp(-0.3 * 1.5 - 0.5 * (t-Tp-1.5Tg) / Tg)
- * 
- * @param input - Parameter input HSS Nakayasu
- * @returns Hidrograf satuan sintetik
- * @throws {z.ZodError} Jika input tidak valid
- * 
- * @reference SNI 2415:2016 Pasal 6.3
+ * - Rising (0 < t < Tp): Qt = Qp × (t/Tp)^2.4
+ * - Recession (t > Tp): Qt = Qp · 0.3^((t-Tp)/T0.3)
  */
 export const calculateHSSNakayasu = (input: HSSNakayasuInput): HSSNakayasuOutput => {
-  // Validasi input
   const validated = HSSNakayasuInputSchema.parse(input);
+  const { Ro, Tg, Tr, Alpha, A, L } = validated;
 
-  const { Ro, Tg, Tr, Alpha, A } = validated;
+  // Perhitungan Tg otomatis jika tidak diinput: Tg = 0.4 + 0.058L
+  const Tg_calc = 0.4 + 0.058 * L;
+  const Tg_used = Tg || Tg_calc;
 
-  // Perhitungan parameter hidrograf
-  const Tp = Tg + 0.8 * Tr; // Waktu puncak (jam)
-  const Tb = Tp + 1.5 * Tg; // Waktu dasar (jam)
+  // Validasi Tr: 0.5Tr ≤ tr ≤ Tr
+  if (Tr < 0.5 * Tg_used || Tr > Tg_used) {
+    console.warn(`Tr (${Tr}) harus antara 0.5×Tg (${0.5*Tg_used.toFixed(2)}) dan Tg (${Tg_used.toFixed(2)})`);
+  }
 
-  // Debit puncak (m³/s)
-  // Qp = (Alpha * Ro * A) / (3.6 * (0.3 * Tp + Tg))
-  const Qp = (Alpha * Ro * A) / (3.6 * (0.3 * Tp + Tg));
+  const Tp = Tg_used + 0.8 * Tr;
+  const T03 = Alpha * Tg_used;
+  const Qp = (Alpha * Ro * A) / (3.6 * (0.3 * Tp + T03));
+  const Tb = Tp + 2.5 * T03;
 
-  // Generate hidrograf
   const hydrograph: Array<{ time: number; discharge: number }> = [];
-  const timeStep = 0.1; // Interval waktu 0.1 jam
-  const maxTime = Tb + 2 * Tg; // Perpanjang sedikit untuk kurva lengkap
+  const timeStep = 0.1;
+  const maxTime = Tb + 2 * T03;
 
   for (let t = 0; t <= maxTime; t += timeStep) {
     let Q = 0;
-
     if (t === 0) {
       Q = 0;
     } else if (t > 0 && t <= Tp) {
-      // Rising Limb: Q = Qp * (t/Tp)^2.4
       Q = Qp * Math.pow(t / Tp, 2.4);
-    } else if (t > Tp && t <= Tp + 1.5 * Tg) {
-      // Recession Limb 1: Q = Qp * exp(-0.3 * (t-Tp) / Tg)
-      Q = Qp * Math.exp((-0.3 * (t - Tp)) / Tg);
     } else {
-      // Recession Limb 2: Q = Qp * exp(-0.3 * 1.5 - 0.5 * (t-Tp-1.5Tg) / Tg)
-      Q = Qp * Math.exp(-0.3 * 1.5 - (0.5 * (t - Tp - 1.5 * Tg)) / Tg);
+      Q = Qp * Math.pow(0.3, (t - Tp) / T03);
     }
-
-    hydrograph.push({
-      time: parseFloat(t.toFixed(2)),
-      discharge: parseFloat(Q.toFixed(4)),
-    });
+    hydrograph.push({ time: parseFloat(t.toFixed(2)), discharge: parseFloat(Q.toFixed(4)) });
   }
 
-  return {
-    Qp,
-    Tp,
-    Tb,
-    hydrograph,
-  };
+  return { Qp: parseFloat(Qp.toFixed(3)), Tp: parseFloat(Tp.toFixed(2)), Tb: parseFloat(Tb.toFixed(2)), hydrograph };
 };
 
 /**

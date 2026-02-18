@@ -18,68 +18,85 @@ export interface WaterBalanceData {
 }
 
 /**
- * Menghitung Debit Saluran Terbuka menggunakan Rumus Manning dengan Output yang Sangat Detail
+ * Menghitung Kapasitas Saluran Terbuka - Rumus Manning
+ * Sesuai SNI 2415:2016 & SNI 03-3424-1994
+ * 
+ * Formula Manning: V = (1/n) × R^(2/3) × S^(1/2)
+ * Dimana:
+ * - V = Kecepatan aliran (m/s)
+ * - n = Koefisien kekasaran Manning
+ * - R = Jari-jari hidrolik (m) = A/P
+ * - S = Kemiringan dasar saluran (m/m)
+ * - Q = A × V (m³/s)
  */
 export const calculateManning = (inputs: ManningInputs) => {
   const { shape, roughness, slope, width, diameter, depth, sideSlope, totalDepth } = inputs;
-  const n = roughness || 0.001;
+  const n = roughness || 0.013; // Default beton halus
   const S = Math.max(0.000001, slope); 
-  const g = 9.81;
-  const gamma = 9810; // Berat jenis air (N/m3)
-  const kinematicViscosity = 1.004e-6; // Viskositas air pada 20°C (m2/s)
+  const g = 9.81; // Gravitasi (m/s²)
+  const gamma = 9810; // Berat jenis air (N/m³)
+  const nu = 1.004e-6; // Viskositas kinematik air 20°C (m²/s)
   
-  let A = 0; // Luas Penampang Basah
-  let P = 0; // Keliling Basah
-  let T = 0; // Lebar Permukaan
+  let A = 0; // Luas penampang basah (m²)
+  let P = 0; // Keliling basah (m)
+  let T = 0; // Lebar permukaan (m)
 
+  // Perhitungan geometri saluran
   if (shape === ChannelShape.CIRCULAR) {
     const D = diameter;
     const h = Math.min(depth, D);
-    let theta = 2 * Math.acos(1 - (2 * h) / D);
-    A = (Math.pow(D, 2) / 8) * (theta - Math.sin(theta));
+    const theta = 2 * Math.acos(1 - (2 * h) / D); // Sudut sentral (radian)
+    A = (D * D / 8) * (theta - Math.sin(theta));
     P = (theta * D) / 2;
     T = D * Math.sin(theta / 2);
   } else {
+    // Trapesium atau persegi (z=0)
     const b = width;
     const h = depth;
-    const z = sideSlope;
+    const z = sideSlope || 0;
     A = (b + z * h) * h;
     P = b + 2 * h * Math.sqrt(1 + z * z);
     T = b + 2 * z * h;
   }
 
-  const R = P === 0 ? 0 : A / P; 
-  const V = (1 / n) * Math.pow(R, 2 / 3) * Math.pow(S, 1 / 2);
-  const Q = A * V; 
-
-  const Dh = T === 0 ? 0 : A / T; 
-  const Fr = Dh === 0 ? 0 : V / Math.sqrt(g * Dh); 
-
-  // --- Parameter Lanjutan ---
+  // Jari-jari hidrolik (SNI 2415:2016)
+  const R = P > 0 ? A / P : 0;
   
-  // 1. Bilangan Reynolds (Re = V*R / nu)
-  const Re = (V * R) / kinematicViscosity;
-  let regimeState = "Laminar";
-  if (Re > 4000) regimeState = "Turbulen";
-  else if (Re > 2000) regimeState = "Transisi";
+  // Kecepatan aliran - Manning Formula
+  const V = (1 / n) * Math.pow(R, 2 / 3) * Math.pow(S, 1 / 2);
+  
+  // Debit (m³/s)
+  const Q = A * V;
 
-  // 2. Kedalaman Kritis (hc) - Estimasi untuk penampang umum
-  // hc = (Q^2 / (g * T^2))^(1/3) -> Pendekatan iteratif sederhana
-  let hc = Math.pow(Math.pow(Q, 2) / (g * Math.pow(Math.max(0.1, T), 2)), 1/3);
-  if (shape === ChannelShape.CIRCULAR) {
-    hc = 0.35 * diameter * Math.pow(Q / (Math.sqrt(g) * Math.pow(diameter, 2.5)), 0.45); // Pendekatan pipa
+  // Kedalaman hidrolik
+  const Dh = T > 0 ? A / T : 0;
+  
+  // Bilangan Froude (Fr = V / √(g × Dh))
+  const Fr = Dh > 0 ? V / Math.sqrt(g * Dh) : 0;
+
+  // Bilangan Reynolds (Re = V × R / ν)
+  const Re = (V * R) / nu;
+  let regime = "Laminar";
+  if (Re > 4000) regime = "Turbulen";
+  else if (Re > 2000) regime = "Transisi";
+
+  // Kedalaman kritis (hc) - Iterasi sederhana
+  let hc = 0;
+  if (Q > 0 && T > 0) {
+    hc = Math.pow(Q * Q / (g * T * T), 1/3);
   }
 
-  // 3. Kemiringan Kritis (Sc)
-  // Sc = (n^2 * g * A) / (T * R^(4/3))
-  const Sc = (Math.pow(n, 2) * g * A) / (Math.max(0.1, T) * Math.pow(Math.max(0.01, R), 4/3));
+  // Kemiringan kritis (Sc)
+  const Sc = R > 0 && T > 0 ? (n * n * g * A) / (T * Math.pow(R, 4/3)) : 0;
 
-  const velocityHead = Math.pow(V, 2) / (2 * g);
-  const specificEnergy = depth + velocityHead;
-  const conveyance = (1 / n) * A * Math.pow(R, 2 / 3);
-  const shearStress = gamma * R * S; 
-  const streamPower = gamma * Q * S;
+  // Parameter hidrolik tambahan
+  const velocityHead = V * V / (2 * g); // Tinggi kecepatan (m)
+  const specificEnergy = depth + velocityHead; // Energi spesifik (m)
+  const conveyance = (1 / n) * A * Math.pow(R, 2 / 3); // Daya hantar (m³/s)
+  const shearStress = gamma * R * S; // Tegangan geser (N/m²)
+  const streamPower = gamma * Q * S; // Daya aliran (W)
 
+  // Tinggi jagaan (freeboard)
   const H_physical = shape === ChannelShape.CIRCULAR ? diameter : (totalDepth || depth * 1.5);
   const freeboard = H_physical - depth;
   
@@ -90,7 +107,7 @@ export const calculateManning = (inputs: ManningInputs) => {
     Velocity: V.toFixed(3),
     Discharge: Q.toFixed(3),
     Froude: Fr.toFixed(3),
-    FlowType: Fr < 0.9 ? "Sub-kritis" : Fr > 1.1 ? "Super-kritis" : "Kritis",
+    FlowType: Fr < 1.0 ? "Sub-kritis" : Fr > 1.0 ? "Super-kritis" : "Kritis",
     Freeboard: freeboard.toFixed(3),
     SafetyStatus: freeboard < 0 ? "MELUAP" : freeboard < 0.3 ? "Waspada" : "Aman",
     TopWidth: T.toFixed(3),
@@ -100,54 +117,49 @@ export const calculateManning = (inputs: ManningInputs) => {
     ShearStress: shearStress.toFixed(2),
     StreamPower: streamPower.toFixed(2),
     Reynolds: Math.round(Re).toLocaleString(),
-    Regime: regimeState,
+    Regime: regime,
     CriticalDepth: hc.toFixed(3),
-    CriticalSlope: Sc.toFixed(5),
+    CriticalSlope: Sc.toFixed(6),
     WettedRatio: (depth / H_physical).toFixed(2)
   };
 };
 
 /**
- * Menghitung Debit Banjir menggunakan Metode Rasional dengan parameter Hidrologi Diperkaya
+ * Menghitung Debit Banjir menggunakan Metode Rasional
+ * Sesuai SNI 2415:2016 Pasal 5.2 & Permen PU No. 12/2014
+ * 
+ * Formula: Q = 0.278 × C × I × A
+ * Dimana:
+ * - Q = Debit puncak (m³/s)
+ * - C = Koefisien pengaliran (0-1)
+ * - I = Intensitas hujan (mm/jam) dari Mononobe
+ * - A = Luas DAS (km²)
  */
 export const calculateRational = (inputs: RationalInputs) => {
   const { runoffCoefficient, area, rainfallDesign, flowLength, catchmentSlope } = inputs;
   
-  const L_meters = flowLength * 1000;
-  const S_land = Math.max(0.0001, catchmentSlope);
+  const L_km = flowLength;
+  const S = Math.max(0.0001, catchmentSlope);
   
-  // Tc calculation with slope validation (Ven Te Chow)
-  let Tc_minutes;
-  if (S_land < 0.003) {
-    // SCS method for flat terrain (S < 0.3%)
-    Tc_minutes = 0.057 * Math.pow(L_meters, 0.8) * Math.pow(S_land, -0.5);
-  } else {
-    // Kirpich method for steeper slopes (S >= 0.3%)
-    Tc_minutes = 0.0195 * Math.pow(L_meters, 0.77) * Math.pow(S_land, -0.385);
-  }
+  // Waktu Konsentrasi (Tc) - Kirpich Formula (SNI 2415:2016)
+  // Tc = 0.0195 × L^0.77 × S^-0.385 (menit)
+  const Tc_minutes = 0.0195 * Math.pow(L_km * 1000, 0.77) * Math.pow(S, -0.385);
   const Tc_hours = Tc_minutes / 60;
 
-  // Intensitas Mononobe (mm/jam)
+  // Intensitas Hujan - Mononobe Formula (SNI 2415:2016 Pasal 5.2.2)
+  // I = (R24 / 24) × (24 / Tc)^(2/3)
   const I = (rainfallDesign / 24) * Math.pow(24 / Math.max(0.1, Tc_hours), 2 / 3);
 
-  // Q = 0.278 * C * I * A (m3/s)
+  // Debit Puncak - Metode Rasional (SNI 2415:2016 Pasal 5.2.1)
+  // Q = 0.278 × C × I × A
   const Q = 0.278 * runoffCoefficient * I * area;
 
-  // --- Parameter Hidrologi Lanjutan ---
-  
-  // 1. Estimasi Volume Total Limpasan (m3) selama durasi Tc
-  // V = C * (Rainfall in duration Tc) * Area
-  const rainDepthInTc = I * (Tc_minutes / 60); // mm
-  const volumeTotal = (runoffCoefficient * (rainDepthInTc / 1000) * (area * 1000000));
-
-  // 2. Debit Spesifik (m3/s/km2)
-  const specificDischarge = Q / area;
-
-  // 3. Waktu Lag (Waktu keterlambatan puncak) - Estimasi 0.6 * Tc
-  const lagTime = 0.6 * Tc_minutes;
-
-  // 4. Tebal Hujan Efektif (Excess Rainfall)
-  const excessRain = runoffCoefficient * rainDepthInTc;
+  // Parameter Hidrologi Tambahan
+  const rainDepthInTc = I * Tc_hours; // Kedalaman hujan selama Tc (mm)
+  const volumeTotal = (runoffCoefficient * (rainDepthInTc / 1000) * (area * 1000000)); // Volume limpasan (m³)
+  const specificDischarge = Q / area; // Debit spesifik (m³/s/km²)
+  const lagTime = 0.6 * Tc_minutes; // Waktu lag (menit)
+  const excessRain = runoffCoefficient * rainDepthInTc; // Hujan efektif (mm)
 
   return {
     Discharge: Q.toFixed(3),

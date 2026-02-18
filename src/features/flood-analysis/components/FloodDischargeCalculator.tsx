@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
 import RunoffCoefficientInput from './RunoffCoefficientInput';
+import AlphaParameterInput from './AlphaParameterInput';
 import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, IntensityCalculator, FrequencyAnalysisCalculator, EffectiveRainfallCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
+import { calculateHSSNakayasu, calculateRainfallIntensity } from '@/lib/engine';
+import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
@@ -34,6 +37,7 @@ interface NakayasuInputs {
   L: number;
   Ro: number;
   Alpha: number;
+  C?: number; // Koefisien limpasan untuk menghitung Ro
 }
 
 interface ReturnPeriod {
@@ -48,7 +52,7 @@ const TOOLTIPS = {
   C: 'Rasio antara limpasan permukaan dengan curah hujan total (0-1)',
   tc: 'Waktu yang diperlukan air dari titik terjauh mencapai outlet (menit)',
   I: 'Intensitas curah hujan rata-rata selama waktu konsentrasi (mm/jam)',
-  Ro: 'Tinggi hujan efektif yang menjadi limpasan permukaan (mm)',
+  Ro: 'Tinggi hujan efektif (Ro = C × R) yang menjadi limpasan permukaan (mm)',
   Alpha: 'Koefisien karakteristik DAS, tergantung kondisi topografi (1.5-3.0)'
 };
 
@@ -68,8 +72,9 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [nakayasuInputs, setNakayasuInputs] = useState<NakayasuInputs>({
     A: 50,
     L: 15,
-    Ro: 100,
-    Alpha: 2
+    Ro: 10,  // Hujan satuan 10 mm (bukan 100 mm)
+    Alpha: 2,
+    C: 0.7,  // Koefisien limpasan default
   });
   const [returnPeriods, setReturnPeriods] = useState<ReturnPeriod[]>([
     { period: 'Q2', rainfall: 80, qPeak: 0 },
@@ -94,6 +99,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [isResizing, setIsResizing] = useState(false);
 
   const calculateRationalDischarge = (C: number, I: number, A: number): number => {
+    // Menggunakan formula SNI 2415:2016
     return 0.278 * C * I * A;
   };
 
@@ -138,29 +144,9 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     return data;
   };
 
-  const calculateNakayasuDischarge = (A: number, Ro: number, Tp: number): number => {
-    return 0.278 * (A * Ro) / (3.6 * Tp);
-  };
-
-  const generateNakayasuHydrograph = (Qp: number, Tp: number, T03: number) => {
-    const data = [];
-    const totalTime = Tp + 3 * T03;
-    const timeStep = totalTime / 50;
-
-    for (let t = 0; t <= totalTime; t += timeStep) {
-      let Q = 0;
-      if (t < Tp) {
-        Q = Qp * Math.pow(t / Tp, 2.4);
-      } else if (t < Tp + T03) {
-        Q = Qp * Math.pow(0.3, (t - Tp) / T03);
-      } else if (t < Tp + T03 + 1.5 * T03) {
-        Q = Qp * Math.pow(0.3, 1 + (t - Tp - T03) / (1.5 * T03));
-      } else {
-        Q = Qp * Math.pow(0.3, 2.5 + (t - Tp - 2.5 * T03) / (2 * T03));
-      }
-      data.push({ time: parseFloat(t.toFixed(1)), discharge: parseFloat(Q.toFixed(2)) });
-    }
-    return data;
+  const generateNakayasuHydrograph = (Qp: number, Tp: number, Tg: number, Alpha: number) => {
+    const T03 = Alpha * Tg;
+    return generateHydrograph(Qp, Tp, T03, 0.1);
   };
 
   useEffect(() => {
@@ -173,15 +159,16 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       setVolume(vol);
       setHydrographData(generateRationalHydrograph(Q, rationalInputs.tc));
     } else {
-      const Tg = 0.21 * Math.pow(nakayasuInputs.L, 0.7);
-      const Tp = Tg + 0.8 * nakayasuInputs.Alpha;
-      const T03 = nakayasuInputs.Alpha * Tg;
-      const Q = calculateNakayasuDischarge(nakayasuInputs.A, nakayasuInputs.Ro, Tp);
+      // HSS Nakayasu - SNI 2415:2016 Pasal 6.3
+      const Tg = calculateTg(nakayasuInputs.L);
+      const Tp = calculateTp(Tg);
+      const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
+      const Q = calculateQp(nakayasuInputs.A, nakayasuInputs.Ro, Tp, T03);
       const vol = Q * Tp * 3600;
       setQPeak(Q);
       setTPeak(Tp);
       setVolume(vol);
-      setHydrographData(generateNakayasuHydrograph(Q, Tp, T03));
+      setHydrographData(generateNakayasuHydrograph(Q, Tp, Tg, nakayasuInputs.Alpha));
     }
   }, [method, rationalInputs, nakayasuInputs]);
 
@@ -197,11 +184,13 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       });
       setReturnPeriods(updated);
     } else {
-      const Tg = 0.21 * Math.pow(nakayasuInputs.L, 0.7);
-      const Tp = Tg + 0.8 * nakayasuInputs.Alpha;
+      // HSS Nakayasu untuk berbagai kala ulang
+      const Tg = calculateTg(nakayasuInputs.L);
+      const Tp = calculateTp(Tg);
+      const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
       const updated = returnPeriods.map(rp => ({
         ...rp,
-        qPeak: calculateNakayasuDischarge(nakayasuInputs.A, rp.rainfall, Tp)
+        qPeak: calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03)
       }));
       setReturnPeriods(updated);
     }
@@ -506,6 +495,18 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
                     <div className="space-y-4">
                       <div>
+                        <SNILabel
+                          label="Koefisien Limpasan (C)"
+                          tooltip="Koefisien untuk mengubah curah hujan total menjadi hujan efektif (Ro = C × R). Nilai tergantung tata guna lahan."
+                          sniCode="Permen PU 12/2014"
+                        />
+                        <RunoffCoefficientInput
+                          value={nakayasuInputs.C || 0.7}
+                          onChange={(v) => setNakayasuInputs({...nakayasuInputs, C: v || 0.7})}
+                          required={true}
+                        />
+                      </div>
+                      <div>
                         <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
                           Hujan Efektif (Ro)
                           <TooltipIcon text={TOOLTIPS.Ro} />
@@ -529,10 +530,16 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         </div>
                         {showEffRainCalc && (
                           <EffectiveRainfallCalculator
+                            C={nakayasuInputs.C || 0.7}
                             onApply={(Ro) => setNakayasuInputs({...nakayasuInputs, Ro})}
                             onClose={() => setShowEffRainCalc(false)}
                           />
                         )}
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-xs text-blue-800">
+                            <span className="font-semibold">Ro = C × R</span> dimana C = {nakayasuInputs.C?.toFixed(2) || '0.70'} dan R adalah curah hujan rencana.
+                          </p>
+                        </div>
                       </div>
                       <div>
                         <SNILabel
@@ -540,21 +547,11 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           tooltip="Parameter karakteristik DAS yang mempengaruhi bentuk hidrograf. Kisaran normal 1.5 - 3.0 tergantung kondisi topografi dan tata guna lahan"
                           sniCode="SNI 2415:2016"
                         />
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={nakayasuInputs.Alpha}
-                            onChange={e => setNakayasuInputs({...nakayasuInputs, Alpha: parseFloat(e.target.value) || 0})}
-                            className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
-                          />
-                        </div>
-                        {(nakayasuInputs.Alpha < 1.5 || nakayasuInputs.Alpha > 3.0) && (
-                          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-amber-800">Nilai Alpha di luar kisaran normal (1.5 - 3.0). Pastikan nilai sesuai kondisi DAS.</p>
-                          </div>
-                        )}
+                        <AlphaParameterInput
+                          value={nakayasuInputs.Alpha}
+                          onChange={(v) => setNakayasuInputs({ ...nakayasuInputs, Alpha: v || 2.0 })}
+                          required={true}
+                        />
                       </div>
                     </div>
               </div>
@@ -752,12 +749,17 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
                 <ComplianceBadge sniCode="SNI 2415:2016" />
               </div>
-              {qPeak > 1000 && (
+              {qPeak > 500 && (
                 <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div className="text-xs text-amber-800">
-                    <p className="font-semibold">Peringatan: Debit sangat tinggi</p>
-                    <p className="mt-1">Pastikan satuan input sudah benar (km², mm/jam). Verifikasi parameter DAS dan hujan rencana.</p>
+                    <p className="font-semibold">Peringatan: Debit sangat tinggi ({qPeak.toFixed(0)} m³/s)</p>
+                    <p className="mt-1">Pastikan satuan input sudah benar:</p>
+                    <ul className="list-disc ml-4 mt-1">
+                      <li>Luas DAS (A) dalam km²</li>
+                      <li>Hujan satuan (Ro) dalam mm (biasanya 10-20 mm, bukan 100 mm)</li>
+                      <li>Panjang sungai (L) dalam km</li>
+                    </ul>
                   </div>
                 </div>
               )}
