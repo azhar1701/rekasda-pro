@@ -394,9 +394,10 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
             </thead>
             <tbody>
               {Object.keys(GUMBEL_K).map((period, idx) => {
-                const K = method === 'gumbel' ? GUMBEL_K[period as keyof typeof GUMBEL_K] : 
-                         method === 'normal' ? NORMAL_K[period as keyof typeof NORMAL_K] :
-                         LOG_PEARSON_K[period as keyof typeof LOG_PEARSON_K];
+                const periodNum = parseInt(period) as 2 | 5 | 10 | 25 | 50 | 100;
+                const K = method === 'gumbel' ? GUMBEL_K[periodNum] : 
+                         method === 'normal' ? NORMAL_K[periodNum] :
+                         LOG_PEARSON_K[periodNum];
                 return (
                   <tr key={period} className="border-b border-slate-100">
                     <td className="py-2 font-bold text-slate-900">Q{period}</td>

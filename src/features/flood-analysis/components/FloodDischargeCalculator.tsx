@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import RunoffCoefficientInput from './RunoffCoefficientInput';
 import AlphaParameterInput from './AlphaParameterInput';
 import { FloodHydrographChart } from './FloodHydrographChart';
-import { TcCalculator, IntensityCalculator, FrequencyAnalysisCalculator, EffectiveRainfallCalculator } from '@/features/channel-analysis/components/MiniCalculators';
+import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
@@ -90,9 +90,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [tPeak, setTPeak] = useState<number>(0);
   const [volume, setVolume] = useState<number>(0);
   const [showTcCalc, setShowTcCalc] = useState(false);
-  const [showIntensityCalc, setShowIntensityCalc] = useState(false);
   const [showFreqAnalysis, setShowFreqAnalysis] = useState(false);
-  const [showEffRainCalc, setShowEffRainCalc] = useState(false);
   const [rainfallDataSource, setRainfallDataSource] = useState<'manual' | 'frequency'>('manual');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
