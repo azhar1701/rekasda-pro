@@ -12,7 +12,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<CalculationResult | null>(null);
-  const [hoveredMarker, setHoveredMarker] = useState<CalculationResult | null>(null);
+  const prevFocusIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     // Cleanup previous map instance safely
@@ -177,15 +177,13 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
               }, 1800);
             }
             
-            // Hover effect
+            // Hover effect - icon only, no popup
             marker.on('mouseover', function(this: L.Marker) {
               this.setIcon(iconLarge);
-              setHoveredMarker(item);
             });
             
             marker.on('mouseout', function(this: L.Marker) {
               this.setIcon(icon);
-              setHoveredMarker(null);
             });
             
             // Click to show detail
@@ -226,20 +224,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
       // Only fit bounds if we have valid markers
       if (validData.length > 0 && bounds.isValid?.()) {
         try {
-          if (focusItemId) {
-            const focusItem = validData.find(item => item.id === focusItemId);
-            if (focusItem && focusItem.location) {
-              setTimeout(() => {
-                map.flyTo([focusItem.location!.latitude, focusItem.location!.longitude], 15, {
-                  duration: 1.5
-                });
-              }, 300);
-            } else {
-              map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
-            }
-          } else {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
-          }
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
         } catch (boundsError) {
           console.warn('Error fitting bounds:', boundsError);
         }
@@ -285,33 +270,29 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
         mapInstanceRef.current = null;
       };
     }
-  }, [data, focusItemId]);
+  }, [data]);
+
+  // Separate effect for focus handling
+  useEffect(() => {
+    if (!focusItemId || !mapInstanceRef.current || prevFocusIdRef.current === focusItemId) return;
+    
+    prevFocusIdRef.current = focusItemId;
+    const focusItem = data.find(item => item.id === focusItemId);
+    
+    if (focusItem?.location) {
+      setTimeout(() => {
+        mapInstanceRef.current?.flyTo(
+          [focusItem.location!.latitude, focusItem.location!.longitude], 
+          15, 
+          { duration: 1.5 }
+        );
+      }, 300);
+    }
+  }, [focusItemId, data]);
 
   return (
     <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-sm border border-slate-200 z-0 bg-slate-50">
          <div ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 1 }} />
-         
-         {/* Hover Info Card - Compact */}
-         {hoveredMarker && !selectedMarker && (
-           <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-[1000] bg-white rounded-lg shadow-xl p-3 sm:p-4 max-w-[280px] pointer-events-none">
-             <div className={`inline-block px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold mb-1.5 ${hoveredMarker.type === CalculationType.MANNING ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
-               {hoveredMarker.type}
-             </div>
-             <h3 className="font-bold text-sm sm:text-base text-slate-900 mb-1 line-clamp-1">{hoveredMarker.inputs.site?.channelName || 'Tanpa Nama'}</h3>
-             <p className="text-[10px] sm:text-xs text-slate-500 mb-2 flex items-center gap-1">
-               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-               {new Date(hoveredMarker.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
-             </p>
-             <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-2.5 rounded-md border border-slate-200">
-               <span className="text-[9px] sm:text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-0.5">Output</span>
-               <div className="flex items-baseline gap-1">
-                 <span className="text-lg sm:text-xl font-black text-slate-900">{hoveredMarker.outputs.Discharge}</span>
-                 <span className="text-[10px] sm:text-xs font-semibold text-slate-600">m³/s</span>
-               </div>
-             </div>
-             <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 text-center">Klik untuk detail lengkap</p>
-           </div>
-         )}
          
          {/* Floating Info Card - Mobile Optimized */}
          {selectedMarker && (
