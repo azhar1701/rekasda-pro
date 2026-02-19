@@ -43,8 +43,13 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
   };
 
   const handleShowOnMap = (item: AllCalculationsData) => {
-    setFocusItemId(item.id);
     setViewMode('MAP');
+    // Set focus after view mode changes
+    setTimeout(() => {
+      setFocusItemId(item.id);
+      // Clear focus after zoom completes
+      setTimeout(() => setFocusItemId(undefined), 2000);
+    }, 100);
   };
 
   const getTypeLabel = (type: string) => {
