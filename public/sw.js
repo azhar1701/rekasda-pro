@@ -19,6 +19,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Guard: Ignore external resources (CDN, unpkg, etc) to avoid CORS issues
+  const url = new URL(event.request.url);
+  if (url.origin !== location.origin) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchResponse) => {
