@@ -6,7 +6,7 @@ import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
-import { calculateRationalMethod, convertKm2ToHa } from '@/lib/engine';
+import { calculateRationalMethod, convertKm2ToHa, useSNI2415Workflow } from '@/lib/engine';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
@@ -99,6 +99,12 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
   const [engineWarnings, setEngineWarnings] = useState<string[]>([]);
+  
+  // SNI 2415:2016 Workflow Validation
+  const sniWorkflow = useMemo(() => {
+    const area = method === 'RATIONAL' ? rationalInputs.A : nakayasuInputs.A;
+    return useSNI2415Workflow(area);
+  }, [method, rationalInputs.A, nakayasuInputs.A]);
 
   // Calculate using production engine
   const calculateRationalDischarge = useMemo(() => {
@@ -345,6 +351,26 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   </div>
                 </div>
               )}
+              
+              {/* SNI 2415:2016 Compliance Warning */}
+              {sniWorkflow.warnings.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold text-red-900 mb-2">Peringatan SNI 2415:2016</h3>
+                      <ul className="space-y-1">
+                        {sniWorkflow.warnings.map((warning, idx) => (
+                          <li key={idx} className="text-xs text-red-800">{warning}</li>
+                        ))}
+                      </ul>
+                      <div className="mt-2 text-xs text-red-700">
+                        <strong>Referensi:</strong> {sniWorkflow.compliance.sniReference}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Location Identity */}
               <LocationIdentity onLocationChange={setLocationData} />
@@ -376,9 +402,9 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
                   <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div className="text-xs text-amber-800">
-                    <p className="font-semibold mb-1">Panduan Pemilihan Metode:</p>
-                    <p>• <strong>Rasional:</strong> DAS &lt; 5000 Ha (Pasal 3.1)</p>
-                    <p>• <strong>HSS Nakayasu:</strong> DAS &gt; 5000 Ha atau data hujan jam-jaman tersedia</p>
+                    <p className="font-semibold mb-1">Panduan Pemilihan Metode (SNI 2415:2016 Pasal 3.1):</p>
+                    <p>• <strong>Rasional:</strong> DAS ≤ 300 Ha (3 km²)</p>
+                    <p>• <strong>HSS Nakayasu:</strong> DAS &gt; 300 Ha (3 km²)</p>
                   </div>
                 </div>
               </div>
