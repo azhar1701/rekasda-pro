@@ -29,6 +29,7 @@ interface RationalInputs {
   A: number;
   tc: number;
   I: number;
+  R24?: number;
 }
 
 interface NakayasuInputs {
@@ -66,7 +67,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     C: 0.7,
     A: 0.5,
     tc: 30,
-    I: 100
+    I: 100,
+    R24: 100
   });
   const [nakayasuInputs, setNakayasuInputs] = useState<NakayasuInputs>({
     A: 50,
@@ -91,6 +93,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [showIntensityCalc, setShowIntensityCalc] = useState(false);
   const [showFreqAnalysis, setShowFreqAnalysis] = useState(false);
   const [showEffRainCalc, setShowEffRainCalc] = useState(false);
+  const [rainfallDataSource, setRainfallDataSource] = useState<'manual' | 'frequency'>('manual');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
@@ -402,6 +405,74 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               </div>
 
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Curah Hujan</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-2">Sumber Data</label>
+                    <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                      <button
+                        onClick={() => setRainfallDataSource('manual')}
+                        className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
+                          rainfallDataSource === 'manual' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500'
+                        }`}
+                      >
+                        Input Manual
+                      </button>
+                      <button
+                        onClick={() => setRainfallDataSource('frequency')}
+                        className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
+                          rainfallDataSource === 'frequency' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500'
+                        }`}
+                      >
+                        Analisis Frekuensi
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {rainfallDataSource === 'manual' ? (
+                    <div>
+                      <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                        Curah Hujan Harian (R₂₄)
+                        <TooltipIcon text="Curah hujan maksimum harian untuk kala ulang tertentu" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={rationalInputs.R24 || 100}
+                          onChange={e => {
+                            const R24 = parseFloat(e.target.value) || 0;
+                            const tcHours = rationalInputs.tc / 60;
+                            const I = (R24 / 24) * Math.pow(24 / tcHours, 2/3);
+                            setRationalInputs({...rationalInputs, R24, I});
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
+                      </div>
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-800">
+                          <span className="font-semibold">Auto-calculate:</span> I = {rationalInputs.I.toFixed(2)} mm/jam (Mononobe)
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-lg">
+                      <p className="text-xs text-slate-700 mb-3">Gunakan analisis frekuensi untuk menghitung hujan rencana berbagai kala ulang</p>
+                      <button
+                        onClick={() => setShowFreqAnalysis(true)}
+                        className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-xs font-bold flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Buka Analisis Frekuensi
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
                     <div className="space-y-4">
                       <div>
@@ -421,33 +492,19 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                       <div>
                         <SNILabel
                           label="Intensitas Hujan (I)"
-                          tooltip="Intensitas hujan harus diturunkan dari rumus Mononobe atau kurva IDF berdasarkan analisis frekuensi hujan"
+                          tooltip="Intensitas hujan dihitung otomatis dari R₂₄ menggunakan rumus Mononobe"
                           sniCode="SNI 2415:2016 Pasal 4"
                         />
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <input
-                              type="number"
-                              value={rationalInputs.I}
-                              onChange={e => setRationalInputs({...rationalInputs, I: parseFloat(e.target.value) || 0})}
-                              className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 pr-20 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm/jam</span>
-                          </div>
-                          <button
-                            onClick={() => setShowIntensityCalc(!showIntensityCalc)}
-                            className="px-3 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 text-xs font-bold whitespace-nowrap"
-                          >
-                            Hitung I
-                          </button>
-                        </div>
-                        {showIntensityCalc && (
-                          <IntensityCalculator
-                            tc={rationalInputs.tc}
-                            onApply={(I) => setRationalInputs({...rationalInputs, I})}
-                            onClose={() => setShowIntensityCalc(false)}
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={rationalInputs.I}
+                            readOnly
+                            className="w-full bg-slate-100 border border-slate-300 text-slate-700 text-sm font-bold rounded-lg p-3 pr-20 outline-none cursor-not-allowed"
                           />
-                        )}
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm/jam</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Dihitung otomatis: I = (R₂₄/24) × (24/tc)^(2/3)</p>
                       </div>
                     </div>
               </div>
@@ -491,6 +548,73 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               </div>
 
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Curah Hujan</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-2">Sumber Data</label>
+                    <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                      <button
+                        onClick={() => setRainfallDataSource('manual')}
+                        className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
+                          rainfallDataSource === 'manual' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500'
+                        }`}
+                      >
+                        Input Manual
+                      </button>
+                      <button
+                        onClick={() => setRainfallDataSource('frequency')}
+                        className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
+                          rainfallDataSource === 'frequency' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500'
+                        }`}
+                      >
+                        Analisis Frekuensi
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {rainfallDataSource === 'manual' ? (
+                    <div>
+                      <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                        Curah Hujan Rencana (R)
+                        <TooltipIcon text="Curah hujan untuk kala ulang tertentu yang akan dikonversi menjadi hujan efektif" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={nakayasuInputs.Ro / (nakayasuInputs.C || 0.7)}
+                          onChange={e => {
+                            const R = parseFloat(e.target.value) || 0;
+                            const Ro = R * (nakayasuInputs.C || 0.7);
+                            setNakayasuInputs({...nakayasuInputs, Ro});
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
+                      </div>
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs text-blue-800">
+                          <span className="font-semibold">Auto-calculate:</span> Ro = {nakayasuInputs.Ro.toFixed(2)} mm (C × R)
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-lg">
+                      <p className="text-xs text-slate-700 mb-3">Gunakan analisis frekuensi untuk menghitung hujan rencana berbagai kala ulang</p>
+                      <button
+                        onClick={() => setShowFreqAnalysis(true)}
+                        className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-xs font-bold flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Buka Analisis Frekuensi
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
                     <div className="space-y-4">
                       <div>
@@ -501,7 +625,11 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         />
                         <RunoffCoefficientInput
                           value={nakayasuInputs.C || 0.7}
-                          onChange={(v) => setNakayasuInputs({...nakayasuInputs, C: v || 0.7})}
+                          onChange={(v) => {
+                            const R = nakayasuInputs.Ro / (nakayasuInputs.C || 0.7);
+                            const newRo = R * (v || 0.7);
+                            setNakayasuInputs({...nakayasuInputs, C: v || 0.7, Ro: newRo});
+                          }}
                           required={true}
                         />
                       </div>
@@ -510,35 +638,16 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           Hujan Efektif (Ro)
                           <TooltipIcon text={TOOLTIPS.Ro} />
                         </label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <input
-                              type="number"
-                              value={nakayasuInputs.Ro}
-                              onChange={e => setNakayasuInputs({...nakayasuInputs, Ro: parseFloat(e.target.value) || 0})}
-                              className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
-                          </div>
-                          <button
-                            onClick={() => setShowEffRainCalc(!showEffRainCalc)}
-                            className="px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200 text-xs font-bold whitespace-nowrap"
-                          >
-                            Hitung Ro
-                          </button>
-                        </div>
-                        {showEffRainCalc && (
-                          <EffectiveRainfallCalculator
-                            C={nakayasuInputs.C || 0.7}
-                            onApply={(Ro) => setNakayasuInputs({...nakayasuInputs, Ro})}
-                            onClose={() => setShowEffRainCalc(false)}
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={nakayasuInputs.Ro}
+                            readOnly
+                            className="w-full bg-slate-100 border border-slate-300 text-slate-700 text-sm font-bold rounded-lg p-3 pr-16 outline-none cursor-not-allowed"
                           />
-                        )}
-                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-xs text-blue-800">
-                            <span className="font-semibold">Ro = C × R</span> dimana C = {nakayasuInputs.C?.toFixed(2) || '0.70'} dan R adalah curah hujan rencana.
-                          </p>
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
                         </div>
+                        <p className="text-xs text-slate-500 mt-1">Dihitung otomatis: Ro = C × R</p>
                       </div>
                       <div>
                         <SNILabel
@@ -783,13 +892,15 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               <h2 className="text-lg font-bold text-slate-800 mb-4">Analisis Kala Ulang</h2>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <p className="text-sm text-slate-600">Edit nilai hujan atau gunakan analisis frekuensi otomatis</p>
-                      <button
-                        onClick={() => setShowFreqAnalysis(true)}
-                        className="px-3 py-2 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors border border-teal-200 text-xs font-bold"
-                      >
-                        Analisis Frekuensi
-                      </button>
+                      <p className="text-sm text-slate-600">Hasil perhitungan debit untuk berbagai kala ulang</p>
+                      {rainfallDataSource === 'manual' && (
+                        <button
+                          onClick={() => setShowFreqAnalysis(true)}
+                          className="px-3 py-2 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors border border-teal-200 text-xs font-bold"
+                        >
+                          Analisis Frekuensi
+                        </button>
+                      )}
                     </div>
                     <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-sm">
