@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import RunoffCoefficientInput from './RunoffCoefficientInput';
 import AlphaParameterInput from './AlphaParameterInput';
@@ -6,6 +6,7 @@ import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
+import { calculateRationalMethod, convertKm2ToHa } from '@/lib/engine';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
@@ -97,11 +98,24 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
+  const [engineWarnings, setEngineWarnings] = useState<string[]>([]);
 
-  const calculateRationalDischarge = (C: number, I: number, A: number): number => {
-    // Menggunakan formula SNI 2415:2016
-    return 0.278 * C * I * A;
-  };
+  // Calculate using production engine
+  const calculateRationalDischarge = useMemo(() => {
+    try {
+      const areaHa = convertKm2ToHa(rationalInputs.A);
+      const result = calculateRationalMethod({
+        C: rationalInputs.C,
+        I: rationalInputs.I,
+        A: areaHa
+      });
+      setEngineWarnings(result.warnings);
+      return result.Q;
+    } catch (error) {
+      setEngineWarnings(['Error: Input tidak valid']);
+      return 0;
+    }
+  }, [rationalInputs.C, rationalInputs.I, rationalInputs.A]);
 
   useEffect(() => {
     const saved = localStorage.getItem('flood-sidebar-width');
@@ -151,7 +165,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
   useEffect(() => {
     if (method === 'RATIONAL') {
-      const Q = calculateRationalDischarge(rationalInputs.C, rationalInputs.I, rationalInputs.A);
+      const Q = calculateRationalDischarge;
       const tcHours = rationalInputs.tc / 60;
       const vol = Q * tcHours * 3600;
       setQPeak(Q);
@@ -177,10 +191,13 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       const updated = returnPeriods.map(rp => {
         const tcHours = rationalInputs.tc / 60;
         const I = (rp.rainfall / 24) * Math.pow(24 / tcHours, 2/3);
-        return {
-          ...rp,
-          qPeak: calculateRationalDischarge(rationalInputs.C, I, rationalInputs.A)
-        };
+        const areaHa = convertKm2ToHa(rationalInputs.A);
+        try {
+          const result = calculateRationalMethod({ C: rationalInputs.C, I, A: areaHa });
+          return { ...rp, qPeak: result.Q };
+        } catch {
+          return { ...rp, qPeak: 0 };
+        }
       });
       setReturnPeriods(updated);
     } else {
@@ -311,6 +328,23 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 onLoadNakayasu={handleLoadNakayasuPilot}
               />
               </div>
+
+              {/* Smart Warnings from Engine */}
+              {method === 'RATIONAL' && engineWarnings.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold text-amber-900 mb-2">Peringatan Validasi</h3>
+                      <ul className="space-y-1">
+                        {engineWarnings.map((warning, idx) => (
+                          <li key={idx} className="text-xs text-amber-800">{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Location Identity */}
               <LocationIdentity onLocationChange={setLocationData} />
