@@ -463,6 +463,43 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               </div>
 
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="mb-2">
+                          <SNILabel
+                            label="Koefisien Pengaliran (C)"
+                            tooltip="Koefisien pengaliran berdasarkan karakteristik tata guna lahan DAS"
+                            sniCode="SNI 2415:2016 (Lampiran A) & Permen PU 12/2014"
+                          />
+                        </div>
+                        <RunoffCoefficientInput
+                          value={rationalInputs.C}
+                          onChange={(v) => setRationalInputs({ ...rationalInputs, C: v || 0 })}
+                          required={true}
+                        />
+                      </div>
+                      <div>
+                        <SNILabel
+                          label="Intensitas Hujan (I)"
+                          tooltip="Intensitas hujan dihitung otomatis dari R₂₄ menggunakan rumus Mononobe"
+                          sniCode="SNI 2415:2016 Pasal 4"
+                        />
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={rationalInputs.I}
+                            readOnly
+                            className="w-full bg-slate-100 border border-slate-300 text-slate-700 text-sm font-bold rounded-lg p-3 pr-20 outline-none cursor-not-allowed"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm/jam</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Dihitung otomatis: I = (R₂₄/24) × (24/tc)^(2/3)</p>
+                      </div>
+                    </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Curah Hujan</h2>
                 <div className="space-y-4">
                   <div>
@@ -529,43 +566,6 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   )}
                 </div>
               </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="mb-2">
-                          <SNILabel
-                            label="Koefisien Pengaliran (C)"
-                            tooltip="Koefisien pengaliran berdasarkan karakteristik tata guna lahan DAS"
-                            sniCode="SNI 2415:2016 (Lampiran A) & Permen PU 12/2014"
-                          />
-                        </div>
-                        <RunoffCoefficientInput
-                          value={rationalInputs.C}
-                          onChange={(v) => setRationalInputs({ ...rationalInputs, C: v || 0 })}
-                          required={true}
-                        />
-                      </div>
-                      <div>
-                        <SNILabel
-                          label="Intensitas Hujan (I)"
-                          tooltip="Intensitas hujan dihitung otomatis dari R₂₄ menggunakan rumus Mononobe"
-                          sniCode="SNI 2415:2016 Pasal 4"
-                        />
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={rationalInputs.I}
-                            readOnly
-                            className="w-full bg-slate-100 border border-slate-300 text-slate-700 text-sm font-bold rounded-lg p-3 pr-20 outline-none cursor-not-allowed"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm/jam</span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">Dihitung otomatis: I = (R₂₄/24) × (24/tc)^(2/3)</p>
-                      </div>
-                    </div>
-              </div>
             </>
           ) : (
             <>
@@ -601,6 +601,56 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">km</span>
                         </div>
+                      </div>
+                    </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <SNILabel
+                          label="Koefisien Limpasan (C)"
+                          tooltip="Koefisien untuk mengubah curah hujan total menjadi hujan efektif (Ro = C × R). Nilai tergantung tata guna lahan."
+                          sniCode="Permen PU 12/2014"
+                        />
+                        <RunoffCoefficientInput
+                          value={nakayasuInputs.C || 0.7}
+                          onChange={(v) => {
+                            const R = nakayasuInputs.Ro / (nakayasuInputs.C || 0.7);
+                            const newRo = R * (v || 0.7);
+                            setNakayasuInputs({...nakayasuInputs, C: v || 0.7, Ro: newRo});
+                          }}
+                          required={true}
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                          Hujan Efektif (Ro)
+                          <TooltipIcon text={TOOLTIPS.Ro} />
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={nakayasuInputs.Ro}
+                            readOnly
+                            className="w-full bg-slate-100 border border-slate-300 text-slate-700 text-sm font-bold rounded-lg p-3 pr-16 outline-none cursor-not-allowed"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Dihitung otomatis: Ro = C × R</p>
+                      </div>
+                      <div>
+                        <SNILabel
+                          label="Koefisien Alpha (α)"
+                          tooltip="Parameter karakteristik DAS yang mempengaruhi bentuk hidrograf. Kisaran normal 1.5 - 3.0 tergantung kondisi topografi dan tata guna lahan"
+                          sniCode="SNI 2415:2016"
+                        />
+                        <AlphaParameterInput
+                          value={nakayasuInputs.Alpha}
+                          onChange={(v) => setNakayasuInputs({ ...nakayasuInputs, Alpha: v || 2.0 })}
+                          required={true}
+                        />
                       </div>
                     </div>
               </div>
@@ -670,56 +720,6 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Parameter Hidrologi</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <SNILabel
-                          label="Koefisien Limpasan (C)"
-                          tooltip="Koefisien untuk mengubah curah hujan total menjadi hujan efektif (Ro = C × R). Nilai tergantung tata guna lahan."
-                          sniCode="Permen PU 12/2014"
-                        />
-                        <RunoffCoefficientInput
-                          value={nakayasuInputs.C || 0.7}
-                          onChange={(v) => {
-                            const R = nakayasuInputs.Ro / (nakayasuInputs.C || 0.7);
-                            const newRo = R * (v || 0.7);
-                            setNakayasuInputs({...nakayasuInputs, C: v || 0.7, Ro: newRo});
-                          }}
-                          required={true}
-                        />
-                      </div>
-                      <div>
-                        <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-                          Hujan Efektif (Ro)
-                          <TooltipIcon text={TOOLTIPS.Ro} />
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={nakayasuInputs.Ro}
-                            readOnly
-                            className="w-full bg-slate-100 border border-slate-300 text-slate-700 text-sm font-bold rounded-lg p-3 pr-16 outline-none cursor-not-allowed"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">Dihitung otomatis: Ro = C × R</p>
-                      </div>
-                      <div>
-                        <SNILabel
-                          label="Koefisien Alpha (α)"
-                          tooltip="Parameter karakteristik DAS yang mempengaruhi bentuk hidrograf. Kisaran normal 1.5 - 3.0 tergantung kondisi topografi dan tata guna lahan"
-                          sniCode="SNI 2415:2016"
-                        />
-                        <AlphaParameterInput
-                          value={nakayasuInputs.Alpha}
-                          onChange={(v) => setNakayasuInputs({ ...nakayasuInputs, Alpha: v || 2.0 })}
-                          required={true}
-                        />
-                      </div>
-                    </div>
               </div>
             </>
           )}
