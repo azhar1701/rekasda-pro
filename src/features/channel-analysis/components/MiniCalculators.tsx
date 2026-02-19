@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { performFrequencyAnalysis, recommendDistribution, validateFrequencyInput, type DistributionMethod } from '@/lib/engine/statistics/frequency';
 
 // 1. Kalkulator Waktu Konsentrasi (Kirpich)
 export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: () => void }> = ({ onApply, onClose }) => {
@@ -97,34 +98,7 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
 };
 
 // 3. Kalkulator Analisis Frekuensi (Multi-Method)
-const GUMBEL_K = {
-  2: -0.164,
-  5: 0.719,
-  10: 1.305,
-  25: 2.044,
-  50: 2.592,
-  100: 3.137
-};
-
-const NORMAL_K = {
-  2: 0.000,
-  5: 0.842,
-  10: 1.282,
-  25: 1.751,
-  50: 2.054,
-  100: 2.326
-};
-
-const LOG_PEARSON_K = {
-  2: -0.033,
-  5: 0.842,
-  10: 1.282,
-  25: 1.751,
-  50: 2.054,
-  100: 2.326
-};
-
-type MethodType = 'gumbel' | 'normal' | 'logpearson';
+type MethodType = 'gumbel' | 'normal' | 'logpearson3' | 'lognormal';
 
 export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number[]) => void; onClose: () => void }> = ({ onApply, onClose }) => {
   const [method, setMethod] = useState<MethodType>('gumbel');
@@ -141,49 +115,39 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
     {year: '2022', rainfall: '200'},
     {year: '2023', rainfall: '215'},
   ]);
-  const [mean, setMean] = useState(100);
-  const [stdDev, setStdDev] = useState(20);
-  const [skewness, setSkewness] = useState(0.5);
-  
-  const calculateStats = (data: number[]) => {
-    const n = data.length;
-    const avg = data.reduce((a, b) => a + b, 0) / n;
-    const variance = data.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / (n - 1);
-    const std = Math.sqrt(variance);
-    const skew = data.reduce((sum, val) => sum + Math.pow((val - avg) / std, 3), 0) * n / ((n - 1) * (n - 2));
-    return { mean: avg, stdDev: std, skewness: skew };
-  };
   
   const parsedData = rainfallData.map(d => parseFloat(d.rainfall)).filter(v => !isNaN(v) && v > 0);
-  const autoStats = parsedData.length >= 3 ? calculateStats(parsedData) : { mean: 0, stdDev: 0, skewness: 0 };
   
-  const activeMean = inputMode === 'data' ? autoStats.mean : mean;
-  const activeStdDev = inputMode === 'data' ? autoStats.stdDev : stdDev;
-  const activeSkewness = inputMode === 'data' ? autoStats.skewness : skewness;
-  
-  const calculateRainfall = (period: 2 | 5 | 10 | 25 | 50 | 100) => {
-    if (method === 'gumbel') {
-      const K = GUMBEL_K[period];
-      return activeMean + (K * activeStdDev);
-    } else if (method === 'normal') {
-      const K = NORMAL_K[period];
-      return activeMean + (K * activeStdDev);
-    } else {
-      let K = LOG_PEARSON_K[period];
-      const Cs = activeSkewness;
-      K = K + (Cs / 6) * (K * K - 1);
-      return activeMean + (K * activeStdDev);
+  // Use production engine
+  const analysisResult = useMemo(() => {
+    if (inputMode === 'data' && parsedData.length >= 10) {
+      try {
+        return performFrequencyAnalysis(
+          { data: parsedData, returnPeriods: [2, 5, 10, 25, 50, 100] },
+          method as DistributionMethod
+        );
+      } catch {
+        return null;
+      }
     }
-  };
+    return null;
+  }, [parsedData, method, inputMode]);
   
-  const results = [
-    calculateRainfall(2),
-    calculateRainfall(5),
-    calculateRainfall(10),
-    calculateRainfall(25),
-    calculateRainfall(50),
-    calculateRainfall(100)
-  ];
+  const validation = useMemo(() => {
+    if (inputMode === 'data' && parsedData.length >= 3) {
+      return validateFrequencyInput({ data: parsedData, returnPeriods: [2, 5, 10, 25, 50, 100] });
+    }
+    return { valid: false, errors: [], warnings: [] };
+  }, [parsedData, inputMode]);
+  
+  const recommendedMethod = useMemo(() => {
+    if (parsedData.length >= 10) {
+      return recommendDistribution(parsedData);
+    }
+    return null;
+  }, [parsedData]);
+  
+  const results = analysisResult?.designValues.map(dv => dv.designValue) || [0, 0, 0, 0, 0, 0];
   
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -207,14 +171,6 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
               }`}
             >
               Data Hujan
-            </button>
-            <button
-              onClick={() => setInputMode('stats')}
-              className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
-                inputMode === 'stats' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500'
-              }`}
-            >
-              Statistik Manual
             </button>
           </div>
         </div>
@@ -284,71 +240,42 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-slate-500 mt-1">Minimal 3 data untuk analisis</p>
+              <p className="text-xs text-slate-500 mt-1">Minimal 10 data untuk analisis engine</p>
             </div>
-            {parsedData.length >= 3 && (
+            {validation.warnings.length > 0 && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="text-xs font-bold text-amber-900 mb-1">Peringatan:</div>
+                {validation.warnings.map((w, i) => (
+                  <div key={i} className="text-xs text-amber-800">{w}</div>
+                ))}
+              </div>
+            )}
+            {analysisResult && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <div className="text-xs font-bold text-emerald-900 mb-2">Statistik Otomatis (n={parsedData.length})</div>
+                <div className="text-xs font-bold text-emerald-900 mb-2">Statistik (n={analysisResult.parameters.n})</div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span className="text-slate-600">Rata-rata:</span>
-                    <div className="font-bold text-slate-900">{autoStats.mean.toFixed(2)} mm</div>
+                    <span className="text-slate-600">Mean:</span>
+                    <div className="font-bold text-slate-900">{analysisResult.parameters.mean.toFixed(2)}</div>
                   </div>
                   <div>
                     <span className="text-slate-600">Std Dev:</span>
-                    <div className="font-bold text-slate-900">{autoStats.stdDev.toFixed(2)} mm</div>
+                    <div className="font-bold text-slate-900">{analysisResult.parameters.stdDev.toFixed(2)}</div>
                   </div>
                   <div>
-                    <span className="text-slate-600">Skewness:</span>
-                    <div className="font-bold text-slate-900">{autoStats.skewness.toFixed(3)}</div>
+                    <span className="text-slate-600">Cs:</span>
+                    <div className="font-bold text-slate-900">{analysisResult.parameters.cs.toFixed(3)}</div>
                   </div>
                 </div>
+                {recommendedMethod && recommendedMethod !== method && (
+                  <div className="mt-2 text-xs text-blue-700">
+                    💡 Rekomendasi: <strong>{recommendedMethod.toUpperCase()}</strong>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4 mb-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-600 block mb-1">Rata-rata Hujan (X̄)</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={mean}
-                  onChange={e => setMean(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-50 border border-slate-200 text-sm font-bold rounded-lg p-3 pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-600 block mb-1">Standar Deviasi (S)</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={stdDev}
-                  onChange={e => setStdDev(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-50 border border-slate-200 text-sm font-bold rounded-lg p-3 pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
-              </div>
-            </div>
-            {method === 'logpearson' && (
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1">Koefisien Skewness (Cs)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={skewness}
-                    onChange={e => setSkewness(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-slate-50 border border-slate-200 text-sm font-bold rounded-lg p-3"
-                  />
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Nilai tipikal: -0.5 hingga 1.5</p>
-              </div>
-            )}
-          </div>
-        )}
+        ) : null}
         
         <div className="mb-4">
           <label className="text-xs font-semibold text-slate-600 block mb-2">Metode Analisis</label>
@@ -370,19 +297,27 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
               Normal
             </button>
             <button
-              onClick={() => setMethod('logpearson')}
+              onClick={() => setMethod('logpearson3')}
               className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
-                method === 'logpearson' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                method === 'logpearson3' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               Log Pearson III
+            </button>
+            <button
+              onClick={() => setMethod('lognormal')}
+              className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${
+                method === 'lognormal' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Log-Normal
             </button>
           </div>
         </div>
         
         <div className="bg-slate-50 rounded-lg p-4 mb-4">
           <div className="text-xs font-bold text-slate-600 mb-2">
-            Hasil Perhitungan {method === 'gumbel' ? '(Gumbel)' : method === 'normal' ? '(Normal)' : '(Log Pearson III)'}
+            Hasil ({method.toUpperCase()})
           </div>
           <table className="w-full text-sm">
             <thead>
@@ -393,19 +328,15 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
               </tr>
             </thead>
             <tbody>
-              {Object.keys(GUMBEL_K).map((period, idx) => {
-                const periodNum = parseInt(period) as 2 | 5 | 10 | 25 | 50 | 100;
-                const K = method === 'gumbel' ? GUMBEL_K[periodNum] : 
-                         method === 'normal' ? NORMAL_K[periodNum] :
-                         LOG_PEARSON_K[periodNum];
-                return (
-                  <tr key={period} className="border-b border-slate-100">
-                    <td className="py-2 font-bold text-slate-900">Q{period}</td>
-                    <td className="py-2 text-center text-slate-600">{K.toFixed(3)}</td>
-                    <td className="py-2 text-right font-bold text-emerald-600">{results[idx].toFixed(1)}</td>
-                  </tr>
-                );
-              })}
+              {analysisResult?.designValues.map((dv, idx) => (
+                <tr key={idx} className="border-b border-slate-100">
+                  <td className="py-2 font-bold text-slate-900">Q{dv.returnPeriod}</td>
+                  <td className="py-2 text-center text-slate-600">{dv.frequency.toFixed(3)}</td>
+                  <td className="py-2 text-right font-bold text-emerald-600">{dv.designValue.toFixed(1)}</td>
+                </tr>
+              )) || (
+                <tr><td colSpan={3} className="py-4 text-center text-xs text-slate-500">Masukkan minimal 10 data</td></tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -415,7 +346,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
             onApply(results);
             onClose();
           }}
-          disabled={inputMode === 'data' && parsedData.length < 3}
+          disabled={inputMode === 'data' && parsedData.length < 10}
           className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Terapkan Semua ke Tabel
