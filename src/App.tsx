@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Waves, CloudRain, Scale, Database, Sparkles } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
 import { FloodDischargeCalculator } from '@/features/flood-analysis/components/FloodDischargeCalculator';
+import { ModifiedRationalCalculator } from '@/features/flood-analysis';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
@@ -21,6 +22,7 @@ import { APP_NAME } from '@/constants';
 enum Tab {
   SALURAN = 'SALURAN',
   BANJIR = 'BANJIR',
+  BANJIR_MODIFIED = 'BANJIR_MODIFIED',
   NERACA = 'NERACA',
   HISTORY = 'HISTORY',
   AI = 'AI'
@@ -111,6 +113,13 @@ const App: React.FC = () => {
       textColor: 'text-blue-600'
     },
     { 
+      tab: Tab.BANJIR_MODIFIED, 
+      label: 'Modified', 
+      icon: <CloudRain strokeWidth={2} />,
+      color: 'bg-indigo-500',
+      textColor: 'text-indigo-600'
+    },
+    { 
       tab: Tab.NERACA, 
       label: 'Neraca', 
       icon: <Scale strokeWidth={2} />,
@@ -160,6 +169,7 @@ const App: React.FC = () => {
             setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
             setActiveTab(Tab.AI);
           }} />}
+          {activeTab === Tab.BANJIR_MODIFIED && <ModifiedRationalCalculator />}
           {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
             setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
             setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');

@@ -38,3 +38,16 @@ export type {
   RationalMethodOutput,
   TcInput
 } from './rationalMethod';
+export {
+  calculateHaspersOsugi,
+  calculateDerWeduwen,
+  calculateMelchior,
+  calculateDesignFloodIndo,
+  compareAllMethods,
+  ModifiedRationalInputSchema,
+} from './flood/modifiedRationalIndo';
+export type {
+  ModifiedRationalInput,
+  ModifiedRationalResult,
+  DesignFloodResult,
+} from './flood/modifiedRationalIndo';
