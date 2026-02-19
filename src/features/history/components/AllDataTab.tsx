@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '@/services/allCalculationsService';
 import { HistoryMap } from './HistoryMap';
-import { CalculationType, ChannelShape } from '@/types/types';
+import { CalculationType, ChannelShape, ExtendedCalculationType } from '@/types/types';
 import { manningPilotData } from '@/data/manningPilotData';
 import { rationalPilotData } from '@/data/floodPilotData';
 import { waterBalancePilotData } from '@/data/waterBalancePilotData';
@@ -14,7 +14,7 @@ interface Props {
   onMapDetail?: (item: any) => void;
 }
 
-export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail, onShowOnMap }) => {
+export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail }) => {
   const [data, setData] = useState<AllCalculationsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
@@ -108,7 +108,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       };
     }
     
-    const calcType = item.type === 'manning' ? CalculationType.MANNING : 
+    const calcType: ExtendedCalculationType = item.type === 'manning' ? CalculationType.MANNING : 
                      item.type === 'water_balance' ? 'WATER_BALANCE' : 
                      CalculationType.RATIONAL;
     
@@ -242,7 +242,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const totalSupply = pilot.inputs.monthlySupply.reduce((a, b) => a + b, 0);
       return {
         id: `pilot-water-${idx}`,
-        type: 'WATER_BALANCE',
+        type: 'WATER_BALANCE' as ExtendedCalculationType,
         date: new Date().toISOString(),
         inputs: {
           site: {
