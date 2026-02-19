@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { CalculationResult, CalculationType } from '@/types/types';
+import { CalculationResult, CalculationType, ExtendedCalculationType } from '@/types/types';
 
 interface Props {
   data: CalculationResult[];
@@ -145,7 +145,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
           }
 
           const isManning = item.type === CalculationType.MANNING;
-          const isWater = item.type === 'WATER_BALANCE';
+          const isWater = (item.type as ExtendedCalculationType) === 'WATER_BALANCE';
           
           let icon, iconLarge, colorClass, bgClass;
           
@@ -178,12 +178,12 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
             }
             
             // Hover effect
-            marker.on('mouseover', function() {
+            marker.on('mouseover', function(this: L.Marker) {
               this.setIcon(iconLarge);
               setHoveredMarker(item);
             });
             
-            marker.on('mouseout', function() {
+            marker.on('mouseout', function(this: L.Marker) {
               this.setIcon(icon);
               setHoveredMarker(null);
             });

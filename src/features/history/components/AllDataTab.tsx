@@ -3,7 +3,7 @@ import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '
 import { HistoryMap } from './HistoryMap';
 import { CalculationType, ChannelShape } from '@/types/types';
 import { manningPilotData } from '@/data/manningPilotData';
-import { rationalPilotData, nakayasuPilotData } from '@/data/floodPilotData';
+import { rationalPilotData } from '@/data/floodPilotData';
 import { waterBalancePilotData } from '@/data/waterBalancePilotData';
 
 type ViewMode = 'LIST' | 'MAP';
@@ -12,7 +12,6 @@ interface Props {
   onViewDetail?: (item: AllCalculationsData) => void;
   onConsultAI?: (item: AllCalculationsData) => void;
   onMapDetail?: (item: any) => void;
-  onShowOnMap?: (item: AllCalculationsData) => void;
 }
 
 export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail, onShowOnMap }) => {

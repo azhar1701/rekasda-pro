@@ -4,6 +4,8 @@ export enum CalculationType {
   RATIONAL = 'RATIONAL'
 }
 
+export type ExtendedCalculationType = CalculationType | 'WATER_BALANCE';
+
 export enum ChannelShape {
   TRAPEZOID = 'TRAPEZOID', 
   CIRCULAR = 'CIRCULAR'    
@@ -49,7 +51,7 @@ export interface RationalInputs {
 
 export interface CalculationResult {
   id: string;
-  type: CalculationType;
+  type: ExtendedCalculationType;
   date: string;
   inputs: ManningInputs | RationalInputs;
   outputs: Record<string, number | string>;
