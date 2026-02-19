@@ -6,15 +6,15 @@ import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
-import { calculateRationalMethod, convertKm2ToHa, useSNI2415Workflow } from '@/lib/engine';
+import { calculateRationalMethod, convertKm2ToHa, useSNI2415Workflow, calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
-import { Info, AlertTriangle } from 'lucide-react';
+import { Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { RETURN_PERIOD_GUIDANCE } from '@/constants/returnPeriodGuidance';
 
-type MethodType = 'RATIONAL' | 'NAKAYASU';
+type MethodType = 'RATIONAL' | 'NAKAYASU' | 'HASPERS' | 'DER_WEDUWEN' | 'MELCHIOR';
 
 interface LocationData {
   channelName: string;
@@ -31,6 +31,8 @@ interface RationalInputs {
   tc: number;
   I: number;
   R24?: number;
+  L?: number;
+  S?: number;
 }
 
 interface NakayasuInputs {
@@ -69,7 +71,9 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     A: 0.5,
     tc: 30,
     I: 100,
-    R24: 100
+    R24: 100,
+    L: 1.5,
+    S: 0.01
   });
   const [nakayasuInputs, setNakayasuInputs] = useState<NakayasuInputs>({
     A: 50,
@@ -109,6 +113,30 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   // Calculate using production engine
   const calculateRationalDischarge = useMemo(() => {
     try {
+      if (method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
+        const inputs = {
+          luasDasKm2: rationalInputs.A,
+          panjangSungaiUtamaKm: rationalInputs.L || 1.5,
+          kemiringanSungai: rationalInputs.S || 0.01,
+          curahHujanHarianMaksimum: rationalInputs.R24 || 100,
+          koefisienPengaliran: rationalInputs.C
+        };
+        
+        if (method === 'HASPERS') {
+          const result = calculateHaspersOsugi(inputs.luasDasKm2, inputs.panjangSungaiUtamaKm, inputs.kemiringanSungai, inputs.curahHujanHarianMaksimum);
+          setEngineWarnings(result.warnings);
+          return result.qPeak;
+        } else if (method === 'DER_WEDUWEN') {
+          const result = calculateDerWeduwen(inputs.luasDasKm2, inputs.panjangSungaiUtamaKm, inputs.kemiringanSungai, inputs.curahHujanHarianMaksimum);
+          setEngineWarnings(result.warnings);
+          return result.qPeak;
+        } else {
+          const result = calculateMelchior(inputs.luasDasKm2, inputs.panjangSungaiUtamaKm, inputs.kemiringanSungai, inputs.curahHujanHarianMaksimum, inputs.koefisienPengaliran);
+          setEngineWarnings(result.warnings);
+          return result.qPeak;
+        }
+      }
+      
       const areaHa = convertKm2ToHa(rationalInputs.A);
       const result = calculateRationalMethod({
         C: rationalInputs.C,
@@ -121,7 +149,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       setEngineWarnings(['Error: Input tidak valid']);
       return 0;
     }
-  }, [rationalInputs.C, rationalInputs.I, rationalInputs.A]);
+  }, [method, rationalInputs.C, rationalInputs.I, rationalInputs.A, rationalInputs.L, rationalInputs.S, rationalInputs.R24]);
 
   useEffect(() => {
     const saved = localStorage.getItem('flood-sidebar-width');
@@ -170,7 +198,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   };
 
   useEffect(() => {
-    if (method === 'RATIONAL') {
+    if (method === 'RATIONAL' || method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
       const Q = calculateRationalDischarge;
       const tcHours = rationalInputs.tc / 60;
       const vol = Q * tcHours * 3600;
@@ -381,36 +409,73 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Metode Perhitungan</h2>
                   <ComplianceBadge sniCode="SNI 2415:2016" />
                 </div>
-                <div className="flex gap-2 p-2 bg-slate-100 rounded-xl">
-                <button
-                  onClick={() => setMethod('RATIONAL')}
-                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
-                    method === 'RATIONAL' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Rasional
-                </button>
-                <button
-                  onClick={() => setMethod('NAKAYASU')}
-                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
-                    method === 'NAKAYASU' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Nakayasu
-                </button>
+                <div className="space-y-2">
+                  {/* Primary Methods */}
+                  <div className="flex gap-2 p-2 bg-slate-100 rounded-xl">
+                    <button
+                      onClick={() => setMethod('RATIONAL')}
+                      className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all relative ${
+                        method === 'RATIONAL' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      Rasional
+                      {rationalInputs.A <= 3 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-1 right-1" />}
+                    </button>
+                    <button
+                      onClick={() => setMethod('NAKAYASU')}
+                      className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                        method === 'NAKAYASU' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      Nakayasu
+                    </button>
+                  </div>
+                  
+                  {/* Modified Rational Methods */}
+                  <div className="grid grid-cols-3 gap-2 p-2 bg-indigo-50 rounded-xl border border-indigo-200">
+                    <button
+                      onClick={() => setMethod('HASPERS')}
+                      className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
+                        method === 'HASPERS' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
+                      }`}
+                    >
+                      Haspers
+                      {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
+                    </button>
+                    <button
+                      onClick={() => setMethod('DER_WEDUWEN')}
+                      className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
+                        method === 'DER_WEDUWEN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
+                      }`}
+                    >
+                      Weduwen
+                      {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
+                    </button>
+                    <button
+                      onClick={() => setMethod('MELCHIOR')}
+                      className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
+                        method === 'MELCHIOR' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
+                      }`}
+                    >
+                      Melchior
+                      {rationalInputs.A > 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
                   <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div className="text-xs text-amber-800">
-                    <p className="font-semibold mb-1">Panduan Pemilihan Metode (SNI 2415:2016 Pasal 3.1):</p>
-                    <p>• <strong>Rasional:</strong> DAS ≤ 300 Ha (3 km²)</p>
-                    <p>• <strong>HSS Nakayasu:</strong> DAS &gt; 300 Ha (3 km²)</p>
+                    <p className="font-semibold mb-1">Panduan Pemilihan Metode:</p>
+                    <p>• <strong>Rasional:</strong> DAS ≤ 3 km²</p>
+                    <p>• <strong>Haspers/Weduwen:</strong> 3-100 km²</p>
+                    <p>• <strong>Melchior:</strong> &gt; 100 km²</p>
+                    <p>• <strong>Nakayasu:</strong> DAS &gt; 3 km²</p>
                   </div>
                 </div>
               </div>
 
             {/* Input Sections */}
-            {method === 'RATIONAL' ? (
+            {method === 'RATIONAL' || method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR' ? (
             <>
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Geometri DAS</h2>
@@ -430,6 +495,42 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">km²</span>
                         </div>
                       </div>
+                      {(method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') && (
+                        <>
+                          <div>
+                            <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                              Panjang Sungai (L)
+                              <TooltipIcon text={TOOLTIPS.L} />
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                value={rationalInputs.L || 1.5}
+                                onChange={e => setRationalInputs({...rationalInputs, L: parseFloat(e.target.value) || 0})}
+                                className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">km</span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
+                              Kemiringan (S)
+                              <TooltipIcon text="Kemiringan sungai utama (m/m)" />
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                step="0.001"
+                                value={rationalInputs.S || 0.01}
+                                onChange={e => setRationalInputs({...rationalInputs, S: parseFloat(e.target.value) || 0})}
+                                className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm font-bold rounded-lg p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/m</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {method === 'RATIONAL' && (
                       <div>
                         <label className="flex items-center text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
                           Waktu Konsentrasi (tc)
@@ -459,6 +560,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           />
                         )}
                       </div>
+                      )}
                     </div>
               </div>
 
@@ -911,7 +1013,10 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-800">Hidrograf Banjir Rencana</h2>
-                  <p className="text-xs text-slate-500 mt-1">Debit Puncak: <span className="font-bold text-teal-600">{qPeak.toFixed(2)} m³/s</span></p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Metode: <span className="font-bold text-indigo-600">{method.replace(/_/g, ' ')}</span> | 
+                    Debit Puncak: <span className="font-bold text-teal-600">{qPeak.toFixed(2)} m³/s</span>
+                  </p>
                 </div>
                 <ComplianceBadge sniCode="SNI 2415:2016" />
               </div>
