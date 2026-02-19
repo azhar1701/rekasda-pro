@@ -186,7 +186,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const discharge = calculateManningDischarge(pilot.inputs);
       return {
         id: `pilot-manning-${idx}`,
-        type: CalculationType.MANNING,
+        type: CalculationType.MANNING as ExtendedCalculationType,
         date: new Date().toISOString(),
         inputs: {
           site: {
@@ -210,7 +210,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const discharge = calculateRationalDischarge(pilot.inputs);
       return {
         id: `pilot-rational-${idx}`,
-        type: CalculationType.RATIONAL,
+        type: CalculationType.RATIONAL as ExtendedCalculationType,
         date: new Date().toISOString(),
         inputs: {
           site: {
