@@ -1,41 +1,59 @@
 const CACHE_NAME = 'rekasda-pro-v1';
+const RUNTIME_CACHE = 'rekasda-runtime-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Guard: Ignore non-http/https requests (chrome-extension://, file://, data:)
-  if (!event.request.url.startsWith('http')) {
-    return;
-  }
-  
-  // Guard: Ignore non-GET requests (POST, PUT, DELETE should not be cached)
-  if (event.request.method !== 'GET') {
+  if (!event.request.url.startsWith('http') || event.request.method !== 'GET') {
     return;
   }
 
-  // Guard: Ignore external resources (CDN, unpkg, etc) to avoid CORS issues
   const url = new URL(event.request.url);
   if (url.origin !== location.origin) {
     return;
   }
 
+  // Network first for HTML to avoid stale pages
+  if (event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache first for assets
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
+        return caches.open(RUNTIME_CACHE).then((cache) => {
           cache.put(event.request, fetchResponse.clone());
           return fetchResponse;
         });
       });
-    }).catch(() => {
-      // Fallback for offline
-      return new Response('Offline', { status: 503 });
     })
   );
 });
