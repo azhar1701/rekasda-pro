@@ -69,13 +69,18 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
     // Convert Water Balance data
     if (waterData && !waterError) {
       waterData.forEach(item => {
+        const location = item.monthly_inputs?.location?.coordinates ? {
+          latitude: item.monthly_inputs.location.coordinates.lat,
+          longitude: item.monthly_inputs.location.coordinates.lng
+        } : item.monthly_inputs?.location;
+        
         allData.push({
           id: item.id,
           type: 'water_balance',
           project_name: item.project_name,
           created_at: item.created_at,
           data: { monthly_inputs: item.monthly_inputs, monthly_results: item.monthly_results, summary: item.summary },
-          location: item.monthly_inputs?.location
+          location
         });
       });
     }

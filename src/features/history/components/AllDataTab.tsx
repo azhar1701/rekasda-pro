@@ -43,6 +43,11 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     }
   };
 
+  const handleShowOnMap = (item: AllCalculationsData) => {
+    setFocusItemId(item.id);
+    setViewMode('MAP');
+  };
+
   const getTypeLabel = (type: string) => {
     if (type === 'manning') return 'Saluran';
     if (type === 'flood') return 'Banjir';
@@ -51,9 +56,9 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
   };
 
   const getTypeColor = (type: string) => {
-    if (type === 'manning') return 'bg-teal-50 text-teal-700';
-    if (type === 'flood') return 'bg-purple-50 text-purple-700';
-    if (type === 'water_balance') return 'bg-blue-50 text-blue-700';
+    if (type === 'manning') return 'bg-blue-100 text-blue-700';
+    if (type === 'flood') return 'bg-red-100 text-red-700';
+    if (type === 'water_balance') return 'bg-green-100 text-green-700';
     return 'bg-slate-50 text-slate-700';
   };
 
@@ -71,12 +76,12 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
 
   // Default coordinates for items without location
   const defaultCoordinates = [
-    { latitude: -6.2088, longitude: 106.8456 },
-    { latitude: -7.2575, longitude: 112.7521 },
-    { latitude: -6.9175, longitude: 107.6191 },
-    { latitude: -7.7956, longitude: 110.3695 },
-    { latitude: -6.9932, longitude: 110.4203 },
-    { latitude: -8.6500, longitude: 115.2167 },
+    { latitude: -6.2088, longitude: 106.8456 }, // Jakarta
+    { latitude: -7.2575, longitude: 112.7521 }, // Surabaya
+    { latitude: -6.9175, longitude: 107.6191 }, // Bandung
+    { latitude: -7.7956, longitude: 110.3695 }, // Yogyakarta
+    { latitude: -6.9932, longitude: 110.4203 }, // Semarang
+    { latitude: -8.6500, longitude: 115.2167 }, // Bali
   ];
 
   // Convert to CalculationResult format for map
@@ -95,24 +100,48 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       location = item.data.monthly_inputs.location;
     }
     
+    // Assign default coordinates if still no location
     if (!location || !location.latitude || !location.longitude) {
       const defaultCoord = defaultCoordinates[index % defaultCoordinates.length];
       location = {
-        latitude: defaultCoord.latitude + (Math.random() - 0.5) * 0.1,
-        longitude: defaultCoord.longitude + (Math.random() - 0.5) * 0.1
+        latitude: defaultCoord.latitude + (Math.random() - 0.5) * 0.05,
+        longitude: defaultCoord.longitude + (Math.random() - 0.5) * 0.05
       };
+    }
+    
+    const calcType = item.type === 'manning' ? CalculationType.MANNING : 
+                     item.type === 'water_balance' ? 'WATER_BALANCE' : 
+                     CalculationType.RATIONAL;
+    
+    // Extract location details based on type
+    let regency = '';
+    let district = '';
+    let village = '';
+    
+    if (item.type === 'manning') {
+      regency = item.data?.inputs?.site?.regency || item.data?.inputs?.site?.kabupaten || '';
+      district = item.data?.inputs?.site?.district || item.data?.inputs?.site?.kecamatan || '';
+      village = item.data?.inputs?.site?.village || item.data?.inputs?.site?.desa || '';
+    } else if (item.type === 'flood') {
+      regency = item.data?.inputs?.regency || item.data?.inputs?.kabupaten || '';
+      district = item.data?.inputs?.district || item.data?.inputs?.kecamatan || '';
+      village = item.data?.inputs?.village || item.data?.inputs?.desa || '';
+    } else if (item.type === 'water_balance') {
+      regency = item.data?.monthly_inputs?.regency || item.data?.monthly_inputs?.kabupaten || '';
+      district = item.data?.monthly_inputs?.district || item.data?.monthly_inputs?.kecamatan || '';
+      village = item.data?.monthly_inputs?.village || item.data?.monthly_inputs?.desa || '';
     }
     
     return {
       id: item.id,
-      type: item.type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
+      type: calcType,
       date: item.created_at,
       inputs: { 
         site: { 
           channelName: item.project_name,
-          regency: item.data?.inputs?.site?.regency || item.data?.inputs?.site?.kabupaten || '',
-          district: item.data?.inputs?.site?.district || item.data?.inputs?.site?.kecamatan || '',
-          village: item.data?.inputs?.site?.village || item.data?.inputs?.site?.desa || ''
+          regency,
+          district,
+          village
         },
         shape: ChannelShape.TRAPEZOID,
         roughness: 0,
@@ -214,7 +243,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const totalSupply = pilot.inputs.monthlySupply.reduce((a, b) => a + b, 0);
       return {
         id: `pilot-water-${idx}`,
-        type: CalculationType.RATIONAL,
+        type: 'WATER_BALANCE',
         date: new Date().toISOString(),
         inputs: {
           site: {
@@ -299,15 +328,15 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
                 <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
                 <div className="flex gap-2 text-[10px] sm:text-xs">
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span>
                     Manning
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>
                     Banjir
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
                     Neraca
                   </span>
                 </div>
@@ -352,13 +381,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
                   </div>
                   <div className="flex flex-col gap-2 mt-auto">
                     <button 
-                      onClick={() => {
-                        if (onShowOnMap) {
-                          onShowOnMap(item);
-                        }
-                        setFocusItemId(item.id);
-                        setViewMode('MAP');
-                      }}
+                      onClick={() => handleShowOnMap(item)}
                       className="w-full py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

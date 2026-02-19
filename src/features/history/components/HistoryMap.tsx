@@ -125,29 +125,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
           shadowSize: [57, 57]
         });
 
-      const legend = L.control({ position: 'bottomleft' });
-      legend.onAdd = () => {
-        const div = L.DomUtil.create('div', 'info legend');
-        div.innerHTML = `
-          <div style="background: white; padding: 12px 14px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: 'Plus Jakarta Sans', sans-serif; backdrop-filter: blur(10px);">
-            <div style="font-weight: 700; font-size: 11px; color: #334155; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.8px;">📍 Legenda</div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; padding: 4px; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
-              <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(59,130,246,0.4);"></div>
-              <span style="font-size: 12px; color: #475569; font-weight: 600;">Saluran Manning</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; padding: 4px; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
-              <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(239,68,68,0.4);"></div>
-              <span style="font-size: 12px; color: #475569; font-weight: 600;">Analisis Banjir</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 4px; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='transparent'">
-              <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(16,185,129,0.4);"></div>
-              <span style="font-size: 12px; color: #475569; font-weight: 600;">Neraca Air</span>
-            </div>
-          </div>
-        `;
-        return div;
-      };
-      legend.addTo(map);
+
 
       // Add scale control
       L.control.scale({ position: 'bottomright', imperial: false, metric: true }).addTo(map);
@@ -167,7 +145,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
           }
 
           const isManning = item.type === CalculationType.MANNING;
-          const isWater = item.id.includes('water');
+          const isWater = item.type === 'WATER_BALANCE';
           
           let icon, iconLarge, colorClass, bgClass;
           
@@ -191,6 +169,13 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
           try {
             const marker = L.marker([latitude, longitude], { icon })
               .addTo(map);
+            
+            // Auto-open popup if this is the focused item
+            if (focusItemId && item.id === focusItemId) {
+              setTimeout(() => {
+                marker.openPopup();
+              }, 1800);
+            }
             
             // Hover effect
             marker.on('mouseover', function() {
@@ -241,16 +226,19 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
       // Only fit bounds if we have valid markers
       if (validData.length > 0 && bounds.isValid?.()) {
         try {
-          // If focusItemId is provided, zoom to that specific item
           if (focusItemId) {
             const focusItem = validData.find(item => item.id === focusItemId);
             if (focusItem && focusItem.location) {
-              map.setView([focusItem.location.latitude, focusItem.location.longitude], 16);
+              setTimeout(() => {
+                map.flyTo([focusItem.location!.latitude, focusItem.location!.longitude], 15, {
+                  duration: 1.5
+                });
+              }, 300);
             } else {
-              map.fitBounds(bounds, { padding: [50, 50] });
+              map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
             }
           } else {
-            map.fitBounds(bounds, { padding: [50, 50] });
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
           }
         } catch (boundsError) {
           console.warn('Error fitting bounds:', boundsError);
@@ -297,7 +285,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
         mapInstanceRef.current = null;
       };
     }
-  }, [data]);
+  }, [data, focusItemId]);
 
   return (
     <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-sm border border-slate-200 z-0 bg-slate-50">
