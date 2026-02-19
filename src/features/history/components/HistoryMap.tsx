@@ -280,36 +280,15 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
     const focusItem = data.find(item => item.id === focusItemId);
     
     if (focusItem?.location) {
-      const validData = data.filter(item => 
-        item.location && 
-        typeof item.location.latitude === 'number' && 
-        typeof item.location.longitude === 'number' &&
-        !isNaN(item.location.latitude) &&
-        !isNaN(item.location.longitude) &&
-        item.location.latitude !== 0 &&
-        item.location.longitude !== 0
-      );
-
-      setTimeout(() => {
-        mapInstanceRef.current?.flyTo(
-          [focusItem.location!.latitude, focusItem.location!.longitude], 
-          15, 
-          { duration: 1.5 }
-        );
-
-        setTimeout(() => {
-          if (mapInstanceRef.current && validData.length > 0) {
-            const bounds = L.latLngBounds(
-              validData.map(item => [item.location!.latitude, item.location!.longitude])
-            );
-            mapInstanceRef.current.flyToBounds(bounds, { 
-              padding: [50, 50], 
-              maxZoom: 13,
-              duration: 1.5 
-            });
+      // Just open popup without zoom
+      const markers = mapInstanceRef.current.eachLayer((layer: any) => {
+        if (layer instanceof L.Marker) {
+          const latLng = layer.getLatLng();
+          if (latLng.lat === focusItem.location!.latitude && latLng.lng === focusItem.location!.longitude) {
+            setTimeout(() => layer.openPopup(), 300);
           }
-        }, 3000);
-      }, 300);
+        }
+      });
     }
   }, [focusItemId, data]);
 
