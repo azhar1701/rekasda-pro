@@ -281,7 +281,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
     
     if (focusItem?.location) {
       // Just open popup without zoom
-      const markers = mapInstanceRef.current.eachLayer((layer: any) => {
+      mapInstanceRef.current.eachLayer((layer: any) => {
         if (layer instanceof L.Marker) {
           const latLng = layer.getLatLng();
           if (latLng.lat === focusItem.location!.latitude && latLng.lng === focusItem.location!.longitude) {
