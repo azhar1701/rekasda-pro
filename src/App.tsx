@@ -32,6 +32,7 @@ const App: React.FC = () => {
   const [tempCalculation, setTempCalculation] = useState<Partial<CalculationResult> | null>(null);
   const [history, setHistory] = useState<CalculationResult[]>([]);
   const [viewAllDataDetail, setViewAllDataDetail] = useState<AllCalculationsData | null>(null);
+  const [mapDetailItem, setMapDetailItem] = useState<any>(null);
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
   const [scrolled, setScrolled] = useState(false);
@@ -168,6 +169,7 @@ const App: React.FC = () => {
           
           {activeTab === Tab.HISTORY && <AllDataTab 
             onViewDetail={(item) => setViewAllDataDetail(item)}
+            onMapDetail={(item) => setMapDetailItem(item)}
             onConsultAI={(item) => {
               const typeLabel = item.type === 'manning' ? 'Saluran Manning' : item.type === 'flood' ? 'Banjir' : 'Neraca Air';
               setLastContext(`Tipe: ${typeLabel}\nProyek: ${item.project_name}\nData: ${JSON.stringify(item.data)}`);
@@ -180,6 +182,63 @@ const App: React.FC = () => {
 
       <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
       <AllDataDetailModal isOpen={!!viewAllDataDetail} data={viewAllDataDetail} onClose={() => setViewAllDataDetail(null)} />
+      
+      {/* Map Detail Modal */}
+      {mapDetailItem && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setMapDetailItem(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+              <div>
+                <div className={`inline-block px-3 py-1 rounded-lg text-xs font-bold mb-2 ${mapDetailItem.type === CalculationType.MANNING ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                  {mapDetailItem.type}
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">{mapDetailItem.inputs.site?.channelName || 'Detail Proyek'}</h2>
+              </div>
+              <button onClick={() => setMapDetailItem(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors">
+                <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Tanggal</span>
+                  <p className="text-sm font-medium text-slate-900">{new Date(mapDetailItem.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Output Utama</span>
+                  <p className="text-2xl font-black text-slate-900">{mapDetailItem.outputs.Discharge} <span className="text-sm font-semibold text-slate-600">m³/s</span></p>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <div>
+                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide block mb-1">Koordinat Lokasi</span>
+                    <p className="text-sm font-mono text-blue-900">{mapDetailItem.location?.latitude.toFixed(6)}, {mapDetailItem.location?.longitude.toFixed(6)}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-lg border border-slate-200">
+                <h3 className="text-sm font-bold text-slate-900 mb-3">Informasi Lokasi</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Kabupaten:</span>
+                    <span className="font-semibold text-slate-900">{mapDetailItem.inputs.site?.regency || 'Tidak tersedia'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Kecamatan:</span>
+                    <span className="font-semibold text-slate-900">{mapDetailItem.inputs.site?.district || 'Tidak tersedia'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Desa:</span>
+                    <span className="font-semibold text-slate-900">{mapDetailItem.inputs.site?.village || 'Tidak tersedia'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- Navigation Bar (Mobile-First Bottom Nav) --- */}
       <nav className="fixed bottom-0 left-0 right-0 md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">

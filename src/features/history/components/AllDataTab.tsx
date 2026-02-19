@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '@/services/allCalculationsService';
 import { HistoryMap } from './HistoryMap';
 import { CalculationType, ChannelShape } from '@/types/types';
+import { manningPilotData } from '@/data/manningPilotData';
+import { rationalPilotData, nakayasuPilotData } from '@/data/floodPilotData';
+import { waterBalancePilotData } from '@/data/waterBalancePilotData';
 
 type ViewMode = 'LIST' | 'MAP';
 
 interface Props {
   onViewDetail?: (item: AllCalculationsData) => void;
   onConsultAI?: (item: AllCalculationsData) => void;
+  onMapDetail?: (item: any) => void;
 }
 
-export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
+export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail }) => {
   const [data, setData] = useState<AllCalculationsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
@@ -63,19 +67,50 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
     return '-';
   };
 
+  // Default coordinates for items without location
+  const defaultCoordinates = [
+    { latitude: -6.2088, longitude: 106.8456 },
+    { latitude: -7.2575, longitude: 112.7521 },
+    { latitude: -6.9175, longitude: 107.6191 },
+    { latitude: -7.7956, longitude: 110.3695 },
+    { latitude: -6.9932, longitude: 110.4203 },
+    { latitude: -8.6500, longitude: 115.2167 },
+  ];
+
   // Convert to CalculationResult format for map
-  const mapData = data
-    .filter(item => item.location && item.location.latitude && item.location.longitude)
-    .map(item => ({
+  const dbMapData = data.map((item, index) => {
+    let location = item.location;
+    
+    if (!location && item.type === 'manning' && item.data?.inputs?.site?.location) {
+      location = item.data.inputs.site.location;
+    }
+    
+    if (!location && item.type === 'flood') {
+      location = item.data?.inputs?.location || item.data?.inputs?.site?.location;
+    }
+    
+    if (!location && item.type === 'water_balance' && item.data?.monthly_inputs?.location) {
+      location = item.data.monthly_inputs.location;
+    }
+    
+    if (!location || !location.latitude || !location.longitude) {
+      const defaultCoord = defaultCoordinates[index % defaultCoordinates.length];
+      location = {
+        latitude: defaultCoord.latitude + (Math.random() - 0.5) * 0.1,
+        longitude: defaultCoord.longitude + (Math.random() - 0.5) * 0.1
+      };
+    }
+    
+    return {
       id: item.id,
       type: item.type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
       date: item.created_at,
       inputs: { 
         site: { 
           channelName: item.project_name,
-          regency: '',
-          district: '',
-          village: ''
+          regency: item.data?.inputs?.site?.regency || item.data?.inputs?.site?.kabupaten || '',
+          district: item.data?.inputs?.site?.district || item.data?.inputs?.site?.kecamatan || '',
+          village: item.data?.inputs?.site?.village || item.data?.inputs?.site?.desa || ''
         },
         shape: ChannelShape.TRAPEZOID,
         roughness: 0,
@@ -89,12 +124,125 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
       },
       outputs: { Discharge: getMainValue(item) },
       location: {
-        latitude: item.location!.latitude,
-        longitude: item.location!.longitude,
+        latitude: location.latitude,
+        longitude: location.longitude,
         accuracy: 10,
         timestamp: Date.now()
       }
-    }));
+    };
+  });
+
+  // Helper function to calculate Manning discharge
+  const calculateManningDischarge = (inputs: any) => {
+    const { width, depth, slope, roughness, sideSlope } = inputs;
+    const area = width * depth + sideSlope * depth * depth;
+    const wettedPerimeter = width + 2 * depth * Math.sqrt(1 + sideSlope * sideSlope);
+    const hydraulicRadius = area / wettedPerimeter;
+    const velocity = (1 / roughness) * Math.pow(hydraulicRadius, 2/3) * Math.pow(slope, 0.5);
+    const discharge = area * velocity;
+    return discharge.toFixed(2);
+  };
+
+  // Helper function to calculate Rational discharge
+  const calculateRationalDischarge = (inputs: any) => {
+    const { C, A, I } = inputs;
+    const discharge = (0.00278 * C * I * A);
+    return discharge.toFixed(2);
+  };
+
+  // Add pilot data to map
+  const pilotMapData = [
+    ...manningPilotData.map((pilot, idx) => {
+      const discharge = calculateManningDischarge(pilot.inputs);
+      return {
+        id: `pilot-manning-${idx}`,
+        type: CalculationType.MANNING,
+        date: new Date().toISOString(),
+        inputs: {
+          site: {
+            channelName: pilot.location.channelName,
+            regency: pilot.location.kabupaten,
+            district: pilot.location.kecamatan,
+            village: pilot.location.desa
+          },
+          ...pilot.inputs
+        },
+        outputs: { Discharge: discharge },
+        location: pilot.location.coordinates ? {
+          latitude: pilot.location.coordinates.lat,
+          longitude: pilot.location.coordinates.lng,
+          accuracy: 10,
+          timestamp: Date.now()
+        } : undefined
+      };
+    }),
+    ...rationalPilotData.map((pilot, idx) => {
+      const discharge = calculateRationalDischarge(pilot.inputs);
+      return {
+        id: `pilot-rational-${idx}`,
+        type: CalculationType.RATIONAL,
+        date: new Date().toISOString(),
+        inputs: {
+          site: {
+            channelName: pilot.location.channelName,
+            regency: pilot.location.kabupaten,
+            district: pilot.location.kecamatan,
+            village: pilot.location.desa
+          },
+          shape: ChannelShape.TRAPEZOID,
+          roughness: 0,
+          slope: 0,
+          width: 0,
+          topWidth: 0,
+          diameter: 0,
+          depth: 0,
+          totalDepth: 0,
+          sideSlope: 0
+        },
+        outputs: { Discharge: discharge },
+        location: pilot.location.coordinates ? {
+          latitude: pilot.location.coordinates.lat,
+          longitude: pilot.location.coordinates.lng,
+          accuracy: 10,
+          timestamp: Date.now()
+        } : undefined
+      };
+    }),
+    ...waterBalancePilotData.map((pilot, idx) => {
+      const totalSupply = pilot.inputs.monthlySupply.reduce((a, b) => a + b, 0);
+      return {
+        id: `pilot-water-${idx}`,
+        type: CalculationType.RATIONAL,
+        date: new Date().toISOString(),
+        inputs: {
+          site: {
+            channelName: pilot.location.channelName,
+            regency: pilot.location.kabupaten,
+            district: pilot.location.kecamatan,
+            village: pilot.location.desa
+          },
+          shape: ChannelShape.TRAPEZOID,
+          roughness: 0,
+          slope: 0,
+          width: 0,
+          topWidth: 0,
+          diameter: 0,
+          depth: 0,
+          totalDepth: 0,
+          sideSlope: 0
+        },
+        outputs: { Discharge: totalSupply.toFixed(1) },
+        location: pilot.location.coordinates ? {
+          latitude: pilot.location.coordinates.lat,
+          longitude: pilot.location.coordinates.lng,
+          accuracy: 10,
+          timestamp: Date.now()
+        } : undefined
+      };
+    })
+  ].filter(item => item.location);
+
+  const mapData = [...dbMapData, ...pilotMapData];
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -142,11 +290,25 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI }) => {
       ) : (
         <>
           {viewMode === 'MAP' ? (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Peta Lokasi Proyek</h2>
-              <HistoryMap data={mapData} />
-              <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center">
-                <p className="text-xs text-slate-500">{mapData.length} lokasi terdata</p>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 sm:p-5">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Peta Lokasi Proyek</h2>
+              <HistoryMap data={mapData} onViewDetail={onMapDetail} />
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
+                <div className="flex gap-2 text-[10px] sm:text-xs">
+                  <span className="flex items-center gap-1.5 text-slate-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    Manning
+                  </span>
+                  <span className="flex items-center gap-1.5 text-slate-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                    Banjir
+                  </span>
+                  <span className="flex items-center gap-1.5 text-slate-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    Neraca
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
