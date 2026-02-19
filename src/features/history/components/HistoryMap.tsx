@@ -5,9 +5,10 @@ import { CalculationResult, CalculationType } from '@/types/types';
 interface Props {
   data: CalculationResult[];
   onViewDetail?: (item: CalculationResult) => void;
+  focusItemId?: string;
 }
 
-export const HistoryMap: React.FC<Props> = ({ data, onViewDetail }) => {
+export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<CalculationResult | null>(null);
@@ -240,7 +241,17 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail }) => {
       // Only fit bounds if we have valid markers
       if (validData.length > 0 && bounds.isValid?.()) {
         try {
-          map.fitBounds(bounds, { padding: [50, 50] });
+          // If focusItemId is provided, zoom to that specific item
+          if (focusItemId) {
+            const focusItem = validData.find(item => item.id === focusItemId);
+            if (focusItem && focusItem.location) {
+              map.setView([focusItem.location.latitude, focusItem.location.longitude], 16);
+            } else {
+              map.fitBounds(bounds, { padding: [50, 50] });
+            }
+          } else {
+            map.fitBounds(bounds, { padding: [50, 50] });
+          }
         } catch (boundsError) {
           console.warn('Error fitting bounds:', boundsError);
         }

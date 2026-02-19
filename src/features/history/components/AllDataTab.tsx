@@ -12,12 +12,14 @@ interface Props {
   onViewDetail?: (item: AllCalculationsData) => void;
   onConsultAI?: (item: AllCalculationsData) => void;
   onMapDetail?: (item: any) => void;
+  onShowOnMap?: (item: AllCalculationsData) => void;
 }
 
-export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail }) => {
+export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail, onShowOnMap }) => {
   const [data, setData] = useState<AllCalculationsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
+  const [focusItemId, setFocusItemId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadData();
@@ -292,7 +294,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
           {viewMode === 'MAP' ? (
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 sm:p-5">
               <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Peta Lokasi Proyek</h2>
-              <HistoryMap data={mapData} onViewDetail={onMapDetail} />
+              <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
                 <div className="flex gap-2 text-[10px] sm:text-xs">
@@ -349,6 +351,22 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 mt-auto">
+                    <button 
+                      onClick={() => {
+                        if (onShowOnMap) {
+                          onShowOnMap(item);
+                        }
+                        setFocusItemId(item.id);
+                        setViewMode('MAP');
+                      }}
+                      className="w-full py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Tampilkan di Peta
+                    </button>
                     <button 
                       onClick={() => onViewDetail?.(item)} 
                       className="w-full py-2.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
