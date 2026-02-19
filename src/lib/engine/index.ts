@@ -2,6 +2,7 @@ export * from './flood';
 export * from './rainfall';
 export * from './dependableFlow';
 export * from './validation';
+export * from './statistics';
 export {
   calculateRationalDischarge as calculateRationalMethod,
   calculateTc,
