@@ -1,5 +1,7 @@
 // Water Balance Calculation Engine - SNI 6738:2015 & UU No. 17/2019
 
+import { z } from 'zod';
+
 export interface WaterBalanceInputs {
   population: number;
   agricultureArea: number; // Ha
@@ -7,6 +9,15 @@ export interface WaterBalanceInputs {
   irrigationDemand: number; // L/s/Ha
   monthlySupply: number[]; // 12 months Q80 (m³/s)
 }
+
+// Zod validation schema
+const WaterBalanceInputsSchema = z.object({
+  population: z.number().min(0, 'Jumlah penduduk harus ≥ 0'),
+  agricultureArea: z.number().min(0, 'Luas lahan pertanian harus ≥ 0'),
+  domesticStandard: z.number().min(0, 'Standar kebutuhan air harus ≥ 0').max(500, 'Standar kebutuhan air tidak realistis'),
+  irrigationDemand: z.number().min(0, 'Kebutuhan irigasi harus ≥ 0').max(5, 'Kebutuhan irigasi tidak realistis'),
+  monthlySupply: z.array(z.number().min(0, 'Debit bulanan harus ≥ 0')).length(12, 'Harus ada 12 data bulanan')
+});
 
 export interface WaterBalanceResult {
   month: string;
@@ -62,10 +73,11 @@ export const calculateAgricultureDemand = (area: number, demand: number = 1.0): 
  * @returns Array hasil neraca air 12 bulan
  */
 export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceResult[] => {
-  const domesticDemand = calculateDomesticDemand(inputs.population, inputs.domesticStandard);
-  const agricultureDemand = calculateAgricultureDemand(inputs.agricultureArea, inputs.irrigationDemand);
+  const validated = WaterBalanceInputsSchema.parse(inputs);
+  const domesticDemand = calculateDomesticDemand(validated.population, validated.domesticStandard);
+  const agricultureDemand = calculateAgricultureDemand(validated.agricultureArea, validated.irrigationDemand);
   
-  return inputs.monthlySupply.map((supply, index) => {
+  return validated.monthlySupply.map((supply, index) => {
     // Debit Lingkungan (Environmental Flow) - UU No. 17/2019 Pasal 22
     // Minimum 10% dari debit tersedia untuk ekosistem
     const environmentalFlow = supply * 0.10;

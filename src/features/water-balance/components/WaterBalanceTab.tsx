@@ -302,10 +302,17 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           {/* Resizer - Desktop Only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`hidden lg:block w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
+            role="separator"
+            aria-label="Resize sidebar"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') setSidebarWidth(Math.max(25, sidebarWidth - 1));
+              if (e.key === 'ArrowRight') setSidebarWidth(Math.min(50, sidebarWidth + 1));
+            }}
           >
-            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-teal-500 transition-colors"></div>
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
           </div>
 
           {/* MAIN CONTENT */}

@@ -271,7 +271,7 @@ export const nakayasuPilotData: PilotDataNakayasu[] = [
     inputs: {
       A: 450,       // DAS besar 450 km² (SESUAI SNI: > 3 km²)
       L: 35,        // Panjang sungai 35 km
-      Ro: 12,       // Hujan efektif 12 mm (unit rainfall)
+      Ro: 80,       // Hujan efektif rencana (mm) - dari analisis frekuensi
       Alpha: 2.0    // Karakteristik DAS pegunungan
     },
     returnPeriods: [
@@ -296,7 +296,7 @@ export const nakayasuPilotData: PilotDataNakayasu[] = [
     inputs: {
       A: 180,       // DAS sedang 180 km² (SESUAI SNI: > 3 km²)
       L: 22,        // Panjang sungai 22 km
-      Ro: 15,       // Hujan efektif tinggi (urban)
+      Ro: 90,       // Hujan efektif rencana (mm) - dari analisis frekuensi
       Alpha: 2.2    // Karakteristik DAS urban
     },
     returnPeriods: [
@@ -321,7 +321,7 @@ export const nakayasuPilotData: PilotDataNakayasu[] = [
     inputs: {
       A: 620,       // DAS sangat besar 620 km² (SESUAI SNI: > 3 km²)
       L: 48,        // Panjang sungai 48 km
-      Ro: 10,       // Hujan efektif sedang
+      Ro: 70,       // Hujan efektif rencana (mm) - dari analisis frekuensi
       Alpha: 1.8    // Karakteristik DAS dataran tinggi
     },
     returnPeriods: [
@@ -346,7 +346,7 @@ export const nakayasuPilotData: PilotDataNakayasu[] = [
     inputs: {
       A: 1250,      // DAS sangat besar 1250 km² (SESUAI SNI: > 3 km²)
       L: 65,        // Panjang sungai 65 km
-      Ro: 8,        // Hujan efektif rendah (dataran)
+      Ro: 65,       // Hujan efektif rencana (mm) - dari analisis frekuensi
       Alpha: 2.5    // Karakteristik DAS dataran luas
     },
     returnPeriods: [
@@ -371,7 +371,7 @@ export const nakayasuPilotData: PilotDataNakayasu[] = [
     inputs: {
       A: 380,       // DAS sedang-besar 380 km² (SESUAI SNI: > 3 km²)
       L: 28,        // Panjang sungai 28 km
-      Ro: 18,       // Hujan efektif tinggi (pegunungan)
+      Ro: 85,       // Hujan efektif rencana (mm) - dari analisis frekuensi
       Alpha: 1.7    // Karakteristik DAS pegunungan curam
     },
     returnPeriods: [
@@ -396,7 +396,7 @@ export const nakayasuPilotData: PilotDataNakayasu[] = [
     inputs: {
       A: 520,       // DAS besar 520 km² (SESUAI SNI: > 3 km²)
       L: 42,        // Panjang sungai 42 km
-      Ro: 11,       // Hujan efektif sedang
+      Ro: 75,       // Hujan efektif rencana (mm) - dari analisis frekuensi
       Alpha: 2.1    // Karakteristik DAS campuran
     },
     returnPeriods: [
@@ -630,7 +630,7 @@ export const gamma1PilotData: PilotDataGamma1[] = [
       desa: "Cihideung",
       coordinates: { lat: -6.8281, lng: 107.5831 }
     },
-    inputs: { A: 85, L: 18, Ro: 14, SF: 1.0 },
+    inputs: { A: 85, L: 18, Ro: 80, SF: 1.0 },
     returnPeriods: [
       { period: 'Q2', rainfall: 80 },
       { period: 'Q5', rainfall: 100 },
@@ -650,7 +650,7 @@ export const gamma1PilotData: PilotDataGamma1[] = [
       desa: "Meruya Utara",
       coordinates: { lat: -6.1881, lng: 106.7381 }
     },
-    inputs: { A: 120, L: 24, Ro: 16, SF: 1.2 },
+    inputs: { A: 120, L: 24, Ro: 90, SF: 1.2 },
     returnPeriods: [
       { period: 'Q2', rainfall: 90 },
       { period: 'Q5', rainfall: 115 },
@@ -678,7 +678,7 @@ export const snyderPilotData: PilotDataSnyder[] = [
       desa: "Wadas",
       coordinates: { lat: -6.3531, lng: 107.3081 }
     },
-    inputs: { A: 850, L: 58, Lc: 29, Ro: 9, Ct: 0.6, Cp: 0.6 },
+    inputs: { A: 850, L: 58, Lc: 29, Ro: 65, Ct: 0.6, Cp: 0.6 },
     returnPeriods: [
       { period: 'Q2', rainfall: 65 },
       { period: 'Q5', rainfall: 85 },
@@ -698,7 +698,7 @@ export const snyderPilotData: PilotDataSnyder[] = [
       desa: "Kadipaten",
       coordinates: { lat: -7.1531, lng: 111.8831 }
     },
-    inputs: { A: 1580, L: 82, Lc: 41, Ro: 7, Ct: 0.7, Cp: 0.65 },
+    inputs: { A: 1580, L: 82, Lc: 41, Ro: 60, Ct: 0.7, Cp: 0.65 },
     returnPeriods: [
       { period: 'Q2', rainfall: 60 },
       { period: 'Q5', rainfall: 80 },

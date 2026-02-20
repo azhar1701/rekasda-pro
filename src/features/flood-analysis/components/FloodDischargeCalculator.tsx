@@ -6,7 +6,8 @@ import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
-import { calculateRationalMethod, convertKm2ToHa, useSNI2415Workflow, calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine';
+import { calculateRationalMethod, convertKm2ToHa, calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine';
+import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
@@ -391,20 +392,13 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               )}
               
               {/* SNI 2415:2016 Compliance Warning */}
-              {sniWorkflow.warnings.length > 0 && (
+              {sniWorkflow.warning && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <h3 className="text-sm font-bold text-red-900 mb-2">Peringatan SNI 2415:2016</h3>
-                      <ul className="space-y-1">
-                        {sniWorkflow.warnings.map((warning, idx) => (
-                          <li key={idx} className="text-xs text-red-800">{warning}</li>
-                        ))}
-                      </ul>
-                      <div className="mt-2 text-xs text-red-700">
-                        <strong>Referensi:</strong> {sniWorkflow.compliance.sniReference}
-                      </div>
+                      <p className="text-xs text-red-800">{sniWorkflow.warning}</p>
                     </div>
                   </div>
                 </div>

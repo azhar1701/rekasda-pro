@@ -302,15 +302,15 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                   )}
                   {goodnessOfFit && (
                     <div className={`mt-3 p-3 border rounded-lg ${
-                      goodnessOfFit.isAccepted 
+                      goodnessOfFit.isValid 
                         ? 'bg-emerald-50 border-emerald-200' 
                         : 'bg-red-50 border-red-200'
                     }`}>
                       <div className="flex items-start gap-2">
                         <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                          goodnessOfFit.isAccepted ? 'text-emerald-600' : 'text-red-600'
+                          goodnessOfFit.isValid ? 'text-emerald-600' : 'text-red-600'
                         }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {goodnessOfFit.isAccepted ? (
+                          {goodnessOfFit.isValid ? (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           ) : (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -318,15 +318,15 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                         </svg>
                         <div className="flex-1">
                           <div className={`text-xs font-semibold mb-1 ${
-                            goodnessOfFit.isAccepted ? 'text-emerald-900' : 'text-red-900'
+                            goodnessOfFit.isValid ? 'text-emerald-900' : 'text-red-900'
                           }`}>
-                            Uji Kecocokan: {goodnessOfFit.isAccepted ? 'LULUS' : 'GAGAL'}
+                            Uji Kecocokan: {goodnessOfFit.isValid ? 'LULUS' : 'GAGAL'}
                           </div>
                           <div className={`text-xs space-y-0.5 ${
-                            goodnessOfFit.isAccepted ? 'text-emerald-700' : 'text-red-700'
+                            goodnessOfFit.isValid ? 'text-emerald-700' : 'text-red-700'
                           }`}>
                             <div>Chi-Square: {goodnessOfFit.chiSquare.isAccepted ? '✓' : '✗'} ({goodnessOfFit.chiSquare.calculatedValue} vs {goodnessOfFit.chiSquare.criticalValue})</div>
-                            <div>Smirnov-Kolmogorov: {goodnessOfFit.smirnovKolmogorov.isAccepted ? '✓' : '✗'} ({goodnessOfFit.smirnovKolmogorov.deltaMax} vs {goodnessOfFit.smirnovKolmogorov.deltaCritical})</div>
+                            <div>Kolmogorov-Smirnov: {goodnessOfFit.kolmogorovSmirnov.isAccepted ? '✓' : '✗'} ({goodnessOfFit.kolmogorovSmirnov.deltaMax} vs {goodnessOfFit.kolmogorovSmirnov.deltaCritical})</div>
                           </div>
                         </div>
                       </div>

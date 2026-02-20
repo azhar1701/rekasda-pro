@@ -260,7 +260,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                       <button 
                         key={s}
                         onClick={() => handleInputChange('shape', s)}
-                        className={`flex-1 py-2.5 text-xs font-bold uppercase rounded-lg transition-all ${inputs.shape === s ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`flex-1 py-2.5 text-xs font-bold uppercase rounded-lg transition-all ${inputs.shape === s ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         {s === ChannelShape.TRAPEZOID ? 'Trapesium' : 'Lingkaran'}
                       </button>
@@ -308,7 +308,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     <InputGroup id="slope" label="" unit="m/m" step="0.0001" value={inputs.slope} onChange={e => handleInputChange('slope', parseFloat(e.target.value)||0)} placeholder="0.002" />
                     <button 
                       onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                      className="mt-2 w-full px-3 py-2.5 text-teal-600 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border border-teal-200 text-xs font-bold"
+                      className="mt-2 w-full px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 text-xs font-bold"
                     >
                       Kalkulator Kemiringan
                     </button>
@@ -347,10 +347,17 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
           {/* Resizer - Desktop only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`hidden lg:block w-1 cursor-col-resize hover:bg-teal-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-teal-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
+            role="separator"
+            aria-label="Resize sidebar"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') setSidebarWidth(Math.max(25, sidebarWidth - 1));
+              if (e.key === 'ArrowRight') setSidebarWidth(Math.min(50, sidebarWidth + 1));
+            }}
           >
-            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-teal-500 transition-colors"></div>
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
           </div>
 
           {/* MAIN CONTENT */}
@@ -401,7 +408,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           <span className="text-xs font-bold text-slate-600 uppercase block mb-1 flex items-center gap-1">
                             {item.label}
                             <div className="group relative inline-block">
-                              <svg className="w-3 h-3 text-slate-400 hover:text-teal-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3 text-slate-400 hover:text-blue-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-48 z-50 whitespace-normal">
