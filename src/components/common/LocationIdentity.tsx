@@ -137,7 +137,7 @@ export const LocationIdentity: React.FC<Props> = ({ onLocationChange }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">

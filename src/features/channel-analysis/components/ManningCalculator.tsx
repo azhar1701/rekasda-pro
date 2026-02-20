@@ -13,6 +13,7 @@ import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
 import { ManningPilotDataLoader } from './ManningPilotDataLoader';
 import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
 import { ManningFormulaDisplay } from '@/components/ui/data-display/ManningFormulaDisplay';
+import { Collapsible } from '@/components/ui/Collapsible';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -183,13 +184,13 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   }, [inputs]);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-3 sm:p-6">
+    <div className="min-h-screen p-3 sm:p-6">
       <div className="max-w-[1600px] mx-auto">
         
         {/* Header */}
         <div className="mb-2 md:mb-3">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Analisis Saluran Manning</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Analisis Saluran Manning</h1>
+          <p className="text-xs sm:text-sm text-neutral-600 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
         </div>
 
         {/* Load Message Toast */}
@@ -225,23 +226,27 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
           
           {/* LEFT SIDEBAR */}
           <div className="lg:block" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%' }}>
-            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-3 sm:space-y-4">
+            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-4">
               
-              {/* Pilot Data Loader */}
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
-                <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Data Pilot</h2>
-                <ManningPilotDataLoader onLoad={handleLoadPilotData} />
-              </div>
-
-              {/* Location Identity */}
-              <LocationIdentity onLocationChange={handleLocationChange} />
+              {/* Data Pilot & Location Identity - Combined */}
+              <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={true}>
+                <div className="space-y-4">
+                  <ManningPilotDataLoader onLoad={handleLoadPilotData} />
+                  <div className="border-t border-white/20 pt-4">
+                <div className="glass-card rounded-xl p-0 overflow-hidden border-0">
+                  <LocationIdentity onLocationChange={handleLocationChange} />
+                </div>
+                  </div>
+                </div>
+              </Collapsible>
 
               {/* Formula Display */}
-              <ManningFormulaDisplay />
+              <Collapsible title="Rumus Manning" defaultOpen={false}>
+                <ManningFormulaDisplay />
+              </Collapsible>
 
               {/* Geometry Section */}
-              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
-                <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Geometri Saluran</h2>
+              <Collapsible title="Geometri Saluran" defaultOpen={true}>
                 
                 {Object.keys(errors).length > 0 && (
                   <div className="mb-4">
@@ -340,22 +345,15 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     />
                   </div>
                 </div>
-              </div>
+              </Collapsible>
             </div>
           </div>
           
           {/* Resizer - Desktop only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
-            role="separator"
-            aria-label="Resize sidebar"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') setSidebarWidth(Math.max(25, sidebarWidth - 1));
-              if (e.key === 'ArrowRight') setSidebarWidth(Math.min(50, sidebarWidth + 1));
-            }}
           >
             <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
           </div>
@@ -365,8 +363,8 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
             <div className="space-y-4 sm:space-y-6">
             
             {/* Visualization */}
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
-              <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-3 sm:mb-4">Tampilan Penampang Melintang</h2>
+            <div className="glass-card rounded-xl shadow-lg border border-white/20 p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Tampilan Penampang Melintang</h2>
               <ChannelVisualizer inputs={inputs} results={results} />
             </div>
 
@@ -394,8 +392,8 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 <FlowInsight discharge={parseFloat(results.Discharge)} velocity={parseFloat(results.Velocity)} type="MANNING" />
 
                 {/* Detailed Results */}
-                <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-3 sm:mb-4">Rincian Hasil Perhitungan</h2>
+                <div className="glass-card rounded-xl shadow-lg border border-white/20 p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Rincian Hasil Perhitungan</h2>
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {[

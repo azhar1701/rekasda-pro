@@ -43,7 +43,7 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
     <div className="group w-full">
       <div className="flex justify-between items-baseline mb-2">
         <div className="flex items-center gap-2">
-          <label htmlFor={inputId} className="text-xs font-semibold text-slate-500 uppercase tracking-wide group-focus-within:text-safety-blue transition-colors duration-200">
+          <label htmlFor={inputId} className="text-label text-neutral-700 group-focus-within:text-primary-600 transition-colors duration-200">
             {label}
           </label>
           {helpText && <HelpTooltip content={helpText} />}
@@ -52,16 +52,16 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
       </div>
       
       <div className={`
-        relative flex items-center bg-white rounded-2xl border transition-all duration-300 overflow-hidden shadow-sm
+        relative flex items-center glass-card rounded-xl border transition-all duration-300 overflow-hidden shadow-md h-11
         ${error 
-          ? 'border-red-300 ring-4 ring-red-50' 
-          : 'border-slate-200 hover:border-slate-300 focus-within:border-safety-blue focus-within:ring-4 focus-within:ring-safety-blue/10 focus-within:shadow-glow'
+          ? 'border-error ring-4 ring-error/20' 
+          : 'border-white/30 hover:border-white/50 focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/20'
         }
       `}>
         <input
           id={inputId}
           name={inputName}
-          className="w-full bg-transparent py-3.5 px-4 text-base font-bold text-slate-900 placeholder-slate-300 outline-none font-mono"
+          className="w-full h-full bg-transparent px-4 text-body font-bold text-neutral-900 placeholder-neutral-400 outline-none font-mono"
           step="any"
           autoComplete="off"
           value={localValue}
@@ -69,8 +69,8 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
           {...props}
         />
         {unit && (
-          <div className="bg-slate-50 border-l border-slate-100 px-4 py-3 h-full flex items-center justify-center min-w-[3.5rem]">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{unit}</span>
+          <div className="glass border-l border-white/20 px-4 h-full flex items-center justify-center min-w-[3.5rem]">
+            <span className="text-label text-neutral-600">{unit}</span>
           </div>
         )}
       </div>

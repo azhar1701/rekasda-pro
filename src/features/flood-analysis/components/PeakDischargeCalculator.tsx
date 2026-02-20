@@ -12,6 +12,7 @@ import { MethodSelector } from '@/components/ui/forms/MethodSelector';
 import { SaveButton } from '@/components/ui/forms/SaveButton';
 import { FormulaDisplay } from '@/components/ui/data-display/FormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
+import { SlopeCalculator } from '@/features/channel-analysis/components/SlopeCalculator';
 
 interface LocationData {
   channelName: string;
@@ -53,6 +54,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
   });
   const [result, setResult] = useState<{ Qp: number; params?: any } | null>(null);
   const [useManualC, setUseManualC] = useState(false);
+  const [showSlopeCalculator, setShowSlopeCalculator] = useState(false);
 
   const sniWorkflow = useMemo(() => {
     return useSNI2415Workflow(inputs.area);
@@ -272,6 +274,23 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       placeholder="0.5"
                     />
+                    <button
+                      onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
+                      className="mt-2 w-full px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 text-xs font-bold"
+                    >
+                      Kalkulator Kemiringan
+                    </button>
+                    {showSlopeCalculator && (
+                      <div className="mt-3">
+                        <SlopeCalculator
+                          onSlopeCalculated={(slope) => {
+                            setInputs({ ...inputs, S: slope * 100 });
+                            setShowSlopeCalculator(false);
+                          }}
+                          onClose={() => setShowSlopeCalculator(false)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </>
               )}

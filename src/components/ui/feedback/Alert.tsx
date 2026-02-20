@@ -86,7 +86,7 @@ export const Alert: React.FC<AlertProps> = ({
   return (
     <div
       className={`
-        flex items-start gap-3 px-4 py-3 rounded-lg border
+        flex items-start gap-3 px-4 py-3 rounded-xl border glass-card
         ${style.bg} ${style.border}
         ${className}
       `}
@@ -94,12 +94,12 @@ export const Alert: React.FC<AlertProps> = ({
       <div className={`flex-shrink-0 mt-0.5 ${style.icon}`}>{icons[type]}</div>
       <div className="flex-1">
         {title && <h3 className={`font-semibold ${style.title}`}>{title}</h3>}
-        <p className="text-sm text-slate-700">{message}</p>
+        <p className="text-sm text-neutral-900">{message}</p>
       </div>
       {onClose && (
         <button
           onClick={onClose}
-          className="flex-shrink-0 text-slate-400 hover:text-slate-600"
+          className="flex-shrink-0 text-neutral-400 hover:text-neutral-600"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path

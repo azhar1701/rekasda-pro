@@ -1,47 +1,7 @@
-// Design System Components - Centralized Exports
-
-// Branding
-export { BrandLogo } from './BrandLogo';
-
-// Forms
-export { Button } from './forms/Button';
-export { Input } from './forms/InputNew';
-export { Select } from './forms/Select';
-export { FormField } from './forms/FormField';
-
-// Feedback
-export { LoadingState } from './feedback/LoadingState';
-export { EmptyState } from './feedback/EmptyState';
-export { ToastContainer } from './feedback/Toast';
-export { Alert } from './feedback/Alert';
-
-// Data Display
-export { Badge } from './data-display/Badge';
-export { Tooltip } from './data-display/Tooltip';
-
-// Navigation
-export { Tabs } from './navigation/Tabs';
-export { Header } from './navigation/Header';
-export { Stepper } from './navigation/Stepper';
-export { Sidebar, NavBadge, SidebarSection } from './navigation/Sidebar';
-
-// Layout
-export { Accordion } from './layout/Accordion';
-export {
-  Card as CardNew,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-  CardData,
-  CardGrid,
-  SectionCard,
-  CardLegacy as Card,
-} from './layout/CardNew';
-export {
-  AppLayout,
-  PageHeader,
-  PageContent,
-  Section,
-  ContentGrid,
-} from './layout/Layout';
+export { default as Button } from './Button';
+export { default as Card } from './Card';
+export { default as DataTable } from './DataTable';
+export { default as InputField } from './InputField';
+export { default as Modal } from './Modal';
+export { default as Collapsible } from './Collapsible';
+export { default as BrandLogo } from './BrandLogo';

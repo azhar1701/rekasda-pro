@@ -12,18 +12,18 @@ export const Collapsible: React.FC<CollapsibleProps> = ({ title, defaultOpen = f
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200">
+    <div className="glass-card rounded-xl">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors"
+        className="w-full flex items-center justify-between px-6 py-5 hover:glass transition-all"
       >
-        <div className="flex items-center gap-2">
-          <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
-          {badge && <span className="text-xs font-bold text-emerald-600">{badge}</span>}
+        <div className="flex items-center gap-3">
+          <h2 className="text-label text-neutral-900">{title}</h2>
+          {badge && <span className="text-caption font-bold text-success">{badge}</span>}
         </div>
-        {isOpen ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+        {isOpen ? <ChevronUp className="w-5 h-5 text-neutral-600" /> : <ChevronDown className="w-5 h-5 text-neutral-600" />}
       </button>
-      {isOpen && <div className="px-4 sm:px-5 pb-4 sm:pb-5">{children}</div>}
+      {isOpen && <div className="px-6 pb-6 pt-2">{children}</div>}
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { saveWaterBalance } from '@/services/calculationService';
 import { WaterBalancePilotDataLoader } from './WaterBalancePilotDataLoader';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { WaterBalanceFormulaDisplay } from '@/components/ui/data-display/WaterBalanceFormulaDisplay';
+import { Collapsible } from '@/components/ui/Collapsible';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -141,14 +142,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-3 md:p-5">
+    <div className="min-h-screen p-3 md:p-5">
       
       <div className="max-w-[1600px] mx-auto">
         
         {/* HEADER */}
         <div className="mb-2 md:mb-3">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Analisis Neraca Air</h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-neutral-900">Analisis Neraca Air</h1>
+          <p className="text-xs md:text-sm text-neutral-600 mt-1">Water Balance Analysis Dashboard • SNI 6728.1:2015</p>
         </div>
 
         {/* Load Message Toast */}
@@ -165,28 +166,27 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           
           {/* LEFT SIDEBAR */}
           <div className="w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%', position: 'relative' }}>
-            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-3 md:space-y-4">
+            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-4">
               
-              {/* Pilot Data Loader */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Data Pilot</h2>
-                <WaterBalancePilotDataLoader onLoad={handleLoadPilotData} />
-              </div>
-              
-              {/* Location Identity */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
-                <LocationIdentity onLocationChange={setLocationData} />
-              </div>
+              {/* Data Pilot & Location Identity - Combined */}
+              <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={true}>
+                <div className="space-y-4">
+                  <WaterBalancePilotDataLoader onLoad={handleLoadPilotData} />
+                  <div className="border-t border-white/20 pt-4">
+                    <div className="glass-card rounded-xl p-0 overflow-hidden border-0">
+                      <LocationIdentity onLocationChange={setLocationData} />
+                    </div>
+                  </div>
+                </div>
+              </Collapsible>
               
               {/* Formula Display */}
-              <WaterBalanceFormulaDisplay />
+              <Collapsible title="Rumus Neraca Air" defaultOpen={false}>
+                <WaterBalanceFormulaDisplay />
+              </Collapsible>
               
               {/* SECTION 1: PARAMETER GLOBAL */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
-                  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Parameter Masukan</h2>
-                </div>
+              <Collapsible title="Parameter Masukan" defaultOpen={true}>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -252,17 +252,10 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Collapsible>
 
               {/* SECTION 2: DEBIT ANDALAN */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-8 bg-cyan-500 rounded-full"></div>
-                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Debit Andalan</h2>
-                  </div>
-                  <ComplianceBadge sniCode="SNI 6738:2015" />
-                </div>
+              <Collapsible title="Debit Andalan" defaultOpen={true} badge="SNI 6738:2015">
 
                 <button
                   onClick={() => setIsCalcModalOpen(true)}
@@ -296,21 +289,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                     ))}
                   </div>
                 </div>
-              </div>
+              </Collapsible>
             </div>
           </div>
           {/* Resizer - Desktop Only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
-            role="separator"
-            aria-label="Resize sidebar"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') setSidebarWidth(Math.max(25, sidebarWidth - 1));
-              if (e.key === 'ArrowRight') setSidebarWidth(Math.min(50, sidebarWidth + 1));
-            }}
           >
             <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
           </div>
