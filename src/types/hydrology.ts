@@ -60,6 +60,70 @@ export interface HSSNakayasuOutput {
 }
 
 /**
+ * HSS Gamma I - Input Parameters
+ * Metode Hidrograf Satuan Sintetik Gamma I (Sri Harto, 1993)
+ */
+export interface HSSGamma1Input {
+  /** Hujan Satuan (Unit Rainfall) - mm */
+  Ro: number;
+  /** Luas DAS (Catchment Area) - km² */
+  A: number;
+  /** Panjang Sungai Utama (Main River Length) - km */
+  L: number;
+  /** Faktor Sumber (Source Factor) - dimensionless */
+  SF: number;
+  /** Waktu Konsentrasi (Time of Concentration) - jam */
+  Tc?: number;
+}
+
+/**
+ * HSS Gamma I - Output
+ */
+export interface HSSGamma1Output {
+  /** Debit Puncak (Peak Discharge) - m³/s */
+  Qp: number;
+  /** Waktu Puncak (Time to Peak) - jam */
+  Tp: number;
+  /** Waktu Dasar (Base Time) - jam */
+  Tb: number;
+  /** Data Hidrograf (Time-Discharge pairs) */
+  hydrograph: Array<{ time: number; discharge: number }>;
+}
+
+/**
+ * HSS Snyder - Input Parameters
+ * Metode Hidrograf Satuan Sintetik Snyder (1938)
+ */
+export interface HSSSnyderInput {
+  /** Hujan Satuan (Unit Rainfall) - mm */
+  Ro: number;
+  /** Luas DAS (Catchment Area) - km² */
+  A: number;
+  /** Panjang Sungai Utama (Main River Length) - km */
+  L: number;
+  /** Panjang dari outlet ke titik berat DAS (Distance to Centroid) - km */
+  Lc: number;
+  /** Koefisien Ct (0.4 - 0.8, standard = 0.6) */
+  Ct: number;
+  /** Koefisien Cp (0.4 - 0.8, standard = 0.6) */
+  Cp: number;
+}
+
+/**
+ * HSS Snyder - Output
+ */
+export interface HSSSnyderOutput {
+  /** Debit Puncak (Peak Discharge) - m³/s */
+  Qp: number;
+  /** Waktu Puncak (Time to Peak) - jam */
+  Tp: number;
+  /** Waktu Dasar (Base Time) - jam */
+  Tb: number;
+  /** Data Hidrograf (Time-Discharge pairs) */
+  hydrograph: Array<{ time: number; discharge: number }>;
+}
+
+/**
  * Manning Formula - Input Parameters
  * Untuk perhitungan kapasitas saluran
  */

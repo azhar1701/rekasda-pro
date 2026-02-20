@@ -134,9 +134,11 @@ export const HSSNakayasuInputSchema = z.object({
 /**
  * Determine Recommended Method Based on Catchment Area
  * 
- * SNI 2415:2016 Pasal 3.1:
- * - Metode Rasional: A ≤ 300 Ha (3 km²)
- * - HSS: A > 300 Ha (3 km²)
+ * SNI 2415:2016 Pasal 3.1 & Praktik Empiris Indonesia:
+ * - Metode Rasional: A ≤ 3 km² (300 Ha)
+ * - Metode Haspers/Weduwen: 3 km² < A ≤ 100 km²
+ * - Metode Melchior: A > 100 km²
+ * - HSS: A > 3 km² (untuk analisis hidrograf lengkap)
  * 
  * @param areaKm2 - Luas DAS dalam km²
  * @returns Method recommendation with compliance status
@@ -163,18 +165,37 @@ export function useSNI2415Workflow(areaKm2: number): MethodRecommendation {
         areaUnit: 'Ha',
       },
     };
-  } else {
-    // HSS is required
+  } else if (areaKm2 <= 100) {
+    // Modified Rational Methods (Haspers, Weduwen) are valid
     warnings.push(
       `Luas DAS (${areaHa.toFixed(0)} Ha / ${areaKm2.toFixed(2)} km²) melebihi batas Metode Rasional (${RATIONAL_LIMIT_HA} Ha).`
     );
     warnings.push(
-      'Sesuai SNI 2415:2016 Pasal 3.1, gunakan Metode HSS (Hidrograf Satuan Sintetis).'
+      'Sesuai SNI 2415:2016 Pasal 3.1, gunakan Metode Empiris Modifikasi (Haspers/Weduwen) atau HSS (Hidrograf Satuan Sintetis).'
     );
     
     return {
       recommended: 'HSS_NAKAYASU',
-      isValid: false, // Rational is NOT valid
+      isValid: false, // Rational is NOT valid, but empirical methods are OK
+      warnings,
+      compliance: {
+        sniReference: 'SNI 2415:2016 Pasal 3.1',
+        areaLimit: RATIONAL_LIMIT_HA,
+        areaUnit: 'Ha',
+      },
+    };
+  } else {
+    // Large catchment: Melchior or HSS required
+    warnings.push(
+      `Luas DAS (${areaHa.toFixed(0)} Ha / ${areaKm2.toFixed(2)} km²) melebihi batas Metode Rasional (${RATIONAL_LIMIT_HA} Ha).`
+    );
+    warnings.push(
+      'Sesuai SNI 2415:2016 Pasal 3.1, gunakan Metode Melchior (A > 100 km²) atau HSS (Hidrograf Satuan Sintetis).'
+    );
+    
+    return {
+      recommended: 'HSS_NAKAYASU',
+      isValid: false,
       warnings,
       compliance: {
         sniReference: 'SNI 2415:2016 Pasal 3.1',

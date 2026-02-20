@@ -6,6 +6,7 @@ import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { saveWaterBalance } from '@/services/calculationService';
 import { WaterBalancePilotDataLoader } from './WaterBalancePilotDataLoader';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
+import { WaterBalanceFormulaDisplay } from '@/components/ui/data-display/WaterBalanceFormulaDisplay';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -176,6 +177,9 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">
                 <LocationIdentity onLocationChange={setLocationData} />
               </div>
+              
+              {/* Formula Display */}
+              <WaterBalanceFormulaDisplay />
               
               {/* SECTION 1: PARAMETER GLOBAL */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-5">

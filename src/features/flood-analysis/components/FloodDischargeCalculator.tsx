@@ -258,10 +258,20 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      const inputs = method === 'RATIONAL' ? { ...rationalInputs, location: locationData } : { ...nakayasuInputs, location: locationData };
+      const inputs = method === 'RATIONAL' || method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR' 
+        ? { ...rationalInputs, location: locationData } 
+        : { ...nakayasuInputs, location: locationData };
       const results = { qPeak, tPeak, volume, returnPeriods, hydrographData };
+      
+      // Convert modified rational methods to RATIONAL for saving
+      let saveMethod: 'RATIONAL' | 'NAKAYASU';
+      if (method === 'NAKAYASU') {
+        saveMethod = 'NAKAYASU';
+      } else {
+        saveMethod = 'RATIONAL';
+      }
 
-      const { error } = await saveFloodCalculation({ method, projectName, inputs, results });
+      const { error } = await saveFloodCalculation({ method: saveMethod, projectName, inputs, results });
 
       if (error) {
         setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
@@ -357,7 +367,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Data Pilot</h2>
                 <PilotDataLoader
-                method={method}
+                method={method === 'NAKAYASU' ? 'NAKAYASU' : 'RATIONAL'}
                 onLoadRational={handleLoadRationalPilot}
                 onLoadNakayasu={handleLoadNakayasuPilot}
               />

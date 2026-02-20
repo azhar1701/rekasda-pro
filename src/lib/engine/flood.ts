@@ -13,6 +13,10 @@ import type {
   RationalMethodOutput,
   HSSNakayasuInput,
   HSSNakayasuOutput,
+  HSSGamma1Input,
+  HSSGamma1Output,
+  HSSSnyderInput,
+  HSSSnyderOutput,
 } from '@/types/hydrology';
 
 /**
@@ -161,4 +165,80 @@ export const validateRationalInput = (input: RationalMethodInput): boolean => {
 export const validateHSSNakayasuInput = (input: HSSNakayasuInput): boolean => {
   HSSNakayasuInputSchema.parse(input);
   return true;
+};
+
+/**
+ * HSS Gamma I - Perhitungan Hidrograf Satuan Sintetik
+ * Metode Sri Harto (1993)
+ * 
+ * Parameter:
+ * - Tc = 0.43 × (L / √S)^0.467 (Waktu konsentrasi)
+ * - Tp = 0.5 × Tc (Waktu puncak)
+ * - Qp = (0.18 × A × Ro) / Tp (Debit puncak)
+ * - Tb = 3 × Tp (Waktu dasar)
+ */
+export const calculateHSSGamma1 = (input: HSSGamma1Input): HSSGamma1Output => {
+  const { Ro, A, L, Tc: TcInput } = input;
+
+  // Perhitungan Tc jika tidak diinput (asumsi slope 0.01)
+  const Tc = TcInput || 0.43 * Math.pow(L / Math.sqrt(0.01), 0.467);
+  const Tp = 0.5 * Tc;
+  const Qp = (0.18 * A * Ro) / Tp;
+  const Tb = 3 * Tp; // Simplified formula
+
+  const hydrograph: Array<{ time: number; discharge: number }> = [];
+  const timeStep = 0.1;
+  const maxTime = Tb + Tp;
+
+  for (let t = 0; t <= maxTime; t += timeStep) {
+    let Q = 0;
+    if (t === 0) {
+      Q = 0;
+    } else if (t > 0 && t <= Tp) {
+      Q = Qp * Math.pow(t / Tp, 2.5);
+    } else if (t > Tp && t <= Tb) {
+      Q = Qp * Math.pow((Tb - t) / (Tb - Tp), 1.5);
+    }
+    hydrograph.push({ time: parseFloat(t.toFixed(2)), discharge: parseFloat(Q.toFixed(4)) });
+  }
+
+  return { Qp: parseFloat(Qp.toFixed(3)), Tp: parseFloat(Tp.toFixed(2)), Tb: parseFloat(Tb.toFixed(2)), hydrograph };
+};
+
+/**
+ * HSS Snyder - Perhitungan Hidrograf Satuan Sintetik
+ * Metode Snyder (1938)
+ * 
+ * Parameter:
+ * - tpR = Ct × (L × Lc)^0.3 (Time lag)
+ * - Tp = tpR + 0.25 × tr (Waktu puncak)
+ * - Qp = (2.78 × Cp × A × Ro) / Tp (Debit puncak)
+ * - Tb = 5 × Tp (Waktu dasar)
+ */
+export const calculateHSSSnyder = (input: HSSSnyderInput): HSSSnyderOutput => {
+  const { Ro, A, L, Lc, Ct, Cp } = input;
+
+  const tpR = Ct * Math.pow(L * Lc, 0.3);
+  const tr = tpR / 5.5;
+  const Tp = tpR + 0.25 * tr;
+  const Qp = (2.78 * Cp * A * Ro) / Tp;
+  const Tb = 5 * Tp; // Simplified: base time = 5 × peak time
+
+  const hydrograph: Array<{ time: number; discharge: number }> = [];
+  const timeStep = 0.1;
+  const maxTime = Tb + Tp;
+
+  for (let t = 0; t <= maxTime; t += timeStep) {
+    let Q = 0;
+    if (t === 0) {
+      Q = 0;
+    } else if (t > 0 && t <= Tp) {
+      Q = Qp * Math.pow(t / Tp, 2.0);
+    } else if (t > Tp && t <= Tb) {
+      Q = Qp * Math.pow((Tb - t) / (Tb - Tp), 1.2);
+    }
+    hydrograph.push({ time: parseFloat(t.toFixed(2)), discharge: parseFloat(Q.toFixed(4)) });
+  }
+
+  return { Qp: parseFloat(Qp.toFixed(3)), Tp: parseFloat(Tp.toFixed(2)), Tb: parseFloat(Tb.toFixed(2)), hydrograph };
 };

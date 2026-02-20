@@ -2,34 +2,81 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { 
   rationalPilotData, 
+  haspersPilotData,
+  weduwenPilotData,
+  melchiorPilotData,
   nakayasuPilotData,
+  gamma1PilotData,
+  snyderPilotData,
   PilotDataRational,
-  PilotDataNakayasu
+  PilotDataModifiedRational,
+  PilotDataNakayasu,
+  PilotDataGamma1,
+  PilotDataSnyder
 } from '@/data/floodPilotData';
 
 interface PilotDataLoaderProps {
-  method: 'RATIONAL' | 'NAKAYASU';
+  method: 'RATIONAL' | 'HASPERS' | 'WEDUWEN' | 'MELCHIOR' | 'NAKAYASU' | 'GAMMA1' | 'SNYDER';
   onLoadRational?: (data: PilotDataRational) => void;
+  onLoadModifiedRational?: (data: PilotDataModifiedRational) => void;
   onLoadNakayasu?: (data: PilotDataNakayasu) => void;
+  onLoadGamma1?: (data: PilotDataGamma1) => void;
+  onLoadSnyder?: (data: PilotDataSnyder) => void;
 }
 
 export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
   method,
   onLoadRational,
-  onLoadNakayasu
+  onLoadModifiedRational,
+  onLoadNakayasu,
+  onLoadGamma1,
+  onLoadSnyder
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const pilotData = method === 'RATIONAL' ? rationalPilotData : nakayasuPilotData;
+  const getPilotData = () => {
+    switch (method) {
+      case 'RATIONAL': return rationalPilotData;
+      case 'HASPERS': return haspersPilotData;
+      case 'WEDUWEN': return weduwenPilotData;
+      case 'MELCHIOR': return melchiorPilotData;
+      case 'NAKAYASU': return nakayasuPilotData;
+      case 'GAMMA1': return gamma1PilotData;
+      case 'SNYDER': return snyderPilotData;
+      default: return [];
+    }
+  };
+
+  const pilotData = getPilotData();
+
+  const getMethodLabel = () => {
+    switch (method) {
+      case 'RATIONAL': return 'Metode Rasional';
+      case 'HASPERS': return 'Metode Haspers & Osugi';
+      case 'WEDUWEN': return 'Metode der Weduwen';
+      case 'MELCHIOR': return 'Metode Melchior';
+      case 'NAKAYASU': return 'HSS Nakayasu';
+      case 'GAMMA1': return 'HSS Gamma I';
+      case 'SNYDER': return 'HSS Snyder';
+      default: return '';
+    }
+  };
 
   const handleLoad = () => {
     if (selectedIndex === null) return;
 
     if (method === 'RATIONAL' && onLoadRational) {
       onLoadRational(rationalPilotData[selectedIndex]);
+    } else if (['HASPERS', 'WEDUWEN', 'MELCHIOR'].includes(method) && onLoadModifiedRational) {
+      const data = getPilotData()[selectedIndex] as PilotDataModifiedRational;
+      onLoadModifiedRational(data);
     } else if (method === 'NAKAYASU' && onLoadNakayasu) {
       onLoadNakayasu(nakayasuPilotData[selectedIndex]);
+    } else if (method === 'GAMMA1' && onLoadGamma1) {
+      onLoadGamma1(gamma1PilotData[selectedIndex]);
+    } else if (method === 'SNYDER' && onLoadSnyder) {
+      onLoadSnyder(snyderPilotData[selectedIndex]);
     }
 
     setIsOpen(false);
@@ -64,7 +111,7 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
               {/* Header */}
               <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-5 flex items-center justify-between flex-shrink-0">
                 <div>
-                  <h2 className="text-xl font-black text-white">Data Pilot - {method === 'RATIONAL' ? 'Metode Rasional' : 'HSS Nakayasu'}</h2>
+                  <h2 className="text-xl font-black text-white">Data Pilot - {getMethodLabel()}</h2>
                   <p className="text-purple-100 text-xs mt-1">Pilih data pilot untuk dimuat ke dalam form</p>
                 </div>
                 <button
@@ -131,7 +178,26 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
                             <div className="text-xs font-bold text-emerald-600">{(data as PilotDataRational).inputs.I}</div>
                           </div>
                         </>
-                      ) : (
+                      ) : ['HASPERS', 'WEDUWEN', 'MELCHIOR'].includes(method) ? (
+                        <>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">A (km²)</div>
+                            <div className="text-xs font-bold text-blue-600">{(data as PilotDataModifiedRational).inputs.A}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">L (km)</div>
+                            <div className="text-xs font-bold text-blue-600">{(data as PilotDataModifiedRational).inputs.L}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">S (%)</div>
+                            <div className="text-xs font-bold text-blue-600">{(data as PilotDataModifiedRational).inputs.S}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">I (mm/h)</div>
+                            <div className="text-xs font-bold text-blue-600">{(data as PilotDataModifiedRational).inputs.I}</div>
+                          </div>
+                        </>
+                      ) : method === 'NAKAYASU' ? (
                         <>
                           <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
                             <div className="text-[10px] text-slate-500 mb-0.5">A (km²)</div>
@@ -150,7 +216,45 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
                             <div className="text-xs font-bold text-teal-600">{(data as PilotDataNakayasu).inputs.Alpha}</div>
                           </div>
                         </>
-                      )}
+                      ) : method === 'GAMMA1' ? (
+                        <>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">A (km²)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataGamma1).inputs.A}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">L (km)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataGamma1).inputs.L}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">Ro (mm)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataGamma1).inputs.Ro}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">SF</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataGamma1).inputs.SF}</div>
+                          </div>
+                        </>
+                      ) : method === 'SNYDER' ? (
+                        <>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">A (km²)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataSnyder).inputs.A}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">L (km)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataSnyder).inputs.L}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">Lc (km)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataSnyder).inputs.Lc}</div>
+                          </div>
+                          <div className="bg-white rounded-lg px-2 py-1.5 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 mb-0.5">Ro (mm)</div>
+                            <div className="text-xs font-bold text-teal-600">{(data as PilotDataSnyder).inputs.Ro}</div>
+                          </div>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                 ))}

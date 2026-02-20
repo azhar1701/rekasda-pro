@@ -12,6 +12,7 @@ import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
 import { ManningPilotDataLoader } from './ManningPilotDataLoader';
 import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
+import { ManningFormulaDisplay } from '@/components/ui/data-display/ManningFormulaDisplay';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -234,6 +235,9 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
               {/* Location Identity */}
               <LocationIdentity onLocationChange={handleLocationChange} />
+
+              {/* Formula Display */}
+              <ManningFormulaDisplay />
 
               {/* Geometry Section */}
               <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
