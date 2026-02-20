@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Waves, CloudRain, Scale, Database, Sparkles } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
-import { FloodDischargeCalculator } from '@/features/flood-analysis/components/FloodDischargeCalculator';
+import { FloodAnalysisTab } from '@/features/flood-analysis/components/FloodAnalysisTab';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
@@ -155,7 +155,7 @@ const App: React.FC = () => {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-24 md:pb-32">
           <div className="transition-opacity duration-300">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-          {activeTab === Tab.BANJIR && <FloodDischargeCalculator onConsultAI={() => {
+          {activeTab === Tab.BANJIR && <FloodAnalysisTab onConsultAI={() => {
             setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');
             setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
             setActiveTab(Tab.AI);
