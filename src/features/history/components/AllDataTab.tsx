@@ -78,14 +78,28 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     return '-';
   };
 
-  // Default coordinates for items without location
+  // Default coordinates - Sebaran merata di Indonesia
   const defaultCoordinates = [
-    { latitude: -6.2088, longitude: 106.8456 }, // Jakarta
-    { latitude: -7.2575, longitude: 112.7521 }, // Surabaya
-    { latitude: -6.9175, longitude: 107.6191 }, // Bandung
-    { latitude: -7.7956, longitude: 110.3695 }, // Yogyakarta
-    { latitude: -6.9932, longitude: 110.4203 }, // Semarang
-    { latitude: -8.6500, longitude: 115.2167 }, // Bali
+    { latitude: -6.2088, longitude: 106.8456, name: 'Jakarta' },
+    { latitude: -7.2575, longitude: 112.7521, name: 'Surabaya' },
+    { latitude: -6.9175, longitude: 107.6191, name: 'Bandung' },
+    { latitude: -7.7956, longitude: 110.3695, name: 'Yogyakarta' },
+    { latitude: -6.9932, longitude: 110.4203, name: 'Semarang' },
+    { latitude: -8.6500, longitude: 115.2167, name: 'Bali' },
+    { latitude: -5.1477, longitude: 119.4327, name: 'Makassar' },
+    { latitude: 3.5952, longitude: 98.6722, name: 'Medan' },
+    { latitude: -0.9471, longitude: 100.4172, name: 'Padang' },
+    { latitude: -3.3194, longitude: 114.5906, name: 'Banjarmasin' },
+    { latitude: -2.5489, longitude: 118.0149, name: 'Palu' },
+    { latitude: -0.0263, longitude: 109.3425, name: 'Pontianak' },
+    { latitude: 1.4748, longitude: 124.8421, name: 'Manado' },
+    { latitude: -3.9893, longitude: 122.5213, name: 'Kendari' },
+    { latitude: -8.5833, longitude: 116.1167, name: 'Mataram' },
+    { latitude: 0.5333, longitude: 123.0667, name: 'Gorontalo' },
+    { latitude: -2.9761, longitude: 104.7754, name: 'Palembang' },
+    { latitude: -5.4500, longitude: 105.2667, name: 'Bandar Lampung' },
+    { latitude: 5.5483, longitude: 95.3238, name: 'Banda Aceh' },
+    { latitude: 0.9071, longitude: 104.4553, name: 'Batam' },
   ];
 
   // Convert to CalculationResult format for map
@@ -107,9 +121,10 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     // Assign default coordinates if still no location
     if (!location || !location.latitude || !location.longitude) {
       const defaultCoord = defaultCoordinates[index % defaultCoordinates.length];
+      // Add random offset (±0.1 degree = ~11km) for visual separation
       location = {
-        latitude: defaultCoord.latitude + (Math.random() - 0.5) * 0.05,
-        longitude: defaultCoord.longitude + (Math.random() - 0.5) * 0.05
+        latitude: defaultCoord.latitude + (Math.random() - 0.5) * 0.2,
+        longitude: defaultCoord.longitude + (Math.random() - 0.5) * 0.2
       };
     }
     
