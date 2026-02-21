@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/forms/Button';
 import { CardLegacy as Card, CardContent } from '@/components/ui/layout/CardNew';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/api/supabase';
 
 interface WaterBalanceData {
   site: { channelName: string; regency: string; district: string; village: string };

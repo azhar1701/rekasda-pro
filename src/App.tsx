@@ -10,11 +10,12 @@ import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
 import { AllCalculationsData } from '@/services/allCalculationsService';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ToastContainer } from '@/components/ui/feedback/Toast';
-import { CalculationType, CalculationResult } from '@/types/types';
+import { CalculationType } from '@/types/types';
+import type { CalculationResult } from '@/types/common.types';
 
 import { Header } from '@/components/ui/navigation/Header';
 
-import { useDatabase } from '@/lib/useDatabase';
+import { useDatabase } from '@/hooks/useDatabase';
 import { useDatabaseStatus } from '@/features/history/components/DatabaseTest';
 import { APP_NAME } from '@/constants';
 

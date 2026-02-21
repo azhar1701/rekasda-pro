@@ -1,4 +1,4 @@
-import { supabase, isSupabaseEnabled } from '../lib/supabase'
+import { supabase, isSupabaseEnabled } from '../lib/api/supabase'
 
 export interface CalculationRecord {
   id?: string

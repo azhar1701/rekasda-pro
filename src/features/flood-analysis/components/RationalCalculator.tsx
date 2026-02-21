@@ -10,7 +10,7 @@ import { FlowInsight } from './FlowInsight';
 import { SiteIdentityForm } from '@/components/common/SiteIdentityForm';
 import { SlopeCalculator } from '@/features/channel-analysis/components/SlopeCalculator';
 import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
-import { RunoffCoefficientInput } from './RunoffCoefficientInput';
+import RunoffCoefficientInput from './RunoffCoefficientInput';
 import { SNIBadge, SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
 
 interface Props {
@@ -158,7 +158,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                       />
                       <RunoffCoefficientInput
                         value={inputs.runoffCoefficient}
-                        onChange={(value) => setInputs({...inputs, runoffCoefficient: value || 0.70})}
+                        onChange={(value: number | null) => setInputs({...inputs, runoffCoefficient: value || 0.70})}
                         required={true}
                       />
                     </div>

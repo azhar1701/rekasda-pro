@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { debugSupabase } from '@/lib/debugSupabase';
+import { apiService } from '@/services/api.service';
 
 export const useDatabaseStatus = () => {
   const [status, setStatus] = useState<'testing' | 'success' | 'error'>('testing');
@@ -14,17 +14,16 @@ export const useDatabaseStatus = () => {
     setMessage('Running diagnostics...');
     
     try {
-      // Run full diagnostic
-      const diagnosticPassed = await debugSupabase.runFullDiagnostic();
+      const response = await apiService.testConnection();
       
-      if (!diagnosticPassed) {
+      if (response.status === 'error') {
         setStatus('error');
-        setMessage('Diagnostic failed - check console');
+        setMessage('Connection failed');
         return;
       }
 
       setStatus('success');
-      setMessage('All tests passed');
+      setMessage('Connected');
     } catch (error) {
       console.error('Database test error:', error);
       setStatus('error');

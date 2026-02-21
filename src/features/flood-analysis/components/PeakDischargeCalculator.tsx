@@ -6,7 +6,7 @@ import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataModifiedRational } from '@/data/floodPilotData';
-import { RunoffCoefficientInput } from '@/features/flood-analysis/components/RunoffCoefficientInput';
+import RunoffCoefficientInput from '@/features/flood-analysis/components/RunoffCoefficientInput';
 import { RainfallFrequencyAnalysis } from '@/features/flood-analysis/components/RainfallFrequencyAnalysis';
 import { MethodSelector } from '@/components/ui/forms/MethodSelector';
 import { SaveButton } from '@/components/ui/forms/SaveButton';
@@ -331,7 +331,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                 ) : (
                   <RunoffCoefficientInput
                     value={inputs.C}
-                    onChange={(value) => setInputs({ ...inputs, C: value || 0 })}
+                    onChange={(value: number | null) => setInputs({ ...inputs, C: value || 0 })}
                   />
                 )}
               </div>

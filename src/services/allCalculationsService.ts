@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/api/supabase';
 
 export interface AllCalculationsData {
   id: string;
@@ -40,7 +40,7 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
 
     // Convert Manning data
     if (manningData && !manningError) {
-      manningData.forEach(item => {
+      manningData.forEach((item: any) => {
         allData.push({
           id: item.id,
           type: 'manning',
@@ -54,7 +54,7 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
 
     // Convert Flood data
     if (floodData && !floodError) {
-      floodData.forEach(item => {
+      floodData.forEach((item: any) => {
         allData.push({
           id: item.id,
           type: 'flood',
@@ -68,7 +68,7 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
 
     // Convert Water Balance data
     if (waterData && !waterError) {
-      waterData.forEach(item => {
+      waterData.forEach((item: any) => {
         const location = item.monthly_inputs?.location?.coordinates ? {
           latitude: item.monthly_inputs.location.coordinates.lat,
           longitude: item.monthly_inputs.location.coordinates.lng

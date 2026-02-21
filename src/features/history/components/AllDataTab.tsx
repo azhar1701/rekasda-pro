@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '@/services/allCalculationsService';
 import { HistoryMap } from './HistoryMap';
-import { CalculationType, ChannelShape, ExtendedCalculationType } from '@/types/types';
+import { CalculationType, ChannelShape } from '@/types/types';
 import { manningPilotData } from '@/data/manningPilotData';
 import { rationalPilotData } from '@/data/floodPilotData';
 import { waterBalancePilotData } from '@/data/waterBalancePilotData';
@@ -113,8 +113,8 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       };
     }
     
-    const calcType: ExtendedCalculationType = item.type === 'manning' ? CalculationType.MANNING : 
-                     item.type === 'water_balance' ? 'WATER_BALANCE' : 
+    const calcType: CalculationType = item.type === 'manning' ? CalculationType.MANNING : 
+                     item.type === 'water_balance' ? CalculationType.WATER_BALANCE : 
                      CalculationType.RATIONAL;
     
     // Extract location details based on type
@@ -191,7 +191,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const discharge = calculateManningDischarge(pilot.inputs);
       return {
         id: `pilot-manning-${idx}`,
-        type: CalculationType.MANNING as ExtendedCalculationType,
+        type: CalculationType.MANNING,
         date: new Date().toISOString(),
         inputs: {
           site: {
@@ -215,7 +215,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const discharge = calculateRationalDischarge(pilot.inputs);
       return {
         id: `pilot-rational-${idx}`,
-        type: CalculationType.RATIONAL as ExtendedCalculationType,
+        type: CalculationType.RATIONAL,
         date: new Date().toISOString(),
         inputs: {
           site: {
@@ -247,7 +247,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const totalSupply = pilot.inputs.monthlySupply.reduce((a, b) => a + b, 0);
       return {
         id: `pilot-water-${idx}`,
-        type: 'WATER_BALANCE' as ExtendedCalculationType,
+        type: CalculationType.WATER_BALANCE,
         date: new Date().toISOString(),
         inputs: {
           site: {
