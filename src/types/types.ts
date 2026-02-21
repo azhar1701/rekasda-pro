@@ -1,10 +1,11 @@
 
 export enum CalculationType {
   MANNING = 'MANNING',
-  RATIONAL = 'RATIONAL'
+  RATIONAL = 'RATIONAL',
+  WATER_BALANCE = 'WATER_BALANCE'
 }
 
-export type ExtendedCalculationType = CalculationType | 'WATER_BALANCE';
+export type ExtendedCalculationType = CalculationType;
 
 export enum ChannelShape {
   TRAPEZOID = 'TRAPEZOID', 

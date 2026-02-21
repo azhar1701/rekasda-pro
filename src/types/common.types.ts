@@ -1,6 +1,7 @@
 export enum CalculationType {
   MANNING = 'MANNING',
   RATIONAL = 'RATIONAL',
+  WATER_BALANCE = 'WATER_BALANCE'
 }
 
 export enum ChannelShape {

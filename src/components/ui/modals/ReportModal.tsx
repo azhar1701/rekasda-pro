@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { Button } from '@/components/ui/forms/Button';
-import { CalculationResult, GeoLocationData } from '@/types/types';
+import { CalculationResult, GeoLocationData } from '@/types/common.types';
 
 interface Props {
   isOpen: boolean;

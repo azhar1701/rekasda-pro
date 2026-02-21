@@ -1,6 +1,6 @@
 
 import { ManningInputs, RationalInputs, ChannelShape } from '@/types/types';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/api/supabase';
 
 // Interfaces untuk data perhitungan
 export interface FloodCalcData {

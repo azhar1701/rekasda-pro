@@ -1,4 +1,4 @@
-import { supabase, isSupabaseEnabled } from '@/lib/supabase';
+import { supabase, isSupabaseEnabled } from '@/lib/api/supabase';
 import { ApiResponse } from '@/types/api.types';
 import { CalculationRecord, isValidCalculationRecord } from '@/types/database.types';
 
