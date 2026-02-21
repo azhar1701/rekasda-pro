@@ -6,12 +6,12 @@ interface MethodSelectorProps {
   onChange: (method: DistributionMethod) => void;
 }
 
-const methods: { id: DistributionMethod; label: string }[] = [
-  { id: 'gumbel', label: 'Gumbel' },
-  { id: 'normal', label: 'Normal' },
-  { id: 'log-pearson-iii', label: 'Log Pearson III' },
-  { id: 'log-normal', label: 'Log-Normal' }
-];
+  const methods: { id: DistributionMethod; label: string }[] = [
+    { id: 'gumbel', label: 'Gumbel' },
+    { id: 'normal', label: 'Normal' },
+    { id: 'logpearson3', label: 'Log Pearson III' },
+    { id: 'lognormal', label: 'Log-Normal' }
+  ];
 
 export const MethodSelector: React.FC<MethodSelectorProps> = ({ method, onChange }) => {
   return (
