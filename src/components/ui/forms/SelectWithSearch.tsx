@@ -85,7 +85,7 @@ export const SelectWithSearch: React.FC<SelectWithSearchProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 glass-strong border border-white/20 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-[100] w-full mt-1 glass-strong border border-white/20 rounded-xl shadow-lg overflow-hidden">
           <div className="p-2 border-b border-white/20">
             <div className="relative">
               <svg
@@ -109,14 +109,14 @@ export const SelectWithSearch: React.FC<SelectWithSearchProps> = ({
             </div>
           </div>
           
-          <div className="max-h-60 overflow-y-auto">
+          <div className="max-h-60 overflow-y-auto flex flex-col">
             {filteredOptions.length > 0 ? (
               filteredOptions.map(option => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full px-3 py-2.5 text-left text-sm transition-colors ${
+                  className={`w-full px-3 py-2.5 text-left text-sm transition-colors flex-shrink-0 ${
                     option.value === value
                       ? 'bg-primary-500/20 text-primary-700 font-semibold'
                       : 'text-neutral-700 hover:glass'

@@ -74,6 +74,7 @@
   --button-height: 2.75rem;     /* 44px - Consistent with input */
   --button-height-sm: 2.25rem;  /* 36px - Small button */
   --button-height-lg: 3.25rem;  /* 52px - Large button */
+  --bottom-nav-height: 80px;    /* Bottom navigation bar height */
   
   /* === MOTION TOKENS === */
   --motion-fast: 150ms;
@@ -310,6 +311,17 @@ body {
 .safe-area-bottom {
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+/* Prevent content from being hidden behind bottom nav */
+@media (max-width: 768px) {
+  main {
+    padding-bottom: calc(var(--bottom-nav-height) + 1rem) !important;
+  }
 }
 
 /* Animations */

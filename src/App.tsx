@@ -153,7 +153,7 @@ const App: React.FC = () => {
       />
 
       {/* --- Main Content --- */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-24 md:pb-32">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-28 md:pb-32">
           <div className="transition-opacity duration-300">
           {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
           {activeTab === Tab.BANJIR && <FloodAnalysisTab onConsultAI={() => {

@@ -581,7 +581,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
               {MONTHS.map((month, index) => (
                 <div key={month} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">{month}</label>
