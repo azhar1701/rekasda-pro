@@ -13,9 +13,16 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
   const [mode, setMode] = useState<FloodMode>('peak');
 
   return (
-    <div className="space-y-4">
+    <div className="min-h-screen p-3 sm:p-6">
+      <div className="max-w-[1600px] mx-auto space-y-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Analisis Debit Banjir Rencana</h1>
+        <p className="text-xs sm:text-sm text-neutral-600 mt-1">Perhitungan debit puncak dengan metode empiris & hidrograf satuan sintetik • SNI 2415:2016</p>
+      </div>
+
       {/* Mode Selector */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2">
+      <div className="glass-card rounded-xl shadow-lg border border-white/20 p-2">
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setMode('peak')}
@@ -45,11 +52,14 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
       </div>
 
       {/* Content */}
+      <div>
       {mode === 'peak' ? (
         <PeakDischargeCalculator onConsultAI={onConsultAI} />
       ) : (
         <HydrographCalculator onConsultAI={onConsultAI} />
       )}
+      </div>
+    </div>
     </div>
   );
 };

@@ -36,24 +36,40 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
   };
 
   return (
-    <div className="w-full h-[400px]">
+    <div className="w-full h-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+        <ComposedChart 
+          data={chartData} 
+          margin={{ 
+            top: 10, 
+            right: 10, 
+            left: 0, 
+            bottom: 5 
+          }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="month" 
-            tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
             axisLine={{ stroke: '#cbd5e1' }}
+            height={40}
           />
           <YAxis 
-            label={{ value: 'Debit (m³/s)', angle: -90, position: 'insideLeft', style: { fill: '#64748b', fontWeight: 600 } }}
-            tick={{ fill: '#64748b', fontSize: 12 }}
+            label={{ 
+              value: 'Debit (m³/s)', 
+              angle: -90, 
+              position: 'insideLeft', 
+              style: { fill: '#64748b', fontWeight: 600, fontSize: 11 } 
+            }}
+            tick={{ fill: '#64748b', fontSize: 11 }}
             axisLine={{ stroke: '#cbd5e1' }}
+            width={60}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend 
-            wrapperStyle={{ paddingTop: '20px' }}
+            wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
             iconType="rect"
+            iconSize={10}
           />
           <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
           

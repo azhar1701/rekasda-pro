@@ -16,13 +16,13 @@ export default function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-fast focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 shadow-lg shadow-primary-500/30 focus:ring-primary-500',
-    secondary: 'glass text-neutral-900 hover:bg-white/20 shadow-md focus:ring-accent-500',
-    outline: 'glass border-2 border-white/40 text-neutral-900 hover:bg-white/20 focus:ring-primary-500',
-    ghost: 'text-neutral-700 hover:glass focus:ring-neutral-500',
+    primary: 'bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 hover:-translate-y-0.5 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 focus:ring-primary-500',
+    secondary: 'glass text-neutral-900 hover:bg-white/20 hover:-translate-y-0.5 shadow-md hover:shadow-lg focus:ring-accent-500',
+    outline: 'glass border-2 border-white/40 text-neutral-900 hover:bg-white/20 hover:-translate-y-0.5 focus:ring-primary-500',
+    ghost: 'text-neutral-700 hover:glass hover:-translate-y-0.5 focus:ring-neutral-500',
   };
   
   const sizes = {

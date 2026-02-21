@@ -332,7 +332,78 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
         {/* Header */}
         <div className="mb-2 md:mb-3">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Analisis Banjir & Hidrologi</h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-1">Perhitungan debit puncak • Metode Rasional & Nakayasu</p>
+          <p className="text-xs md:text-sm text-slate-500 mt-1">Perhitungan debit puncak banjir rencana • Metode Empiris & HSS Nakayasu • SNI 2415:2016</p>
+        </div>
+
+        {/* Method Selector - Moved to top */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Metode Perhitungan</h2>
+            <ComplianceBadge sniCode="SNI 2415:2016" />
+          </div>
+          <div className="space-y-2">
+            {/* Primary Methods */}
+            <div className="flex gap-2 p-2 bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setMethod('RATIONAL')}
+                className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all relative ${
+                  method === 'RATIONAL' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Rasional
+                {rationalInputs.A <= 3 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-1 right-1" />}
+              </button>
+              <button
+                onClick={() => setMethod('NAKAYASU')}
+                className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                  method === 'NAKAYASU' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Nakayasu
+              </button>
+            </div>
+            
+            {/* Modified Rational Methods */}
+            <div className="grid grid-cols-3 gap-2 p-2 bg-indigo-50 rounded-xl border border-indigo-200">
+              <button
+                onClick={() => setMethod('HASPERS')}
+                className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
+                  method === 'HASPERS' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
+                }`}
+              >
+                Haspers
+                {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
+              </button>
+              <button
+                onClick={() => setMethod('DER_WEDUWEN')}
+                className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
+                  method === 'DER_WEDUWEN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
+                }`}
+              >
+                Weduwen
+                {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
+              </button>
+              <button
+                onClick={() => setMethod('MELCHIOR')}
+                className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
+                  method === 'MELCHIOR' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
+                }`}
+              >
+                Melchior
+                {rationalInputs.A > 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+            <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-800">
+              <p className="font-semibold mb-1">Panduan Pemilihan Metode:</p>
+              <p>• <strong>Rasional:</strong> DAS ≤ 3 km² (metode sederhana)</p>
+              <p>• <strong>Haspers/Weduwen:</strong> 3-100 km² (modifikasi rasional)</p>
+              <p>• <strong>Melchior:</strong> &gt; 100 km² (DAS besar)</p>
+              <p>• <strong>Nakayasu:</strong> DAS &gt; 3 km² (hidrograf satuan sintetik)</p>
+            </div>
+          </div>
         </div>
 
       {/* Messages Toast */}
@@ -406,77 +477,6 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
               {/* Location Identity */}
               <LocationIdentity onLocationChange={setLocationData} />
-
-              {/* Method Selector */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Metode Perhitungan</h2>
-                  <ComplianceBadge sniCode="SNI 2415:2016" />
-                </div>
-                <div className="space-y-2">
-                  {/* Primary Methods */}
-                  <div className="flex gap-2 p-2 bg-slate-100 rounded-xl">
-                    <button
-                      onClick={() => setMethod('RATIONAL')}
-                      className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all relative ${
-                        method === 'RATIONAL' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      Rasional
-                      {rationalInputs.A <= 3 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-1 right-1" />}
-                    </button>
-                    <button
-                      onClick={() => setMethod('NAKAYASU')}
-                      className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
-                        method === 'NAKAYASU' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      Nakayasu
-                    </button>
-                  </div>
-                  
-                  {/* Modified Rational Methods */}
-                  <div className="grid grid-cols-3 gap-2 p-2 bg-indigo-50 rounded-xl border border-indigo-200">
-                    <button
-                      onClick={() => setMethod('HASPERS')}
-                      className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
-                        method === 'HASPERS' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
-                      }`}
-                    >
-                      Haspers
-                      {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
-                    </button>
-                    <button
-                      onClick={() => setMethod('DER_WEDUWEN')}
-                      className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
-                        method === 'DER_WEDUWEN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
-                      }`}
-                    >
-                      Weduwen
-                      {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
-                    </button>
-                    <button
-                      onClick={() => setMethod('MELCHIOR')}
-                      className={`py-2 px-2 rounded-lg text-[10px] font-bold transition-all relative ${
-                        method === 'MELCHIOR' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-indigo-700'
-                      }`}
-                    >
-                      Melchior
-                      {rationalInputs.A > 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                  <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-xs text-amber-800">
-                    <p className="font-semibold mb-1">Panduan Pemilihan Metode:</p>
-                    <p>• <strong>Rasional:</strong> DAS ≤ 3 km²</p>
-                    <p>• <strong>Haspers/Weduwen:</strong> 3-100 km²</p>
-                    <p>• <strong>Melchior:</strong> &gt; 100 km²</p>
-                    <p>• <strong>Nakayasu:</strong> DAS &gt; 3 km²</p>
-                  </div>
-                </div>
-              </div>
 
             {/* Input Sections */}
             {method === 'RATIONAL' || method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR' ? (

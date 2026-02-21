@@ -19,7 +19,7 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
         <div className="relative">
           <input
             ref={ref}
-            className={`w-full h-11 px-4 text-body glass-card rounded-lg transition-all
+            className={`w-full h-11 px-4 text-body glass-card rounded-lg transition-all duration-fast
               ${error 
                 ? 'border-error focus:border-error focus:ring-2 focus:ring-error/20' 
                 : 'border-white/30 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'

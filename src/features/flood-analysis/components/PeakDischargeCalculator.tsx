@@ -135,15 +135,23 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
         setResult({ Qp: res.qPeak, params: res });
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Calculation error');
+      setResult(null);
     }
   };
 
+  useEffect(() => {
+    handleCalculate();
+  }, [inputs, method]);
+
   return (
-    <div className="flex gap-0">
+    <div>
+      <div className="max-w-[1600px] mx-auto">
+
+      <div className="lg:flex lg:gap-0">
       
       {/* LEFT: Input Section */}
-      <div className="space-y-4" style={{ width: `${leftWidth}%` }}>
+      <div className="lg:block" style={{ width: window.innerWidth >= 1024 ? `${leftWidth}%` : '100%' }}>
+        <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-4">
         
         {/* Collapsible: Data Pilot & Location */}
         <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={false}>
@@ -154,7 +162,9 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
               onLoadModifiedRational={handleLoadModifiedPilot}
               onLoadNakayasu={() => {}}
             />
-            <LocationIdentity onLocationChange={setLocationData} />
+            <div className="border-t border-white/20 pt-4">
+              <LocationIdentity onLocationChange={setLocationData} />
+            </div>
           </div>
         </Collapsible>
         
@@ -339,15 +349,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
             </div>
           </div>
         </Collapsible>
-        
-        {/* Calculate Button */}
-        <button
-          onClick={handleCalculate}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-sm"
-        >
-          <Calculator className="w-4 h-4" />
-          Hitung Debit Puncak
-        </button>
+        </div>
       </div>
 
       {/* Resizer */}
@@ -355,19 +357,12 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
         onMouseDown={() => setIsResizing(true)}
         className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
         style={{ userSelect: 'none' }}
-        role="separator"
-        aria-label="Resize sidebar"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft') setLeftWidth(Math.max(25, leftWidth - 1));
-          if (e.key === 'ArrowRight') setLeftWidth(Math.min(50, leftWidth + 1));
-        }}
       >
         <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
       </div>
 
       {/* RIGHT: Result Section */}
-      <div className="flex-1 pl-4">
+      <div className="mt-4 lg:mt-0" style={{ width: window.innerWidth >= 1024 ? `${100 - leftWidth}%` : '100%' }}>
         {result ? (
           <div className="space-y-4">
             {/* Main Result Card */}
@@ -486,9 +481,11 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calculator className="w-8 h-8 text-slate-400" />
             </div>
-            <p className="text-slate-600 text-sm">Masukkan parameter dan klik "Hitung Debit Puncak"</p>
+            <p className="text-slate-600 text-sm">Masukkan parameter untuk melihat hasil perhitungan</p>
           </div>
         )}
+      </div>
+      </div>
       </div>
     </div>
   );

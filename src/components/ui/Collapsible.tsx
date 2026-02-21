@@ -15,7 +15,7 @@ export const Collapsible: React.FC<CollapsibleProps> = ({ title, defaultOpen = f
     <div className="glass-card rounded-xl">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-6 py-5 hover:glass transition-all"
+        className="w-full flex items-center justify-between px-6 py-5 transition-colors"
       >
         <div className="flex items-center gap-3">
           <h2 className="text-label text-neutral-900">{title}</h2>

@@ -226,16 +226,14 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
           
           {/* LEFT SIDEBAR */}
           <div className="lg:block" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%' }}>
-            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-4">
+            <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:overflow-x-visible lg:pr-4 space-y-4">
               
               {/* Data Pilot & Location Identity - Combined */}
               <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={true}>
                 <div className="space-y-4">
                   <ManningPilotDataLoader onLoad={handleLoadPilotData} />
                   <div className="border-t border-white/20 pt-4">
-                <div className="glass-card rounded-xl p-0 overflow-hidden border-0">
-                  <LocationIdentity onLocationChange={handleLocationChange} />
-                </div>
+                    <LocationIdentity onLocationChange={handleLocationChange} />
                   </div>
                 </div>
               </Collapsible>
@@ -352,7 +350,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
           {/* Resizer - Desktop only */}
           <div
             onMouseDown={() => setIsResizing(true)}
-            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
+            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
             style={{ userSelect: 'none' }}
           >
             <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
