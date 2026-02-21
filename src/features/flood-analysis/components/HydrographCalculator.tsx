@@ -134,10 +134,10 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
   };
 
   return (
-    <div className="flex gap-0">
+    <div className="flex flex-col lg:flex-row gap-0">
       
       {/* LEFT: Input Section */}
-      <div className="space-y-4" style={{ width: `${leftWidth}%` }}>
+      <div className="space-y-4 w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${leftWidth}%` : '100%' }}>
         
         {/* Collapsible: Data Pilot & Location */}
         <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={false}>
@@ -296,11 +296,11 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
       </div>
 
       {/* RIGHT: Result Section */}
-      <div className="flex-1 pl-4">
+      <div className="flex-1 lg:pl-4 mt-4 lg:mt-0">
         {result ? (
           <div className="space-y-4">
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <ResultCard
                 title="Debit Puncak (Qp)"
                 value={result.Qp}
@@ -353,7 +353,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
             </div>
 
             {/* Engineering Data Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               {/* Card A: Parameter Breakdown */}
               {method === 'nakayasu' && result.Tg !== undefined && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">

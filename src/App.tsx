@@ -147,7 +147,7 @@ const App: React.FC = () => {
           color: getStatusColor(),
           isLoading: dbStatus === 'testing'
         }}
-        version="1.0"
+        version="1.1"
         isScrolled={scrolled}
       />
 
