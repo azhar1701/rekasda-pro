@@ -78,55 +78,32 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     return '-';
   };
 
-  // Default coordinates - Sebaran merata di Indonesia
-  const defaultCoordinates = [
-    { latitude: -6.2088, longitude: 106.8456, name: 'Jakarta' },
-    { latitude: -7.2575, longitude: 112.7521, name: 'Surabaya' },
-    { latitude: -6.9175, longitude: 107.6191, name: 'Bandung' },
-    { latitude: -7.7956, longitude: 110.3695, name: 'Yogyakarta' },
-    { latitude: -6.9932, longitude: 110.4203, name: 'Semarang' },
-    { latitude: -8.6500, longitude: 115.2167, name: 'Bali' },
-    { latitude: -5.1477, longitude: 119.4327, name: 'Makassar' },
-    { latitude: 3.5952, longitude: 98.6722, name: 'Medan' },
-    { latitude: -0.9471, longitude: 100.4172, name: 'Padang' },
-    { latitude: -3.3194, longitude: 114.5906, name: 'Banjarmasin' },
-    { latitude: -2.5489, longitude: 118.0149, name: 'Palu' },
-    { latitude: -0.0263, longitude: 109.3425, name: 'Pontianak' },
-    { latitude: 1.4748, longitude: 124.8421, name: 'Manado' },
-    { latitude: -3.9893, longitude: 122.5213, name: 'Kendari' },
-    { latitude: -8.5833, longitude: 116.1167, name: 'Mataram' },
-    { latitude: 0.5333, longitude: 123.0667, name: 'Gorontalo' },
-    { latitude: -2.9761, longitude: 104.7754, name: 'Palembang' },
-    { latitude: -5.4500, longitude: 105.2667, name: 'Bandar Lampung' },
-    { latitude: 5.5483, longitude: 95.3238, name: 'Banda Aceh' },
-    { latitude: 0.9071, longitude: 104.4553, name: 'Batam' },
-  ];
-
-  // Convert to CalculationResult format for map
-  const dbMapData = data.map((item, index) => {
-    let location = item.location;
-    
-    if (!location && item.type === 'manning' && item.data?.inputs?.site?.location) {
-      location = item.data.inputs.site.location;
-    }
-    
-    if (!location && item.type === 'flood') {
-      location = item.data?.inputs?.location || item.data?.inputs?.site?.location;
-    }
-    
-    if (!location && item.type === 'water_balance' && item.data?.monthly_inputs?.location) {
-      location = item.data.monthly_inputs.location;
-    }
-    
-    // Assign default coordinates if still no location
-    if (!location || !location.latitude || !location.longitude) {
-      const defaultCoord = defaultCoordinates[index % defaultCoordinates.length];
-      // Add random offset (±0.1 degree = ~11km) for visual separation
-      location = {
-        latitude: defaultCoord.latitude + (Math.random() - 0.5) * 0.2,
-        longitude: defaultCoord.longitude + (Math.random() - 0.5) * 0.2
-      };
-    }
+  // Convert to CalculationResult format for map - ONLY items with valid GPS
+  const dbMapData = data
+    .filter(item => {
+      // Check if item has valid location
+      let location = item.location;
+      
+      if (!location && item.type === 'manning' && item.data?.inputs?.site?.location) {
+        location = item.data.inputs.site.location;
+      }
+      
+      if (!location && item.type === 'flood') {
+        location = item.data?.inputs?.location || item.data?.inputs?.site?.location;
+      }
+      
+      if (!location && item.type === 'water_balance' && item.data?.monthly_inputs?.location) {
+        location = item.data.monthly_inputs.location;
+      }
+      
+      // Only include if has valid GPS coordinates
+      return location && location.latitude && location.longitude;
+    })
+    .map((item) => {
+    const location = item.location || 
+                     (item.type === 'manning' && item.data?.inputs?.site?.location) ||
+                     (item.type === 'flood' && (item.data?.inputs?.location || item.data?.inputs?.site?.location)) ||
+                     (item.type === 'water_balance' && item.data?.monthly_inputs?.location);
     
     const calcType: CalculationType = item.type === 'manning' ? CalculationType.MANNING : 
                      item.type === 'water_balance' ? CalculationType.WATER_BALANCE : 
