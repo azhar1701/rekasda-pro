@@ -3,9 +3,9 @@ import { SYSTEM_PROMPT, AI_MODEL } from '@/lib/ai/config';
 import { apiService } from './api.service';
 
 const getAiClient = () => {
-  const apiKey = import.meta.env.VITE_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("VITE_API_KEY tidak ditemukan di environment variables");
+    throw new Error("VITE_GEMINI_API_KEY tidak ditemukan di environment variables");
   }
   return new GoogleGenerativeAI(apiKey);
 };
