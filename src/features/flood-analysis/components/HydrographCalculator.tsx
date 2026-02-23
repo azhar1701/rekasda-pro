@@ -40,6 +40,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
     return saved ? parseFloat(saved) : 35;
   });
   const [isResizing, setIsResizing] = useState(false);
+  const [isRainfallModalOpen, setIsRainfallModalOpen] = useState(false);
   const [nakayasuInputs, setNakayasuInputs] = useState<HSSNakayasuInput>({
     Ro: 0, Tg: 0, Tr: 0, Alpha: 2, A: 0, L: 0
   });
@@ -215,6 +216,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
               else if (method === 'gamma1') setGamma1Inputs({ ...gamma1Inputs, Ro: value });
               else if (method === 'snyder') setSnyderInputs({ ...snyderInputs, Ro: value });
             }}
+            onModalStateChange={setIsRainfallModalOpen}
           />
         </Collapsible>
 
@@ -329,20 +331,22 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
       </div>
 
       {/* Resizer */}
-      <div
-        onMouseDown={() => setIsResizing(true)}
-        className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
-        style={{ userSelect: 'none' }}
-        role="separator"
-        aria-label="Resize sidebar"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft') setLeftWidth(Math.max(25, leftWidth - 1));
-          if (e.key === 'ArrowRight') setLeftWidth(Math.min(50, leftWidth + 1));
-        }}
-      >
-        <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
-      </div>
+      {!isRainfallModalOpen && (
+        <div
+          onMouseDown={() => setIsResizing(true)}
+          className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
+          style={{ userSelect: 'none' }}
+          role="separator"
+          aria-label="Resize sidebar"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') setLeftWidth(Math.max(25, leftWidth - 1));
+            if (e.key === 'ArrowRight') setLeftWidth(Math.min(50, leftWidth + 1));
+          }}
+        >
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
+        </div>
+      )}
 
       {/* RIGHT: Result Section */}
       <div className="flex-1 lg:pl-4 mt-4 lg:mt-0">

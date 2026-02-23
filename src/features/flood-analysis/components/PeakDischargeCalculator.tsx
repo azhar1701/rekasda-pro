@@ -49,6 +49,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
     return saved ? parseFloat(saved) : 35;
   });
   const [isResizing, setIsResizing] = useState(false);
+  const [isRainfallModalOpen, setIsRainfallModalOpen] = useState(false);
   const [inputs, setInputs] = useState<Inputs>({
     area: 0,
     C: 0,
@@ -225,6 +226,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                   onSelectValue={(_, value) => {
                     setInputs({ ...inputs, I: value });
                   }}
+                  onModalStateChange={setIsRainfallModalOpen}
                 />
               </Collapsible>
 
@@ -266,36 +268,6 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
               {/* Collapsible: Parameter Input */}
               <Collapsible title="Parameter Input" defaultOpen={true}>
                 <div className="space-y-4">
-                  {inputs.area > 0 && sniWorkflow.warning && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-xs text-red-800">
-                        <p className="font-semibold mb-1">Peringatan SNI 2415:2016 Pasal 5.2</p>
-                        <p>{sniWorkflow.warning}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <MethodSelector
-                    methods={methods}
-                    selected={method}
-                    onChange={(id) => setMethod(id as EmpiricalMethod)}
-                    title="Pilih Metode Empiris"
-                    columns={2}
-                  />
-
-                  <FormulaDisplay method={method} />
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
-                    <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-xs text-amber-800">
-                      <p className="font-semibold mb-1">Panduan Pemilihan:</p>
-                      <p>• <strong>Rasional:</strong> DAS ≤ 3 km²</p>
-                      <p>• <strong>Haspers/Weduwen:</strong> 3-100 km²</p>
-                      <p>• <strong>Melchior:</strong> &gt; 100 km²</p>
-                    </div>
-                  </div>
-
                   {/* Input Form */}
                   <div className="space-y-3">
                     <h3 className="text-xs font-bold text-blue-600 uppercase tracking-wide border-b border-blue-200 pb-1.5">Geometri DAS</h3>
@@ -400,13 +372,15 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
           </div>
 
           {/* Resizer */}
-          <div
-            onMouseDown={() => setIsResizing(true)}
-            className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
-            style={{ userSelect: 'none' }}
-          >
-            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
-          </div>
+          {!isRainfallModalOpen && (
+            <div
+              onMouseDown={() => setIsResizing(true)}
+              className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
+              style={{ userSelect: 'none' }}
+            >
+              <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
+            </div>
+          )}
 
           {/* RIGHT: Result Section */}
           <div className="mt-4 lg:mt-0" style={{ width: window.innerWidth >= 1024 ? `${100 - leftWidth}%` : '100%' }}>

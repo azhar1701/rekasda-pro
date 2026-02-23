@@ -3,15 +3,26 @@ import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisMod
 
 interface RainfallFrequencyAnalysisProps {
   onSelectValue: (returnPeriod: number, value: number) => void;
+  onModalStateChange?: (isOpen: boolean) => void;
 }
 
-export const RainfallFrequencyAnalysis: React.FC<RainfallFrequencyAnalysisProps> = ({ onSelectValue }) => {
+export const RainfallFrequencyAnalysis: React.FC<RainfallFrequencyAnalysisProps> = ({ onSelectValue, onModalStateChange }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    onModalStateChange?.(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    onModalStateChange?.(false);
+  };
 
   return (
     <>
       <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleOpenModal}
         className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +33,7 @@ export const RainfallFrequencyAnalysis: React.FC<RainfallFrequencyAnalysisProps>
 
       <FrequencyAnalysisModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onSelectValue={onSelectValue}
       />
     </>
