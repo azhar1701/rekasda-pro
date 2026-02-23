@@ -379,18 +379,18 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
               <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
-                <div className="flex gap-2 text-[10px] sm:text-xs">
+                <div className="flex gap-3 text-[10px] sm:text-xs">
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span>
-                    Manning
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></span>
+                    Saluran Manning
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>
-                    Banjir
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626]"></span>
+                    Banjir Rasional
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
-                    Neraca
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#059669]"></span>
+                    Neraca Air
                   </span>
                 </div>
               </div>
