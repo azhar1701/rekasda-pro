@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, CheckCircle } from 'lucide-react';
 import { DataInputTable } from './FrequencyAnalysisModal/DataInputTable';
 import { StatCard } from './FrequencyAnalysisModal/StatCard';
@@ -45,7 +46,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
         const stats = calculateStatistics(values);
         const fit = validateDistributionFit(values, method);
         const analysis = performFrequencyAnalysis({ data: values, returnPeriods: [2, 5, 10, 25, 50, 100] }, method);
-        
+
         setStatistics(stats);
         setGoodnessOfFit(fit);
         setResults(analysis);
@@ -61,13 +62,13 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
+  const modalContent = (
+    <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none" onClick={onClose}></div>
 
       {/* Modal */}
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl h-[calc(100vh-100px)] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
 
         {/* Header (Fixed) */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
@@ -150,11 +151,10 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                       <button
                         key={methodOption.value}
                         onClick={() => setMethod(methodOption.value)}
-                        className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all ${
-                          method === methodOption.value
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                        }`}
+                        className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all ${method === methodOption.value
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                          }`}
                       >
                         {methodOption.display}
                       </button>
@@ -237,4 +237,6 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
