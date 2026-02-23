@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { PageHeader, PageContent, Section } from '@/components/ui/layout/Layout';
-import { Button } from '@/components/ui/forms/Button';
-import { CardLegacy as Card, CardContent } from '@/components/ui/layout/CardNew';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
 import { supabase } from '@/lib/api/supabase';
@@ -135,41 +135,38 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
             {/* Quick Actions */}
             <Section title="Tindakan Cepat">
               <div className="flex gap-2">
-                <button
-                  onClick={loadPilotData}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold text-sm flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                <Button variant="default" className="flex-1 font-bold" onClick={loadPilotData}>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
                   Load Pilot
-                </button>
+                </Button>
               </div>
             </Section>
 
             {/* Site Identity */}
             <Section title="Identitas Lokasi">
               <Card>
-                <CardContent>
+                <CardContent className="pt-6">
                   <div className="space-y-3">
                     <input
                       type="text"
                       placeholder="Nama DAS / Lokasi"
                       value={data.site.channelName}
                       onChange={(e) => handleSiteChange({ ...data.site, channelName: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     <input
                       type="text"
                       placeholder="Kabupaten"
                       value={data.site.regency}
                       onChange={(e) => handleSiteChange({ ...data.site, regency: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     <input
                       type="text"
                       placeholder="Kecamatan"
                       value={data.site.district}
                       onChange={(e) => handleSiteChange({ ...data.site, district: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                 </CardContent>
@@ -224,7 +221,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
             {/* Save Section */}
             <Section title="Simpan Analisis">
               <Card>
-                <CardContent className="space-y-3">
+                <CardContent className="pt-6 space-y-3">
                   <input
                     type="text"
                     placeholder="Nama Proyek"
@@ -233,12 +230,11 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                   <Button
-                    fullWidth
-                    variant="primary"
+                    className="w-full"
                     onClick={saveToDatabase}
                     disabled={saving || !projectName.trim()}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     {saving ? 'Menyimpan...' : 'Simpan'}
                   </Button>
                 </CardContent>
@@ -258,40 +254,38 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                 </Card>
 
                 {/* Summary Metrics */}
-                <Card>
-                  <div className="bg-white border-b border-slate-200 p-6 md:p-8 relative overflow-hidden">
-                    <div className="relative z-10">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6">Ringkasan Keseimbangan</h3>
+                <Card className="overflow-hidden">
+                  <div className="bg-white border-b border-slate-200 p-6 md:p-8 relative">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6 uppercase tracking-tight">Ringkasan Keseimbangan</h3>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div>
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata</span>
-                            <HelpTooltip content="Rata-rata keseimbangan bulanan" />
-                          </div>
-                          <span className="text-2xl font-black text-slate-900">{results.avgBalance}</span>
-                          <span className="text-xs font-bold text-slate-500 block">m³/s</span>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                      <div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata</span>
+                          <HelpTooltip content="Rata-rata keseimbangan bulanan" />
                         </div>
+                        <span className="text-3xl font-black text-slate-900">{results.avgBalance}</span>
+                        <span className="text-xs font-bold text-slate-500 block">m³/s</span>
+                      </div>
 
-                        <div>
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
-                            <HelpTooltip content="Keseimbangan terendah" />
-                          </div>
-                          <span className={`text-2xl font-black ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                            {results.minBalance}
-                          </span>
-                          <span className="text-xs font-bold text-slate-500 block">m³/s</span>
+                      <div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
+                          <HelpTooltip content="Keseimbangan terendah" />
                         </div>
+                        <span className={`text-3xl font-black ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                          {results.minBalance}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500 block">m³/s</span>
+                      </div>
 
-                        <div>
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
-                            <HelpTooltip content="Keseimbangan tertinggi" />
-                          </div>
-                          <span className="text-2xl font-black text-emerald-500">{results.maxBalance}</span>
-                          <span className="text-xs font-bold text-slate-500 block">m³/s</span>
+                      <div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
+                          <HelpTooltip content="Keseimbangan tertinggi" />
                         </div>
+                        <span className="text-3xl font-black text-emerald-500">{results.maxBalance}</span>
+                        <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                       </div>
                     </div>
                   </div>
@@ -353,12 +347,12 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
                 {/* Action buttons */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button fullWidth variant="primary" onClick={() => onSave?.(data, results)}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                  <Button className="w-full flex-1" onClick={() => onSave?.(data, results)}>
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                     Simpan Hasil
                   </Button>
-                  <Button variant="outline" onClick={() => onConsultAI?.(data, results)}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  <Button variant="outline" className="w-full flex-1" onClick={() => onConsultAI?.(data, results)}>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                     Konsultasi AI
                   </Button>
                 </div>

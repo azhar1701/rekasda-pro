@@ -24,7 +24,6 @@ class ApiService {
         };
       }
 
-      // Runtime validation if validator provided
       if (validator && data && !validator(data)) {
         return {
           data: null,
@@ -56,6 +55,37 @@ class ApiService {
     }
   }
 
+  async invokeFunction<T>(functionName: string, payload: any): Promise<ApiResponse<T>> {
+    if (!isSupabaseEnabled()) {
+      return {
+        data: null,
+        error: { code: 'NO_CONFIG', message: 'Supabase not configured' },
+        status: 'error',
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    const { data, error } = await supabase!.functions.invoke(functionName, {
+      body: payload
+    });
+
+    if (error) {
+      return {
+        data: null,
+        error: { code: 'FUNCTION_ERROR', message: error.message },
+        status: 'error',
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    return {
+      data,
+      error: null,
+      status: 'success',
+      timestamp: new Date().toISOString()
+    };
+  }
+
   async saveCalculation(
     data: Omit<CalculationRecord, 'id' | 'created_at'>
   ): Promise<ApiResponse<CalculationRecord>> {
@@ -72,19 +102,62 @@ class ApiService {
       };
     }
 
+    // Get current user for RLS association
+    const { data: { user } } = await supabase!.auth.getUser();
+
+    // Prepare PostGIS point if location is available
+    let geo_location = null;
+    if (data.location) {
+      geo_location = `POINT(${data.location.longitude} ${data.location.latitude})`;
+    }
+
     const cleanData = {
       site_name: data.site_name || 'Unknown Site',
       calculation_type: data.calculation_type,
       input_data: data.input_data || {},
       result_data: data.result_data || {},
       location: data.location || null,
+      geo_location, // Added for PostGIS
       photo_url: data.photo_url || null,
-      notes: data.notes || null
+      notes: data.notes || null,
+      user_id: user?.id || null // Associate with user if logged in
     };
 
     return this.handleResponse<CalculationRecord>(
       supabase!.from('calculations').insert([cleanData]).select().single() as any,
       isValidCalculationRecord
+    );
+  }
+
+  async findNearbyCalculations(
+    lat: number,
+    lng: number,
+    radiusMeters: number = 5000
+  ): Promise<ApiResponse<CalculationRecord[]>> {
+    if (!isSupabaseEnabled()) return { data: [], error: null, status: 'success', timestamp: new Date().toISOString() };
+
+    return this.handleResponse<CalculationRecord[]>(
+      supabase!.rpc('find_nearby_calculations', {
+        lat,
+        lng,
+        radius_meters: radiusMeters
+      }) as any
+    );
+  }
+
+  async searchDocuments(
+    queryEmbedding: number[],
+    matchThreshold: number = 0.5,
+    matchCount: number = 5
+  ): Promise<ApiResponse<any[]>> {
+    if (!isSupabaseEnabled()) return { data: [], error: null, status: 'success', timestamp: new Date().toISOString() };
+
+    return this.handleResponse<any[]>(
+      supabase!.rpc('match_documents', {
+        query_embedding: queryEmbedding,
+        match_threshold: matchThreshold,
+        match_count: matchCount
+      }) as any
     );
   }
 

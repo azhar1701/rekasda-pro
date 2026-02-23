@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { HelpTooltip } from '../data-display/HelpTooltip';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface InputGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -10,27 +13,29 @@ interface InputGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
   helpText?: string;
 }
 
-export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, description, helpText, value, onChange, id, name, ...props }) => {
-  // Local state to handle decimal typing (prevents "1." turning into "1" immediately)
+export const InputGroup: React.FC<InputGroupProps> = ({
+  label,
+  unit,
+  error,
+  description,
+  helpText,
+  value,
+  onChange,
+  id,
+  name,
+  className,
+  ...props
+}) => {
   const [localValue, setLocalValue] = useState<string>(value?.toString() ?? '');
-  
-  // Generate unique ID if not provided
   const inputId = id || `input-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Math.random().toString(36).substr(2, 9)}`;
-  const inputName = name || inputId;
 
   useEffect(() => {
     const currentNum = parseFloat(localValue);
     const incomingNum = typeof value === 'string' ? parseFloat(value) : (value as number);
 
-    // CRITICAL FIX: Prevent overwriting local state when:
-    // 1. Numerically equivalent (e.g. "1." vs 1, or "1.0" vs 1)
     if (currentNum === incomingNum) return;
-
-    // 2. Local is empty/invalid (NaN) but parent passes 0 (likely due to 'parseFloat || 0' fallback)
-    // This allows users to clear input or type "." without it jumping to "0"
     if (isNaN(currentNum) && incomingNum === 0) return;
 
-    // Otherwise, it's a genuine external update (e.g. Load Pilot Data), so sync.
     setLocalValue(value?.toString() ?? '');
   }, [value]);
 
@@ -40,28 +45,26 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
   };
 
   return (
-    <div className="group w-full">
-      <div className="flex justify-between items-baseline mb-2">
+    <div className={cn("space-y-2 w-full", className)}>
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <label htmlFor={inputId} className="text-label text-neutral-700 group-focus-within:text-primary-600 transition-colors duration-200">
+          <Label htmlFor={inputId} className="text-[13px] font-semibold text-slate-700">
             {label}
-          </label>
+          </Label>
           {helpText && <HelpTooltip content={helpText} />}
         </div>
         {error && <span className="text-[10px] text-red-500 font-bold animate-pulse">{error}</span>}
       </div>
-      
-      <div className={`
-        relative flex items-center glass-card rounded-xl border transition-all duration-300 overflow-hidden shadow-md h-11
-        ${error 
-          ? 'border-error ring-4 ring-error/20' 
-          : 'border-white/30 hover:border-white/50 focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/20'
-        }
-      `}>
-        <input
+
+      <div className="relative flex items-center group">
+        <Input
           id={inputId}
-          name={inputName}
-          className="w-full h-full bg-transparent px-4 text-body font-bold text-neutral-900 placeholder-neutral-400 outline-none font-mono"
+          name={name || inputId}
+          className={cn(
+            "h-11 font-mono font-bold text-slate-900 border-slate-200 focus-visible:ring-primary-500/20",
+            unit && "pr-16",
+            error && "border-red-500 focus-visible:ring-red-500/20"
+          )}
           step="any"
           autoComplete="off"
           value={localValue}
@@ -69,14 +72,14 @@ export const InputGroup: React.FC<InputGroupProps> = ({ label, unit, error, desc
           {...props}
         />
         {unit && (
-          <div className="glass border-l border-white/20 px-4 h-full flex items-center justify-center min-w-[3.5rem]">
-            <span className="text-label text-neutral-600">{unit}</span>
+          <div className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center border-l border-slate-200 bg-slate-50/80 rounded-r-md text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+            {unit}
           </div>
         )}
       </div>
-      
+
       {description && !error && (
-        <p className="mt-2 text-[11px] text-slate-400 font-medium leading-relaxed">
+        <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
           {description}
         </p>
       )}

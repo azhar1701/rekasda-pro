@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SYSTEM_PROMPT, AI_MODEL } from '@/lib/ai/config';
+import { apiService } from './api.service';
 
 const getAiClient = () => {
   const apiKey = import.meta.env.VITE_API_KEY;
@@ -7,6 +8,36 @@ const getAiClient = () => {
     throw new Error("VITE_API_KEY tidak ditemukan di environment variables");
   }
   return new GoogleGenerativeAI(apiKey);
+};
+
+/**
+ * Mendapatkan embeddings untuk teks menggunakan Gemini
+ */
+export const getEmbeddings = async (text: string): Promise<number[]> => {
+  try {
+    const genAI = getAiClient();
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(text);
+    return result.embedding.values;
+  } catch (error) {
+    console.error("Embedding Error:", error);
+    return [];
+  }
+};
+
+/**
+ * Mencari referensi teknis SNI/Regulasi menggunakan Vector Search
+ */
+export const searchTechnicalReferences = async (query: string) => {
+  const embedding = await getEmbeddings(query);
+  if (embedding.length === 0) return [];
+
+  const { data, error } = await apiService.searchDocuments(embedding, 0.5, 3);
+  if (error) {
+    console.error("Vector Search Error:", error);
+    return [];
+  }
+  return data || [];
 };
 
 /**
@@ -22,6 +53,12 @@ export const consultHydrologist = async (
     const genAI = getAiClient();
     const model = genAI.getGenerativeModel({ model: AI_MODEL });
 
+    // RAG: Search for technical references
+    const references = await searchTechnicalReferences(query);
+    const referenceContext = references.length > 0 
+      ? "\nREFERENSI TEKNIS SNI/REGULASI RELEVAN:\n" + references.map((r: any) => `- [${r.metadata?.title || 'SNI'}] ${r.content_chunk}`).join('\n')
+      : "";
+
     const prompt = `
 ${SYSTEM_PROMPT}
 
@@ -30,6 +67,7 @@ KONTEKS DATA PERHITUNGAN
 ═══════════════════════════════════════════════════════════════
 
 ${contextData}
+${referenceContext}
 
 ═══════════════════════════════════════════════════════════════
 PERTANYAAN USER
@@ -43,6 +81,7 @@ INSTRUKSI
 
 Analisis pertanyaan di atas dengan merujuk SNI/Permen yang relevan.
 Berikan jawaban yang praktis, akurat, dan sesuai standar Indonesia.
+Siapkan kutipan yang jelas jika menggunakan referensi teknis yang disediakan.
     `;
 
     if (imageBase64) {

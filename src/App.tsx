@@ -97,165 +97,167 @@ const App: React.FC = () => {
   };
 
   const navigationItems = [
-    { 
-      tab: Tab.SALURAN, 
-      label: 'Saluran', 
+    {
+      tab: Tab.SALURAN,
+      label: 'Saluran',
       icon: <Waves strokeWidth={2.5} className="w-5 h-5" />
     },
-    { 
-      tab: Tab.BANJIR, 
-      label: 'Banjir', 
+    {
+      tab: Tab.BANJIR,
+      label: 'Banjir',
       icon: <CloudRain strokeWidth={2.5} className="w-5 h-5" />
     },
-    { 
-      tab: Tab.NERACA, 
-      label: 'Neraca', 
+    {
+      tab: Tab.NERACA,
+      label: 'Neraca',
       icon: <Scale strokeWidth={2.5} className="w-5 h-5" />
     },
-    { 
-      tab: Tab.HISTORY, 
-      label: 'Data', 
+    {
+      tab: Tab.HISTORY,
+      label: 'Data',
       icon: <Database strokeWidth={2.5} className="w-5 h-5" />
     },
-    { 
-      tab: Tab.AI, 
-      label: 'Konsultan', 
+    {
+      tab: Tab.AI,
+      label: 'Konsultan',
       icon: <Sparkles strokeWidth={2.5} className="w-5 h-5" />
     }
   ];
 
   return (
     <ErrorBoundary>
-    <ToastContainer />
-    <div className="min-h-screen font-sans flex flex-col">
+      <ToastContainer />
+      <div className="min-h-screen font-sans flex flex-col">
 
-      {/* --- Header --- */}
-      <Header 
-        appName={APP_NAME}
-        appSubtitle="Water Resources Engineering Tools"
-        statusBadge={{
-          label: dbMessage,
-          color: getStatusColor(),
-          isLoading: dbStatus === 'testing'
-        }}
-        version="1.1"
-        isScrolled={scrolled}
-      />
+        {/* --- Header --- */}
+        <Header
+          appName={APP_NAME}
+          appSubtitle="Water Resources Engineering Tools"
+          statusBadge={{
+            label: dbMessage,
+            color: getStatusColor(),
+            isLoading: dbStatus === 'testing'
+          }}
+          version="1.1"
+          isScrolled={scrolled}
+        />
 
-      {/* --- Main Content --- */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-28 md:pb-32">
+        {/* --- Main Content --- */}
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-28 md:pb-32">
           <div className="transition-opacity duration-300">
-          {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-          {activeTab === Tab.BANJIR && <FloodAnalysisTab onConsultAI={() => {
-            setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');
-            setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
-            setActiveTab(Tab.AI);
-          }} />}
-          {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
-            setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
-            setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
-            setActiveTab(Tab.AI);
-          }} />}
-          {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
-          
-          {activeTab === Tab.HISTORY && <AllDataTab 
-            onViewDetail={(item) => setViewAllDataDetail(item)}
-            onMapDetail={(item) => setMapDetailItem(item)}
-            onConsultAI={(item) => {
-              const typeLabel = item.type === 'manning' ? 'Saluran Manning' : item.type === 'flood' ? 'Banjir' : 'Neraca Air';
-              setLastContext(`Tipe: ${typeLabel}\nProyek: ${item.project_name}\nData: ${JSON.stringify(item.data)}`);
-              setAiInitialQuery(`Analisis hasil perhitungan ${typeLabel} untuk proyek ${item.project_name} menurut SNI.`);
+            {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
+            {activeTab === Tab.BANJIR && <FloodAnalysisTab
+              onSave={handleCalculationSave}
+              onConsultAI={() => {
+                setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');
+                setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
+                setActiveTab(Tab.AI);
+              }}
+            />}
+            {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
+              setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
+              setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
               setActiveTab(Tab.AI);
-            }}
-          />}
-          </div>
-      </main>
+            }} />}
+            {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
 
-      <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
-      <AllDataDetailModal isOpen={!!viewAllDataDetail} data={viewAllDataDetail} onClose={() => setViewAllDataDetail(null)} />
-      
-      {/* Map Detail Modal */}
-      {mapDetailItem && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-md" onClick={() => setMapDetailItem(null)}>
-          <div className="glass-strong rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 glass-card border-b border-white/20 px-6 py-4 flex items-center justify-between">
-              <div>
-                <div className={`inline-block px-3 py-1 rounded-lg text-xs font-bold mb-2 ${mapDetailItem.type === CalculationType.MANNING ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
-                  {mapDetailItem.type}
-                </div>
-                <h2 className="text-xl font-bold text-neutral-900">{mapDetailItem.inputs.site?.channelName || 'Detail Proyek'}</h2>
-              </div>
-              <button onClick={() => setMapDetailItem(null)} className="w-8 h-8 flex items-center justify-center rounded-full glass hover:bg-white/30 transition-colors">
-                <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="glass p-4 rounded-lg">
-                  <span className="text-xs font-semibold text-neutral-600 uppercase tracking-wide block mb-1">Tanggal</span>
-                  <p className="text-sm font-medium text-neutral-900">{new Date(mapDetailItem.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
-                </div>
-                <div className="glass p-4 rounded-lg">
-                  <span className="text-xs font-semibold text-neutral-600 uppercase tracking-wide block mb-1">Output Utama</span>
-                  <p className="text-2xl font-black text-neutral-900">{mapDetailItem.outputs.Discharge} <span className="text-sm font-semibold text-neutral-700">m³/s</span></p>
-                </div>
-              </div>
-              <div className="glass border border-white/20 p-4 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-primary-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <div>
-                    <span className="text-xs font-semibold text-primary-700 uppercase tracking-wide block mb-1">Koordinat Lokasi</span>
-                    <p className="text-sm font-mono text-neutral-900">{mapDetailItem.location?.latitude.toFixed(6)}, {mapDetailItem.location?.longitude.toFixed(6)}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="glass border border-white/20 p-5 rounded-lg">
-                <h3 className="text-sm font-bold text-neutral-900 mb-3">Informasi Lokasi</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-700">Kabupaten:</span>
-                    <span className="font-semibold text-neutral-900">{mapDetailItem.inputs.site?.regency || 'Tidak tersedia'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-700">Kecamatan:</span>
-                    <span className="font-semibold text-neutral-900">{mapDetailItem.inputs.site?.district || 'Tidak tersedia'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-700">Desa:</span>
-                    <span className="font-semibold text-neutral-900">{mapDetailItem.inputs.site?.village || 'Tidak tersedia'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {activeTab === Tab.HISTORY && <AllDataTab
+              onViewDetail={(item) => setViewAllDataDetail(item)}
+              onMapDetail={(item) => setMapDetailItem(item)}
+              onConsultAI={(item) => {
+                const typeLabel = item.type === 'manning' ? 'Saluran Manning' : item.type === 'flood' ? 'Banjir' : 'Neraca Air';
+                setLastContext(`Tipe: ${typeLabel}\nProyek: ${item.project_name}\nData: ${JSON.stringify(item.data)}`);
+                setAiInitialQuery(`Analisis hasil perhitungan ${typeLabel} untuk proyek ${item.project_name} menurut SNI.`);
+                setActiveTab(Tab.AI);
+              }}
+            />}
           </div>
-        </div>
-      )}
+        </main>
 
-      {/* --- Navigation Bar (Mobile-First Bottom Nav) --- */}
-      <nav className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">
-        <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 md:border md:shadow-lg md:rounded-2xl px-2 py-2 safe-area-inset-bottom">
-            <div className="flex items-center justify-around md:gap-2">
-            {navigationItems.map((item) => (
-                <button
-                    key={item.tab}
-                    onClick={() => setActiveTab(item.tab)}
-                    className={`flex flex-col items-center justify-center min-w-[64px] min-h-[52px] px-2 md:px-5 py-2 rounded-xl transition-all duration-200 ${
-                          activeTab === item.tab
-                            ? `text-primary-600 bg-primary-50`
-                            : `text-slate-500 hover:bg-slate-50 hover:text-slate-900`
-                        }`}
-                >
-                    <div className="flex items-center justify-center transition-transform duration-200 group-active:scale-95">
-                      {item.icon}
-                    </div>
-                    <span className={`text-[10px] md:text-xs mt-1 transition-all duration-200 ${activeTab === item.tab ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+        <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
+        <AllDataDetailModal isOpen={!!viewAllDataDetail} data={viewAllDataDetail} onClose={() => setViewAllDataDetail(null)} />
+
+        {/* Map Detail Modal */}
+        {mapDetailItem && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-md" onClick={() => setMapDetailItem(null)}>
+            <div className="glass-strong rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="sticky top-0 glass-card border-b border-white/20 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <div className={`inline-block px-3 py-1 rounded-lg text-xs font-bold mb-2 ${mapDetailItem.type === CalculationType.MANNING ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                    {mapDetailItem.type}
+                  </div>
+                  <h2 className="text-xl font-bold text-neutral-900">{mapDetailItem.inputs.site?.channelName || 'Detail Proyek'}</h2>
+                </div>
+                <button onClick={() => setMapDetailItem(null)} className="w-8 h-8 flex items-center justify-center rounded-full glass hover:bg-white/30 transition-colors">
+                  <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
-            ))}
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="glass p-4 rounded-lg">
+                    <span className="text-xs font-semibold text-neutral-600 uppercase tracking-wide block mb-1">Tanggal</span>
+                    <p className="text-sm font-medium text-neutral-900">{new Date(mapDetailItem.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                  <div className="glass p-4 rounded-lg">
+                    <span className="text-xs font-semibold text-neutral-600 uppercase tracking-wide block mb-1">Output Utama</span>
+                    <p className="text-2xl font-black text-neutral-900">{mapDetailItem.outputs.Discharge} <span className="text-sm font-semibold text-neutral-700">m³/s</span></p>
+                  </div>
+                </div>
+                <div className="glass border border-white/20 p-4 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-primary-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <div>
+                      <span className="text-xs font-semibold text-primary-700 uppercase tracking-wide block mb-1">Koordinat Lokasi</span>
+                      <p className="text-sm font-mono text-neutral-900">{mapDetailItem.location?.latitude.toFixed(6)}, {mapDetailItem.location?.longitude.toFixed(6)}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass border border-white/20 p-5 rounded-lg">
+                  <h3 className="text-sm font-bold text-neutral-900 mb-3">Informasi Lokasi</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-700">Kabupaten:</span>
+                      <span className="font-semibold text-neutral-900">{mapDetailItem.inputs.site?.regency || 'Tidak tersedia'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-700">Kecamatan:</span>
+                      <span className="font-semibold text-neutral-900">{mapDetailItem.inputs.site?.district || 'Tidak tersedia'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-700">Desa:</span>
+                      <span className="font-semibold text-neutral-900">{mapDetailItem.inputs.site?.village || 'Tidak tersedia'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-        </div>
-      </nav>
-      
-    </div>
+          </div>
+        )}
+
+        {/* --- Navigation Bar (Mobile-First Bottom Nav) --- */}
+        <nav className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">
+          <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 md:border md:shadow-lg md:rounded-2xl px-2 py-2 safe-area-inset-bottom">
+            <div className="flex items-center justify-around md:gap-2">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.tab}
+                  onClick={() => setActiveTab(item.tab)}
+                  className={`flex flex-col items-center justify-center min-w-[64px] min-h-[52px] px-2 md:px-5 py-2 rounded-xl transition-all duration-200 ${activeTab === item.tab
+                      ? `text-primary-600 bg-primary-50`
+                      : `text-slate-500 hover:bg-slate-50 hover:text-slate-900`
+                    }`}
+                >
+                  <div className="flex items-center justify-center transition-transform duration-200 group-active:scale-95">
+                    {item.icon}
+                  </div>
+                  <span className={`text-[10px] md:text-xs mt-1 transition-all duration-200 ${activeTab === item.tab ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </nav>
+
+      </div>
     </ErrorBoundary>
   );
 };

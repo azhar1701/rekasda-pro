@@ -1,11 +1,13 @@
 // Strict Database Schema Types - Single Source of Truth
 export interface CalculationRecord {
   id: string;
+  user_id?: string | null;
   site_name: string;
-  calculation_type: 'manning' | 'rational';
+  calculation_type: 'manning' | 'rational' | 'water-balance';
   input_data: Record<string, any>;
   result_data: Record<string, any>;
   location: GeoLocation | null;
+  geo_location?: string | null; // PostGIS hex representation or Point format
   photo_url: string | null;
   notes: string | null;
   created_at: string;
@@ -17,6 +19,23 @@ export interface GeoLocation {
   longitude: number;
   accuracy: number;
   timestamp: number;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  content: string;
+  metadata: Record<string, any>;
+  source_url?: string;
+  created_at: string;
+}
+
+export interface DocumentEmbedding {
+  id: string;
+  document_id: string;
+  embedding: number[];
+  content_chunk: string;
+  metadata: Record<string, any>;
 }
 
 export interface CalculationOutputs {
@@ -32,7 +51,7 @@ export function isValidCalculationRecord(data: any): data is CalculationRecord {
     data &&
     typeof data.id === 'string' &&
     typeof data.site_name === 'string' &&
-    ['manning', 'rational'].includes(data.calculation_type) &&
+    ['manning', 'rational', 'water-balance'].includes(data.calculation_type) &&
     typeof data.input_data === 'object' &&
     typeof data.result_data === 'object'
   );

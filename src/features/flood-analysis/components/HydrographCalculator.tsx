@@ -12,6 +12,8 @@ import { SaveButton } from '@/components/ui/forms/SaveButton';
 import { HSSFormulaDisplay } from '@/components/ui/data-display/HSSFormulaDisplay';
 import { RainfallFrequencyAnalysis } from '@/features/flood-analysis/components/RainfallFrequencyAnalysis';
 import { Collapsible } from '@/components/ui/Collapsible';
+import { getCurrentLocation } from '@/lib/utils/geolocation';
+import { CalculationType } from '@/types/types';
 
 interface LocationData {
   channelName: string;
@@ -25,12 +27,14 @@ interface LocationData {
 type HSSMethod = 'nakayasu' | 'gamma1' | 'snyder';
 
 interface HydrographCalculatorProps {
+  onSave: (type: CalculationType, inputs: any, outputs: any) => void;
   onConsultAI: () => void;
 }
 
-export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onConsultAI }) => {
+export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSave, onConsultAI }) => {
   const [method, setMethod] = useState<HSSMethod>('nakayasu');
-  const [_locationData, setLocationData] = useState<LocationData | null>(null);
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [leftWidth, setLeftWidth] = useState(() => {
     const saved = localStorage.getItem('flood-hydrograph-width');
     return saved ? parseFloat(saved) : 35;
@@ -106,6 +110,51 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
       }
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Calculation error');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+
+    setIsSaving(true);
+    try {
+      let currentLoc = locationData?.coordinates ? {
+        latitude: locationData.coordinates.lat,
+        longitude: locationData.coordinates.lng,
+        accuracy: 10,
+        timestamp: Date.now()
+      } : null;
+
+      if (!currentLoc) {
+        try {
+          currentLoc = await getCurrentLocation();
+        } catch (e) {
+          console.warn('Geolocation failed', e);
+        }
+      }
+
+      const activeInputs = method === 'nakayasu' ? nakayasuInputs :
+        method === 'gamma1' ? gamma1Inputs : snyderInputs;
+
+      const saveInputs = {
+        ...activeInputs,
+        site: {
+          channelName: locationData?.channelName || 'HSS ' + method,
+          regency: locationData?.kabupaten || '',
+          district: locationData?.kecamatan || '',
+          village: locationData?.desa || '',
+          location: currentLoc
+        }
+      };
+
+      const saveOutputs = {
+        ...result,
+        method
+      };
+
+      onSave(CalculationType.RATIONAL, saveInputs, saveOutputs);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -431,8 +480,9 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
             <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
               <div className="flex gap-2">
                 <SaveButton
-                  onClick={() => alert('Save functionality')}
-                  label="Simpan Hasil"
+                  onClick={handleSave}
+                  label={isSaving ? "Menyiapkan..." : "Simpan Hasil"}
+                  disabled={isSaving}
                 />
                 <button
                   onClick={onConsultAI}

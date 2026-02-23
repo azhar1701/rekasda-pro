@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MANNING_ROUGHNESS } from '@/constants';
-import { calculateManning, saveManningCalculation } from '@/services/calculationService';
+import { saveManningCalculation } from '@/services/calculationService';
 import { ManningInputs, CalculationType, ChannelShape } from '@/types/types';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
-import { Button } from '@/components/ui/forms/Button';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/feedback/Alert';
 import { ChannelVisualizer } from './ChannelVisualizer';
+import { useHydraulicCalculations } from '@/hooks/useHydraulicCalculations';
+import { isSupabaseEnabled } from '@/lib/api/supabase';
 
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { SlopeCalculator } from './SlopeCalculator';
@@ -14,6 +17,7 @@ import { ManningPilotDataLoader } from './ManningPilotDataLoader';
 import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
 import { ManningFormulaDisplay } from '@/components/ui/data-display/ManningFormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
+import { getCurrentLocation } from '@/lib/utils/geolocation';
 
 interface Props {
   onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -21,9 +25,11 @@ interface Props {
 }
 
 export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
+  const { calculateManningChannel, manningResults, isCalculating: isHookCalculating, error: calcError } = useHydraulicCalculations();
   const [, setLocationData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [useCloud, setUseCloud] = useState(false);
   const [inputs, setInputs] = useState<ManningInputs>({
     site: { channelName: '', regency: '', district: '', village: '' },
     shape: ChannelShape.TRAPEZOID,
@@ -37,14 +43,11 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
     sideSlope: 0.1666,
   });
 
-  const [results, setResults] = useState<any>(null);
   const [showSlopeCalculator, setShowSlopeCalculator] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
-
-
 
   const handleLoadPilotData = (data: any) => {
     setInputs({
@@ -77,10 +80,27 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
     setIsSaving(true);
     setSaveMessage(null);
     try {
+      // Try to get precise location if not already present
+      let currentLoc = inputs.site?.location;
+      if (!currentLoc) {
+        try {
+          currentLoc = await getCurrentLocation();
+        } catch (locErr) {
+          console.warn('Geolocation capture failed:', locErr);
+          // Continue without location if user denies/fails
+        }
+      }
+
       const { error } = await saveManningCalculation({
         projectName,
-        inputs,
-        results
+        inputs: {
+          ...inputs,
+          site: {
+            ...inputs.site,
+            location: currentLoc || inputs.site?.location || null
+          }
+        },
+        results: manningResults
       });
 
       if (error) {
@@ -179,18 +199,41 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   }, [isResizing, sidebarWidth]);
 
   useEffect(() => {
-    if (validate(inputs)) setResults(calculateManning(inputs));
-    else setResults(null);
-  }, [inputs]);
+    const runCalc = async () => {
+      if (validate(inputs)) {
+        await calculateManningChannel(inputs, useCloud);
+      }
+    };
+    runCalc();
+  }, [inputs, useCloud, calculateManningChannel]);
 
   return (
     <div className="min-h-screen p-3 sm:p-6">
       <div className="max-w-[1600px] mx-auto">
 
         {/* Header */}
-        <div className="mb-2 md:mb-3">
-          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Analisis Saluran Manning</h1>
-          <p className="text-xs sm:text-sm text-neutral-600 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
+        <div className="mb-2 md:mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Analisis Saluran Manning</h1>
+            <p className="text-xs sm:text-sm text-neutral-600 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
+          </div>
+
+          {isSupabaseEnabled() && (
+            <div className="flex items-center gap-2 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm">
+              <button
+                onClick={() => setUseCloud(false)}
+                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${!useCloud ? 'bg-primary-600 text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'}`}
+              >
+                Local
+              </button>
+              <button
+                onClick={() => setUseCloud(true)}
+                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${useCloud ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'}`}
+              >
+                Cloud (Edge)
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Load Message Toast */}
@@ -245,12 +288,12 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 {/* Geometry Section */}
                 <Collapsible title="Geometri Saluran" defaultOpen={true}>
 
-                  {Object.keys(errors).length > 0 && (
+                  {(Object.keys(errors).length > 0 || calcError) && (
                     <div className="mb-4">
                       <Alert
                         type="error"
                         title="Validation Errors"
-                        message={Object.values(errors).join(', ')}
+                        message={calcError || Object.values(errors).join(', ')}
                       />
                     </div>
                   )}
@@ -360,41 +403,48 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
               <div className="space-y-4 sm:space-y-6">
 
                 {/* Visualization */}
-                <div className="glass-card rounded-xl shadow-lg border border-white/20 p-4 sm:p-6">
+                <Card className="glass-card shadow-lg border-white/20 p-4 sm:p-6">
                   <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Tampilan Penampang Melintang</h2>
-                  <ChannelVisualizer inputs={inputs} results={results} />
-                </div>
+                  <CardContent className="p-0">
+                    <ChannelVisualizer inputs={inputs} results={manningResults} />
+                  </CardContent>
+                </Card>
 
-                {results && (
+                {manningResults && (
                   <>
                     {/* KPI Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 relative">
+                      {isHookCalculating && (
+                        <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+                          <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      <Card className="p-6 shadow-sm hover:shadow-md transition-shadow border-slate-200">
                         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kapasitas Debit</div>
                         <div className="flex items-baseline gap-2">
-                          <div className="text-3xl font-black text-slate-900">{results.Discharge}</div>
+                          <div className="text-3xl font-black text-slate-900">{manningResults.Discharge}</div>
                           <div className="text-sm font-bold text-slate-500">m³/s</div>
                         </div>
-                      </div>
-                      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                      </Card>
+                      <Card className="p-6 shadow-sm hover:shadow-md transition-shadow border-slate-200">
                         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kecepatan</div>
                         <div className="flex items-baseline gap-2">
-                          <div className="text-3xl font-black text-slate-900">{results.Velocity}</div>
+                          <div className="text-3xl font-black text-slate-900">{manningResults.Velocity}</div>
                           <div className="text-sm font-bold text-slate-500">m/s</div>
                         </div>
-                      </div>
+                      </Card>
                     </div>
 
                     {/* Detailed Results */}
-                    <div className="glass-card rounded-xl shadow-lg border border-white/20 p-4 sm:p-6">
+                    <Card className="glass-card shadow-lg border-white/20 p-4 sm:p-6 opacity-ransition duration-300" style={{ opacity: isHookCalculating ? 0.7 : 1 }}>
                       <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Rincian Hasil Perhitungan</h2>
-                      <div className="space-y-4">
+                      <CardContent className="p-0 space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           {[
-                            { label: 'Jari-jari Hidrolis', val: results.Radius, unit: 'm', help: 'Rasio luas penampang terhadap keliling basah' },
-                            { label: 'Lebar Permukaan', val: results.TopWidth, unit: 'm', help: 'Lebar permukaan air di bagian atas' },
-                            { label: 'Energi Spesifik', val: results.SpecificEnergy, unit: 'm', help: 'Total energi per satuan berat air' },
-                            { label: 'Tegangan Geser', val: results.ShearStress, unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
+                            { label: 'Jari-jari Hidrolis', val: manningResults.Radius, unit: 'm', help: 'Rasio luas penampang terhadap keliling basah' },
+                            { label: 'Lebar Permukaan', val: manningResults.TopWidth, unit: 'm', help: 'Lebar permukaan air di bagian atas' },
+                            { label: 'Energi Spesifik', val: manningResults.SpecificEnergy, unit: 'm', help: 'Total energi per satuan berat air' },
+                            { label: 'Tegangan Geser', val: manningResults.ShearStress, unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
                           ].map((item, i) => (
                             <div key={i} className="bg-slate-50 p-3 rounded-lg">
                               <span className="text-xs font-bold text-slate-600 uppercase block mb-1 flex items-center gap-1">
@@ -415,12 +465,12 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-slate-200">
-                          <Button fullWidth variant="primary" onClick={handleSaveToDatabase} disabled={isSaving}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                          <Button className="w-full flex-1" onClick={handleSaveToDatabase} disabled={isSaving}>
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                             {isSaving ? 'Menyimpan...' : 'Simpan Hasil'}
                           </Button>
-                          <Button variant="outline" onClick={() => onConsultAI(inputs, results)}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          <Button variant="outline" className="w-full flex-1" onClick={() => onConsultAI(inputs, manningResults)}>
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                             Analisis AI
                           </Button>
                         </div>
@@ -429,14 +479,14 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           standard="SNI 2415:2016"
                           title="Rumus Manning untuk Perhitungan Kapasitas Saluran"
                         />
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   </>
                 )}
               </div>
             </div>
-
           </div>
+
         </div>
       </div>
     </div>

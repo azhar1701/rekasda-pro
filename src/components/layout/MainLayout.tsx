@@ -30,9 +30,8 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 glass-strong border-r border-white/20 transform transition-transform duration-200 lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 z-50 h-full w-64 glass-strong border-r border-white/20 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/20">
@@ -76,9 +75,13 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
             </button>
             {title && <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>}
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-neutral-600">SNI Compliant</span>
-            <div className="w-2 h-2 bg-success rounded-full shadow-lg shadow-success/50" />
+          <div className="flex items-center gap-6">
+            <div className="items-center gap-2 hidden md:flex">
+              <span className="text-sm font-medium text-neutral-500">SNI Compliant</span>
+              <div className="w-2 h-2 bg-success rounded-full shadow-lg shadow-success/50" />
+            </div>
+            <div className="h-8 w-px bg-neutral-200 hidden md:block" />
+            <UserNav />
           </div>
         </header>
 

@@ -13,6 +13,8 @@ import { SaveButton } from '@/components/ui/forms/SaveButton';
 import { FormulaDisplay } from '@/components/ui/data-display/FormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { SlopeCalculator } from '@/features/channel-analysis/components/SlopeCalculator';
+import { getCurrentLocation } from '@/lib/utils/geolocation';
+import { CalculationType } from '@/types/types';
 
 interface LocationData {
   channelName: string;
@@ -26,6 +28,7 @@ interface LocationData {
 type EmpiricalMethod = 'rational' | 'haspers' | 'weduwen' | 'melchior';
 
 interface PeakDischargeCalculatorProps {
+  onSave: (type: CalculationType, inputs: any, outputs: any) => void;
   onConsultAI: () => void;
 }
 
@@ -37,9 +40,10 @@ interface Inputs {
   S: number;
 }
 
-export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = ({ onConsultAI }) => {
+export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = ({ onSave, onConsultAI }) => {
   const [method, setMethod] = useState<EmpiricalMethod>('rational');
-  const [_locationData, setLocationData] = useState<LocationData | null>(null);
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [leftWidth, setLeftWidth] = useState(() => {
     const saved = localStorage.getItem('flood-sidebar-width');
     return saved ? parseFloat(saved) : 35;
@@ -136,6 +140,49 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
       }
     } catch (error) {
       setResult(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+
+    setIsSaving(true);
+    try {
+      let currentLoc = locationData?.coordinates ? {
+        latitude: locationData.coordinates.lat,
+        longitude: locationData.coordinates.lng,
+        accuracy: 10,
+        timestamp: Date.now()
+      } : null;
+
+      if (!currentLoc) {
+        try {
+          currentLoc = await getCurrentLocation();
+        } catch (e) {
+          console.warn('Geolocation failed', e);
+        }
+      }
+
+      const saveInputs = {
+        ...inputs,
+        site: {
+          channelName: locationData?.channelName || 'Analisis Banjir ' + method,
+          regency: locationData?.kabupaten || '',
+          district: locationData?.kecamatan || '',
+          village: locationData?.desa || '',
+          location: currentLoc
+        }
+      };
+
+      const saveOutputs = {
+        ...result,
+        method,
+        ...result.params
+      };
+
+      onSave(CalculationType.RATIONAL, saveInputs, saveOutputs);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -463,8 +510,9 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                 <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
                   <div className="flex gap-2">
                     <SaveButton
-                      onClick={() => alert('Save functionality')}
-                      label="Simpan Hasil"
+                      onClick={handleSave}
+                      label={isSaving ? "Menyiapkan..." : "Simpan Hasil"}
+                      disabled={isSaving}
                     />
                     <button
                       onClick={onConsultAI}
