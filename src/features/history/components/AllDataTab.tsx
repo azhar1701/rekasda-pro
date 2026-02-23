@@ -85,8 +85,6 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     // Set focus after view mode changes
     setTimeout(() => {
       setFocusItemId(item.id);
-      // Clear focus after zoom completes
-      setTimeout(() => setFocusItemId(undefined), 2000);
     }, 100);
   };
 
