@@ -2,7 +2,7 @@
 
 -- 1. Enable Extensions
 CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS pgvector;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- 2. Update Calculations Table with Spacial Data
 -- We'll add a geography column for precise spatial queries
