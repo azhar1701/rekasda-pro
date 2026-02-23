@@ -67,15 +67,15 @@ export const SelectWithSearch: React.FC<SelectWithSearchProps> = ({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full glass-card border border-white/30 text-neutral-900 text-sm font-medium rounded-xl p-3 text-left flex items-center justify-between outline-none transition-all shadow-md ${
-          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/50 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'
+        className={`w-full bg-white/95 border border-slate-200 text-slate-900 text-sm font-medium rounded-xl p-3 text-left flex items-center justify-between outline-none transition-all shadow-md ${
+          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-slate-300 hover:shadow-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'
         }`}
       >
-        <span className={selectedOption ? 'text-neutral-900' : 'text-neutral-500'}>
+        <span className={selectedOption ? 'text-slate-900' : 'text-slate-500'}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <svg
-          className={`w-4 h-4 text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -85,11 +85,11 @@ export const SelectWithSearch: React.FC<SelectWithSearchProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] w-full mt-1 glass-strong border border-white/20 rounded-xl shadow-lg overflow-hidden">
-          <div className="p-2 border-b border-white/20">
+        <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-lg border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-slate-100">
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -104,7 +104,7 @@ export const SelectWithSearch: React.FC<SelectWithSearchProps> = ({
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Cari..."
-                className="w-full pl-9 pr-3 py-2 text-sm glass-card border border-white/30 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-slate-900 placeholder-slate-400"
               />
             </div>
           </div>
@@ -118,15 +118,15 @@ export const SelectWithSearch: React.FC<SelectWithSearchProps> = ({
                   onClick={() => handleSelect(option.value)}
                   className={`w-full px-3 py-2.5 text-left text-sm transition-colors flex-shrink-0 ${
                     option.value === value
-                      ? 'bg-primary-500/20 text-primary-700 font-semibold'
-                      : 'text-neutral-700 hover:glass'
+                      ? 'bg-primary-500/15 text-primary-700 font-semibold'
+                      : 'text-slate-700 hover:bg-slate-100 font-medium'
                   }`}
                 >
                   {option.label}
                 </button>
               ))
             ) : (
-              <div className="px-3 py-6 text-center text-sm text-neutral-500">
+              <div className="px-3 py-6 text-center text-sm text-slate-500">
                 Tidak ada hasil
               </div>
             )}
