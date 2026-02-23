@@ -91,14 +91,17 @@ export default defineConfig({
           }
 
           // Shared hooks and types
-          if (id.includes('src/hooks')) {
-            return 'hooks';
-          }
           if (id.includes('src/types')) {
             return 'types';
           }
-          if (id.includes('src/components/common') || id.includes('src/components/ui')) {
-            return 'ui-components';
+
+          // Combine hooks and ui-components to avoid circular dependencies
+          if (
+            id.includes('src/hooks') || 
+            id.includes('src/components/common') || 
+            id.includes('src/components/ui')
+          ) {
+            return 'ui-shared';
           }
         },
       },
