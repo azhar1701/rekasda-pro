@@ -14,6 +14,20 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
   const [selectedMarker, setSelectedMarker] = useState<CalculationResult | null>(null);
   const prevFocusIdRef = useRef<string | undefined>(undefined);
 
+  // Expose onViewDetail globally so the raw HTML popup button can call it
+  useEffect(() => {
+    (window as any).handleMapPopupDetailClick = (id: string) => {
+      const item = data.find(d => d.id === id);
+      if (item) {
+        if (onViewDetail) onViewDetail(item);
+        else setSelectedMarker(item);
+      }
+    };
+    return () => {
+      delete (window as any).handleMapPopupDetailClick;
+    };
+  }, [data, onViewDetail]);
+
   useEffect(() => {
     // Cleanup previous map instance safely
     if (mapInstanceRef.current) {
@@ -212,6 +226,10 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
                           <span style="font-size: 11px; font-weight: 600; color: #64748b;">m³/s</span>
                         </div>
                     </div>
+                    <button onclick="window.handleMapPopupDetailClick('${item.id}')" style="width: 100%; appearance: none; border: none; background: #0f172a; color: white; border-radius: 6px; padding: 8px 12px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+                      <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                      Lihat Detail Analisis
+                    </button>
                 </div>
             `, { maxWidth: 240, closeButton: true });
 
@@ -326,6 +344,15 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
               <span className="font-semibold">Lokasi:</span> {selectedMarker.location?.latitude.toFixed(6)}, {selectedMarker.location?.longitude.toFixed(6)}
             </p>
           </div>
+          <button
+            onClick={() => {
+              if (onViewDetail) onViewDetail(selectedMarker);
+            }}
+            className="mt-4 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-md"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            Tampilkan Detail Analisis
+          </button>
         </div>
       )}
 
