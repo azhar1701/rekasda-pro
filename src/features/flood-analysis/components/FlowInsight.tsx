@@ -26,6 +26,16 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
     ? Math.min(Math.max(velocity, 0.5), 5) 
     : (safeDischarge > 0 ? 2 : 0);
 
+  // Calculate animation duration (seconds) - tuned to appear slower for "normal" flows
+  // - For no flow: paused (duration 0)
+  // - For normal flows (safeDischarge <= 5): prefer a slower baseline so animation isn't too fast
+  // - For high flows: scale down the duration (faster animation) but keep a minimum
+  const animationDuration = safeDischarge <= 0
+    ? 0
+    : (safeDischarge > 5
+      ? Math.max(2.5, 6 / Math.max(flowSpeed, 0.8))
+      : Math.max(3.5, 8 / Math.max(flowSpeed, 0.8)));
+
   // Determine status badge
   const getStatusLabel = (): { text: string; color: string } => {
     if (safeDischarge <= 0) return { text: 'Tidak Ada Aliran', color: 'text-slate-400' };
@@ -68,15 +78,9 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
         <div className="relative w-full flex items-center justify-between px-8 z-20" style={{ height: '80px' }}>
           {/* SVG Drawing Layer - Positioned absolutely at center */}
           <svg
-            className="absolute inset-0 w-full h-full"
-            style={{ 
-              left: 0, 
-              top: 0,
-              height: '80px',
-              margin: 'auto 0'
-            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-16"
             viewBox="0 0 100 40"
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
           >
             <defs>
               <linearGradient id="flowGradient" x1="0%" y1="50%" x2="100%" y2="50%">
@@ -126,7 +130,7 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
               strokeDasharray="6,3"
               markerEnd="url(#flowArrow)"
               style={{
-                animation: `flowPathAnimation ${Math.max(2.5, 6 / flowSpeed)}s linear infinite`,
+                animation: `flowPathAnimation ${animationDuration}s linear infinite`,
                 animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
               }}
             />
@@ -142,8 +146,8 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
               strokeDasharray="6,3"
               opacity="0.2"
               style={{
-                animation: `flowPathAnimationDelay ${Math.max(2.5, 6 / flowSpeed)}s linear infinite`,
-                animationDelay: `${Math.max(2.5, 6 / flowSpeed) * 0.33}s`,
+                animation: `flowPathAnimationDelay ${animationDuration}s linear infinite`,
+                animationDelay: `${animationDuration * 0.33}s`,
                 animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
               }}
             />
