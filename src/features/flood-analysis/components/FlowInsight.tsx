@@ -30,11 +30,12 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
   // - For no flow: paused (duration 0)
   // - For normal flows (safeDischarge <= 5): prefer a slower baseline so animation isn't too fast
   // - For high flows: scale down the duration (faster animation) but keep a minimum
+  // Natural timing: normal flows feel calm (~5s), high flows faster (~3s)
   const animationDuration = safeDischarge <= 0
     ? 0
     : (safeDischarge > 5
-      ? Math.max(2.5, 6 / Math.max(flowSpeed, 0.8))
-      : Math.max(4, 8 / Math.max(flowSpeed, 0.8)));
+      ? Math.max(3, 6 / Math.max(flowSpeed, 0.8))
+      : Math.max(5, 8 / Math.max(flowSpeed, 0.8)));
 
   // Determine status badge
   const getStatusLabel = (): { text: string; color: string } => {
