@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '@/services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { DependableFlowModal } from '@/components/ui/modals/DependableFlowModal';
@@ -35,7 +36,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
-  
+
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
     agricultureArea: 100,
@@ -146,9 +147,9 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
   return (
     <div className="min-h-screen p-3 md:p-5">
-      
+
       <div className="max-w-[1600px] mx-auto">
-        
+
         {/* HEADER */}
         <div className="mb-2 md:mb-3">
           <h1 className="text-2xl md:text-3xl font-bold text-neutral-900">Analisis Neraca Air</h1>
@@ -166,11 +167,11 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          
+
           {/* LEFT SIDEBAR */}
           <div className="w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%', position: 'relative' }}>
             <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:overflow-x-visible lg:pr-4 space-y-4">
-              
+
               {/* Data Pilot & Location Identity - Combined */}
               <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={true}>
                 <div className="space-y-4">
@@ -180,12 +181,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   </div>
                 </div>
               </Collapsible>
-              
+
               {/* Formula Display */}
               <Collapsible title="Rumus Neraca Air" defaultOpen={false}>
                 <WaterBalanceFormulaDisplay />
               </Collapsible>
-              
+
               {/* SECTION 1: PARAMETER GLOBAL */}
               <Collapsible title="Parameter Masukan" defaultOpen={true}>
 
@@ -304,12 +305,11 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
           {/* MAIN CONTENT */}
           <div className="w-full lg:w-auto space-y-3 md:space-y-4 page-enter" style={{ width: window.innerWidth >= 1024 ? `${100 - sidebarWidth}%` : '100%' }}>
-            
+
             {/* Save Message Toast */}
             {saveMessage && (
-              <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg border-2 flex items-center gap-3 animate-fade-in ${
-                saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
-              }`}>
+              <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg border-2 flex items-center gap-3 animate-fade-in ${saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
+                }`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {saveMessage.type === 'success' ? (
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -320,7 +320,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 <span className="font-semibold">{saveMessage.text}</span>
               </div>
             )}
-            
+
             {/* KPI CARDS */}
             <div ref={kpiCardsRef} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-lg">
@@ -466,7 +466,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             {/* TABLE SECTION - Collapsible */}
             <Collapsible title="Tabel Detail Bulanan" defaultOpen={false} badge="12 Bulan">
               <p className="text-xs text-slate-500 mb-4">Data lengkap neraca air per bulan</p>
-              
+
               {/* Desktop: Table */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
@@ -495,11 +495,10 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                           {row.balance >= 0 ? '+' : ''}{row.balance}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                            row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
-                            row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                              row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
+                                'bg-slate-100 text-slate-700'
+                            }`}>
                             {row.status}
                           </span>
                         </td>
@@ -508,18 +507,17 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* Mobile: Card View */}
               <div className="md:hidden space-y-3">
                 {results.map((row, i) => (
                   <div key={i} className={`p-4 rounded-lg border space-y-3 ${row.balance < 0 ? 'bg-rose-50/30 border-rose-200' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex items-center justify-between">
                       <span className="text-base font-bold text-slate-900">{row.month}</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                        row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
-                        row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
-                        'bg-slate-100 text-slate-700'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                          row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
+                            'bg-slate-100 text-slate-700'
+                        }`}>
                         {row.status}
                       </span>
                     </div>
@@ -566,8 +564,8 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
         onApply={handleUseCalculatedFlow}
       />
 
-      {isInputModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent" onClick={() => setIsInputModalOpen(false)}>
+      {isInputModalOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsInputModalOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
               <div>
@@ -608,7 +606,8 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
