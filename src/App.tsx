@@ -100,37 +100,27 @@ const App: React.FC = () => {
     { 
       tab: Tab.SALURAN, 
       label: 'Saluran', 
-      icon: <Waves strokeWidth={2} />,
-      color: 'bg-cyan-500',
-      textColor: 'text-cyan-600'
+      icon: <Waves strokeWidth={2.5} className="w-5 h-5" />
     },
     { 
       tab: Tab.BANJIR, 
       label: 'Banjir', 
-      icon: <CloudRain strokeWidth={2} />,
-      color: 'bg-blue-500',
-      textColor: 'text-blue-600'
+      icon: <CloudRain strokeWidth={2.5} className="w-5 h-5" />
     },
     { 
       tab: Tab.NERACA, 
       label: 'Neraca', 
-      icon: <Scale strokeWidth={2} />,
-      color: 'bg-emerald-500',
-      textColor: 'text-emerald-600'
+      icon: <Scale strokeWidth={2.5} className="w-5 h-5" />
     },
     { 
       tab: Tab.HISTORY, 
       label: 'Data', 
-      icon: <Database strokeWidth={2} />,
-      color: 'bg-purple-500',
-      textColor: 'text-purple-600'
+      icon: <Database strokeWidth={2.5} className="w-5 h-5" />
     },
     { 
       tab: Tab.AI, 
       label: 'Konsultan', 
-      icon: <Sparkles strokeWidth={2} />,
-      color: 'bg-amber-500',
-      textColor: 'text-amber-600'
+      icon: <Sparkles strokeWidth={2.5} className="w-5 h-5" />
     }
   ];
 
@@ -242,27 +232,23 @@ const App: React.FC = () => {
       )}
 
       {/* --- Navigation Bar (Mobile-First Bottom Nav) --- */}
-      <nav className="fixed bottom-0 left-0 right-0 md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">
-        <div className="glass-strong border-t md:border md:border-white/20 md:shadow-lg md:rounded-full px-2 md:px-2 py-2 md:py-2 safe-area-inset-bottom">
-            <div className="flex items-center justify-around md:gap-1">
+      <nav className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">
+        <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 md:border md:shadow-lg md:rounded-2xl px-2 py-2 safe-area-inset-bottom">
+            <div className="flex items-center justify-around md:gap-2">
             {navigationItems.map((item) => (
                 <button
                     key={item.tab}
                     onClick={() => setActiveTab(item.tab)}
-                    className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-3 md:px-4 py-2 rounded-xl md:rounded-full transition-all ${
+                    className={`flex flex-col items-center justify-center min-w-[64px] min-h-[52px] px-2 md:px-5 py-2 rounded-xl transition-all duration-200 ${
                           activeTab === item.tab
-                            ? `${item.color} text-white shadow-lg`
-                            : `text-neutral-600 hover:glass hover:${item.textColor}`
+                            ? `text-primary-600 bg-primary-50`
+                            : `text-slate-500 hover:bg-slate-50 hover:text-slate-900`
                         }`}
                 >
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      {React.cloneElement(item.icon as React.ReactElement, {
-                        className: 'w-5 h-5',
-                        stroke: 'currentColor',
-                        fill: 'none'
-                      })}
+                    <div className="flex items-center justify-center transition-transform duration-200 group-active:scale-95">
+                      {item.icon}
                     </div>
-                    <span className="text-[10px] md:text-xs font-medium mt-0.5 text-current">{item.label}</span>
+                    <span className={`text-[10px] md:text-xs mt-1 transition-all duration-200 ${activeTab === item.tab ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
                 </button>
             ))}
             </div>

@@ -23,7 +23,7 @@ interface Props {
 
 export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  
+
   const [data, setData] = useState<WaterBalanceData>({
     site: { channelName: 'DAS Analisa', regency: 'Kab. Bandung', district: 'Soreang', village: 'Soreang' },
     population: 50000,
@@ -32,7 +32,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
     irrigationDemand: 0.5,
     monthlySupply: [150, 160, 180, 200, 220, 210, 180, 170, 160, 150, 140, 130]
   });
-  
+
   const [results, setResults] = useState<any>(null);
   const [projectName, setProjectName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -53,7 +53,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
     const domesticDemand = (data.population * data.domesticStandard) / (24 * 3600) / 1000; // L to m³/s
     const agricultureDemand = (data.agricultureArea * 2.5) / (365 * 24 * 3600); // 2.5 m³/ha/day
     const totalDemand = domesticDemand + agricultureDemand + data.irrigationDemand;
-    
+
     const monthlyBalance = data.monthlySupply.map((supply) => ({
       supply,
       demand: totalDemand,
@@ -92,23 +92,23 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
       alert('Masukkan nama proyek');
       return;
     }
-    
+
     setSaving(true);
     try {
       if (!supabase) {
         alert('Database tidak tersedia');
         return;
       }
-      
+
       const { error } = await supabase.from('water_balance_analysis').insert({
         project_name: projectName,
         data: JSON.stringify(data),
         results: JSON.stringify(results),
         created_at: new Date().toISOString()
       });
-      
+
       if (error) throw error;
-      
+
       alert(`Analisis "${projectName}" berhasil disimpan!`);
       setProjectName('');
       onSave?.(data, results);
@@ -154,21 +154,21 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       type="text"
                       placeholder="Nama DAS / Lokasi"
                       value={data.site.channelName}
-                      onChange={(e) => handleSiteChange({...data.site, channelName: e.target.value})}
+                      onChange={(e) => handleSiteChange({ ...data.site, channelName: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
                       type="text"
                       placeholder="Kabupaten"
                       value={data.site.regency}
-                      onChange={(e) => handleSiteChange({...data.site, regency: e.target.value})}
+                      onChange={(e) => handleSiteChange({ ...data.site, regency: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
                       type="text"
                       placeholder="Kecamatan"
                       value={data.site.district}
-                      onChange={(e) => handleSiteChange({...data.site, district: e.target.value})}
+                      onChange={(e) => handleSiteChange({ ...data.site, district: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -185,7 +185,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       label="Populasi"
                       unit="jiwa"
                       value={data.population}
-                      onChange={(e) => setData({...data, population: parseFloat(e.target.value) || 0})}
+                      onChange={(e) => setData({ ...data, population: parseFloat(e.target.value) || 0 })}
                       placeholder="50000"
                       helpText="Jumlah penduduk"
                     />
@@ -193,7 +193,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       label="Std Domestik"
                       unit="L/org/hr"
                       value={data.domesticStandard}
-                      onChange={(e) => setData({...data, domesticStandard: parseFloat(e.target.value) || 0})}
+                      onChange={(e) => setData({ ...data, domesticStandard: parseFloat(e.target.value) || 0 })}
                       placeholder="80"
                       helpText="Kebutuhan per orang"
                     />
@@ -204,7 +204,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       label="Luas Pertanian"
                       unit="ha"
                       value={data.agricultureArea}
-                      onChange={(e) => setData({...data, agricultureArea: parseFloat(e.target.value) || 0})}
+                      onChange={(e) => setData({ ...data, agricultureArea: parseFloat(e.target.value) || 0 })}
                       placeholder="500"
                       helpText="Area pertanian"
                     />
@@ -212,7 +212,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       label="Irigasi"
                       unit="m³/s"
                       value={data.irrigationDemand}
-                      onChange={(e) => setData({...data, irrigationDemand: parseFloat(e.target.value) || 0})}
+                      onChange={(e) => setData({ ...data, irrigationDemand: parseFloat(e.target.value) || 0 })}
                       placeholder="0.5"
                       helpText="Kebutuhan irigasi"
                     />
@@ -259,40 +259,38 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
                 {/* Summary Metrics */}
                 <Card>
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 md:p-8 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"></div>
-                    
+                  <div className="bg-white border-b border-slate-200 p-6 md:p-8 relative overflow-hidden">
                     <div className="relative z-10">
-                      <h3 className="text-lg font-bold mb-6">Ringkasan Keseimbangan</h3>
-                      
+                      <h3 className="text-lg font-bold text-slate-800 mb-6">Ringkasan Keseimbangan</h3>
+
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
                           <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-black text-blue-100 uppercase">Rata-rata</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata</span>
                             <HelpTooltip content="Rata-rata keseimbangan bulanan" />
                           </div>
-                          <span className="text-2xl font-bold">{results.avgBalance}</span>
-                          <span className="text-xs text-blue-100 block">m³/s</span>
-                        </div>
-                        
-                        <div>
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-black text-blue-100 uppercase">Minimum</span>
-                            <HelpTooltip content="Keseimbangan terendah" />
-                          </div>
-                          <span className={`text-2xl font-bold ${parseFloat(results.minBalance) < 0 ? 'text-red-300' : 'text-green-300'}`}>
-                            {results.minBalance}
-                          </span>
-                          <span className="text-xs text-blue-100 block">m³/s</span>
+                          <span className="text-2xl font-black text-slate-900">{results.avgBalance}</span>
+                          <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                         </div>
 
                         <div>
                           <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-black text-blue-100 uppercase">Maksimum</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
+                            <HelpTooltip content="Keseimbangan terendah" />
+                          </div>
+                          <span className={`text-2xl font-black ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                            {results.minBalance}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500 block">m³/s</span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
                             <HelpTooltip content="Keseimbangan tertinggi" />
                           </div>
-                          <span className="text-2xl font-bold text-green-300">{results.maxBalance}</span>
-                          <span className="text-xs text-blue-100 block">m³/s</span>
+                          <span className="text-2xl font-black text-emerald-500">{results.maxBalance}</span>
+                          <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                         </div>
                       </div>
                     </div>

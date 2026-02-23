@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '@/services/api.service';
 import type { CalculationRecord } from '@/types/database.types';
 import { CalculationResult, CalculationType } from '@/types';
@@ -13,12 +13,19 @@ interface UseDatabaseReturn {
 }
 
 export const useDatabase = (): UseDatabaseReturn => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [calculations, setCalculations] = useState<CalculationRecord[]>([]);
+  const queryClient = useQueryClient();
 
-  const saveCalculation = async (result: CalculationResult): Promise<CalculationRecord | null> => {
-    setLoading(true);
-    try {
+  const { data: calculations = [], isLoading: isFetching, refetch } = useQuery({
+    queryKey: ['calculations'],
+    queryFn: async () => {
+      const response = await apiService.getCalculations();
+      if (response.error) throw new Error(response.error.message);
+      return response.data || [];
+    }
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (result: CalculationResult) => {
       const siteName = typeof result.inputs === 'object' && result.inputs !== null && 'site' in result.inputs
         ? (result.inputs.site as { channelName?: string })?.channelName || 'Unknown Site'
         : 'Unknown Site';
@@ -32,72 +39,40 @@ export const useDatabase = (): UseDatabaseReturn => {
         photo_url: result.photoUrl || null,
         notes: result.notes || null,
       });
-      
-      if (response.error) {
-        toast.error(response.error.message);
-        throw new Error(response.error.message);
-      }
-      
-      toast.success('Data berhasil disimpan');
-      if (response.data) {
-        setCalculations(prev => [response.data!, ...prev]);
-      }
+
+      if (response.error) throw new Error(response.error.message);
       return response.data;
-    } catch (error) {
+    },
+    onSuccess: () => {
+      toast.success('Data berhasil disimpan');
+      queryClient.invalidateQueries({ queryKey: ['calculations'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
       console.error('Error saving calculation:', error);
-      throw error;
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
-  const loadCalculations = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const response = await apiService.getCalculations();
-      if (response.error) {
-        console.error('Error loading calculations:', response.error);
-        setCalculations([]);
-        return;
-      }
-      setCalculations(response.data || []);
-    } catch (error) {
-      console.error('Error loading calculations:', error);
-      setCalculations([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteCalculation = async (id: string): Promise<void> => {
-    setLoading(true);
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const response = await apiService.deleteCalculation(id);
-      
-      if (response.error) {
-        toast.error(response.error.message);
-        throw new Error(response.error.message);
-      }
-      
+      if (response.error) throw new Error(response.error.message);
+    },
+    onSuccess: () => {
       toast.success('Data berhasil dihapus');
-      setCalculations(prev => prev.filter(calc => calc.id !== id));
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['calculations'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
       console.error('Error deleting calculation:', error);
-      throw error;
-    } finally {
-      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    void loadCalculations();
-  }, []);
+  });
 
   return {
     calculations,
-    saveCalculation,
-    deleteCalculation,
-    loadCalculations,
-    loading,
+    saveCalculation: async (result) => saveMutation.mutateAsync(result),
+    deleteCalculation: async (id) => deleteMutation.mutateAsync(id),
+    loadCalculations: async () => { await refetch(); },
+    loading: isFetching || saveMutation.isPending || deleteMutation.isPending,
   };
 };

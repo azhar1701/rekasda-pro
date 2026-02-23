@@ -19,15 +19,15 @@ interface Props {
 }
 
 export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
-  const [inputs, setInputs] = useState<RationalInputs>({ 
+  const [inputs, setInputs] = useState<RationalInputs>({
     site: { channelName: '', regency: '', district: '', village: '' },
-    runoffCoefficient: 0.70, 
-    rainfallDesign: 120, 
+    runoffCoefficient: 0.70,
+    rainfallDesign: 120,
     area: 0.5,
     flowLength: 0.8,
     catchmentSlope: 0.01
   });
-  
+
   const [results, setResults] = useState<any>(null);
   const [showSlopeCalculator, setShowSlopeCalculator] = useState<boolean>(false);
 
@@ -66,7 +66,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
             {/* Quick Actions */}
             <Section title="Tindakan Cepat">
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={loadPilotData}
                   className="flex-1 px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-bold text-sm flex items-center justify-center gap-2"
                 >
@@ -93,45 +93,45 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                     {/* Grid for area and rainfall */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <SNITooltipLabel 
-                          label="Luas DAS (A)" 
+                        <SNITooltipLabel
+                          label="Luas DAS (A)"
                           tooltip="Luas Daerah Aliran Sungai dalam km². Metode Rasional disarankan untuk DAS < 5000 Ha (50 km²)."
                           sniRef="SNI 2415:2016"
                         />
-                        <InputGroup id="rational-area" label="" unit="km²" value={inputs.area} onChange={e => setInputs({...inputs, area: parseFloat(e.target.value)||0})} placeholder="0.50" />
+                        <InputGroup id="rational-area" label="" unit="km²" value={inputs.area} onChange={e => setInputs({ ...inputs, area: parseFloat(e.target.value) || 0 })} placeholder="0.50" />
                       </div>
                       <div>
-                        <SNITooltipLabel 
-                          label="Hujan Rencana" 
+                        <SNITooltipLabel
+                          label="Hujan Rencana"
                           tooltip="Curah hujan 24 jam untuk periode ulang tertentu (2-100 tahun)."
                           sniRef="SNI 2415:2016"
                         />
-                        <InputGroup id="rational-rainfall" label="" unit="mm" value={inputs.rainfallDesign} onChange={e => setInputs({...inputs, rainfallDesign: parseFloat(e.target.value)||0})} placeholder="100" />
+                        <InputGroup id="rational-rainfall" label="" unit="mm" value={inputs.rainfallDesign} onChange={e => setInputs({ ...inputs, rainfallDesign: parseFloat(e.target.value) || 0 })} placeholder="100" />
                       </div>
                     </div>
-                    
+
                     {/* Flow Length */}
                     <div>
-                      <SNITooltipLabel 
-                        label="Panjang Alur Aliran (L)" 
+                      <SNITooltipLabel
+                        label="Panjang Alur Aliran (L)"
                         tooltip="Panjang saluran utama dari titik terjauh hingga outlet."
                       />
-                      <InputGroup id="rational-flow-length" label="" unit="km" value={inputs.flowLength} onChange={e => setInputs({...inputs, flowLength: parseFloat(e.target.value)||0})} placeholder="1.5" />
+                      <InputGroup id="rational-flow-length" label="" unit="km" value={inputs.flowLength} onChange={e => setInputs({ ...inputs, flowLength: parseFloat(e.target.value) || 0 })} placeholder="1.5" />
                     </div>
-                    
+
                     {/* Slope with calculator */}
                     <div>
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
-                          <SNITooltipLabel 
-                            label="Kemiringan Lahan (S)" 
+                          <SNITooltipLabel
+                            label="Kemiringan Lahan (S)"
                             tooltip="Rata-rata kemiringan DAS dalam m/m. Mempengaruhi waktu konsentrasi dan kecepatan aliran."
                           />
-                          <InputGroup id="rational-slope" label="" unit="m/m" value={inputs.catchmentSlope} onChange={e => setInputs({...inputs, catchmentSlope: parseFloat(e.target.value)||0})} placeholder="0.005" />
+                          <InputGroup id="rational-slope" label="" unit="m/m" value={inputs.catchmentSlope} onChange={e => setInputs({ ...inputs, catchmentSlope: parseFloat(e.target.value) || 0 })} placeholder="0.005" />
                         </div>
-                        <button 
+                        <button
                           onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                          className="mt-6 p-3 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200 hover:border-teal-300" 
+                          className="mt-6 p-3 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200 hover:border-teal-300"
                           title="Slope Calculator"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,8 +141,8 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                       </div>
                       {showSlopeCalculator && (
                         <div className="mt-3">
-                          <SlopeCalculator 
-                            onSlopeCalculated={(slope) => setInputs({...inputs, catchmentSlope: slope})}
+                          <SlopeCalculator
+                            onSlopeCalculated={(slope) => setInputs({ ...inputs, catchmentSlope: slope })}
                             onClose={() => setShowSlopeCalculator(false)}
                           />
                         </div>
@@ -151,14 +151,14 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
 
                     {/* Runoff Coefficient */}
                     <div>
-                      <SNITooltipLabel 
-                        label="Koefisien Pengaliran (C)" 
+                      <SNITooltipLabel
+                        label="Koefisien Pengaliran (C)"
                         tooltip="Nilai referensi berdasarkan Permen PU No. 12/PRT/M/2014 & Suripin (2004). Rentang: 0.15 (hutan) - 0.95 (aspal)."
                         sniRef="Permen PU 12/2014"
                       />
                       <RunoffCoefficientInput
                         value={inputs.runoffCoefficient}
-                        onChange={(value: number | null) => setInputs({...inputs, runoffCoefficient: value || 0.70})}
+                        onChange={(value: number | null) => setInputs({ ...inputs, runoffCoefficient: value || 0.70 })}
                         required={true}
                       />
                     </div>
@@ -174,31 +174,29 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
               <div className="animate-fade-in space-y-6">
                 {/* Result Card */}
                 <Card className="overflow-hidden">
-                  {/* Header with gradient */}
-                  <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 md:p-8 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"></div>
-                    
+                  {/* Header */}
+                  <div className="bg-white border-b border-slate-200 p-6 md:p-8 relative overflow-hidden">
                     <div className="relative z-10">
                       {/* Title */}
                       <div className="mb-6">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/80">Debit Banjir Rencana (Q)</span>
+                          <span className="text-xs font-bold text-slate-500 text-slate-500 uppercase tracking-wider">Debit Banjir Rencana (Q)</span>
                           <HelpTooltip content="Debit puncak dari peristiwa hujan rancangan" />
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <svg className="w-4 h-4 text-teal-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                        <div className="flex items-center gap-2 flex-wrap text-slate-500">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
                           <SNIBadge standard="SNI 2415:2016" description="Metode Rasional sesuai SNI 2415:2016" />
                         </div>
                       </div>
-                      
+
                       {/* Main value */}
                       <div className="flex items-baseline">
-                        <h3 className="text-5xl md:text-7xl font-bold tracking-tighter text-white">{results.Discharge}</h3>
-                        <span className="text-lg md:text-2xl font-bold text-emerald-100 ml-2 md:ml-3">m³/s</span>
+                        <h3 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">{results.Discharge}</h3>
+                        <span className="text-lg md:text-2xl font-bold text-slate-500 ml-2 md:ml-3">m³/s</span>
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Details Section */}
                   <div className="p-6 md:p-8">
                     {/* Secondary metrics */}
@@ -250,8 +248,8 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                     </div>
 
                     {/* SNI Compliance Footer */}
-                    <SNIFooter 
-                      standard="SNI 2415:2016" 
+                    <SNIFooter
+                      standard="SNI 2415:2016"
                       title="Tata Cara Perhitungan Debit Banjir Rencana"
                     />
                   </div>

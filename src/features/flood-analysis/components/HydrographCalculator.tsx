@@ -135,17 +135,17 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
 
   return (
     <div className="flex flex-col lg:flex-row gap-0">
-      
+
       {/* LEFT: Input Section */}
       <div className="space-y-4 w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${leftWidth}%` : '100%' }}>
-        
+
         {/* Collapsible: Data Pilot & Location */}
         <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={false}>
           <div className="space-y-4">
             <PilotDataLoader
               method={method === 'nakayasu' ? 'NAKAYASU' : method === 'gamma1' ? 'GAMMA1' : 'SNYDER'}
-              onLoadRational={() => {}}
-              onLoadModifiedRational={() => {}}
+              onLoadRational={() => { }}
+              onLoadModifiedRational={() => { }}
               onLoadNakayasu={handleLoadPilot}
               onLoadGamma1={handleLoadGamma1}
               onLoadSnyder={handleLoadSnyder}
@@ -153,10 +153,10 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
             <LocationIdentity onLocationChange={setLocationData} />
           </div>
         </Collapsible>
-        
+
         {/* Collapsible: Rainfall Frequency Analysis */}
-        <Collapsible 
-          title="Analisis Frekuensi Hujan" 
+        <Collapsible
+          title="Analisis Frekuensi Hujan"
           defaultOpen={false}
           badge={(method === 'nakayasu' && nakayasuInputs.Ro > 0) || (method === 'gamma1' && gamma1Inputs.Ro > 0) || (method === 'snyder' && snyderInputs.Ro > 0) ? '✓ Terisi' : undefined}
         >
@@ -168,7 +168,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
             }}
           />
         </Collapsible>
-        
+
         {/* Collapsible: Method Selection */}
         <Collapsible title="Pilih Metode HSS" defaultOpen={true}>
           <div className="space-y-4">
@@ -179,9 +179,9 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
               title="Pilih Metode HSS"
               columns={1}
             />
-            
+
             <HSSFormulaDisplay method={method} />
-            
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
               <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-blue-800">
@@ -193,7 +193,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
             </div>
           </div>
         </Collapsible>
-        
+
         {/* Collapsible: Parameter Input */}
         <Collapsible title="Parameter Input" defaultOpen={true}>
           {/* Section A: Geometri DAS */}
@@ -268,7 +268,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
             )}
           </div>
         </Collapsible>
-        
+
         {/* Calculate Button */}
         <button
           onClick={handleCalculate}
@@ -305,13 +305,11 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
                 title="Debit Puncak (Qp)"
                 value={result.Qp}
                 unit="m³/s"
-                gradient="from-blue-500 to-blue-600"
               />
               <ResultCard
                 title="Waktu Puncak (Tp)"
                 value={result.Tp}
                 unit="jam"
-                gradient="from-purple-500 to-purple-600"
               />
             </div>
 
@@ -324,26 +322,26 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={result.hydrograph}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis 
-                    dataKey="time" 
+                  <XAxis
+                    dataKey="time"
                     label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5 }}
                     stroke="#64748b"
                     tick={{ fontSize: 12 }}
                   />
-                  <YAxis 
+                  <YAxis
                     label={{ value: 'Debit (m³/s)', angle: -90, position: 'insideLeft' }}
                     stroke="#64748b"
                     tick={{ fontSize: 12 }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px' }}
                     formatter={(value: number) => [`${value.toFixed(2)} m³/s`, 'Debit']}
                     labelFormatter={(label) => `Waktu: ${label} jam`}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="discharge" 
-                    stroke="#3b82f6" 
+                  <Line
+                    type="monotone"
+                    dataKey="discharge"
+                    stroke="#3b82f6"
                     strokeWidth={2}
                     dot={false}
                     activeDot={{ r: 6 }}
@@ -386,13 +384,13 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onCo
               )}
 
               {/* Card B: Total Volume */}
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm p-4 text-white">
-                <h3 className="text-xs font-bold uppercase tracking-wider opacity-90 mb-2">💧 Total Volume Banjir</h3>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">💧 Total Volume Banjir</h3>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-3xl font-black">{(calculateVolume() / 1000000).toFixed(2)}</div>
-                  <div className="text-sm font-bold opacity-80">× 10⁶ m³</div>
+                  <div className="text-3xl font-black text-slate-900">{(calculateVolume() / 1000000).toFixed(2)}</div>
+                  <div className="text-sm font-bold text-slate-500">× 10⁶ m³</div>
                 </div>
-                <p className="text-xs opacity-75 mt-2">Untuk desain kolam retensi</p>
+                <p className="text-xs text-slate-400 mt-2">Untuk desain kolam retensi</p>
               </div>
             </div>
 

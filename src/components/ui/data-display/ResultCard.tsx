@@ -5,30 +5,28 @@ interface ResultCardProps {
   value: number;
   unit: string;
   icon?: React.ReactNode;
-  gradient?: string;
   description?: string;
 }
 
-export const ResultCard: React.FC<ResultCardProps> = ({ 
-  title, 
-  value, 
-  unit, 
+export const ResultCard: React.FC<ResultCardProps> = ({
+  title,
+  value,
+  unit,
   icon,
-  gradient = 'from-blue-500 to-blue-600',
-  description 
+  description
 }) => {
   return (
-    <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-6 text-white shadow-md`}>
-      <div className="flex items-center gap-2 mb-3">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-2 mb-3 text-slate-500">
         {icon}
-        <h3 className="text-sm font-bold uppercase tracking-wide opacity-90">{title}</h3>
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{title}</h3>
       </div>
       <div className="flex items-baseline gap-2">
-        <div className="text-5xl font-black">{value.toFixed(2)}</div>
-        <div className="text-lg font-bold opacity-80">{unit}</div>
+        <div className="text-5xl font-black text-slate-900">{value.toFixed(2)}</div>
+        <div className="text-lg font-bold text-slate-500">{unit}</div>
       </div>
       {description && (
-        <p className="text-xs opacity-75 mt-2">{description}</p>
+        <p className="text-xs text-slate-400 mt-2">{description}</p>
       )}
     </div>
   );
