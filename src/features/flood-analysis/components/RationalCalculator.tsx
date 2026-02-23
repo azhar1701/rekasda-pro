@@ -6,7 +6,7 @@ import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { Button } from '@/components/ui/forms/Button';
 import { CardLegacy as Card, CardContent } from '@/components/ui/layout/CardNew';
 import { PageHeader, PageContent, Section } from '@/components/ui/layout/Layout';
-import { FlowInsight } from './FlowInsight';
+
 import { SiteIdentityForm } from '@/components/common/SiteIdentityForm';
 import { SlopeCalculator } from '@/features/channel-analysis/components/SlopeCalculator';
 import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
@@ -172,9 +172,6 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
           <div className="lg:col-span-2 space-y-6">
             {results && (
               <div className="animate-fade-in space-y-6">
-                {/* Flow Insight */}
-                <FlowInsight discharge={parseFloat(results.Discharge)} type="RATIONAL" label="Estimasi Debit Banjir" />
-                
                 {/* Result Card */}
                 <Card className="overflow-hidden">
                   {/* Header with gradient */}

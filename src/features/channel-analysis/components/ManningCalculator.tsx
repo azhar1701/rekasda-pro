@@ -6,7 +6,7 @@ import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { Button } from '@/components/ui/forms/Button';
 import { Alert } from '@/components/ui/feedback/Alert';
 import { ChannelVisualizer } from './ChannelVisualizer';
-import { FlowInsight } from '@/features/flood-analysis/components/FlowInsight';
+
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
@@ -385,9 +385,6 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     </div>
                   </div>
                 </div>
-
-                {/* Flow Insight */}
-                <FlowInsight discharge={parseFloat(results.Discharge)} velocity={parseFloat(results.Velocity)} type="MANNING" />
 
                 {/* Detailed Results */}
                 <div className="glass-card rounded-xl shadow-lg border border-white/20 p-4 sm:p-6">
