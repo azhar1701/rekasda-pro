@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { consultHydrologist } from '@/services/geminiService';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 
 interface Props {

@@ -1,0 +1,13 @@
+src/components/auth/UserNav.tsx(9,51): error TS2304: Cannot find name 'useState'.
+src/components/layout/MainLayout.tsx(84,14): error TS2304: Cannot find name 'UserNav'.
+src/components/ui/index.ts(1,10): error TS2305: Module '"./Button"' has no exported member 'default'.
+src/components/ui/index.ts(2,10): error TS2305: Module '"./Card"' has no exported member 'default'.
+src/features/ai-consultant/GeminiConsultant.tsx(5,16): error TS6133: 'CardContent' is declared but its value is never read.
+src/features/ai-consultant/GeminiConsultant.tsx(5,29): error TS6133: 'CardHeader' is declared but its value is never read.
+src/features/ai-consultant/GeminiConsultant.tsx(5,41): error TS6133: 'CardTitle' is declared but its value is never read.
+src/features/flood-analysis/components/RationalCalculator.tsx(67,9): error TS2322: Type '{ title: string; subtitle: string; icon: Element; extra: false | Element; }' is not assignable to type 'IntrinsicAttributes & PageHeaderProps'.
+  Property 'extra' does not exist on type 'IntrinsicAttributes & PageHeaderProps'.
+src/features/flood-analysis/components/RationalCalculator.tsx(269,31): error TS2322: Type '{ location: GeoLocationData | undefined; channelName?: string | undefined; regency?: string | undefined; district?: string | undefined; village?: string | undefined; photoUrl?: string; }' is not assignable to type 'SiteIdentity'.
+  Types of property 'channelName' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.

@@ -64,7 +64,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
         title="Metode Rasional"
         subtitle="Perhitungan debit banjir menggunakan metode rasional untuk DAS kecil"
         icon={<span className="text-2xl">☔</span>}
-        extra={
+        action={
           isSupabaseEnabled() && (
             <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-white/20 shadow-sm ml-auto">
               <button
@@ -266,7 +266,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                             }
                             onSave(CalculationType.RATIONAL, {
                               ...inputs,
-                              site: { ...inputs.site, location: currentLoc }
+                              site: { channelName: inputs.site?.channelName || '', regency: inputs.site?.regency || '', district: inputs.site?.district || '', village: inputs.site?.village || '', location: currentLoc }
                             }, rationalResults);
                           } finally {
                             setIsSaving(false);

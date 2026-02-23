@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Menu, X, Droplets, BarChart3, Waves, Clock, Bot, Map } from 'lucide-react';
+import { UserNav } from '@/components/auth/UserNav';
 
 interface MainLayoutProps {
   children: ReactNode;

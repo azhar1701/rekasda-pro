@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { PageHeader, PageContent, Section } from '@/components/ui/layout/Layout';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
 import { supabase } from '@/lib/api/supabase';

@@ -1,3 +1,4 @@
+// @ts-nocheck - Deno runtime, not compiled by project tsc
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -29,7 +30,7 @@ serve(async (req) => {
       JSON.stringify(results),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
-  } catch (error) {
+  } catch (error: any) {
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },

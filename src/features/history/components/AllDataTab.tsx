@@ -1,4 +1,11 @@
+import React, { useState, useEffect } from 'react';
+import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '@/services/allCalculationsService';
+import { HistoryMap } from './HistoryMap';
+import { CalculationType, ChannelShape } from '@/types/types';
+import { manningPilotData } from '@/data/manningPilotData';
+import { rationalPilotData } from '@/data/floodPilotData';
 import { waterBalancePilotData } from '@/data/waterBalancePilotData';
+import { Button } from '@/components/ui/Button';
 import { apiService } from '@/services/api.service';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 
