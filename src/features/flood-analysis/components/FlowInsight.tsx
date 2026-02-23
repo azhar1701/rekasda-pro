@@ -34,7 +34,7 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
     ? 0
     : (safeDischarge > 5
       ? Math.max(2.5, 6 / Math.max(flowSpeed, 0.8))
-      : Math.max(3.5, 8 / Math.max(flowSpeed, 0.8)));
+      : Math.max(4, 8 / Math.max(flowSpeed, 0.8)));
 
   // Determine status badge
   const getStatusLabel = (): { text: string; color: string } => {
@@ -151,6 +151,13 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
                 animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
               }}
             />
+
+            {/* Glowing particle indicator (Option B) - small dot moving left->right */}
+            {safeDischarge > 0 && (
+              <circle cx={5} cy={20} r={3.2} fill="#06b6d4" filter="url(#glowFilter)">
+                <animate attributeName="cx" from="5" to="95" dur={`${animationDuration}s`} repeatCount="indefinite" calcMode="linear" />
+              </circle>
+            )}
           </svg>
 
           {/* ============================================
