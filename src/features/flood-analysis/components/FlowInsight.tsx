@@ -60,145 +60,155 @@ export const FlowInsight: React.FC<FlowInsightProps> = ({ discharge, velocity, l
       {/* ============================================
           FLOW VISUALIZATION - SVG Path Animation
           ============================================ */}
-      <div className="relative h-32 bg-slate-800/60 rounded-xl border border-slate-700/80 flex items-center justify-between px-8 overflow-hidden backdrop-blur-sm">
-        {/* Background gradient effect - more visible */}
+      <div className="relative w-full h-32 bg-slate-800/60 rounded-xl border border-slate-700/80 flex flex-col items-center justify-center overflow-hidden backdrop-blur-sm" style={{ minHeight: '140px' }}>
+        {/* Background gradient effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/5 via-cyan-950/5 to-emerald-950/5 pointer-events-none" />
 
-        {/* SVG Flow Animation */}
-        <svg
-          viewBox="0 0 600 100"
-          className="absolute inset-0 w-full h-full"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.4" />
-            </linearGradient>
-            
-            <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-            </filter>
-
-            <marker
-              id="flowArrow"
-              markerWidth="8"
-              markerHeight="8"
-              refX="5"
-              refY="4"
-              orient="auto"
-            >
-              <polygon points="0 0, 8 4, 0 8" fill="#06b6d4" opacity="0.7" />
-            </marker>
-          </defs>
-
-          {/* Background stationary line - subtle reference */}
-          <line
-            x1="50"
-            y1="50"
-            x2="550"
-            y2="50"
-            stroke="#1e293b"
-            strokeWidth="1"
-            opacity="0.6"
-            strokeDasharray="4,4"
-          />
-
-          {/* Animated flowing line with glow - Main Animation */}
-          <line
-            x1="50"
-            y1="50"
-            x2="550"
-            y2="50"
-            stroke="url(#flowGradient)"
-            strokeWidth="4"
-            filter="url(#glowFilter)"
-            strokeLinecap="round"
-            strokeDasharray="40,20"
-            markerEnd="url(#flowArrow)"
-            style={{
-              animation: `flowPathAnimation ${Math.max(2.5, 6 / flowSpeed)}s linear infinite`,
-              animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
+        {/* Main Flow Container - Flexbox aligned */}
+        <div className="relative w-full flex items-center justify-between px-8 z-20" style={{ height: '80px' }}>
+          {/* SVG Drawing Layer - Positioned absolutely at center */}
+          <svg
+            className="absolute inset-0 w-full h-full"
+            style={{ 
+              left: 0, 
+              top: 0,
+              height: '80px',
+              margin: 'auto 0'
             }}
-          />
+            viewBox="0 0 100 40"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="flowGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.5" />
+                <stop offset="50%" stopColor="#06b6d4" stopOpacity="1" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.5" />
+              </linearGradient>
+              
+              <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
+              </filter>
 
-          {/* Secondary animated pulse line for extra visual effect */}
-          <line
-            x1="50"
-            y1="50"
-            x2="550"
-            y2="50"
-            stroke="#06b6d4"
-            strokeWidth="2"
-            strokeDasharray="40,20"
-            opacity="0.3"
-            style={{
-              animation: `flowPathAnimationDelay ${Math.max(2.5, 6 / flowSpeed)}s linear infinite`,
-              animationDelay: `${Math.max(2.5, 6 / flowSpeed) * 0.33}s`,
-              animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
-            }}
-          />
-        </svg>
+              <marker
+                id="flowArrow"
+                markerWidth="6"
+                markerHeight="6"
+                refX="4"
+                refY="3"
+                orient="auto"
+              >
+                <polygon points="0 0, 6 3, 0 6" fill="#06b6d4" opacity="0.8" />
+              </marker>
+            </defs>
 
-        {/* ============================================
-            NODE ELEMENTS (Positioned absolutely)
-            ============================================ */}
-        
-        {/* INLET Node - Left Side */}
-        <div
-          className="relative z-20 flex flex-col items-center"
-          onMouseEnter={() => setHoveredNode('inlet')}
-          onMouseLeave={() => setHoveredNode(null)}
-        >
-          {/* Glow effect on hover */}
-          {hoveredNode === 'inlet' && (
-            <div className="absolute -inset-5 bg-emerald-500/25 rounded-full blur-xl animate-pulse pointer-events-none" />
-          )}
+            {/* Background stationary dashed line */}
+            <line
+              x1="5"
+              y1="20"
+              x2="95"
+              y2="20"
+              stroke="#1e293b"
+              strokeWidth="0.8"
+              opacity="0.5"
+              strokeDasharray="2,2"
+            />
+
+            {/* Primary animated flowing line */}
+            <line
+              x1="5"
+              y1="20"
+              x2="95"
+              y2="20"
+              stroke="url(#flowGradient)"
+              strokeWidth="2.5"
+              filter="url(#glowFilter)"
+              strokeLinecap="round"
+              strokeDasharray="6,3"
+              markerEnd="url(#flowArrow)"
+              style={{
+                animation: `flowPathAnimation ${Math.max(2.5, 6 / flowSpeed)}s linear infinite`,
+                animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
+              }}
+            />
+
+            {/* Secondary pulse line for depth effect */}
+            <line
+              x1="5"
+              y1="20"
+              x2="95"
+              y2="20"
+              stroke="#06b6d4"
+              strokeWidth="1.2"
+              strokeDasharray="6,3"
+              opacity="0.2"
+              style={{
+                animation: `flowPathAnimationDelay ${Math.max(2.5, 6 / flowSpeed)}s linear infinite`,
+                animationDelay: `${Math.max(2.5, 6 / flowSpeed) * 0.33}s`,
+                animationPlayState: safeDischarge > 0 ? 'running' : 'paused',
+              }}
+            />
+          </svg>
+
+          {/* ============================================
+              NODES LAYER - Flex positioned above SVG
+              ============================================ */}
           
-          {/* Node circle - Dashed border, green accent */}
-          <div className="relative w-13 h-13 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-dashed border-emerald-500/70 flex items-center justify-center cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_16px_rgba(16,185,129,0.4)] transition-all duration-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-            {type === 'RATIONAL' ? (
-              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" />
-              </svg>
+          {/* INLET Node - Left Side */}
+          <div
+            className="relative z-20 flex flex-col items-center"
+            onMouseEnter={() => setHoveredNode('inlet')}
+            onMouseLeave={() => setHoveredNode(null)}
+          >
+            {/* Glow effect on hover */}
+            {hoveredNode === 'inlet' && (
+              <div className="absolute -inset-5 bg-emerald-500/25 rounded-full blur-xl animate-pulse pointer-events-none" />
             )}
+            
+            {/* Node circle */}
+            <div className="relative w-13 h-13 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-dashed border-emerald-500/70 flex items-center justify-center cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_16px_rgba(16,185,129,0.4)] transition-all duration-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]" style={{ flex: '0 0 auto' }}>
+              {type === 'RATIONAL' ? (
+                <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" />
+                </svg>
+              )}
+            </div>
           </div>
-          
-          {/* Label with better styling */}
-          <span className="text-xs font-bold text-slate-300 mt-2.5 uppercase tracking-wider">
-            {type === 'RATIONAL' ? 'DAS / Hujan' : 'Inlet'}
-          </span>
-        </div>
 
-        {/* OUTLET Node - Right Side */}
-        <div
-          className="relative z-20 flex flex-col items-center"
-          onMouseEnter={() => setHoveredNode('outlet')}
-          onMouseLeave={() => setHoveredNode(null)}
-        >
-          {/* Glow effect on hover */}
-          {hoveredNode === 'outlet' && (
-            <div className="absolute -inset-5 bg-cyan-500/25 rounded-xl blur-xl animate-pulse pointer-events-none" />
-          )}
-          
-          {/* Node square - Solid border, cyan accent */}
-          <div className="relative w-14 h-14 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-solid border-cyan-400/80 flex items-center justify-center cursor-pointer hover:border-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:scale-110 transition-all duration-300 shadow-[0_0_16px_rgba(34,211,238,0.3)]">
-            {/* Double chevron icon with smooth stroke */}
-            <svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-              <path strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
+          {/* OUTLET Node - Right Side */}
+          <div
+            className="relative z-20 flex flex-col items-center"
+            onMouseEnter={() => setHoveredNode('outlet')}
+            onMouseLeave={() => setHoveredNode(null)}
+          >
+            {/* Glow effect on hover */}
+            {hoveredNode === 'outlet' && (
+              <div className="absolute -inset-5 bg-cyan-500/25 rounded-xl blur-xl animate-pulse pointer-events-none" />
+            )}
+            
+            {/* Node square */}
+            <div className="relative w-14 h-14 rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-solid border-cyan-400/80 flex items-center justify-center cursor-pointer hover:border-cyan-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:scale-110 transition-all duration-300 shadow-[0_0_16px_rgba(34,211,238,0.3)]" style={{ flex: '0 0 auto' }}>
+              <svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                <path strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
-          
-          {/* Label with better styling */}
-          <span className="text-xs font-bold text-slate-300 mt-2.5 uppercase tracking-wider">
-            Saluran Utama
-          </span>
         </div>
+      </div>
+
+      {/* ============================================
+          LABELS SECTION - Node labels below
+          ============================================ */}
+      <div className="relative w-full flex items-center justify-between px-8 mt-3 z-10">
+        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          {type === 'RATIONAL' ? 'DAS / Hujan' : 'Inlet'}
+        </span>
+        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          Saluran Utama
+        </span>
       </div>
 
       {/* ============================================
