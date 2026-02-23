@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { PageHeader, PageContent, Section } from '@/components/ui/layout/Layout';
 import { useHydraulicCalculations } from '@/hooks/useHydraulicCalculations';
-import { isSupabaseEnabled } from '@/lib/api/supabase';
 
 import { SiteIdentityForm } from '@/components/common/SiteIdentityForm';
 import { SlopeCalculator } from '@/features/channel-analysis/components/SlopeCalculator';
@@ -22,7 +21,6 @@ interface Props {
 
 export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   const { calculateRationalMethod, rationalResults, isCalculating: isHookCalculating, error: calcError } = useHydraulicCalculations();
-  const [useCloud, setUseCloud] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [inputs, setInputs] = useState<RationalInputs>({
     site: { channelName: '', regency: '', district: '', village: '' },
@@ -52,10 +50,10 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
 
   useEffect(() => {
     const runCalc = async () => {
-      await calculateRationalMethod(inputs, useCloud);
+      await calculateRationalMethod(inputs);
     };
     runCalc();
-  }, [inputs, useCloud, calculateRationalMethod]);
+  }, [inputs, calculateRationalMethod]);
 
   return (
     <div className="space-y-8">
@@ -64,24 +62,6 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
         title="Metode Rasional"
         subtitle="Perhitungan debit banjir menggunakan metode rasional untuk DAS kecil"
         icon={<span className="text-2xl">☔</span>}
-        action={
-          isSupabaseEnabled() && (
-            <div className="flex items-center gap-2 bg-white/50 p-1 rounded-full border border-white/20 shadow-sm ml-auto">
-              <button
-                onClick={() => setUseCloud(false)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${!useCloud ? 'bg-primary-600 text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'}`}
-              >
-                Local
-              </button>
-              <button
-                onClick={() => setUseCloud(true)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${useCloud ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'}`}
-              >
-                Cloud
-              </button>
-            </div>
-          )
-        }
       />
 
       <PageContent>

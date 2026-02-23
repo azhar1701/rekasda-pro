@@ -8,7 +8,6 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/feedback/Alert';
 import { ChannelVisualizer } from './ChannelVisualizer';
 import { useHydraulicCalculations } from '@/hooks/useHydraulicCalculations';
-import { isSupabaseEnabled } from '@/lib/api/supabase';
 
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { SlopeCalculator } from './SlopeCalculator';
@@ -29,7 +28,6 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [, setLocationData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [useCloud, setUseCloud] = useState(false);
   const [inputs, setInputs] = useState<ManningInputs>({
     site: { channelName: '', regency: '', district: '', village: '' },
     shape: ChannelShape.TRAPEZOID,
@@ -201,11 +199,11 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   useEffect(() => {
     const runCalc = async () => {
       if (validate(inputs)) {
-        await calculateManningChannel(inputs, useCloud);
+        await calculateManningChannel(inputs);
       }
     };
     runCalc();
-  }, [inputs, useCloud, calculateManningChannel]);
+  }, [inputs, calculateManningChannel]);
 
   return (
     <div className="min-h-screen p-3 sm:p-6">
@@ -217,23 +215,6 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
             <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Analisis Saluran Manning</h1>
             <p className="text-xs sm:text-sm text-neutral-600 mt-1">Perhitungan kapasitas debit saluran terbuka • Rumus Manning</p>
           </div>
-
-          {isSupabaseEnabled() && (
-            <div className="flex items-center gap-2 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm">
-              <button
-                onClick={() => setUseCloud(false)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${!useCloud ? 'bg-primary-600 text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'}`}
-              >
-                Local
-              </button>
-              <button
-                onClick={() => setUseCloud(true)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${useCloud ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-500 hover:text-neutral-700'}`}
-              >
-                Cloud (Edge)
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Load Message Toast */}
