@@ -1,140 +1,116 @@
-# FloodDischargeCalculator - Layout Refactoring Guide
+# Flood Analysis Architecture Refactor
 
-## Perubahan yang Dilakukan
+## Overview
+Fundamental refactor to separate two distinct hydrological concepts:
+1. **Peak Discharge Analysis (Metode Empiris)** - Single Qp value
+2. **Hydrograph Analysis (Metode HSS)** - Time-series curve
 
-### 1. Import Changes
-```tsx
-// HAPUS
-import { Card } from './ui/Card';
-import { SiteIdentityForm } from './SiteIdentityForm';
-import { SiteIdentity } from '../types';
+## Architecture Changes
 
-// TAMBAH
-import { LocationIdentity } from './LocationIdentity';
+### New Component Structure
+```
+FloodAnalysisTab (Main Wrapper)
+├── PeakDischargeCalculator (Metode Empiris)
+│   ├── Rasional Standar (A ≤ 3 km²)
+│   ├── Haspers & Osugi (3-100 km²)
+│   ├── der Weduwen (3-100 km²)
+│   └── Melchior (A > 100 km²)
+└── HydrographCalculator (Metode HSS)
+    ├── HSS Nakayasu ✅
+    ├── HSS Gamma I (planned)
+    └── HSS Snyder (planned)
 ```
 
-### 2. State Changes
-```tsx
-// UBAH dari:
-const [locationData, setLocationData] = useState<SiteIdentity>({
-  channelName: '',
-  regency: '',
-  district: '',
-  village: ''
-});
+### UI/UX Improvements
 
-// MENJADI:
-const [locationData, setLocationData] = useState<any>(null);
-```
+#### Mode Selector
+Two-tab interface at the top:
+- **Debit Puncak (Metode Empiris)** - TrendingUp icon
+- **Hidrograf Banjir (Metode HSS)** - Activity icon
 
-### 3. Layout Structure - Main Grid
-```tsx
-// UBAH dari:
-<div className="grid grid-cols-1 lg:grid-cols-10 gap-6 pb-20">
-  <div className="lg:col-span-3 space-y-6">
-    <div className="lg:sticky lg:top-24 space-y-6">
+#### Peak Discharge Calculator
+- Method selector with area-based recommendations (CheckCircle2 badges)
+- Conditional inputs (L, S only for Modified Rational methods)
+- Large number card result (Qp in m³/s)
+- Parameter summary table
+- **NO LINE CHART** (conceptually different from hydrograph)
 
-// MENJADI:
-<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
-  <div className="lg:col-span-4">
-    <div className="sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2 space-y-6">
-```
+#### Hydrograph Calculator
+- Method selector (Nakayasu, Gamma I, Snyder)
+- HSS-specific inputs (Ro, Tg, Tr, Alpha, A, L)
+- Summary cards (Qp, Tp)
+- **RECHARTS LINE CHART** showing rising limb, peak, recession
+- Full time-series visualization
 
-### 4. Location Component
-```tsx
-// UBAH dari:
-<SiteIdentityForm value={locationData} onChange={setLocationData} />
+## Technical Implementation
 
-// MENJADI:
-<LocationIdentity onLocationChange={setLocationData} />
-```
+### Engine Functions Used
 
-### 5. Method Selector Card
-```tsx
-// UBAH dari:
-<Card>
-  <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+**Peak Discharge:**
+- `calculateRationalDischarge()` from `@/lib/engine/rationalMethod`
+- `calculateHaspersOsugi()` from `@/lib/engine/flood/modifiedRationalIndo`
+- `calculateDerWeduwen()` from `@/lib/engine/flood/modifiedRationalIndo`
+- `calculateMelchior()` from `@/lib/engine/flood/modifiedRationalIndo`
 
-// MENJADI:
-<div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-  <h3 className="text-sm font-bold text-slate-900 mb-3">Pilih Metode Perhitungan</h3>
-  <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
-    {/* buttons tetap sama */}
-  </div>
-</div>
-```
+**Hydrograph:**
+- `calculateHSSNakayasu()` from `@/lib/engine/flood`
+- Returns: `{ Qp, Tp, Tb, hydrograph: Array<{time, discharge}> }`
 
-### 6. Replace All Card Components
-Ganti semua `<Card title="..." className="bg-white">` dengan:
-```tsx
-<div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
-  <h3 className="text-sm font-bold text-slate-900 mb-4">{title}</h3>
-  {/* content */}
-</div>
-```
+### Type Safety
+- `HSSNakayasuInput` from `@/types/hydrology`
+- `HSSNakayasuOutput` from `@/types/hydrology`
+- Custom `Inputs` interface for Peak Discharge
 
-### 7. Right Panel Grid
-```tsx
-// UBAH dari:
-<div className="lg:col-span-7 space-y-6">
+### State Management
+- Separate state for each calculator
+- Shared inputs preserved when switching tabs (area, L)
+- Method-specific parameters reset on tab switch
 
-// MENJADI:
-<div className="lg:col-span-8 space-y-6">
-```
+## Files Modified
 
-### 8. KPI Cards Gap
-```tsx
-// UBAH dari:
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+### New Files
+- `src/features/flood-analysis/components/FloodAnalysisTab.tsx` - Main wrapper
+- `src/features/flood-analysis/components/PeakDischargeCalculator.tsx` - Empirical methods
+- `src/features/flood-analysis/components/HydrographCalculator.tsx` - HSS methods
 
-// MENJADI:
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-```
+### Modified Files
+- `src/App.tsx` - Import FloodAnalysisTab instead of FloodDischargeCalculator
+- `src/features/flood-analysis/index.ts` - Export new components
 
-### 9. handleSaveToDB Function
-```tsx
-// UBAH dari:
-const inputs = method === 'RATIONAL' 
-  ? { ...rationalInputs, site: locationData } 
-  : { ...nakayasuInputs, site: locationData };
+### Deprecated Files
+- `src/features/flood-analysis/components/FloodDischargeCalculator.tsx` - Can be removed after testing
 
-// MENJADI:
-const inputs = method === 'RATIONAL' 
-  ? { ...rationalInputs, location: locationData } 
-  : { ...nakayasuInputs, location: locationData };
+## SNI Compliance
 
-// DAN UBAH:
-const projectName = window.prompt('Masukkan Nama Proyek/Lokasi:');
+### Peak Discharge Methods
+- **Rasional Standar**: SNI 2415:2016 Pasal 5.2
+- **Modified Rational**: Sosrodarsono "Hidrologi untuk Pengairan"
+- Area constraints enforced with visual recommendations
 
-// MENJADI:
-const projectName = locationData?.channelName || window.prompt('Masukkan Nama Proyek/Lokasi:');
+### HSS Methods
+- **Nakayasu**: SNI 2415:2016 Pasal 6.3
+- **Gamma I**: Planned (SNI 2415:2016)
+- **Snyder**: Planned (International standard)
 
-// DAN UBAH alert success:
-alert('Berhasil menyimpan perhitungan!');
-// MENJADI:
-alert('✓ Berhasil menyimpan perhitungan!');
-```
+## User Benefits
 
-## Summary Perubahan Layout
+1. **Conceptual Clarity**: No confusion between Qp calculation vs. hydrograph generation
+2. **Smart Recommendations**: CheckCircle2 badges guide method selection based on area
+3. **Appropriate Visualization**: Chart only shown for time-series data (HSS)
+4. **Professional UX**: Clean separation matches engineering workflow
+5. **Minimal Code**: Reuses existing engine functions, no duplication
 
-### Before (Old Layout):
-- Grid: 10 kolom (3 sidebar + 7 content)
-- Sidebar: `lg:sticky lg:top-24`
-- Menggunakan `<Card>` component
-- Menggunakan `<SiteIdentityForm>`
+## Next Steps
 
-### After (New Layout):
-- Grid: 12 kolom (4 sidebar + 8 content)
-- Sidebar: `sticky top-6 h-[calc(100vh-100px)] overflow-y-auto pr-2`
-- Menggunakan `<div>` dengan styling manual
-- Menggunakan `<LocationIdentity>`
-- Gap antar elemen lebih besar (gap-6)
-- Hierarki visual lebih jelas dengan title di setiap card
+1. ✅ Test new architecture in dev environment
+2. ⏳ Implement HSS Gamma I method
+3. ⏳ Implement HSS Snyder method
+4. ⏳ Remove deprecated FloodDischargeCalculator.tsx
+5. ⏳ Add unit tests for new components
+6. ⏳ Update user documentation
 
-## Keuntungan Layout Baru:
-1. ✅ Sidebar sticky dengan scroll independent
-2. ✅ Proporsi lebih baik (35% sidebar, 65% content)
-3. ✅ LocationIdentity lebih sederhana dan clean
-4. ✅ Tidak ada dependency ke Card component
-5. ✅ Hierarki visual lebih jelas
-6. ✅ Responsive dan mobile-friendly
+## Migration Notes
+
+**Breaking Changes**: None (backward compatible)
+**API Changes**: None (internal refactor only)
+**Data Migration**: Not required

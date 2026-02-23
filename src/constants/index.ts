@@ -1,5 +1,5 @@
 
-import { RoughnessMaterial, RunoffSurface } from './types';
+import { RoughnessMaterial, RunoffSurface } from '../types';
 
 export const MANNING_ROUGHNESS: RoughnessMaterial[] = [
   { name: 'Beton Halus (Finishing Sendok)', value: 0.013, category: 'Buatan' },

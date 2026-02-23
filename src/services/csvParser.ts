@@ -9,9 +9,9 @@ export class CSVParser {
     try {
       // Try multiple possible paths for the CSV file
       const possiblePaths = [
-        '/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
-        './docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
-        '/public/docs/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv'
+        '/data/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
+        './data/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv',
+        '/public/data/diskominfo-od_kode_wilayah_dan_nama_wilayah_desa_kelurahan_data.csv'
       ];
       
       let response: Response | null = null;
