@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
-import { Download, Calculator, Info, Activity, ArrowDownRight } from 'lucide-react';
+import { Download, Calculator, Info, Activity, ArrowDownRight, CheckCircle, AlertTriangle } from 'lucide-react';
 import { calculateFloodRouting } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
 import { HydroValidationError } from '@/features/embung/types/embung.types';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 
 // Default Data for Initialization
 const DEFAULT_HYDROGRAPH = [
@@ -34,9 +36,20 @@ const MOCK_STAGE_DISCHARGE = {
 
 export const RoutingAnalysisTab = () => {
     const [isCalculating, setIsCalculating] = useState(false);
+    const { hasilBanjir, isBanjirDirty } = useHydrologyStore();
+    const isAutoFilled = Boolean(hasilBanjir?.hidrograf?.length);
 
     // Form State
     const [hydrograph, setHydrograph] = useState(DEFAULT_HYDROGRAPH);
+
+    // Run Once to sync autofill
+    useEffect(() => {
+        if (isAutoFilled && hasilBanjir) {
+            setHydrograph(hasilBanjir.hidrograf.map(h => ({ time: h.time, inflow: h.inflow })));
+            setResultData(null);
+            setSummary(null);
+        }
+    }, [isAutoFilled, hasilBanjir]);
 
     // Result State
     const [resultData, setResultData] = useState<any[] | null>(null);
@@ -138,8 +151,8 @@ export const RoutingAnalysisTab = () => {
                                 <Button
                                     size="sm"
                                     onClick={handleCalculate}
-                                    disabled={isCalculating}
-                                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition-all"
+                                    disabled={isCalculating || Boolean(isAutoFilled && isBanjirDirty)}
+                                    className={`shadow-sm transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
                                 >
                                     {isCalculating ? (
                                         <div className="flex items-center gap-2">
@@ -156,37 +169,67 @@ export const RoutingAnalysisTab = () => {
                             </div>
                         </CardHeader>
 
-                        <CardContent className="flex-1 overflow-auto p-0 z-0 border border-slate-200 rounded-b-xl border-t-0 bg-white">
-                            <div className="w-full">
-                                {/* Table Header */}
-                                <div className="flex w-full sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 shadow-sm">
+                        <CardContent className="flex-1 overflow-auto p-0 z-0 border border-slate-200 rounded-b-xl border-t-0 bg-white flex flex-col">
+                            {isAutoFilled ? (
+                                <div className="p-4 bg-teal-50/50 border-b border-teal-100 shrink-0">
+                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-teal-200 shadow-sm">
+                                        <CheckCircle className="w-5 h-5 text-teal-500 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-bold text-teal-800">Auto-fill Aktif</p>
+                                            <p className="text-xs text-teal-600 mt-0.5 leading-relaxed">
+                                                Data Hidrograf Inflow tersinkronisasi otomatis dari Modul Banjir.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-amber-50/50 border-b border-amber-100 shrink-0">
+                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-amber-200 shadow-sm">
+                                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-bold text-amber-800">Data Inflow Belum Tersedia</p>
+                                            <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
+                                                Silakan lakukan perhitungan di Modul Banjir terlebih dahulu atau input manual di bawah ini.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="w-full flex-1 overflow-auto custom-scrollbar">
+                                <div className="flex w-full sticky top-0 z-10 bg-slate-50 border-y border-slate-200 text-xs font-semibold text-slate-600 shadow-sm">
                                     <div className="flex-none w-24 py-3 px-4 text-left">Waktu (Jam)</div>
                                     <div className="flex-1 py-3 px-4 text-right">Debit Inflow (m³/s)</div>
                                 </div>
 
-                                {/* Table Body */}
                                 <div className="w-full">
                                     {hydrograph.map((row, idx) => (
                                         <div key={idx} className="flex w-full items-center border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
                                             <div className="flex-none w-24 py-2.5 px-4 font-medium text-slate-600">
                                                 t = {row.time}
                                             </div>
-                                            <div className="flex-1 py-2 px-4">
-                                                <Input
-                                                    type="number"
-                                                    value={row.inflow}
-                                                    onChange={(e) => handleInflowChange(idx, e.target.value)}
-                                                    className="h-8 text-right text-sm font-medium focus-visible:ring-1 focus-visible:ring-teal-500 shadow-none border-slate-200"
-                                                />
+                                            <div className="flex-1 py-2 px-4 text-right">
+                                                {isAutoFilled ? (
+                                                    <span className="text-sm font-bold text-slate-700 pr-3">{row.inflow}</span>
+                                                ) : (
+                                                    <Input
+                                                        type="number"
+                                                        value={row.inflow}
+                                                        onChange={(e) => handleInflowChange(idx, e.target.value)}
+                                                        className="h-8 text-right text-sm font-medium focus-visible:ring-1 focus-visible:ring-teal-500 shadow-none border-slate-200"
+                                                    />
+                                                )}
                                             </div>
                                         </div>
                                     ))}
-                                    <button
-                                        onClick={handleAddTime}
-                                        className="w-full py-3 text-xs font-medium text-teal-600 hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
-                                    >
-                                        + Tambah Baris Waktu
-                                    </button>
+                                    {!isAutoFilled && (
+                                        <button
+                                            onClick={handleAddTime}
+                                            className="w-full py-3 text-xs font-medium text-teal-600 hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
+                                        >
+                                            + Tambah Baris Waktu
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -195,6 +238,7 @@ export const RoutingAnalysisTab = () => {
 
                 {/* KANAN: Visualisasi (Span 7) */}
                 <div className="lg:col-span-7 flex flex-col gap-4 min-h-0">
+                    <DependencyWarningBanner module="banjir" />
 
                     {/* 3 Summary Cards */}
                     <div className="grid grid-cols-3 gap-4 shrink-0">

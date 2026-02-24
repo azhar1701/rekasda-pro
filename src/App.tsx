@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Waves, CloudRain, Scale, Database, Sparkles, Droplets } from 'lucide-react';
+import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, CloudDrizzle, FileText } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
 import { FloodAnalysisTab } from '@/features/flood-analysis/components/FloodAnalysisTab';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
 import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
+import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
+import { MasterHidrologiTab } from '@/features/master-data/components/MasterHidrologiTab';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataTab } from '@/features/history/components/AllDataTab';
 import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
@@ -25,8 +27,10 @@ enum Tab {
   BANJIR = 'BANJIR',
   NERACA = 'NERACA',
   EMBUNG = 'EMBUNG',
+  MASTER = 'MASTER',
   HISTORY = 'HISTORY',
-  AI = 'AI'
+  AI = 'AI',
+  EXEC = 'EXEC'
 }
 
 const App: React.FC = () => {
@@ -120,6 +124,11 @@ const App: React.FC = () => {
       icon: <Droplets strokeWidth={2.5} className="w-5 h-5" />
     },
     {
+      tab: Tab.MASTER,
+      label: 'Stasiun',
+      icon: <CloudDrizzle strokeWidth={2.5} className="w-5 h-5" />
+    },
+    {
       tab: Tab.HISTORY,
       label: 'Data',
       icon: <Database strokeWidth={2.5} className="w-5 h-5" />
@@ -128,6 +137,11 @@ const App: React.FC = () => {
       tab: Tab.AI,
       label: 'Konsultan',
       icon: <Sparkles strokeWidth={2.5} className="w-5 h-5" />
+    },
+    {
+      tab: Tab.EXEC,
+      label: 'Laporan',
+      icon: <FileText strokeWidth={2.5} className="w-5 h-5" />
     }
   ];
 
@@ -167,6 +181,8 @@ const App: React.FC = () => {
               setActiveTab(Tab.AI);
             }} />}
             {activeTab === Tab.EMBUNG && <EmbungDashboard />}
+            {activeTab === Tab.MASTER && <MasterHidrologiTab />}
+            {activeTab === Tab.EXEC && <ExecutiveDashboard />}
             {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
 
             {activeTab === Tab.HISTORY && <AllDataTab
