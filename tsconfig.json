@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -21,16 +25,45 @@
     "noImplicitReturns": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/features/*": ["./src/features/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/services/*": ["./src/services/*"],
-      "@/types/*": ["./src/types/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/features/*": [
+        "./src/features/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/services/*": [
+        "./src/services/*"
+      ],
+      "@/types/*": [
+        "./src/types/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", "vite.config.ts", "postcss.config.js", "tailwind.config.js", "docs/examples"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "vite.config.ts",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "docs/examples",
+    "**/*.test.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

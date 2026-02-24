@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Waves, CloudRain, Scale, Database, Sparkles } from 'lucide-react';
+import { Waves, CloudRain, Scale, Database, Sparkles, Droplets } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
 import { FloodAnalysisTab } from '@/features/flood-analysis/components/FloodAnalysisTab';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
+import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataTab } from '@/features/history/components/AllDataTab';
@@ -23,6 +24,7 @@ enum Tab {
   SALURAN = 'SALURAN',
   BANJIR = 'BANJIR',
   NERACA = 'NERACA',
+  EMBUNG = 'EMBUNG',
   HISTORY = 'HISTORY',
   AI = 'AI'
 }
@@ -113,6 +115,11 @@ const App: React.FC = () => {
       icon: <Scale strokeWidth={2.5} className="w-5 h-5" />
     },
     {
+      tab: Tab.EMBUNG,
+      label: 'Embung',
+      icon: <Droplets strokeWidth={2.5} className="w-5 h-5" />
+    },
+    {
       tab: Tab.HISTORY,
       label: 'Data',
       icon: <Database strokeWidth={2.5} className="w-5 h-5" />
@@ -159,6 +166,7 @@ const App: React.FC = () => {
               setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
               setActiveTab(Tab.AI);
             }} />}
+            {activeTab === Tab.EMBUNG && <EmbungDashboard />}
             {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
 
             {activeTab === Tab.HISTORY && <AllDataTab
@@ -194,8 +202,8 @@ const App: React.FC = () => {
                   <div className="pr-12">
                     <div className="flex items-center gap-3 mb-2">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${mapDetailItem.type === CalculationType.MANNING ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                          mapDetailItem.type === CalculationType.RATIONAL ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                            'bg-green-500/20 text-green-300 border border-green-500/30'
+                        mapDetailItem.type === CalculationType.RATIONAL ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
+                          'bg-green-500/20 text-green-300 border border-green-500/30'
                         }`}>
                         {mapDetailItem.type === CalculationType.MANNING ? 'Saluran Manning' :
                           mapDetailItem.type === CalculationType.RATIONAL ? 'Banjir Rasional' : 'Neraca Air'}
@@ -305,7 +313,7 @@ const App: React.FC = () => {
                 <button
                   key={item.tab}
                   onClick={() => setActiveTab(item.tab)}
-                  className={`flex flex-col items-center justify-center min-w-[64px] min-h-[52px] px-2 md:px-5 py-2 rounded-xl transition-all duration-200 ${activeTab === item.tab
+                  className={`flex flex-col items-center justify-center min-w-[52px] min-h-[52px] px-1.5 md:px-5 py-2 rounded-xl transition-all duration-200 ${activeTab === item.tab
                     ? `text-primary-600 bg-primary-50`
                     : `text-slate-500 hover:bg-slate-50 hover:text-slate-900`
                     }`}
