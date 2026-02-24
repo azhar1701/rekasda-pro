@@ -9,10 +9,9 @@ import { HydroValidationError } from '@/features/embung/types/embung.types';
 
 // Mock Data Defaults
 const DEFAULT_PARAMS = {
-    catchmentArea: 45.5,    // km2
-    bulkDensity: 1.2,       // t/m3
-    deadStorage: 150000,    // m3
-    trapEfficiency: 90      // %
+    catchmentArea: 45.5,      // km2
+    bulkDensity: 1.2,         // t/m3
+    bedLoadPercentage: 15,    // % (10-20%)
 };
 
 const DEFAULT_SAMPLES = [
@@ -59,29 +58,31 @@ export const SedimentationTab = () => {
 
         setTimeout(() => {
             try {
-                // Ensure total days is somewhat realistic or at least format it
-                const totalDays = samples.reduce((sum, s) => sum + s.days, 0);
-                if (totalDays === 0) throw new HydroValidationError("Total durasi sampel tidak boleh 0 hari.", "INVALID_INPUT");
+                // Formatting data arrays for Rating Curve
+                // qs in (Ton/hari) = q(m3/s) * cs(mg/L) * 0.0864 (conversion factor)
+                const qData = samples.map(s => s.q);
+                // Menghitung Qs (Ton/hari) dari data sampel lapangan Q dan Cs
+                const qsData = samples.map(s => s.q * s.cs * 0.0864);
 
-                const inputSpecs = {
-                    catchmentArea: params.catchmentArea,
-                    bulkDensity: params.bulkDensity,
-                    activeStorage: params.deadStorage, // Using dead storage as the capacity to fill
-                    trapEfficiency: params.trapEfficiency / 100, // % to decimal
-                    samples: samples.map(s => ({
-                        discharge: s.q,
-                        concentration: s.cs,
-                        duration: s.days * 24 * 3600 // days to seconds
-                    }))
-                };
+                // Flow duration arrays for annual accumulation
+                const flowDurationDays = samples.map(s => s.days);
+                const flowDurationQ = samples.map(s => s.q);
 
-                const sedResult = calculateSedimentYield(inputSpecs);
+                const sedResult = calculateSedimentYield({
+                    qData,
+                    qsData,
+                    luasDas: params.catchmentArea,
+                    beratJenis: params.bulkDensity,
+                    bedLoadPercentage: params.bedLoadPercentage,
+                    flowDurationDays,
+                    flowDurationQ
+                });
 
                 setResult({
-                    totalVolume: Number(sedResult.totalVolumeM3PerYear.toFixed(0)),
-                    usefulLife: Number(sedResult.reservoirUsefulLife.toFixed(1)),
-                    totalLoad: Number(sedResult.totalLoadTonnesPerYear.toFixed(1)),
-                    erosionRate: Number(sedResult.erosionRate.toFixed(2))
+                    totalVolume: Number(sedResult.totalVolumeM3.toFixed(0)),
+                    erosionRate: Number(sedResult.erosionRateMm.toFixed(2)),
+                    totalLoad: Number(sedResult.totalLoadTonnes.toFixed(1)),
+                    koefisienRating: `Qs = ${sedResult.a.toFixed(4)} Q^${sedResult.b.toFixed(4)}`
                 });
 
                 toast.success('Kalkulasi Laju Sedimen berhasil.');
@@ -143,20 +144,11 @@ export const SedimentationTab = () => {
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Tampungan Mati (m³)</label>
+                                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Bed Load Percentage (%)</label>
                                 <Input
                                     type="number"
-                                    value={params.deadStorage}
-                                    onChange={(e) => handleParamChange('deadStorage', e.target.value)}
-                                    className="h-9 focus-visible:ring-1 focus-visible:ring-teal-500 bg-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Trap Efficiency (%)</label>
-                                <Input
-                                    type="number"
-                                    value={params.trapEfficiency}
-                                    onChange={(e) => handleParamChange('trapEfficiency', e.target.value)}
+                                    value={params.bedLoadPercentage}
+                                    onChange={(e) => handleParamChange('bedLoadPercentage', e.target.value)}
                                     className="h-9 focus-visible:ring-1 focus-visible:ring-teal-500 bg-white"
                                 />
                             </div>
@@ -285,13 +277,12 @@ export const SedimentationTab = () => {
                                     <div className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto">
                                         <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-amber-100 shadow-sm flex flex-col items-center justify-center">
                                             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                <CalendarClock className="w-4 h-4" /> Umur Guna
+                                                <CalendarClock className="w-4 h-4" /> Persamaan Rating
                                             </p>
                                             <div className="flex items-baseline justify-center gap-1.5">
-                                                <h2 className={`text-3xl font-bold ${result.usefulLife < 25 ? 'text-rose-500' : 'text-slate-800'}`}>
-                                                    {result.usefulLife > 1000 ? '>1000' : result.usefulLife}
+                                                <h2 className="text-xl font-bold text-slate-800 break-words">
+                                                    {result.koefisienRating}
                                                 </h2>
-                                                <span className="text-sm font-semibold text-slate-500">Thn</span>
                                             </div>
                                         </div>
 

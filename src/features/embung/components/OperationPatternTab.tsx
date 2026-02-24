@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Calculator, Info, Waves, CheckCircle2, AlertCircle, Droplets } from 'lucide-react';
-import { calculateWaterBalance } from '@/lib/engine/embung';
+import { simulateReservoirOperation } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
 import { HydroValidationError } from '@/features/embung/types/embung.types';
 
@@ -53,34 +53,46 @@ export const OperationPatternTab = () => {
 
         setTimeout(() => {
             try {
-                // Formatting input to engine requirements
-                const steps = inputs.map(i => ({
-                    inflow: i.inflow * 1000, // x 10^3 m^3 to m^3
-                    demand: i.demand * 1000, // x 10^3 m^3 to m^3
-                    rainfall: i.rain,        // mm
-                    evaporation: i.evap      // mm
-                }));
+                // Format inputs for simulateReservoirOperation:
+                // inflows, demands, evaporation, infiltration are arrays of volumes in m3.
+                // rain is currently not in the simplified mathematical formula strictly, 
+                // but we can map "rain" as a negative evaporation, or ignore it if not specified.
+                // Assuming "evaporation" parameter in the math module is net evaporation (E_o - E_a)*A * dt.
+                // So net evaporation = (evap(mm) - rain(mm)) / 1000 * surfaceArea
 
-                const wbResult = calculateWaterBalance(CONFIG, steps);
+                const inflows = inputs.map(i => i.inflow * 1000); // 10^3 m^3 to m^3
+                const demands = inputs.map(i => i.demand * 1000); // 10^3 m^3 to m^3
+                const evaporationVols = inputs.map(i => ((i.evap - i.rain) / 1000) * CONFIG.surfaceArea);
+                const infiltrationVols = inputs.map(() => CONFIG.seepageLoss);
+
+                const wbResult = simulateReservoirOperation(
+                    CONFIG.initialStorage,
+                    inflows,
+                    demands,
+                    evaporationVols,
+                    infiltrationVols,
+                    CONFIG.maxStorage,
+                    CONFIG.deadStorage
+                );
 
                 // Format results for chart visualization
-                const chartData = wbResult.steps.map((step, idx) => {
+                const chartData = wbResult.steps.map((step: any, idx: number) => {
                     // Convert back to 10^3 m^3 for readability on chart
-                    const storage = step.storageEnd / 1000;
+                    const storage = step.finalStorage / 1000;
                     return {
                         month: MONTHS[idx],
                         storage: Number(storage.toFixed(1)),
                         status: step.status.toUpperCase(),
-                        deficit: step.deficit > 0 ? Number((step.deficit / 1000).toFixed(1)) : 0,
-                        spill: step.overflow > 0 ? Number((step.overflow / 1000).toFixed(1)) : 0
+                        deficit: step.deficitVolume > 0 ? Number((step.deficitVolume / 1000).toFixed(1)) : 0,
+                        spill: step.spillVolume > 0 ? Number((step.spillVolume / 1000).toFixed(1)) : 0
                     };
                 });
 
                 setResultData(chartData);
 
                 // Count metrics
-                const deficitMonths = wbResult.steps.filter(s => s.deficit > 0).length;
-                const finalStorage = wbResult.steps[wbResult.steps.length - 1].storageEnd / 1000;
+                const deficitMonths = wbResult.steps.filter((s: any) => s.deficitVolume > 0).length;
+                const finalStorage = wbResult.steps[wbResult.steps.length - 1].finalStorage / 1000;
 
                 setSummary({
                     reliability: Number(wbResult.reliability.toFixed(1)),

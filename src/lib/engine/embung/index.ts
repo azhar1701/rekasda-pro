@@ -4,5 +4,5 @@
 export { linearInterpolate, validateSortedCurve, toCurvePoints } from './mathUtils';
 export { calculateSequentPeak } from './capacityCalculator';
 export { calculateFloodRouting } from './floodRouting';
-export { calculateWaterBalance } from './waterBalance';
+export { simulateReservoirOperation } from './waterBalance';
 export { calculateSedimentYield } from './sedimentation';

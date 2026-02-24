@@ -242,51 +242,42 @@ export interface WaterBalanceResult {
 // 4. Sedimentation (Sediment Yield)
 // ---------------------------------------------------------------------------
 
-/** A single sediment measurement sample */
-export interface SedimentSample {
-  /** Suspended sediment concentration (mg/L) */
-  concentration: number;
-  /** Water discharge at time of sampling (m³/s) */
-  discharge: number;
-  /** Duration represented by this sample (seconds) */
-  duration: number;
-}
-
-/** Result of sediment yield calculation */
-export interface SedimentYieldResult {
-  /** Total sediment load (tonnes/year) */
-  totalLoadTonnesPerYear: number;
-  /** Total sediment volume (m³/year) */
-  totalVolumeM3PerYear: number;
-  /** Specific sediment yield (tonnes/km²/year) */
-  specificYield: number;
-  /** Erosion rate (mm/year) — volume yield ÷ catchment area */
-  erosionRate: number;
-  /** Estimated useful life of reservoir (years) */
-  reservoirUsefulLife: number;
-  /** Per-sample breakdown */
-  sampleDetails: SedimentSampleDetail[];
-}
-
-export interface SedimentSampleDetail {
-  /** Sediment transport rate (kg/s) */
-  transportRate: number;
-  /** Total sediment mass for the sample's duration (tonnes) */
-  totalMass: number;
-}
-
-/** Input configuration for Sedimentation analysis */
+/** Input untuk membuat Rating Curve (Langkah 1) dan menghitung Total (Langkah 2-4) */
 export interface SedimentationInput {
-  /** Sediment samples */
-  samples: SedimentSample[];
-  /** Dry bulk density of sediment (tonnes/m³), typical 1.1–1.5 */
-  bulkDensity: number;
-  /** Catchment area (km²) */
-  catchmentArea: number;
-  /** Active storage capacity of the reservoir (m³) — for useful life calc */
-  activeStorage: number;
-  /** Trap efficiency (0–1), e.g. 0.90 */
-  trapEfficiency: number;
+  /** Array data debit Q (m³/s) - untuk membuat regresi */
+  qData: number[];
+  /** Array data debit sedimen Qs (Ton/hari atau Kg/s, sesuai kesepakatan) - untuk membuat regresi */
+  qsData: number[];
+  /** Luas Daerah Aliran Sungai (km²) */
+  luasDas: number;
+  /** Berat jenis sedimen (Ton/m³) */
+  beratJenis: number;
+  /** Persentase Bed Load dari Suspended Load (default 10-20%) */
+  bedLoadPercentage: number;
+  /** Opsional: Rata-rata hari per tahun atau debit harian untuk konversi dari Qs ke tahunan. 
+   * Untuk kemudahan tes sesuai rumus dasar, kita asumsikan hasil fungsi ini langsung dihitung per tahun. */
+  flowDurationDays?: number[];
+  flowDurationQ?: number[];
+}
+
+/** Result for Sediment Yield Rating Curve calculation */
+export interface SedimentYieldResult {
+  /** Koefisien a dari log Qs = log a + b log Q */
+  a: number;
+  /** Koefisien b dari log Qs = log a + b log Q */
+  b: number;
+  /** Total Sedimen Suspensi (Ton/Tahun) */
+  suspendedLoadTonnes: number;
+  /** Total Bed Load (Ton/Tahun) */
+  bedLoadTonnes: number;
+  /** Total Sedimen = Suspended + Bed Load (Ton/Tahun) */
+  totalLoadTonnes: number;
+  /** Volume Sedimen Total (m³/Tahun) */
+  totalVolumeM3: number;
+  /** Laju Erosi Spesifik (mm/Tahun) */
+  erosionRateMm: number;
+  /** Laju Erosi (Ton/km²/Tahun) */
+  specificYield: number;
 }
 
 // ---------------------------------------------------------------------------

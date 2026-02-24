@@ -17,6 +17,9 @@ import {
   type FloodRoutingResult,
   type RoutingTimeStep,
   type CurvePoint,
+  type HydrographPoint,
+  type StageStorageCurve,
+  type StageDischargeCurve,
 } from '@/features/embung/types/embung.types';
 import { linearInterpolate, toCurvePoints } from './mathUtils';
 
@@ -115,21 +118,23 @@ function inflowAtTime(
 /**
  * Performs Level-Pool (Storage) Routing.
  *
- * **Algorithm** (Modified Puls Method):
- *
- * The continuity equation is rearranged as:
- *   (2S₂/Δt + O₂) = (I₁ + I₂) + (2S₁/Δt - O₁)
- *
- * We build an auxiliary curve: f(elevation) = 2S/Δt + O
- * Then solve iteratively for each time step.
+ * **Metode**: Level-Pool Routing (Metode Puls)
+ * **Rumus Utama**: (I_1 + I_2)/2 + psi_1 = phi_2
+ *   Dimana:
+ *   psi_1 = S_1/dt - O_1/2
+ *   phi_2 = S_2/dt + O_2/2
  *
  * @param input — All required routing inputs with curves and hydrograph.
  * @returns FloodRoutingResult containing step-by-step results and peaks.
  */
-export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingResult {
-  validateRoutingInput(input);
-
-  const { inflowHydrograph, stageStorageCurve, stageDischargeCurve, deltaT, initialElevation } = input;
+export function calculateFloodRouting(
+  inflowHydrograph: HydrographPoint[],
+  stageStorageCurve: StageStorageCurve,
+  stageDischargeCurve: StageDischargeCurve,
+  deltaT: number,
+  initialElevation: number
+): FloodRoutingResult {
+  validateRoutingInput({ inflowHydrograph, stageStorageCurve, stageDischargeCurve, deltaT, initialElevation });
 
   // Build CurvePoint arrays from parallel arrays
   const elevStorageCurve = toCurvePoints(
@@ -138,18 +143,17 @@ export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingRes
     'elevation', 'storage'
   );
 
-
   const elevDischargeCurve = toCurvePoints(
     stageDischargeCurve.elevation,
     stageDischargeCurve.discharge,
     'elevation', 'discharge'
   );
 
-  // Build the auxiliary curve: elevation → (2S/Δt + O)
-  const auxiliaryCurve: CurvePoint[] = stageStorageCurve.elevation.map((elev, i) => {
+  // Build the auxiliary curve: elevation → phi_2 = (S/dt + O/2)
+  const auxiliaryCurve: CurvePoint[] = stageStorageCurve.elevation.map((elev: number, i: number) => {
     const S = stageStorageCurve.storage[i];
     const O = outflowFromElevation(elevDischargeCurve, elev);
-    return { x: 2 * S / deltaT + O, y: elev };
+    return { x: S / deltaT + O / 2, y: elev };
   });
 
   // Build inflow hydrograph as CurvePoint
@@ -185,12 +189,16 @@ export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingRes
     const I2 = inflowAtTime(hydrographCurve, t);
     const Iavg = (I1 + I2) / 2;
 
-    // LHS of rearranged continuity:
-    // (2S₂/Δt + O₂) = (I₁ + I₂) + (2S₁/Δt - O₁)
-    const rhs = (I1 + I2) + (2 * currentStorage / deltaT - currentOutflow);
+    // Hitung psi_1 (Kondisi awal/sebelumnya)
+    // psi_1 = S_1 / dt - O_1 / 2
+    const psi_1 = currentStorage / deltaT - currentOutflow / 2;
 
-    // Find elevation that gives (2S/Δt + O) = rhs
-    const newElevation = linearInterpolate(auxiliaryCurve, rhs, 'Auxiliary (2S/Δt+O)');
+    // Hitung phi_2 (Kondisi akhir/dicari)
+    // phi_2 = (I_1 + I_2)/2 + psi_1
+    const phi_2 = Iavg + psi_1;
+
+    // Cari elevasi baru dari kurva auxiliary (Kapasitas vs phi_2)
+    const newElevation = linearInterpolate(auxiliaryCurve, phi_2, 'Auxiliary phi_2 (S/dt + O/2)');
     const newStorage = storageFromElevation(elevStorageCurve, newElevation);
     const newOutflow = outflowFromElevation(elevDischargeCurve, newElevation);
 
@@ -202,23 +210,23 @@ export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingRes
       elevation: newElevation,
     });
 
+    // Update variables for next step (S_1 = S_2, O_1 = O_2)
+    currentStorage = newStorage;
+    currentOutflow = newOutflow;
+    currentElevation = newElevation;
+
     // Track peaks
     if (Iavg > peakInflow) peakInflow = Iavg;
     if (newOutflow > peakOutflow) peakOutflow = newOutflow;
     if (newElevation > maxElevation) maxElevation = newElevation;
     if (newStorage > maxStorage) maxStorage = newStorage;
-
-    // Update for next step
-    currentElevation = newElevation;
-    currentStorage = newStorage;
-    currentOutflow = newOutflow;
   }
 
-  // Also check initial inflow
-  const initialInflow = inflowAtTime(hydrographCurve, 0);
-  if (initialInflow > peakInflow) peakInflow = initialInflow;
-
-  const attenuationRatio = peakInflow > 0 ? 1 - peakOutflow / peakInflow : 0;
+  // Handle true peak inflow which might be between dt steps
+  const absolutePeakInflow = Math.max(...inflowHydrograph.map(d => d.discharge));
+  if (absolutePeakInflow > peakInflow) {
+    peakInflow = absolutePeakInflow;
+  }
 
   return {
     steps,
@@ -226,6 +234,6 @@ export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingRes
     peakOutflow,
     maxElevation,
     maxStorage,
-    attenuationRatio,
+    attenuationRatio: peakInflow > 0 ? (1 - peakOutflow / peakInflow) * 100 : 0,
   };
 }

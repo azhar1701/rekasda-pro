@@ -69,13 +69,13 @@ export const RoutingAnalysisTab = () => {
                     discharge: h.inflow
                 }));
 
-                const routingResult = calculateFloodRouting({
-                    inflowHydrograph: inflowInput,
-                    stageStorageCurve: MOCK_STAGE_STORAGE,
-                    stageDischargeCurve: MOCK_STAGE_DISCHARGE,
-                    deltaT: 3600, // 1 hour steps
-                    initialElevation: 100 // Starting at MAN
-                });
+                const routingResult = calculateFloodRouting(
+                    inflowInput,
+                    MOCK_STAGE_STORAGE,
+                    MOCK_STAGE_DISCHARGE,
+                    3600, // 1 hour steps
+                    100 // Starting at MAN
+                );
 
                 // Format for Recharts
                 const chartData = routingResult.steps.map(step => ({
@@ -89,7 +89,7 @@ export const RoutingAnalysisTab = () => {
                 setSummary({
                     peakInflow: Number(routingResult.peakInflow.toFixed(2)),
                     peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
-                    attenuation: Number((routingResult.attenuationRatio * 100).toFixed(1))
+                    attenuation: Number((routingResult.attenuationRatio).toFixed(1))
                 });
 
                 toast.success('Simulasi Penelusuran Banjir berhasil.');
