@@ -1,5 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CapacityAnalysisTab } from './CapacityAnalysisTab';
+import { RoutingAnalysisTab } from './RoutingAnalysisTab';
+import { OperationPatternTab } from './OperationPatternTab';
+import { SedimentationTab } from './SedimentationTab';
 import { Droplets, Activity, Spline, Waves, Database } from 'lucide-react';
 import { EmbungProvider } from '../hooks/useEmbungStore';
 
@@ -70,22 +73,16 @@ export const EmbungDashboard = () => {
                                 <CapacityAnalysisTab />
                             </TabsContent>
 
-                            <TabsContent value="routing" className="h-full m-0 outline-none">
-                                <div className="flex items-center justify-center h-[400px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 font-medium">
-                                    Modul Penelusuran Banjir (Reservoir Routing) akan datang
-                                </div>
+                            <TabsContent value="routing" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
+                                <RoutingAnalysisTab />
                             </TabsContent>
 
-                            <TabsContent value="operation" className="h-full m-0 outline-none">
-                                <div className="flex items-center justify-center h-[400px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 font-medium">
-                                    Modul Simulasi Pola Operasi Waduk akan datang
-                                </div>
+                            <TabsContent value="operation" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
+                                <OperationPatternTab />
                             </TabsContent>
 
-                            <TabsContent value="sediment" className="h-full m-0 outline-none">
-                                <div className="flex items-center justify-center h-[400px] border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 font-medium">
-                                    Modul Perkiraan Sedimen (Sediment Yield) akan datang
-                                </div>
+                            <TabsContent value="sediment" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
+                                <SedimentationTab />
                             </TabsContent>
                         </div>
                     </Tabs>
