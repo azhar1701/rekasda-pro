@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calculator, Activity, Info, Copy, Download } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { calculateHSSNakayasu, calculateHSSGamma1, calculateHSSSnyder } from '@/lib/engine/flood';
@@ -6,12 +6,12 @@ import type { HSSNakayasuInput, HSSGamma1Input, HSSSnyderInput } from '@/types/h
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataNakayasu, PilotDataGamma1, PilotDataSnyder } from '@/data/floodPilotData';
-import { MethodSelector } from '@/components/ui/forms/MethodSelector';
-import { ResultCard } from '@/components/ui/data-display/ResultCard';
 import { SaveButton } from '@/components/ui/forms/SaveButton';
 import { HSSFormulaDisplay } from '@/components/ui/data-display/HSSFormulaDisplay';
 import { RainfallFrequencyAnalysis } from '@/features/flood-analysis/components/RainfallFrequencyAnalysis';
 import { Collapsible } from '@/components/ui/Collapsible';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Tabs } from '@/components/ui/tabs';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { CalculationType } from '@/types/types';
 
@@ -35,12 +35,6 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
   const [method, setMethod] = useState<HSSMethod>('nakayasu');
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [leftWidth, setLeftWidth] = useState(() => {
-    const saved = localStorage.getItem('flood-hydrograph-width');
-    return saved ? parseFloat(saved) : 35;
-  });
-  const [isResizing, setIsResizing] = useState(false);
-  const [isRainfallModalOpen, setIsRainfallModalOpen] = useState(false);
   const [nakayasuInputs, setNakayasuInputs] = useState<HSSNakayasuInput>({
     Ro: 0, Tg: 0, Tr: 0, Alpha: 2, A: 0, L: 0
   });
@@ -52,27 +46,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
   });
   const [result, setResult] = useState<{ Qp: number; Tp: number; Tb?: number; Tg?: number; Tr?: number; Alpha?: number; T03?: number; hydrograph: Array<{ time: number; discharge: number }> } | null>(null);
 
-  useEffect(() => {
-    localStorage.setItem('flood-hydrograph-width', leftWidth.toString());
-  }, [leftWidth]);
 
-  useEffect(() => {
-    if (!isResizing) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = (e.clientX / window.innerWidth) * 100;
-      const clampedWidth = Math.min(Math.max(newWidth, 25), 50);
-      setLeftWidth(clampedWidth);
-    };
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing]);
 
   const handleLoadPilot = (data: PilotDataNakayasu) => {
     if (method === 'nakayasu') {
@@ -184,186 +158,172 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0">
+    <div className="h-full relative grid grid-cols-1 lg:grid-cols-12 gap-6">
 
       {/* LEFT: Input Section */}
-      <div className="space-y-4 w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${leftWidth}%` : '100%' }}>
+      <div className="lg:col-span-5 flex flex-col gap-4">
+        <div className="lg:sticky lg:top-0 lg:h-full lg:overflow-y-auto lg:pr-2 space-y-4 pb-4">
 
-        {/* Collapsible: Data Pilot & Location */}
-        <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={false}>
-          <div className="space-y-4">
-            <PilotDataLoader
-              method={method === 'nakayasu' ? 'NAKAYASU' : method === 'gamma1' ? 'GAMMA1' : 'SNYDER'}
-              onLoadRational={() => { }}
-              onLoadModifiedRational={() => { }}
-              onLoadNakayasu={handleLoadPilot}
-              onLoadGamma1={handleLoadGamma1}
-              onLoadSnyder={handleLoadSnyder}
+          {/* Collapsible: Data Pilot & Location */}
+          <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={false}>
+            <div className="space-y-4">
+              <PilotDataLoader
+                method={method === 'nakayasu' ? 'NAKAYASU' : method === 'gamma1' ? 'GAMMA1' : 'SNYDER'}
+                onLoadRational={() => { }}
+                onLoadModifiedRational={() => { }}
+                onLoadNakayasu={handleLoadPilot}
+                onLoadGamma1={handleLoadGamma1}
+                onLoadSnyder={handleLoadSnyder}
+              />
+              <LocationIdentity onLocationChange={setLocationData} />
+            </div>
+          </Collapsible>
+
+          {/* Collapsible: Rainfall Frequency Analysis */}
+          <Collapsible
+            title="Analisis Frekuensi Hujan"
+            defaultOpen={false}
+            badge={(method === 'nakayasu' && nakayasuInputs.Ro > 0) || (method === 'gamma1' && gamma1Inputs.Ro > 0) || (method === 'snyder' && snyderInputs.Ro > 0) ? '✓ Terisi' : undefined}
+          >
+            <RainfallFrequencyAnalysis
+              onSelectValue={(_, value) => {
+                if (method === 'nakayasu') setNakayasuInputs({ ...nakayasuInputs, Ro: value });
+                else if (method === 'gamma1') setGamma1Inputs({ ...gamma1Inputs, Ro: value });
+                else if (method === 'snyder') setSnyderInputs({ ...snyderInputs, Ro: value });
+              }}
+              onModalStateChange={() => { }}
             />
-            <LocationIdentity onLocationChange={setLocationData} />
-          </div>
-        </Collapsible>
+          </Collapsible>
 
-        {/* Collapsible: Rainfall Frequency Analysis */}
-        <Collapsible
-          title="Analisis Frekuensi Hujan"
-          defaultOpen={false}
-          badge={(method === 'nakayasu' && nakayasuInputs.Ro > 0) || (method === 'gamma1' && gamma1Inputs.Ro > 0) || (method === 'snyder' && snyderInputs.Ro > 0) ? '✓ Terisi' : undefined}
-        >
-          <RainfallFrequencyAnalysis
-            onSelectValue={(_, value) => {
-              if (method === 'nakayasu') setNakayasuInputs({ ...nakayasuInputs, Ro: value });
-              else if (method === 'gamma1') setGamma1Inputs({ ...gamma1Inputs, Ro: value });
-              else if (method === 'snyder') setSnyderInputs({ ...snyderInputs, Ro: value });
-            }}
-            onModalStateChange={setIsRainfallModalOpen}
-          />
-        </Collapsible>
+          {/* Collapsible: Method Selection */}
+          <Collapsible title="Pilih Metode HSS" defaultOpen={true}>
+            <div className="space-y-4">
+              <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-200">
+                <Tabs defaultValue="nakayasu" value={method} onValueChange={(v) => setMethod(v as HSSMethod)}>
+                  <SegmentedControl
+                    items={methods.map(m => ({
+                      value: m.id,
+                      label: m.name
+                    }))}
+                    className="mb-2"
+                  />
+                </Tabs>
+              </div>
 
-        {/* Collapsible: Method Selection */}
-        <Collapsible title="Pilih Metode HSS" defaultOpen={true}>
-          <div className="space-y-4">
-            <MethodSelector
-              methods={methods}
-              selected={method}
-              onChange={(id) => setMethod(id as HSSMethod)}
-              title="Pilih Metode HSS"
-              columns={1}
-            />
+              <HSSFormulaDisplay method={method} />
 
-            <HSSFormulaDisplay method={method} />
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-              <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-blue-800">
-                <p className="font-semibold mb-1">Metode HSS:</p>
-                <p>• <strong>Nakayasu:</strong> Standar Indonesia (SNI 2415:2016)</p>
-                <p>• <strong>Gamma I:</strong> DAS kecil-menengah (Sri Harto, 1993)</p>
-                <p>• <strong>Snyder:</strong> DAS besar (Snyder, 1938)</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-blue-800">
+                  <p className="font-semibold mb-1">Metode HSS:</p>
+                  <p>• <strong>Nakayasu:</strong> Standar Indonesia (SNI 2415:2016)</p>
+                  <p>• <strong>Gamma I:</strong> DAS kecil-menengah (Sri Harto, 1993)</p>
+                  <p>• <strong>Snyder:</strong> DAS besar (Snyder, 1938)</p>
+                </div>
               </div>
             </div>
-          </div>
-        </Collapsible>
+          </Collapsible>
 
-        {/* Collapsible: Parameter Input */}
-        <Collapsible title="Parameter Input" defaultOpen={true}>
-          {/* Section A: Geometri DAS */}
-          <div className="space-y-3 mb-5">
-            <h3 className="text-xs font-bold text-blue-600 uppercase tracking-wide border-b border-blue-200 pb-1.5">Geometri DAS</h3>
-            {method === 'nakayasu' && (
-              <>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label><input type="number" value={nakayasuInputs.A || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, A: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Panjang Sungai (km)</label><input type="number" value={nakayasuInputs.L || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, L: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-              </>
-            )}
-            {method === 'gamma1' && (
-              <>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label><input type="number" value={gamma1Inputs.A || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, A: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Panjang Sungai (km)</label><input type="number" value={gamma1Inputs.L || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, L: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-              </>
-            )}
-            {method === 'snyder' && (
-              <>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label><input type="number" value={snyderInputs.A || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, A: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Panjang Sungai (km)</label><input type="number" value={snyderInputs.L || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, L: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Jarak ke Centroid (km)</label><input type="number" value={snyderInputs.Lc || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Lc: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-              </>
-            )}
-          </div>
+          {/* Collapsible: Parameter Input */}
+          <Collapsible title="Parameter Input" defaultOpen={true}>
+            {/* Section A: Geometri DAS */}
+            <div className="space-y-3 mb-5">
+              <h3 className="text-xs font-bold text-blue-600 uppercase tracking-wide border-b border-blue-200 pb-1.5">Geometri DAS</h3>
+              {method === 'nakayasu' && (
+                <>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label><input type="number" value={nakayasuInputs.A || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, A: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Panjang Sungai (km)</label><input type="number" value={nakayasuInputs.L || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, L: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                </>
+              )}
+              {method === 'gamma1' && (
+                <>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label><input type="number" value={gamma1Inputs.A || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, A: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Panjang Sungai (km)</label><input type="number" value={gamma1Inputs.L || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, L: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                </>
+              )}
+              {method === 'snyder' && (
+                <>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label><input type="number" value={snyderInputs.A || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, A: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Panjang Sungai (km)</label><input type="number" value={snyderInputs.L || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, L: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Jarak ke Centroid (km)</label><input type="number" value={snyderInputs.Lc || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Lc: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                </>
+              )}
+            </div>
 
-          {/* Section B: Parameter Hidrologi */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-green-600 uppercase tracking-wide border-b border-green-200 pb-1.5">Parameter Hidrologi</h3>
-            {method === 'nakayasu' && (
-              <>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-sm font-medium text-slate-700">Hujan Satuan (mm)</label>
-                    {nakayasuInputs.Ro > 0 && <span className="text-xs font-bold text-emerald-600">✓ Terisi</span>}
+            {/* Section B: Parameter Hidrologi */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-green-600 uppercase tracking-wide border-b border-green-200 pb-1.5">Parameter Hidrologi</h3>
+              {method === 'nakayasu' && (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium text-slate-700">Hujan Satuan (mm)</label>
+                      {nakayasuInputs.Ro > 0 && <span className="text-xs font-bold text-emerald-600">✓ Terisi</span>}
+                    </div>
+                    <input type="number" value={nakayasuInputs.Ro || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Ro: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" />
+                    <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan di atas</p>
                   </div>
-                  <input type="number" value={nakayasuInputs.Ro || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Ro: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" />
-                  <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan di atas</p>
-                </div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Time Lag (jam)</label><input type="number" step="0.1" value={nakayasuInputs.Tg || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Tg: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Unit Time (jam)</label><input type="number" step="0.1" value={nakayasuInputs.Tr || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Tr: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Koefisien α</label><input type="number" step="0.1" value={nakayasuInputs.Alpha || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Alpha: parseFloat(e.target.value) || 2 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="2" /></div>
-              </>
-            )}
-            {method === 'gamma1' && (
-              <>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-sm font-medium text-slate-700">Hujan Satuan (mm)</label>
-                    {gamma1Inputs.Ro > 0 && <span className="text-xs font-bold text-emerald-600">✓ Terisi</span>}
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Time Lag (jam)</label><input type="number" step="0.1" value={nakayasuInputs.Tg || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Tg: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Unit Time (jam)</label><input type="number" step="0.1" value={nakayasuInputs.Tr || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Tr: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Koefisien α</label><input type="number" step="0.1" value={nakayasuInputs.Alpha || ''} onChange={(e) => setNakayasuInputs({ ...nakayasuInputs, Alpha: parseFloat(e.target.value) || 2 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="2" /></div>
+                </>
+              )}
+              {method === 'gamma1' && (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium text-slate-700">Hujan Satuan (mm)</label>
+                      {gamma1Inputs.Ro > 0 && <span className="text-xs font-bold text-emerald-600">✓ Terisi</span>}
+                    </div>
+                    <input type="number" value={gamma1Inputs.Ro || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, Ro: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" />
+                    <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan di atas</p>
                   </div>
-                  <input type="number" value={gamma1Inputs.Ro || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, Ro: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" />
-                  <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan di atas</p>
-                </div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Source Factor (SF)</label><input type="number" step="0.1" value={gamma1Inputs.SF || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, SF: parseFloat(e.target.value) || 1.0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="1.0" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Waktu Konsentrasi (jam) - Opsional</label><input type="number" step="0.1" value={gamma1Inputs.Tc || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, Tc: parseFloat(e.target.value) || undefined })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="Auto" /></div>
-              </>
-            )}
-            {method === 'snyder' && (
-              <>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-sm font-medium text-slate-700">Hujan Satuan (mm)</label>
-                    {snyderInputs.Ro > 0 && <span className="text-xs font-bold text-emerald-600">✓ Terisi</span>}
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Source Factor (SF)</label><input type="number" step="0.1" value={gamma1Inputs.SF || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, SF: parseFloat(e.target.value) || 1.0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="1.0" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Waktu Konsentrasi (jam) - Opsional</label><input type="number" step="0.1" value={gamma1Inputs.Tc || ''} onChange={(e) => setGamma1Inputs({ ...gamma1Inputs, Tc: parseFloat(e.target.value) || undefined })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="Auto" /></div>
+                </>
+              )}
+              {method === 'snyder' && (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium text-slate-700">Hujan Satuan (mm)</label>
+                      {snyderInputs.Ro > 0 && <span className="text-xs font-bold text-emerald-600">✓ Terisi</span>}
+                    </div>
+                    <input type="number" value={snyderInputs.Ro || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Ro: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" />
+                    <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan di atas</p>
                   </div>
-                  <input type="number" value={snyderInputs.Ro || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Ro: parseFloat(e.target.value) || 0 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0" />
-                  <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan di atas</p>
-                </div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Koefisien Ct</label><input type="number" step="0.1" value={snyderInputs.Ct || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Ct: parseFloat(e.target.value) || 0.6 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0.6" /></div>
-                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Koefisien Cp</label><input type="number" step="0.1" value={snyderInputs.Cp || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Cp: parseFloat(e.target.value) || 0.6 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0.6" /></div>
-              </>
-            )}
-          </div>
-        </Collapsible>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Koefisien Ct</label><input type="number" step="0.1" value={snyderInputs.Ct || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Ct: parseFloat(e.target.value) || 0.6 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0.6" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Koefisien Cp</label><input type="number" step="0.1" value={snyderInputs.Cp || ''} onChange={(e) => setSnyderInputs({ ...snyderInputs, Cp: parseFloat(e.target.value) || 0.6 })} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="0.6" /></div>
+                </>
+              )}
+            </div>
+          </Collapsible>
 
-        {/* Calculate Button */}
-        <button
-          onClick={handleCalculate}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-sm"
-        >
-          <Calculator className="w-4 h-4" />
-          Hitung Hidrograf
-        </button>
+          {/* Calculate Button */}
+          <button
+            onClick={handleCalculate}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Calculator className="w-4 h-4" />
+            Hitung Hidrograf
+          </button>
+        </div>
       </div>
 
-      {/* Resizer */}
-      {!isRainfallModalOpen && (
-        <div
-          onMouseDown={() => setIsResizing(true)}
-          className={`hidden lg:block w-1 cursor-col-resize hover:bg-blue-500 transition-colors flex-shrink-0 relative ${isResizing ? 'bg-blue-500' : 'bg-transparent'}`}
-          style={{ userSelect: 'none' }}
-          role="separator"
-          aria-label="Resize sidebar"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') setLeftWidth(Math.max(25, leftWidth - 1));
-            if (e.key === 'ArrowRight') setLeftWidth(Math.min(50, leftWidth + 1));
-          }}
-        >
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 w-1 h-20 bg-slate-300 rounded-full hover:bg-blue-500 transition-colors"></div>
-        </div>
-      )}
-
       {/* RIGHT: Result Section */}
-      <div className="flex-1 lg:pl-4 mt-4 lg:mt-0">
+      <div className="lg:col-span-7 flex flex-col gap-6 min-h-0">
         {result ? (
           <div className="space-y-4">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <ResultCard
-                title="Debit Puncak (Qp)"
-                value={result.Qp}
-                unit="m³/s"
-              />
-              <ResultCard
-                title="Waktu Puncak (Tp)"
-                value={result.Tp}
-                unit="jam"
-              />
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 border-l-4 border-l-blue-500">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Debit Puncak (Qp)</div>
+                <div className="flex items-baseline gap-2"><div className="text-3xl font-black text-slate-900">{result.Qp.toFixed(2)}</div><div className="text-sm font-bold text-slate-500">m³/s</div></div>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 border-l-4 border-l-amber-500">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</div>
+                <div className="flex items-baseline gap-2"><div className="text-3xl font-black text-slate-900">{result.Tp.toFixed(2)}</div><div className="text-sm font-bold text-slate-500">jam</div></div>
+              </div>
             </div>
 
             {/* Hydrograph Chart */}
@@ -507,6 +467,6 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 };

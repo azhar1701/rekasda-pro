@@ -1,9 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { consultHydrologist } from '@/services/geminiService';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
+import { ModuleLayout } from '@/components/layout/ModuleLayout';
+import { Bot, User, Send, Paperclip, Sparkles } from 'lucide-react';
 
 interface Props {
   lastContext: string;
@@ -12,6 +12,7 @@ interface Props {
 
 export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery }) => {
   const [query, setQuery] = useState('');
+  const [lastAskedQuery, setLastAskedQuery] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -27,6 +28,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
     if (!query.trim()) return;
     setLoading(true);
     setResponse('');
+    setLastAskedQuery(query);
     const answer = await consultHydrologist(query, lastContext, selectedImage || undefined);
     setResponse(answer);
     setLoading(false);
@@ -169,130 +171,157 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
   };
 
   return (
-    <Card className="rounded-[2rem] overflow-hidden border-slate-100 flex flex-col min-h-[600px] shadow-lg">
-      <div className="bg-slate-900 p-6 flex justify-between items-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
-
-        <div className="relative z-10">
-          <h2 className="text-white font-black text-xl flex items-center gap-3 italic uppercase tracking-tight">
-            <div className="bg-primary-500 p-1.5 rounded-xl shadow-lg shadow-primary-500/20">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+    <ModuleLayout
+      title="Konsultan AI"
+      description="Asisten Hidrologi Cerdas RekaSDA"
+      icon={<Bot className="w-6 h-6" />}
+      iconColorClass="bg-indigo-50 text-indigo-600"
+    >
+      <div className="flex flex-col min-h-[calc(100vh-160px)] page-enter relative">
+        {/* Chat History Area */}
+        <div className="flex-1 overflow-y-auto pb-32 space-y-6">
+          {!response && !loading && !lastAskedQuery ? (
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-indigo-200 blur-2xl opacity-40 rounded-full"></div>
+                <div className="w-20 h-20 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-xl border border-indigo-100 flex items-center justify-center relative z-10">
+                  <Sparkles className="w-10 h-10 text-indigo-500" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">Asisten Cerdas Siap Membantu</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                Tanyakan tentang analisis debit banjir, validasi metode SNI, saran desain penampang, atau unggah foto lokasi untuk dianalisis.
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center mt-6">
+                <span className="px-3 py-1.5 bg-white/60 backdrop-blur-md border border-slate-200 text-slate-600 rounded-lg text-xs font-semibold shadow-sm">SNI 2415:2016</span>
+                <span className="px-3 py-1.5 bg-white/60 backdrop-blur-md border border-slate-200 text-slate-600 rounded-lg text-xs font-semibold shadow-sm">Permen PUPR</span>
+                <span className="px-3 py-1.5 bg-white/60 backdrop-blur-md border border-slate-200 text-slate-600 rounded-lg text-xs font-semibold shadow-sm">Hidrologi Terapan</span>
+              </div>
             </div>
-            Konsultan AI
-          </h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 ml-1">Analisis SDA • Panduan SNI</p>
+          ) : (
+            <div className="space-y-8 max-w-4xl mx-auto">
+
+              {/* User Query Bubble */}
+              {lastAskedQuery && (
+                <div className="flex justify-end animate-fade-in">
+                  <div className="max-w-[85%] sm:max-w-[75%] flex gap-4">
+                    <div className="bg-indigo-600 text-white p-5 rounded-2xl rounded-tr-sm shadow-md">
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{lastAskedQuery}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 shadow-sm border border-indigo-200">
+                      <User className="w-5 h-5 text-indigo-600" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Loading State */}
+              {loading && (
+                <div className="flex justify-start animate-fade-in">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-200">
+                      <Bot className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-md p-5 rounded-2xl rounded-tl-sm shadow-sm border border-slate-200 flex items-center gap-3">
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Response Bubble */}
+              {response && !loading && (
+                <div className="flex justify-start animate-fade-in">
+                  <div className="max-w-[95%] sm:max-w-[85%] flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0 shadow-sm border border-indigo-100">
+                      <Bot className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-xl border border-white/60 p-6 sm:p-8 rounded-3xl rounded-tl-sm shadow-xl shadow-slate-200/50">
+                      <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
+                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded uppercase tracking-widest">Terkonfirmasi AI</span>
+                        <span className="text-xs text-slate-400">Pakar Hidrologi</span>
+                      </div>
+                      <div className="prose prose-sm sm:prose-base max-w-none text-slate-700">
+                        {renderFormattedResponse(response)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className="hidden md:block relative z-10">
-          <span className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-slate-300 border border-white/10">Powered by Gemini</span>
-        </div>
-      </div>
 
-      <div className="p-6 flex-1 flex flex-col gap-6 bg-slate-50/30">
-        {loading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-6">
-              <div className="relative inline-block">
-                <div className="w-16 h-16 border-4 border-slate-200 border-t-primary-600 rounded-full animate-spin"></div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-1">Menganalisis...</h3>
-                <p className="text-sm text-slate-500">Memproses dengan referensi SNI terbaru</p>
-              </div>
-            </div>
-          </div>
-        ) : response ? (
-          <div className="bg-white border border-slate-100 p-8 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Analisis Selesai</span>
-                <p className="text-xs text-slate-400 mt-0.5">Mengacu SNI 2415:2016 & UU 17/2019</p>
-              </div>
-            </div>
-            <div className="prose prose-sm max-w-none text-slate-600">
-              {renderFormattedResponse(response)}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-6 max-w-md">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-                <svg className="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-2">Asisten Cerdas Siap Membantu</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">Tanyakan tentang analisis debit, validasi metode SNI, atau saran desain penampang.</p>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">SNI 2415:2016</span>
-                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">UU 17/2019</span>
-                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">Permen PUPR</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Floating Input Dock */}
+        <div className="fixed bottom-[90px] md:bottom-6 left-0 right-0 px-4 md:px-0 md:static md:mt-auto max-w-4xl mx-auto w-full z-50">
+          <div className="bg-white/70 backdrop-blur-2xl p-2 sm:p-3 rounded-[2rem] sm:rounded-full border border-white shadow-2xl shadow-indigo-500/10 flex flex-col sm:flex-row items-end sm:items-center gap-2 relative">
 
-        <div className="bg-white p-2 rounded-[2rem] border border-slate-200 shadow-lg shadow-slate-200/50">
-          <div className="relative">
-            <textarea
-              className="w-full bg-transparent p-4 pr-12 text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:outline-none resize-none min-h-[60px] max-h-[120px]"
-              rows={2}
-              placeholder="Ketik pertanyaan teknis Anda..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-
+            {/* Image Preview Overlay */}
             {selectedImage && (
-              <div className="absolute bottom-full left-4 mb-2">
-                <div className="relative inline-block group">
-                  <img src={selectedImage} alt="Preview" className="w-16 h-16 object-cover rounded-2xl border-2 border-white shadow-md" />
-                  <button onClick={() => setSelectedImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+              <div className="absolute bottom-[calc(100%+12px)] left-6 animate-fade-in z-50">
+                <div className="relative group">
+                  <img src={selectedImage} alt="Preview" className="w-20 h-20 object-cover rounded-2xl border-4 border-white shadow-xl" />
+                  <button onClick={() => setSelectedImage(null)} className="absolute -top-3 -right-3 bg-rose-500 text-white rounded-full p-1.5 shadow-lg hover:scale-110 hover:bg-rose-600 transition-all">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
               </div>
             )}
-          </div>
 
-          <div className="flex justify-between items-center px-2 pb-2">
-            <div className="flex gap-1">
+            <Button
+              variant="default"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              className={cn("h-12 w-12 rounded-full hidden sm:flex shrink-0 transition-colors shadow-none", selectedImage ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200" : "bg-transparent text-slate-400 hover:bg-slate-100 hover:text-slate-600")}
+              title="Unggah Foto Lokasi"
+            >
+              <Paperclip className="w-5 h-5" />
+            </Button>
+            <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageUpload} />
+
+            <div className="flex-1 relative w-full">
+              <textarea
+                className="w-full bg-slate-50/50 backdrop-blur-sm p-3 sm:px-6 sm:py-4 pr-12 text-sm sm:text-base text-slate-900 border border-slate-200/60 placeholder:text-slate-400 font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 rounded-[1.5rem] sm:rounded-full resize-none min-h-[52px] sm:min-h-[56px] max-h-[120px] transition-all shadow-inner"
+                rows={1}
+                placeholder="Tanya soal analisis atau parameter..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAsk();
+                  }
+                }}
+              />
               <Button
-                variant="ghost"
+                variant="default"
                 size="icon"
                 onClick={() => fileInputRef.current?.click()}
-                className={cn("h-11 w-11 rounded-xl text-slate-400 hover:text-primary-600", selectedImage && "bg-primary-50 text-primary-600")}
-                title="Unggah Foto Lokasi"
+                className={cn("absolute right-12 top-1.5 h-10 w-10 sm:hidden rounded-full transition-colors shadow-none", selectedImage ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200" : "bg-transparent text-slate-400 hover:bg-slate-100 hover:text-slate-600")}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <Paperclip className="w-4 h-4" />
               </Button>
-              <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageUpload} />
             </div>
 
             <Button
               onClick={handleAsk}
               disabled={loading || !query.trim()}
-              className="rounded-xl px-6"
+              className="h-12 w-12 sm:w-auto sm:px-8 rounded-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-lg shadow-indigo-600/20 flex shrink-0 items-center justify-center gap-2 font-bold"
             >
               {loading ? (
-                <div className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  Menganalisis...
-                </div>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
-                <div className="flex items-center gap-2">
-                  Kirim Pertanyaan
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                </div>
+                <>
+                  <Send className="w-5 h-5 sm:mr-1" />
+                  <span className="hidden sm:inline">Kirim</span>
+                </>
               )}
             </Button>
           </div>
         </div>
       </div>
-    </Card>
+    </ModuleLayout>
   );
 };
 
