@@ -29,15 +29,20 @@ export const getEmbeddings = async (text: string): Promise<number[]> => {
  * Mencari referensi teknis SNI/Regulasi menggunakan Vector Search
  */
 export const searchTechnicalReferences = async (query: string) => {
-  const embedding = await getEmbeddings(query);
-  if (embedding.length === 0) return [];
+  try {
+    const embedding = await getEmbeddings(query);
+    if (embedding.length === 0) return [];
 
-  const { data, error } = await apiService.searchDocuments(embedding, 0.5, 3);
-  if (error) {
-    console.error("Vector Search Error:", error);
+    const { data, error } = await apiService.searchDocuments(embedding, 0.5, 3);
+    if (error) {
+      console.error("Vector Search Error:", error);
+      return [];
+    }
+    return data || [];
+  } catch (error) {
+    console.error("searchTechnicalReferences failed:", error);
     return [];
   }
-  return data || [];
 };
 
 /**

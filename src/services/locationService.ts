@@ -16,7 +16,12 @@ let westJavaData: LocationData[] = [];
 
 export const locationService = {
   async init() {
-    westJavaData = await CSVParser.loadData();
+    try {
+      westJavaData = await CSVParser.loadData();
+    } catch (error) {
+      console.error('Failed to load location data:', error);
+      westJavaData = [];
+    }
   },
 
   getKabupaten(): string[] {

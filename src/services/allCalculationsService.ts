@@ -109,10 +109,15 @@ export const deleteCalculationById = async (type: string, id: string) => {
   else if (type === 'water_balance') tableName = 'water_balance_calculations';
   else return { error: { message: 'Invalid type' } };
 
-  const { error } = await supabase
-    .from(tableName)
-    .delete()
-    .eq('id', id);
+  try {
+    const { error } = await supabase
+      .from(tableName)
+      .delete()
+      .eq('id', id);
 
-  return { error };
+    return { error };
+  } catch (error) {
+    console.error('deleteCalculationById failed:', error);
+    return { error: { message: error instanceof Error ? error.message : 'Network error during delete' } };
+  }
 };
