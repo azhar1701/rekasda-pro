@@ -226,9 +226,15 @@ export const calculateHSSNakayasu = (input: HSSNakayasuInput): HSSNakayasuOutput
     if (t > 0 && t <= Tp) {
       // Kurva naik: Qt = Qp × (t / Tp)^2.4
       Q = Qp * Math.pow(t / Tp, 2.4);
-    } else if (t > Tp) {
-      // Kurva turun: Qt = Qp × 0.3^((t - Tp) / T0.3)
+    } else if (t > Tp && t <= Tp + T03) {
+      // Kurva turun segmen 1: Qt = Qp × 0.3^((t-Tp)/T0.3)
       Q = Qp * Math.pow(0.3, (t - Tp) / T03);
+    } else if (t > Tp + T03 && t <= Tp + T03 + 1.5 * T03) {
+      // Kurva turun segmen 2: Qt = Qp × 0.3^(1 + (t-Tp-T0.3)/(1.5×T0.3))
+      Q = Qp * Math.pow(0.3, 1 + (t - Tp - T03) / (1.5 * T03));
+    } else if (t > Tp + 2.5 * T03) {
+      // Kurva turun segmen 3: Qt = Qp × 0.3^(2.5 + (t-Tp-2.5×T0.3)/(2×T0.3))
+      Q = Qp * Math.pow(0.3, 2.5 + (t - Tp - 2.5 * T03) / (2 * T03));
     }
     hydrograph.push({ time: parseFloat(t.toFixed(2)), discharge: parseFloat(Q.toFixed(4)) });
   }

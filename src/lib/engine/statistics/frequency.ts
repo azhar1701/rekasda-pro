@@ -116,8 +116,9 @@ export function calculateStatistics(data: number[]): StatisticalParameters {
   const cv = stdDev / mean;
   
   // Coefficient of skewness (Cs)
-  const m3 = data.reduce((sum, val) => sum + Math.pow(val - mean, 3), 0) / n;
-  const cs = (n * m3) / ((n - 1) * (n - 2) * Math.pow(stdDev, 3));
+  // Cs = n × Σ(Xi - X̄)³ / [(n-1)(n-2) × S³]  — SNI 2415:2016 Lampiran B
+  const sumCubed = data.reduce((sum, val) => sum + Math.pow(val - mean, 3), 0);
+  const cs = (n * sumCubed) / ((n - 1) * (n - 2) * Math.pow(stdDev, 3));
   
   // Coefficient of kurtosis (Ck)
   const m4 = data.reduce((sum, val) => sum + Math.pow(val - mean, 4), 0) / n;
@@ -140,6 +141,7 @@ export function calculateStatistics(data: number[]): StatisticalParameters {
  * @reference Chow (1988), Applied Hydrology
  */
 export function getKNormal(returnPeriod: number): number {
+  if (returnPeriod <= 1) return 0; // T=1 → K=0 (median), T<1 invalid
   const probability = 1 - 1 / returnPeriod;
   
   // Standard normal distribution approximation (Abramowitz & Stegun)
@@ -168,6 +170,7 @@ export function getKNormal(returnPeriod: number): number {
  * @reference SNI 2415:2016 Lampiran C
  */
 export function getKGumbel(returnPeriod: number): number {
+  if (returnPeriod <= 1) return 0; // T=1 → K=0 (median), T<1 invalid
   const yn = 0.5772; // Euler's constant
   const sn = 1.2825; // Standard deviation for Gumbel
   const yT = -Math.log(-Math.log(1 - 1 / returnPeriod));
@@ -245,7 +248,8 @@ export function analyzeLogNormal(input: FrequencyInput): FrequencyResult {
   const validated = FrequencyInputSchema.parse(input);
   
   // Transform to log space
-  const logData = validated.data.map(x => Math.log(x));
+  // Guard: prevent log(0) → -Infinity if any data point is zero
+  const logData = validated.data.map(x => Math.log(Math.max(x, 1e-10)));
   const stats = calculateStatistics(logData);
   
   const designValues = validated.returnPeriods.map(T => {
@@ -320,7 +324,8 @@ export function analyzeLogPearson3(input: FrequencyInput): FrequencyResult {
   const validated = FrequencyInputSchema.parse(input);
   
   // Transform to log space
-  const logData = validated.data.map(x => Math.log(x));
+  // Guard: prevent log(0) → -Infinity if any data point is zero
+  const logData = validated.data.map(x => Math.log(Math.max(x, 1e-10)));
   const logStats = calculateStatistics(logData);
   
   const designValues = validated.returnPeriods.map(T => {

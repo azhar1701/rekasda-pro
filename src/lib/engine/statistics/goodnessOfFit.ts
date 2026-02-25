@@ -92,9 +92,11 @@ function getTheoreticalCDF(x: number, distributionType: string, mean: number, st
       const logStd = Math.sqrt(Math.log(1 + Math.pow(stdDev / mean, 2)));
       return normalCDF((logX - logMean) / logStd);
     case 'logpearson3':
-      // Simplified approximation using log-normal with skewness adjustment
-      const logXp = Math.log(x);
-      const logMeanP = Math.log(mean);
+      // KNOWN LIMITATION: LP3 CDF approximated via Log-Normal (skewness Cs ignored).
+      // Full LP3 CDF requires incomplete gamma function — acceptable for screening,
+      // but results should be interpreted with caution. See audit report F-05.
+      const logXp = Math.log(Math.max(x, 1e-10));
+      const logMeanP = Math.log(Math.max(mean, 1e-10));
       const logStdP = Math.sqrt(Math.log(1 + Math.pow(stdDev / mean, 2)));
       return normalCDF((logXp - logMeanP) / logStdP);
     default:
