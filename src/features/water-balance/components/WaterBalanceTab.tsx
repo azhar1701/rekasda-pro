@@ -60,7 +60,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const kpiCardsRef = useStaggerAnimation(50);
 
   // ── F.J. Mock Integration ──
-  const { luasDas, hasilMock, setHasilMock, neracaFinal } = useHydrologyStore();
+  const { luasDas, hasilMock, setHasilMock, neracaFinal, setLuasDas } = useHydrologyStore();
+  const [luasDasLocal, setLuasDasLocal] = useState<string>('');
+  const luasDasGlobal = parseFloat(luasDas) || 0;
+  // Effective value: local override → global store → 0
+  const luasDasEffective = luasDasLocal !== '' ? (parseFloat(luasDasLocal) || 0) : luasDasGlobal;
+  const isLuasDasOverridden = luasDasLocal !== '' && parseFloat(luasDasLocal) !== luasDasGlobal;
   const [supplyMethod, setSupplyMethod] = useState<'manual' | 'mock'>('manual');
   const [mockParams, setMockParams] = useState({
     smc: 200,
@@ -76,7 +81,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [targetProb, setTargetProb] = useState(80);
   const [mockResults, setMockResults] = useState<MockMonthlyResult[] | null>(null);
   const [mockError, setMockError] = useState<string | null>(null);
-  const luasDasNum = parseFloat(luasDas) || 0;
+  const luasDasNum = luasDasEffective;
 
 
 
@@ -353,21 +358,44 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
                 {supplyMethod === 'mock' ? (
                   <div className="space-y-4">
-                    {/* Luas DAS from store */}
-                    {luasDasNum <= 0 && (
-                      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <p className="text-xs text-amber-800 font-medium">
-                          Luas DAS belum tersedia. Silakan atur di Modul Master Data terlebih dahulu.
-                        </p>
+                    {/* Luas DAS — SmartOverrideInput */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">Luas DAS</label>
+                        {isLuasDasOverridden && (
+                          <button
+                            onClick={() => { setLuasDasLocal(''); }}
+                            className="text-[9px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-0.5 transition-colors"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset ke Data Master
+                          </button>
+                        )}
                       </div>
-                    )}
-
-                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Luas DAS (dari Store)</span>
-                      <div className="text-lg font-bold text-blue-600 font-mono">
-                        {luasDasNum > 0 ? `${luasDasNum} km²` : '— belum diisi'}
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step={0.1}
+                          value={luasDasLocal !== '' ? luasDasLocal : (luasDasGlobal > 0 ? String(luasDasGlobal) : '')}
+                          placeholder={luasDasGlobal > 0 ? String(luasDasGlobal) : 'Masukkan luas DAS...'}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setLuasDasLocal(val);
+                            // Also sync back to global store
+                            if (val !== '') setLuasDas(val);
+                          }}
+                          className={`w-full h-10 px-3 pr-12 text-sm bg-white rounded-lg font-semibold text-right focus:ring-2 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isLuasDasOverridden
+                              ? 'border-2 border-amber-400 focus:border-amber-500 focus:ring-amber-500/20'
+                              : 'border border-slate-200 focus:border-blue-500 focus:ring-blue-500/20'
+                            }`}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">km²</span>
                       </div>
+                      {luasDasGlobal > 0 && !isLuasDasOverridden && (
+                        <p className="text-[9px] text-slate-400 mt-1">Dari Master Data: {luasDasGlobal} km²</p>
+                      )}
                     </div>
 
                     {/* Mock Parameters — Compact 2-col */}
