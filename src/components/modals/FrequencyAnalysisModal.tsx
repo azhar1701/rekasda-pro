@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckCircle, Download, Save, AlertTriangle } from 'lucide-react';
+import { X, CheckCircle, Download, Save, AlertTriangle, Shield } from 'lucide-react';
 import { DataInputTable } from './FrequencyAnalysisModal/DataInputTable';
 import { StatCard } from './FrequencyAnalysisModal/StatCard';
 import { calculateStatistics, performFrequencyAnalysis, type DistributionMethod } from '@/lib/engine/statistics/frequency';
 import { validateDistributionFit } from '@/lib/engine/statistics/goodnessOfFit';
 import { useHydrologyStore, type HasilAnalisisFrekuensi } from '@/stores/useHydrologyStore';
+import { calculatePMP } from '@/lib/engine/rainfallAnalysis';
 
 export interface RainfallDataPoint {
   year: number;
@@ -44,6 +45,9 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
   const [editedRows, setEditedRows] = useState<Set<number>>(new Set());
   // Track whether data was autofilled from store
   const [isAutofilled, setIsAutofilled] = useState(false);
+
+  // PMP toggle
+  const [showPMP, setShowPMP] = useState(false);
 
   // ── Global Store ──
   const dataHujan = useHydrologyStore(s => s.dataHujan);
@@ -326,6 +330,70 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* ─── PMP Toggle ─── */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowPMP(!showPMP)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm font-bold transition-all ${showPMP
+                      ? 'bg-rose-50 border-rose-200 text-rose-700'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-blue-300'
+                    }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Hitung PMP / CMB (Infrastruktur Risiko Tinggi)
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${showPMP ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400'
+                    }`}>
+                    {showPMP ? 'AKTIF' : 'OFF'}
+                  </span>
+                </button>
+
+                {showPMP && data.length >= 3 && (() => {
+                  try {
+                    const pmpResult = calculatePMP(data.map(d => d.value));
+                    return (
+                      <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Shield className="w-4 h-4 text-rose-600" />
+                          <h4 className="text-sm font-bold text-rose-800">Curah Hujan Maksimum Boleh Jadi (PMP)</h4>
+                        </div>
+                        <div className="text-xs text-rose-600 mb-3">Metode Hershfield · PMP = X̄ + Kn × Sn</div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="bg-white rounded-lg p-2 text-center border border-rose-100">
+                            <p className="text-[10px] font-semibold text-slate-400">Mean (X̄)</p>
+                            <p className="text-sm font-black text-slate-800">{pmpResult.mean}</p>
+                            <p className="text-[10px] text-slate-400">mm</p>
+                          </div>
+                          <div className="bg-white rounded-lg p-2 text-center border border-rose-100">
+                            <p className="text-[10px] font-semibold text-slate-400">Std Dev (Sn)</p>
+                            <p className="text-sm font-black text-slate-800">{pmpResult.stdDev}</p>
+                            <p className="text-[10px] text-slate-400">mm</p>
+                          </div>
+                          <div className="bg-white rounded-lg p-2 text-center border border-rose-100">
+                            <p className="text-[10px] font-semibold text-slate-400">Kn</p>
+                            <p className="text-sm font-black text-indigo-600">{pmpResult.kn}</p>
+                            <p className="text-[10px] text-slate-400">faktor</p>
+                          </div>
+                          <div className="bg-rose-100 rounded-lg p-2 text-center border border-rose-200">
+                            <p className="text-[10px] font-bold text-rose-500">PMP</p>
+                            <p className="text-lg font-black text-rose-700">{pmpResult.pmp}</p>
+                            <p className="text-[10px] text-rose-400">mm</p>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-rose-500 mt-2">
+                          Gunakan nilai PMP untuk desain infrastruktur risiko tinggi (bendungan, spillway).
+                        </p>
+                      </div>
+                    );
+                  } catch {
+                    return (
+                      <div className="text-xs text-rose-500 p-2">Data tidak cukup untuk perhitungan PMP.</div>
+                    );
+                  }
+                })()}
+              </div>
             </div>
           </div>
         </div>
@@ -342,8 +410,8 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                 onClick={handleSaveToStore}
                 disabled={!canSave}
                 className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-sm transition-all ${canSave
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/40'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/40'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }`}
               >
                 <Save className="w-4 h-4" />

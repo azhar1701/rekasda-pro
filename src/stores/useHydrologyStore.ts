@@ -22,6 +22,26 @@ export interface DataHujan {
   created_at?: string;
 }
 
+export interface ThiessenStasiunConfig {
+  stasiunId: string;
+  namaStasiun: string;
+  luasPengaruh: number;  // km² — area of influence
+  bobot: number;         // auto-calculated weight
+}
+
+export interface HasilThiessen {
+  stasiunConfigs: ThiessenStasiunConfig[];
+  totalLuas: number;
+  hujanRataRataDAS: number[];  // weighted avg annual max series
+}
+
+export interface HasilARF {
+  arfValue: number;           // calculated ARF
+  arfOverride: number | null; // user override
+  hujanTitik: number;         // point rainfall (mm)
+  hujanDAS: number;           // areal rainfall (mm)
+}
+
 export interface DesignRainfallValue {
   kalaUlang: number;    // 2, 5, 10, 25, 50, 100
   curahHujan: number;   // mm
@@ -62,6 +82,8 @@ export interface HydrologyState {
   
   // State Data Output
   dataHujan: DataHujan[];
+  hasilThiessen: HasilThiessen | null;
+  hasilARF: HasilARF | null;
   hasilAnalisisFrekuensi: HasilAnalisisFrekuensi | null;
   hasilBanjir: HasilBanjir | null;
   hasilNeraca: HasilNeraca | null;
@@ -80,6 +102,8 @@ export interface HydrologyState {
   fetchStasiun: () => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
   fetchDataHujan: (stasiunId: string, tahun?: number) => Promise<void>;
+  setHasilThiessen: (hasil: HasilThiessen | null) => void;
+  setHasilARF: (hasil: HasilARF | null) => void;
   setHasilAnalisisFrekuensi: (hasil: HasilAnalisisFrekuensi | null) => void;
   setSelectedKalaUlang: (kalaUlang: number) => void;
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
@@ -150,6 +174,8 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   stasiunList: [],
   selectedStasiun: null,
   dataHujan: [],
+  hasilThiessen: null,
+  hasilARF: null,
   hasilAnalisisFrekuensi: null,
   hasilBanjir: null,
   hasilNeraca: {
@@ -213,6 +239,14 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
 
+  setHasilThiessen: (hasil) => set({
+    hasilThiessen: hasil,
+    isBanjirDirty: true,
+  }),
+  setHasilARF: (hasil) => set({
+    hasilARF: hasil,
+    isBanjirDirty: true,
+  }),
   setHasilAnalisisFrekuensi: (hasil) => set({ 
     hasilAnalisisFrekuensi: hasil, 
     isBanjirDirty: true 

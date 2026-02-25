@@ -5,6 +5,7 @@ import { MasterDataSelector } from '@/features/master-data/components/MasterData
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisModal';
+import { AreaReductionCard } from '@/features/flood-analysis/components/AreaReductionCard';
 import { Button } from '@/components/ui/Button';
 import {
     CloudRain, Calculator, Activity, ChevronDown,
@@ -603,6 +604,11 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                     </div>
                                 </div>
                             </div>
+
+                            <hr className="border-slate-100" />
+
+                            {/* ─── AREA REDUCTION FACTOR (ARF) ─── */}
+                            <AreaReductionCard />
 
                             <hr className="border-slate-100" />
 
