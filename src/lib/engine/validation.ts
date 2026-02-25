@@ -163,6 +163,12 @@ export const validateWaterBalance = (supply: number, demand: number): {
   status: string;
   recommendation: string;
 } => {
+  // Guard: prevent division by zero when demand is 0
+  if (demand <= 0) {
+    return supply > 0
+      ? { valid: true, status: 'Surplus', recommendation: 'Tidak ada kebutuhan air, ketersediaan penuh.' }
+      : { valid: true, status: 'Seimbang', recommendation: 'Tidak ada ketersediaan maupun kebutuhan air.' };
+  }
   const ratio = supply / demand;
 
   if (ratio >= 1.2) {

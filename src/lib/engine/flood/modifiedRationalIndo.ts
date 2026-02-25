@@ -85,7 +85,9 @@ export function calculateHaspersOsugi(
   }
 
   // 1. Waktu konsentrasi (jam) - Formula Haspers
-  const tc = 0.1 * Math.pow(L, 0.8) * Math.pow(S, -0.3);
+  let tc = 0.1 * Math.pow(L, 0.8) * Math.pow(S, -0.3);
+  // Guard: tc must be > 0 to avoid Infinity in Mononobe intensity formula
+  if (!isFinite(tc) || tc < 0.01) tc = 0.01;
 
   // 2. Koefisien reduksi β (Haspers)
   const beta = 1 / (1 + Math.pow(tc, 2) + 10 * tc);
@@ -159,6 +161,8 @@ export function calculateDerWeduwen(
 
   // 1. Initial guess untuk tc (jam) - Formula der Weduwen
   let tc = 0.167 * Math.pow(L, 0.77) * Math.pow(S, -0.385);
+  // Guard: tc must be > 0 to avoid Infinity in Mononobe intensity formula
+  if (!isFinite(tc) || tc < 0.01) tc = 0.01;
   let C = 0.5; // Initial guess
   let prevC = 0;
   let iterations = 0;
@@ -242,7 +246,9 @@ export function calculateMelchior(
   }
 
   // 1. Waktu konsentrasi (jam)
-  const tc = 0.1 * Math.pow(L, 0.8) * Math.pow(S, -0.3);
+  let tc = 0.1 * Math.pow(L, 0.8) * Math.pow(S, -0.3);
+  // Guard: tc must be > 0 to avoid Infinity in Mononobe intensity formula
+  if (!isFinite(tc) || tc < 0.01) tc = 0.01;
 
   // 2. Koefisien reduksi luas elips (Melchior)
   // α menurun seiring bertambahnya luas DAS

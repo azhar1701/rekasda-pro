@@ -135,6 +135,14 @@ export const calculateFlowDurationCurve = (dischargeData: number[]) => {
  * @returns Status ketersediaan
  */
 export const validateWaterAvailability = (Q80: number, demand: number) => {
+  // Guard: prevent division by zero when demand is 0
+  if (demand <= 0) {
+    return {
+      ratio: Q80 > 0 ? Infinity : 0,
+      status: 'Aman' as const,
+      recommendation: 'Tidak ada kebutuhan air terdefinisi.',
+    };
+  }
   const ratio = Q80 / demand;
   
   let status: 'Aman' | 'Waspada' | 'Kritis';

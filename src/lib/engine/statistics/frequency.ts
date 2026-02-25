@@ -94,12 +94,23 @@ export const FrequencyInputSchema = z.object({
 export function calculateStatistics(data: number[]): StatisticalParameters {
   const n = data.length;
   
+  // Guard: need at least 3 data points for skewness/kurtosis
+  if (n <= 2) {
+    const mean = n > 0 ? data.reduce((sum, val) => sum + val, 0) / n : 0;
+    return { n, mean, stdDev: 0, cv: 0, cs: 0, ck: 0 };
+  }
+  
   // Mean
   const mean = data.reduce((sum, val) => sum + val, 0) / n;
   
   // Standard deviation
   const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
+  
+  // Guard: prevent division by zero when all values are identical (stdDev = 0)
+  if (stdDev === 0) {
+    return { n, mean, stdDev: 0, cv: 0, cs: 0, ck: 0 };
+  }
   
   // Coefficient of variation
   const cv = stdDev / mean;
@@ -110,7 +121,9 @@ export function calculateStatistics(data: number[]): StatisticalParameters {
   
   // Coefficient of kurtosis (Ck)
   const m4 = data.reduce((sum, val) => sum + Math.pow(val - mean, 4), 0) / n;
-  const ck = (n * (n + 1) * m4) / ((n - 1) * (n - 2) * (n - 3) * Math.pow(stdDev, 4));
+  const ck = n > 3
+    ? (n * (n + 1) * m4) / ((n - 1) * (n - 2) * (n - 3) * Math.pow(stdDev, 4))
+    : 0;
   
   return { n, mean, stdDev, cv, cs, ck };
 }
