@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '@/services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
@@ -9,10 +9,19 @@ import { WaterBalancePilotDataLoader } from './WaterBalancePilotDataLoader';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { WaterBalanceFormulaDisplay } from '@/components/ui/data-display/WaterBalanceFormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
-
-import { Droplet } from 'lucide-react';
-
+import { Droplet, AlertTriangle, Zap } from 'lucide-react';
 import { useStaggerAnimation } from '@/hooks/useStaggerAnimation';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import {
+  calculateFJMock,
+  calculateWeibullDependableFlow,
+  DEFAULT_ETO_INDONESIA,
+  DAYS_IN_MONTH,
+  MONTH_LABELS,
+  type MockParams,
+  type MockMonthlyInput,
+  type MockMonthlyResult,
+} from '@/lib/engine/fjMock';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -49,6 +58,25 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [summary, setSummary] = useState<any>(null);
   const kpiCardsRef = useStaggerAnimation(50);
 
+  // ── F.J. Mock Integration ──
+  const { luasDas, hasilMock, setHasilMock } = useHydrologyStore();
+  const [supplyMethod, setSupplyMethod] = useState<'manual' | 'mock'>('manual');
+  const [mockParams, setMockParams] = useState({
+    smc: 200,
+    ism: 200,
+    infiltrationFactor: 0.4,
+    k: 0.7,
+    exposedSurface: 0.1,
+  });
+  const [monthlyETo, setMonthlyETo] = useState<number[]>([...DEFAULT_ETO_INDONESIA]);
+  const [monthlyPrecip, setMonthlyPrecip] = useState<number[]>([
+    300, 280, 250, 200, 120, 80, 60, 50, 80, 150, 220, 280,
+  ]);
+  const [targetProb, setTargetProb] = useState(80);
+  const [mockResults, setMockResults] = useState<MockMonthlyResult[] | null>(null);
+  const [mockError, setMockError] = useState<string | null>(null);
+  const luasDasNum = parseFloat(luasDas) || 0;
+
 
 
   useEffect(() => {
@@ -66,6 +94,62 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const handleUseCalculatedFlow = (flow: number[]) => {
     setInputs({ ...inputs, monthlySupply: flow });
   };
+
+  // ── F.J. Mock Calculate Handler ──
+  const handleMockCalculate = useCallback(() => {
+    setMockError(null);
+    try {
+      if (luasDasNum <= 0) {
+        setMockError('Luas DAS belum diisi. Atur di Master Data terlebih dahulu.');
+        return;
+      }
+
+      const params: MockParams = {
+        luasDas: luasDasNum,
+        smc: mockParams.smc,
+        ism: mockParams.ism,
+        infiltrationFactor: mockParams.infiltrationFactor,
+        k: mockParams.k,
+        exposedSurface: mockParams.exposedSurface,
+      };
+
+      const data: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
+        month,
+        precipitation: monthlyPrecip[i],
+        eto: monthlyETo[i],
+        daysInMonth: DAYS_IN_MONTH[i],
+      }));
+
+      const results = calculateFJMock(params, data);
+      setMockResults(results);
+
+      // Extract discharge series → Weibull
+      const discharges = results.map(r => r.discharge);
+      const weibull = calculateWeibullDependableFlow(discharges, targetProb);
+
+      // Apply Mock discharges as monthlySupply for Water Balance
+      setInputs(prev => ({ ...prev, monthlySupply: discharges }));
+
+      // Save to store
+      setHasilMock({
+        monthlyResults: results.map(r => ({
+          month: r.month,
+          precipitation: r.precipitation,
+          eto: r.eto,
+          waterSurplus: r.waterSurplus,
+          baseFlow: r.baseFlow,
+          directRunoff: r.directRunoff,
+          totalRunoff: r.totalRunoff,
+          discharge: r.discharge,
+        })),
+        qAndalan: weibull.qAndalan,
+        probability: targetProb,
+        metode: 'mock',
+      });
+    } catch (err: any) {
+      setMockError(err.message || 'Perhitungan F.J. Mock gagal.');
+    }
+  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, targetProb, setHasilMock, setInputs]);
 
   const totalSupply = inputs.monthlySupply.reduce((a, b) => a + b, 0);
   const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);
@@ -241,41 +325,194 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
               </Collapsible>
 
-              {/* SECTION 2: DEBIT ANDALAN */}
-              <Collapsible title="Debit Andalan" defaultOpen={true} badge="SNI 6738:2015">
+              {/* SECTION 2: DEBIT ANDALAN — Method Selection */}
+              <Collapsible title="Ketersediaan Air (Debit Andalan)" defaultOpen={true} badge="SNI 6738:2015">
 
-                <button
-                  onClick={() => setIsCalcModalOpen(true)}
-                  className="w-full min-h-[44px] py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                  Kalkulator Hujan
-                </button>
+                {/* Method Toggle */}
+                <div className="flex rounded-lg bg-slate-100 p-1 mb-4">
+                  <button
+                    onClick={() => setSupplyMethod('mock')}
+                    className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${supplyMethod === 'mock'
+                      ? 'bg-white text-blue-700 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    F.J. Mock (Hujan→Aliran)
+                  </button>
+                  <button
+                    onClick={() => setSupplyMethod('manual')}
+                    className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${supplyMethod === 'manual'
+                      ? 'bg-white text-blue-700 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    Input Manual
+                  </button>
+                </div>
 
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data Bulanan (m³/s)</span>
+                {supplyMethod === 'mock' ? (
+                  <div className="space-y-4">
+                    {/* Luas DAS from store */}
+                    {luasDasNum <= 0 && (
+                      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800 font-medium">
+                          Luas DAS belum tersedia. Silakan atur di Modul Master Data terlebih dahulu.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Luas DAS (dari Store)</span>
+                      <div className="text-lg font-bold text-blue-600 font-mono">
+                        {luasDasNum > 0 ? `${luasDasNum} km²` : '— belum diisi'}
+                      </div>
+                    </div>
+
+                    {/* Mock Parameters — Compact 2-col */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { key: 'smc', label: 'SMC', unit: 'mm', step: 10 },
+                        { key: 'ism', label: 'ISM', unit: 'mm', step: 10 },
+                        { key: 'infiltrationFactor', label: 'IF', unit: '', step: 0.05 },
+                        { key: 'k', label: 'K', unit: '', step: 0.05 },
+                      ].map(({ key, label, unit, step }) => (
+                        <div key={key}>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{label}</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step={step}
+                              value={mockParams[key as keyof typeof mockParams]}
+                              onChange={e => setMockParams(p => ({ ...p, [key]: parseFloat(e.target.value) || 0 }))}
+                              className="w-full h-10 px-3 pr-12 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            {unit && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">{unit}</span>}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">m (Exposed Surface %)</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step={0.01}
+                            value={mockParams.exposedSurface}
+                            onChange={e => setMockParams(p => ({ ...p, exposedSurface: parseFloat(e.target.value) || 0 }))}
+                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Probability target */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Probabilitas Andalan</label>
+                      <select
+                        value={targetProb}
+                        onChange={e => setTargetProb(Number(e.target.value))}
+                        className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                      >
+                        <option value={80}>Q80 — Irigasi</option>
+                        <option value={90}>Q90 — PLTA</option>
+                        <option value={95}>Q95 — Air Baku</option>
+                      </select>
+                    </div>
+
+                    {/* Monthly Precipitation input (compact) */}
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Curah Hujan Bulanan (mm)</span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {MONTH_LABELS.map((m, i) => (
+                          <div key={m} className="text-center">
+                            <div className="text-[9px] font-bold text-slate-400 mb-0.5">{m}</div>
+                            <input
+                              type="number"
+                              value={monthlyPrecip[i]}
+                              onChange={e => {
+                                const v = [...monthlyPrecip]; v[i] = parseFloat(e.target.value) || 0; setMonthlyPrecip(v);
+                              }}
+                              className="w-full h-8 px-1 text-xs bg-white border border-slate-200 rounded text-center font-mono font-semibold focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Monthly ETo input (compact) */}
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">ETo Bulanan (mm)</span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {MONTH_LABELS.map((m, i) => (
+                          <div key={m} className="text-center">
+                            <div className="text-[9px] font-bold text-slate-400 mb-0.5">{m}</div>
+                            <input
+                              type="number"
+                              value={monthlyETo[i]}
+                              onChange={e => {
+                                const v = [...monthlyETo]; v[i] = parseFloat(e.target.value) || 0; setMonthlyETo(v);
+                              }}
+                              className="w-full h-8 px-1 text-xs bg-white border border-slate-200 rounded text-center font-mono font-semibold focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Mock error */}
+                    {mockError && (
+                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 font-medium">
+                        {mockError}
+                      </div>
+                    )}
+
+                    {/* Calculate button */}
                     <button
-                      onClick={() => setIsInputModalOpen(true)}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      onClick={handleMockCalculate}
+                      disabled={luasDasNum <= 0}
+                      className="w-full min-h-[44px] py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
+                      <Zap className="w-5 h-5" />
+                      Hitung Ketersediaan Air (F.J. Mock)
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {MONTHS.map((month, index) => (
-                      <div key={month} className="bg-white rounded-md px-2 py-2 border border-slate-200 text-center">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase">{month}</div>
-                        <div className="text-sm font-bold text-slate-700 font-mono">{inputs.monthlySupply[index]}</div>
+                ) : (
+                  /* Manual mode — original UI */
+                  <>
+                    <button
+                      onClick={() => setIsCalcModalOpen(true)}
+                      className="w-full min-h-[44px] py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      Kalkulator Hujan
+                    </button>
+
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data Bulanan (m³/s)</span>
+                        <button
+                          onClick={() => setIsInputModalOpen(true)}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {MONTHS.map((month, index) => (
+                          <div key={month} className="bg-white rounded-md px-2 py-2 border border-slate-200 text-center">
+                            <div className="text-[10px] font-semibold text-slate-400 uppercase">{month}</div>
+                            <div className="text-sm font-bold text-slate-700 font-mono">{inputs.monthlySupply[index]}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </Collapsible>
             </div>
           </div>
@@ -296,6 +533,68 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </svg>
                 <span className="font-semibold text-sm">{saveMessage.text}</span>
               </div>
+            )}
+
+            {/* F.J. Mock Results — Conditional */}
+            {mockResults && hasilMock && (
+              <>
+                {/* Q Andalan Highlight Card */}
+                <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-lg border border-blue-200/60 p-6 flex items-center gap-6">
+                  <div className="p-3 bg-blue-100 rounded-xl shrink-0">
+                    <Droplet className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">
+                      Debit Andalan Q{hasilMock.probability}
+                    </div>
+                    <div className="text-4xl font-bold text-blue-600 font-mono leading-none">
+                      {hasilMock.qAndalan.toFixed(4)}
+                    </div>
+                    <div className="text-sm font-semibold text-slate-500 mt-1">m³/s · Metode F.J. Mock</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <ComplianceBadge sniCode="SNI 6738:2015" />
+                  </div>
+                </div>
+
+                {/* Mock Summary Table */}
+                <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-lg border border-white/50 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-slate-200/50 bg-white/40">
+                    <h3 className="text-sm font-bold text-slate-800">Rekap Hasil F.J. Mock (12 Bulan)</h3>
+                    <p className="text-[10px] text-slate-500">Transformasi Hujan → Aliran per bulan</p>
+                  </div>
+                  <div className="overflow-x-auto overflow-y-auto max-h-80">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
+                        <tr>
+                          <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-blue-600">P (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-orange-600">ETo (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-cyan-600">WS (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-emerald-600">BF (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-purple-600">DRO (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-slate-600">TRO (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-blue-700 bg-blue-50/80">Q (m³/s)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mockResults.map((r, i) => (
+                          <tr key={i} className="border-b border-slate-100 even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
+                            <td className="py-2 px-3 font-bold text-slate-700">{r.month}</td>
+                            <td className="py-2 px-3 text-right font-mono text-blue-600">{r.precipitation}</td>
+                            <td className="py-2 px-3 text-right font-mono text-orange-600">{r.eto}</td>
+                            <td className="py-2 px-3 text-right font-mono text-cyan-600">{r.waterSurplus}</td>
+                            <td className="py-2 px-3 text-right font-mono text-emerald-600">{r.baseFlow}</td>
+                            <td className="py-2 px-3 text-right font-mono text-purple-600">{r.directRunoff}</td>
+                            <td className="py-2 px-3 text-right font-mono font-semibold">{r.totalRunoff}</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">{r.discharge}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
             )}
 
             {/* KPI CARDS — Glassmorphism */}

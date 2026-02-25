@@ -72,6 +72,27 @@ export interface HasilEmbung {
   umurSedimen: number;
 }
 
+/** Hasil perhitungan F.J. Mock + Weibull */
+export interface HasilMock {
+  /** 12-month Mock results (precipitation, eto, TRO, discharge, etc.) */
+  monthlyResults: {
+    month: string;
+    precipitation: number;
+    eto: number;
+    waterSurplus: number;
+    baseFlow: number;
+    directRunoff: number;
+    totalRunoff: number;
+    discharge: number;
+  }[];
+  /** Debit Andalan at target probability (m³/s) */
+  qAndalan: number;
+  /** Target probability (%) */
+  probability: number;
+  /** Metode yang digunakan */
+  metode: 'mock' | 'manual' | 'weibull';
+}
+
 export interface HydrologyState {
   // State Fundamental
   luasDas: string;
@@ -88,6 +109,7 @@ export interface HydrologyState {
   hasilBanjir: HasilBanjir | null;
   hasilNeraca: HasilNeraca | null;
   hasilEmbung: HasilEmbung | null;
+  hasilMock: HasilMock | null;
   
   // State Tracking / Validation
   isBanjirDirty: boolean;
@@ -109,6 +131,7 @@ export interface HydrologyState {
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
+  setHasilMock: (hasil: HasilMock | null) => void;
   
   // Setters statis murni untuk keperluan internal/mocking
   setLoading: (loading: boolean) => void;
@@ -194,6 +217,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     reduksiPuncak: 45.2,
     umurSedimen: 50
   },
+  hasilMock: null,
   isBanjirDirty: false,
   isNeracaDirty: false,
   isLoading: false,
@@ -264,6 +288,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setHasilBanjir: (hasil) => set({ hasilBanjir: hasil, isBanjirDirty: false }),
   setHasilNeraca: (hasil) => set({ hasilNeraca: hasil, isNeracaDirty: false }),
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),
+  setHasilMock: (hasil) => set({ hasilMock: hasil, isNeracaDirty: true }),
 
   // Fetch semua stasiun dari sumber data/API
   fetchStasiun: async () => {
