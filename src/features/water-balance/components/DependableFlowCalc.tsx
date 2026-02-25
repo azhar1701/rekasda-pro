@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { Button } from '@/components/ui/forms/Button';
 
@@ -21,25 +21,26 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
   );
   const [calculatedFlow, setCalculatedFlow] = useState<number[]>([]);
 
-  useEffect(() => {
-    calculateFlow();
-  }, [runoffCoef, catchmentArea, monthlyData]);
-
-  const calculateFlow = () => {
+  // FIX BUG-4: Wrap calculateFlow in useCallback so it can be a stable dependency
+  const calculateFlow = useCallback(() => {
     const flows = monthlyData.map((data) => {
       if (data.rainyDays === 0) return 0;
-      
+
       // Calculate intensity (mm/hour) - simplified approach
       const intensity = data.rainfall / (data.rainyDays * 24); // mm/hour
-      
+
       // Q = 0.278 * C * I * A (m³/s)
       const Q = 0.278 * runoffCoef * intensity * catchmentArea;
-      
+
       return parseFloat(Q.toFixed(3));
     });
-    
+
     setCalculatedFlow(flows);
-  };
+  }, [monthlyData, runoffCoef, catchmentArea]);
+
+  useEffect(() => {
+    calculateFlow();
+  }, [calculateFlow]);
 
   const handleDataChange = (index: number, field: 'rainfall' | 'rainyDays', value: number) => {
     const newData = [...monthlyData];
