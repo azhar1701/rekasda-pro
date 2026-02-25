@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, CloudDrizzle, FileText } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
-import { FloodAnalysisTab } from '@/features/flood-analysis/components/FloodAnalysisTab';
+import { ModulBanjirRencana } from '@/features/flood-analysis/components/ModulBanjirRencana';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
 import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
 import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
@@ -167,7 +167,7 @@ const App: React.FC = () => {
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-28 md:pb-32">
           <div className="transition-opacity duration-300">
             {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-            {activeTab === Tab.BANJIR && <FloodAnalysisTab
+            {activeTab === Tab.BANJIR && <ModulBanjirRencana
               onSave={handleCalculationSave}
               onConsultAI={() => {
                 setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');

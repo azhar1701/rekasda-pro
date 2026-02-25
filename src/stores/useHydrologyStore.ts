@@ -43,6 +43,8 @@ export interface HasilEmbung {
 export interface HydrologyState {
   // State Fundamental
   luasDas: string;
+  panjangSungai: string;
+  curahHujanRencana: string;
   stasiunList: StasiunHidrologi[];
   selectedStasiun: StasiunHidrologi | null;
   
@@ -60,6 +62,8 @@ export interface HydrologyState {
 
   // Actions Basic
   setLuasDas: (luas: string) => void;
+  setPanjangSungai: (val: string) => void;
+  setCurahHujanRencana: (val: string) => void;
   fetchStasiun: () => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
   fetchDataHujan: (stasiunId: string, tahun?: number) => Promise<void>;
@@ -126,6 +130,8 @@ const generateMockDataHujan = (stasiunId: string, tahun: number = 2026): DataHuj
 export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   // Initial State
   luasDas: '',
+  panjangSungai: '',
+  curahHujanRencana: '',
   stasiunList: [],
   selectedStasiun: null,
   dataHujan: [],
@@ -159,6 +165,18 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setLuasDas: (luas) => set((state) => {
     if (state.luasDas !== luas) {
       return { luasDas: luas, isBanjirDirty: true, isNeracaDirty: true };
+    }
+    return state;
+  }),
+  setPanjangSungai: (val) => set((state) => {
+    if (state.panjangSungai !== val) {
+      return { panjangSungai: val, isBanjirDirty: true };
+    }
+    return state;
+  }),
+  setCurahHujanRencana: (val) => set((state) => {
+    if (state.curahHujanRencana !== val) {
+      return { curahHujanRencana: val, isBanjirDirty: true };
     }
     return state;
   }),
