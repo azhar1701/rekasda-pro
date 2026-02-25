@@ -18,6 +18,7 @@ interface HydrographDataPoint {
 
 interface FloodHydrographChartProps {
   data: HydrographDataPoint[];
+  secondaryData?: HydrographDataPoint[];
   qPeak?: number;
   tPeak?: number;
   title?: string;
@@ -29,25 +30,31 @@ interface FloodHydrographChartProps {
 // Custom Tooltip Component
 const CustomHydrographTooltip: React.FC<any> = ({ active, payload }) => {
   if (active && payload && payload.length > 0) {
-    const data = payload[0].payload;
     return (
-      <div className="bg-slate-900/85 backdrop-blur-sm text-white px-4 py-3 rounded-lg shadow-xl border border-slate-700/50 pointer-events-none">
-        <p className="text-sm font-semibold text-slate-100">
-          Waktu: <span className="text-teal-300">{data.time.toFixed(1)}</span> jam
+      <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-2xl border border-white/10 pointer-events-none z-50 min-w-[160px]">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-white/10 pb-1">
+          Waktu: <span className="text-white">{payload[0].payload.time.toFixed(1)} jam</span>
         </p>
-        <p className="text-sm font-semibold text-slate-100 mt-1">
-          Debit: <span className="text-emerald-300">{data.discharge.toFixed(2)}</span> m³/s
-        </p>
+        <div className="space-y-1.5">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.stroke || entry.fill }}></div>
+                <span className="text-xs font-medium text-slate-300">{entry.name}:</span>
+              </div>
+              <span className="text-xs font-bold text-white">{entry.value.toFixed(3)} <span className="text-[10px] text-slate-400 font-normal">m³/s</span></span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
   return null;
 };
 
-
-
 export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
   data,
+  secondaryData,
   qPeak = 0,
   tPeak = 0,
   title = 'Hidrograf Banjir Rencana',
@@ -68,32 +75,43 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
   const gradientId = `hydrograph-gradient-${Math.random().toString(36).substr(2, 9)}`;
 
   return (
-    <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+    <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-transparent">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Left: Title & Volume */}
           <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              {title}
+              {secondaryData && (
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+                  Dual Series
+                </span>
+              )}
+            </h3>
             {volume > 0 && (
-              <p className="text-sm text-slate-600 font-medium">
-                <span className="text-slate-400">Volume:</span> <span className="font-semibold text-slate-800">{volume.toFixed(0)} juta m³</span>
+              <p className="text-sm text-slate-600 font-medium mt-1">
+                <span className="text-slate-400">Total Volume:</span> <span className="font-semibold text-slate-800">{(volume / 1000).toFixed(2)} ribu m³</span>
               </p>
             )}
           </div>
-          
+
           {/* Right: Q-Peak & T-Peak */}
           {qPeak > 0 && (
             <div className="grid grid-cols-2 gap-8 md:justify-end">
               <div className="text-center md:text-right">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Q-Peak</p>
-                <p className="text-3xl font-bold text-teal-600 leading-none">{qPeak.toFixed(2)}</p>
-                <p className="text-xs text-slate-500 font-medium mt-1">m³/s</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Debit Puncak</p>
+                <div className="flex items-baseline md:justify-end gap-1">
+                  <span className="text-3xl font-black text-teal-600 leading-none tracking-tight">{qPeak.toFixed(2)}</span>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase">m³/s</span>
+                </div>
               </div>
               <div className="text-center md:text-right">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">T-Peak</p>
-                <p className="text-3xl font-bold text-slate-700 leading-none">{tPeak.toFixed(1)}</p>
-                <p className="text-xs text-slate-500 font-medium mt-1">jam</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Waktu Puncak</p>
+                <div className="flex items-baseline md:justify-end gap-1">
+                  <span className="text-3xl font-black text-slate-800 leading-none tracking-tight">{tPeak.toFixed(1)}</span>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase">Jam</span>
+                </div>
               </div>
             </div>
           )}
@@ -111,17 +129,16 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
               {/* Define Gradient */}
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={primaryColor} stopOpacity={0.7} />
-                  <stop offset="95%" stopColor={primaryColor} stopOpacity={0.05} />
+                  <stop offset="5%" stopColor={primaryColor} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
 
-              {/* Grid - Subtle and refined */}
+              {/* Grid */}
               <CartesianGrid
-                strokeDasharray="4 8"
-                stroke="#cbd5e1"
+                strokeDasharray="3 3"
+                stroke="#e2e8f0"
                 vertical={false}
-                opacity={0.4}
               />
 
               {/* X Axis */}
@@ -130,13 +147,14 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
                 label={{
                   value: 'Waktu (jam)',
                   position: 'bottom',
-                  offset: 10,
-                  style: { fontSize: '13px', fontWeight: 600, fill: '#64748b' },
+                  offset: 0,
+                  style: { fontSize: '11px', fontWeight: 700, fill: '#64748b' },
                 }}
-                tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
-                axisLine={false}
+                tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                axisLine={{ stroke: '#e2e8f0' }}
                 tickLine={false}
                 type="number"
+                domain={['auto', 'auto']}
               />
 
               {/* Y Axis */}
@@ -145,23 +163,40 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
                   value: 'Debit (m³/s)',
                   angle: -90,
                   position: 'insideLeft',
-                  offset: 10,
-                  style: { fontSize: '13px', fontWeight: 600, fill: '#64748b' },
+                  offset: 15,
+                  style: { fontSize: '11px', fontWeight: 700, fill: '#64748b' },
                 }}
-                tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
-                axisLine={false}
+                tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                axisLine={{ stroke: '#e2e8f0' }}
                 tickLine={false}
               />
 
-              {/* Area - Main hydrograph */}
+              {/* Secondary Area (Unit Hydrograph) */}
+              {secondaryData && (
+                <Area
+                  data={secondaryData}
+                  name="Unit Hydrograph"
+                  type="monotone"
+                  dataKey="discharge"
+                  stroke="#94a3b8"
+                  strokeWidth={2}
+                  strokeDasharray="4 4"
+                  fill="none"
+                  isAnimationActive={false}
+                  dot={false}
+                />
+              )}
+
+              {/* Area - Main hydrograph (DFH) */}
               <Area
-                type="natural"
+                name={secondaryData ? 'Design Flood Hydrograph' : 'Hydrograph'}
+                type="monotone"
                 dataKey="discharge"
                 stroke={primaryColor}
                 strokeWidth={3}
                 fill={`url(#${gradientId})`}
                 isAnimationActive={true}
-                animationDuration={800}
+                animationDuration={1000}
                 dot={false}
               />
 
@@ -171,13 +206,13 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
                   y={qPeak}
                   stroke="#f97316"
                   strokeDasharray="5 5"
-                  opacity={0.3}
+                  opacity={0.4}
                   label={{
-                    value: `Max: ${qPeak.toFixed(2)} m³/s`,
+                    value: `Qp: ${qPeak.toFixed(2)}`,
                     position: 'insideRight',
                     fill: '#f97316',
-                    fontSize: 11,
-                    fontWeight: 600,
+                    fontSize: 10,
+                    fontWeight: 700,
                     offset: -10,
                   }}
                 />
@@ -188,7 +223,7 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
                 <ReferenceDot
                   x={peakPoint.time}
                   y={peakPoint.discharge}
-                  r={6}
+                  r={5}
                   fill={primaryColor}
                   stroke="white"
                   strokeWidth={2}
@@ -200,8 +235,8 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
                 content={<CustomHydrographTooltip />}
                 cursor={{
                   stroke: primaryColor,
-                  strokeOpacity: 0.3,
-                  strokeWidth: 1,
+                  strokeOpacity: 0.2,
+                  strokeWidth: 2,
                 }}
               />
             </AreaChart>
@@ -210,33 +245,36 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
       </div>
 
       {/* Footer Info */}
-      {data.length > 0 && (
-        <div className="px-6 py-2 border-t border-slate-100 bg-slate-50/50">
-          <div className="grid grid-cols-3 gap-6 items-center">
-            {/* Left: Durasi */}
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Durasi</p>
-              <p className="text-sm font-semibold text-slate-900 mt-2">
-                {data[data.length - 1].time.toFixed(1)} <span className="text-xs font-medium text-slate-600">jam</span>
-              </p>
-            </div>
-            
-            {/* Center: Data Points */}
-            <div className="text-center">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Data Points</p>
-              <p className="text-sm font-semibold text-slate-900 mt-2">
-                {data.length} <span className="text-xs font-medium text-slate-600">titik</span>
-              </p>
-            </div>
-            
-            {/* Right: Legend */}
-            <div className="text-right flex items-center justify-end gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: primaryColor, opacity: 0.7 }}></div>
-              <span className="text-xs font-medium text-slate-600">Area hydrograf</span>
-            </div>
+      <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex gap-6">
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Durasi Total</p>
+            <p className="text-sm font-black text-slate-800 mt-1">
+              {data.length > 0 ? data[data.length - 1].time.toFixed(1) : 0} <span className="text-[10px] font-bold text-slate-500">jam</span>
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resolusi</p>
+            <p className="text-sm font-black text-slate-800 mt-1">
+              {data.length} <span className="text-[10px] font-bold text-slate-500">titik</span>
+            </p>
           </div>
         </div>
-      )}
+
+        {/* Legend */}
+        <div className="flex items-center gap-4 py-1 px-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: primaryColor }}></div>
+            <span className="text-[10px] font-bold text-slate-600 uppercase">DFH (Konvolusi)</span>
+          </div>
+          {secondaryData && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-0.5 bg-slate-400 rounded-full"></div>
+              <span className="text-[10px] font-bold text-slate-600 uppercase">Unit Hydrograph</span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

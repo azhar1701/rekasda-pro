@@ -26,3 +26,13 @@ export {
   calculateHSSGamma1,
   calculateHSSSnyder,
 } from '../flood';
+
+// Convolution (Superposition) — SNI 2415:2016 Pasal 6
+export {
+  convolveUnitHydrograph,
+  resampleUnitHydrograph,
+  computeDesignFloodHydrograph,
+  type ConvolutionInput,
+  type ConvolutionResult,
+  type HydrographPoint as ConvolutionHydrographPoint,
+} from './convolution';

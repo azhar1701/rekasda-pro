@@ -7,6 +7,8 @@ import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-an
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
 import { calculateRationalMethod, convertKm2ToHa, calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine';
+import { computeDesignFloodHydrograph } from '@/lib/engine/flood/convolution';
+import { useHydrologyStore, HasilKonvolusi } from '@/stores/useHydrologyStore';
 import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
@@ -101,6 +103,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
+  const [convolutionResult, setConvolutionResult] = useState<HasilKonvolusi | null>(null);
+  const [unitHydrographData, setUnitHydrographData] = useState<any[]>([]);
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
   const [engineWarnings, setEngineWarnings] = useState<string[]>([]);
@@ -109,6 +113,9 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   React.useEffect(() => { sidebarWidthRef.current = sidebarWidth; }, [sidebarWidth]);
   // FIX BUG-3: ref guard against re-entrant useEffect for return periods
   const lastRainfallKeyRef = React.useRef('');
+
+  // Hydrology Store Integration
+  const { distribusiHujanJamJaman, setHasilKonvolusi } = useHydrologyStore();
 
   // SNI 2415:2016 Workflow Validation
   const sniWorkflow = useMemo(() => {
@@ -217,13 +224,29 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       const Tp = calculateTp(Tg);
       const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
       const Q = calculateQp(nakayasuInputs.A, nakayasuInputs.Ro, Tp, T03);
-      const vol = Q * Tp * 3600;
-      setQPeak(Q);
-      setTPeak(Tp);
-      setVolume(vol);
-      setHydrographData(generateNakayasuHydrograph(Q, Tp, Tg, nakayasuInputs.Alpha));
+
+      const uhOrdinates = generateNakayasuHydrograph(Q, Tp, Tg, nakayasuInputs.Alpha);
+      setUnitHydrographData(uhOrdinates);
+
+      // PRODUCTION FEATURE F-04: Auto-Convolution with ABM
+      if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0) {
+        const conv = computeDesignFloodHydrograph(uhOrdinates, distribusiHujanJamJaman, 0.1);
+        setConvolutionResult(conv);
+        setHasilKonvolusi(conv);
+        setQPeak(conv.peakDischarge);
+        setTPeak(conv.timeToPeak);
+        setVolume(conv.totalVolume);
+        setHydrographData(conv.floodHydrograph);
+      } else {
+        setConvolutionResult(null);
+        setHasilKonvolusi(null);
+        setQPeak(Q);
+        setTPeak(Tp);
+        setVolume(Q * Tp * 3600); // Simple volume estimate for UH
+        setHydrographData(uhOrdinates);
+      }
     }
-  }, [method, rationalInputs, nakayasuInputs, calculateRationalDischarge]);
+  }, [method, rationalInputs, nakayasuInputs, calculateRationalDischarge, distribusiHujanJamJaman, setHasilKonvolusi]);
 
   // FIX BUG-3: Stabilize dependency — use ref guard to prevent infinite re-trigger.
   // The rainfall key only changes when the user edits rainfall values or loads pilot data.
@@ -250,10 +273,19 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       const Tg = calculateTg(nakayasuInputs.L);
       const Tp = calculateTp(Tg);
       const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
-      const updated = returnPeriods.map(rp => ({
-        ...rp,
-        qPeak: calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03)
-      }));
+
+      const updated = returnPeriods.map(rp => {
+        const Qp = calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03);
+
+        // PRODUCTION FEATURE F-04: Convolution per return period
+        if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0) {
+          const uhOrdinates = generateNakayasuHydrograph(Qp, Tp, Tg, nakayasuInputs.Alpha);
+          const conv = computeDesignFloodHydrograph(uhOrdinates, distribusiHujanJamJaman, 0.1);
+          return { ...rp, qPeak: conv.peakDischarge };
+        }
+
+        return { ...rp, qPeak: Qp };
+      });
       setReturnPeriods(updated);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1017,7 +1049,14 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">Hidrograf Banjir Rencana</h2>
+                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    Hidrograf Banjir Rencana
+                    {method === 'NAKAYASU' && (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${convolutionResult ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                        {convolutionResult ? 'Konvolusi Aktif (DFH)' : 'Unit Hydrograph (Ro=10mm)'}
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-xs text-slate-500 mt-1">
                     Metode: <span className="font-bold text-indigo-600">{method.replace(/_/g, ' ')}</span> |
                     Debit Puncak: <span className="font-bold text-teal-600">{qPeak.toFixed(2)} m³/s</span>
@@ -1041,6 +1080,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
               )}
               <FloodHydrographChart
                 data={hydrographData}
+                secondaryData={convolutionResult ? unitHydrographData : undefined}
                 qPeak={qPeak}
                 tPeak={tPeak}
                 volume={volume}

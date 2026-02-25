@@ -59,6 +59,14 @@ export interface HasilBanjir {
   hidrograf: { time: number; inflow: number }[];
 }
 
+export interface HasilKonvolusi {
+  floodHydrograph: { time: number; discharge: number }[];
+  peakDischarge: number;
+  timeToPeak: number;
+  totalVolume: number;
+  componentHydrographs: { time: number; discharge: number }[][];
+}
+
 export interface HasilNeraca {
   isSurplus: boolean;
   totalSurplusDefisit: number;
@@ -119,6 +127,7 @@ export interface HydrologyState {
   hasilARF: HasilARF | null;
   hasilAnalisisFrekuensi: HasilAnalisisFrekuensi | null;
   hasilBanjir: HasilBanjir | null;
+  hasilKonvolusi: HasilKonvolusi | null;
   hasilNeraca: HasilNeraca | null;
   hasilEmbung: HasilEmbung | null;
   hasilMock: HasilMock | null;
@@ -144,6 +153,7 @@ export interface HydrologyState {
   setHasilAnalisisFrekuensi: (hasil: HasilAnalisisFrekuensi | null) => void;
   setSelectedKalaUlang: (kalaUlang: number) => void;
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
+  setHasilKonvolusi: (hasil: HasilKonvolusi | null) => void;
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
   setHasilMock: (hasil: HasilMock | null) => void;
@@ -234,6 +244,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     umurSedimen: 50
   },
   hasilMock: null,
+  hasilKonvolusi: null,
   neracaFinal: null,
   distribusiHujanJamJaman: null,
   durasiHujan: 6,
@@ -305,6 +316,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     };
   }),
   setHasilBanjir: (hasil) => set({ hasilBanjir: hasil, isBanjirDirty: false }),
+  setHasilKonvolusi: (hasil) => set({ hasilKonvolusi: hasil }),
   setHasilNeraca: (hasil) => set({ hasilNeraca: hasil, isNeracaDirty: false }),
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),
   setHasilMock: (hasil) => set({ hasilMock: hasil, isNeracaDirty: true }),
