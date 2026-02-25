@@ -141,23 +141,33 @@ export interface HydrologyState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions Basic
+  // Setters dengan Dependency Tracking & Workflow Otomatis (Pipelines)
   setLuasDas: (luas: string) => void;
   setPanjangSungai: (val: string) => void;
   setCurahHujanRencana: (val: string) => void;
+  
+  // Pipeline 1: Master Data -> Hujan Rata-rata DAS
   fetchStasiun: () => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
   fetchDataHujan: (stasiunId: string, tahun?: number) => Promise<void>;
   setHasilThiessen: (hasil: HasilThiessen | null) => void;
   setHasilARF: (hasil: HasilARF | null) => void;
+  
+  // Pipeline 2: Hujan Rata-rata DAS -> Analisis Frekuensi -> Hujan Rencana
   setHasilAnalisisFrekuensi: (hasil: HasilAnalisisFrekuensi | null) => void;
   setSelectedKalaUlang: (kalaUlang: number) => void;
+  
+  // Pipeline 3: Hujan Rencana -> Distribusi Jam-jaman -> Konvolusi -> Banjir
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
   setHasilKonvolusi: (hasil: HasilKonvolusi | null) => void;
+  
+  // Pipeline 4: Evapotranspirasi + Hujan Rencana -> Neraca Air (Mock)
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
-  setHasilEmbung: (hasil: HasilEmbung | null) => void;
   setHasilMock: (hasil: HasilMock | null) => void;
   setNeracaFinal: (data: NeracaFinalRow[] | null) => void;
+  
+  // Pipeline 5: Banjir + Neraca Air -> Embung
+  setHasilEmbung: (hasil: HasilEmbung | null) => void;
   
   // Setters statis murni untuk keperluan internal/mocking
   setLoading: (loading: boolean) => void;
@@ -248,8 +258,8 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   neracaFinal: null,
   distribusiHujanJamJaman: null,
   durasiHujan: 6,
-  isBanjirDirty: false,
-  isNeracaDirty: false,
+  isBanjirDirty: false, // Menandakan bahwa parameter banjir berubah dan perlu re-kalkulasi
+  isNeracaDirty: false, // Menandakan bahwa parameter neraca air berubah dan perlu re-kalkulasi
   isLoading: false,
   error: null,
 
@@ -257,22 +267,34 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
   
-  // Setters dengan Dependency Tracking (DIRTY STATE MIDDLEWARE)
+  // Setters dengan Dependency Tracking (DIRTY STATE MIDDLEWARE & CASCADING INVALIDATION)
   setLuasDas: (luas) => set((state) => {
     if (state.luasDas !== luas) {
-      return { luasDas: luas, isBanjirDirty: true, isNeracaDirty: true };
+      // Invalidate both Flood and Water Balance when Catchment Area changes
+      return { luasDas: luas, isBanjirDirty: true, isNeracaDirty: true, hasilKonvolusi: null, hasilBanjir: null, hasilMock: null, neracaFinal: null };
     }
     return state;
   }),
   setPanjangSungai: (val) => set((state) => {
     if (state.panjangSungai !== val) {
-      return { panjangSungai: val, isBanjirDirty: true };
+      // Stream length only affects Unit Hydrograph (Flood) Time of Concentration / Time Lag
+      return { panjangSungai: val, isBanjirDirty: true, hasilKonvolusi: null, hasilBanjir: null };
     }
     return state;
   }),
   setCurahHujanRencana: (val) => set((state) => {
     if (state.curahHujanRencana !== val) {
-      return { curahHujanRencana: val, isBanjirDirty: true };
+      // Design Rainfall affects EVERYTHING (Flood -> Routing, Mock -> Water Balance)
+      return { 
+        curahHujanRencana: val, 
+        isBanjirDirty: true, 
+        isNeracaDirty: true,
+        hasilKonvolusi: null,
+        hasilBanjir: null,
+        hasilMock: null,
+        neracaFinal: null,
+        hasilEmbung: null 
+      };
     }
     return state;
   }),
@@ -296,6 +318,11 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setHasilThiessen: (hasil) => set({
     hasilThiessen: hasil,
     isBanjirDirty: true,
+    isNeracaDirty: true, // Thiessen affects water balance API eventually
+    hasilAnalisisFrekuensi: null, // cascade invalidation
+    curahHujanRencana: '',
+    hasilKonvolusi: null,
+    hasilBanjir: null,
   }),
   setHasilARF: (hasil) => set({
     hasilARF: hasil,
@@ -303,24 +330,55 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   }),
   setHasilAnalisisFrekuensi: (hasil) => set({ 
     hasilAnalisisFrekuensi: hasil, 
-    isBanjirDirty: true 
+    isBanjirDirty: true,
+    isNeracaDirty: true,
   }),
   setSelectedKalaUlang: (kalaUlang) => set((state) => {
     const freq = state.hasilAnalisisFrekuensi;
     if (!freq) return state;
     const match = freq.curahHujanRencana.find(v => v.kalaUlang === kalaUlang);
+    
+    // Automatically pipe the selected design rainfall into the global state for next modules
+    const newRainfall = match ? String(match.curahHujan) : state.curahHujanRencana;
+    
     return {
       hasilAnalisisFrekuensi: { ...freq, selectedKalaUlang: kalaUlang },
-      curahHujanRencana: match ? String(match.curahHujan) : state.curahHujanRencana,
-      isBanjirDirty: true,
+      curahHujanRencana: newRainfall,
+      isBanjirDirty: state.curahHujanRencana !== newRainfall ? true : state.isBanjirDirty,
+      isNeracaDirty: state.curahHujanRencana !== newRainfall ? true : state.isNeracaDirty,
+      // Clear downstream calculations to force them to recalculate with new return period
+      hasilKonvolusi: state.curahHujanRencana !== newRainfall ? null : state.hasilKonvolusi,
+      hasilBanjir: state.curahHujanRencana !== newRainfall ? null : state.hasilBanjir,
     };
   }),
-  setHasilBanjir: (hasil) => set({ hasilBanjir: hasil, isBanjirDirty: false }),
-  setHasilKonvolusi: (hasil) => set({ hasilKonvolusi: hasil }),
-  setHasilNeraca: (hasil) => set({ hasilNeraca: hasil, isNeracaDirty: false }),
+  setHasilBanjir: (hasil) => set({ 
+    hasilBanjir: hasil, 
+    isBanjirDirty: false,
+    // When flood changes, Reservoir Routing (Embung) must be invalidated
+    hasilEmbung: null
+  }),
+  setHasilKonvolusi: (hasil) => set({ 
+    hasilKonvolusi: hasil,
+    // When Convolution updates, it usually implies a Flood hydrograph update, we should track this
+  }),
+  setHasilNeraca: (hasil) => set({ 
+    hasilNeraca: hasil, 
+    isNeracaDirty: false,
+    // When water balance changes, Reservoir Routing (Embung) must be invalidated
+    hasilEmbung: null 
+  }),
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),
-  setHasilMock: (hasil) => set({ hasilMock: hasil, isNeracaDirty: true }),
-  setNeracaFinal: (data) => set({ neracaFinal: data, isNeracaDirty: false }),
+  setHasilMock: (hasil) => set({ 
+    hasilMock: hasil, 
+    isNeracaDirty: true,
+    // Mock generates the inflow for Neraca Final
+    neracaFinal: null
+  }),
+  setNeracaFinal: (data) => set({ 
+    neracaFinal: data, 
+    isNeracaDirty: false,
+    hasilEmbung: null 
+  }),
 
   // Fetch semua stasiun dari sumber data/API
   fetchStasiun: async () => {

@@ -174,6 +174,13 @@ export const validateHSSNakayasuInput = (input: HSSNakayasuInput): boolean => {
   return true;
 };
 
+const HSSGamma1InputSchema = z.object({
+  Ro: z.number().min(SNI_VALIDATION_LIMITS.unitRainfall.min, 'Hujan satuan terlalu kecil').max(SNI_VALIDATION_LIMITS.unitRainfall.max),
+  A: z.number().min(SNI_VALIDATION_LIMITS.catchmentArea.min, 'Luas DAS harus > 0').max(SNI_VALIDATION_LIMITS.catchmentArea.max),
+  L: z.number().min(SNI_VALIDATION_LIMITS.riverLength.min, 'Panjang sungai harus > 0').max(SNI_VALIDATION_LIMITS.riverLength.max),
+  Tc: z.number().positive('Waktu konsentrasi harus positif').optional(),
+});
+
 /**
  * HSS Gamma I - Perhitungan Hidrograf Satuan Sintetik
  * Metode Sri Harto (1993)
@@ -185,7 +192,8 @@ export const validateHSSNakayasuInput = (input: HSSNakayasuInput): boolean => {
  * - Tb = 3 × Tp (Waktu dasar)
  */
 export const calculateHSSGamma1 = (input: HSSGamma1Input): HSSGamma1Output => {
-  const { Ro, A, L, Tc: TcInput } = input;
+  const validated = HSSGamma1InputSchema.parse(input);
+  const { Ro, A, L, Tc: TcInput } = validated;
 
   // Perhitungan Tc jika tidak diinput (asumsi slope 0.01)
   const Tc = TcInput || 0.43 * Math.pow(L / Math.sqrt(0.01), 0.467);
@@ -212,6 +220,15 @@ export const calculateHSSGamma1 = (input: HSSGamma1Input): HSSGamma1Output => {
   return { Qp: parseFloat(Qp.toFixed(3)), Tp: parseFloat(Tp.toFixed(2)), Tb: parseFloat(Tb.toFixed(2)), hydrograph };
 };
 
+const HSSSnyderInputSchema = z.object({
+  Ro: z.number().min(SNI_VALIDATION_LIMITS.unitRainfall.min).max(SNI_VALIDATION_LIMITS.unitRainfall.max),
+  A: z.number().min(SNI_VALIDATION_LIMITS.catchmentArea.min, 'Luas DAS harus > 0').max(SNI_VALIDATION_LIMITS.catchmentArea.max),
+  L: z.number().min(SNI_VALIDATION_LIMITS.riverLength.min, 'Panjang sungai harus > 0').max(SNI_VALIDATION_LIMITS.riverLength.max),
+  Lc: z.number().min(0.01, 'Panjang ke titik berat harus > 0').max(SNI_VALIDATION_LIMITS.riverLength.max),
+  Ct: z.number().min(0.1, 'Koefisien Ct harus > 0').max(10), // Limit arbitrary to ensure safety
+  Cp: z.number().min(0.1, 'Koefisien Cp harus > 0').max(10),
+});
+
 /**
  * HSS Snyder - Perhitungan Hidrograf Satuan Sintetik
  * Metode Snyder (1938)
@@ -223,7 +240,8 @@ export const calculateHSSGamma1 = (input: HSSGamma1Input): HSSGamma1Output => {
  * - Tb = 5 × Tp (Waktu dasar)
  */
 export const calculateHSSSnyder = (input: HSSSnyderInput): HSSSnyderOutput => {
-  const { Ro, A, L, Lc, Ct, Cp } = input;
+  const validated = HSSSnyderInputSchema.parse(input);
+  const { Ro, A, L, Lc, Ct, Cp } = validated;
 
   const tpR = Ct * Math.pow(L * Lc, 0.3);
   const tr = tpR / 5.5;

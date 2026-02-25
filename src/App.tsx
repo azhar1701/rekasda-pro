@@ -6,6 +6,7 @@ import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanc
 import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
 import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
+import { AIConsultantDrawer } from '@/features/ai-consultant/AIConsultantDrawer';
 import { MasterHidrologiTab } from '@/features/master-data/components/MasterHidrologiTab';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataTab } from '@/features/history/components/AllDataTab';
@@ -15,6 +16,7 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ToastContainer } from '@/components/ui/feedback/Toast';
 import { CalculationType } from '@/types/types';
 import type { CalculationResult } from '@/types/common.types';
+import type { ActiveModule } from '@/hooks/useAIContext';
 
 import { Header } from '@/components/ui/navigation/Header';
 
@@ -43,6 +45,7 @@ const App: React.FC = () => {
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
   const [scrolled, setScrolled] = useState(false);
+  const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
   const { calculations, saveCalculation } = useDatabase();
   const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
 
@@ -94,7 +97,7 @@ const App: React.FC = () => {
     const contextStr = `Tipe: ${type}\nIdentitas: ${JSON.stringify(inputs.site)}\nInput: ${JSON.stringify(inputs)}\nOutput: ${JSON.stringify(outputs)}`;
     setLastContext(contextStr);
     setAiInitialQuery(`Analisis hasil perhitungan ${type === CalculationType.MANNING ? 'Saluran Manning' : 'Debit Rasional'} di ${inputs.site?.channelName || 'lokasi ini'} menurut SNI.`);
-    setActiveTab(Tab.AI);
+    setIsAIDrawerOpen(true); // Open drawer instead of switching tab
   };
 
   const handleCalculationSave = (type: CalculationType, inputs: any, outputs: any) => {
@@ -159,13 +162,13 @@ const App: React.FC = () => {
               onConsultAI={() => {
                 setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');
                 setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
-                setActiveTab(Tab.AI);
+                setIsAIDrawerOpen(true);
               }}
             />}
             {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
               setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
               setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
-              setActiveTab(Tab.AI);
+              setIsAIDrawerOpen(true);
             }} />}
             {activeTab === Tab.EMBUNG && <EmbungDashboard />}
             {activeTab === Tab.MASTER && <MasterHidrologiTab />}
@@ -187,6 +190,13 @@ const App: React.FC = () => {
 
         <ReportModal isOpen={reportModalOpen} data={tempCalculation} onClose={() => setReportModalOpen(false)} onConfirmSave={saveToHistory} />
         <AllDataDetailModal isOpen={!!viewAllDataDetail} data={viewAllDataDetail} onClose={() => setViewAllDataDetail(null)} />
+
+        {/* Context-Aware AI Consultant Drawer — accessible from ANY tab */}
+        <AIConsultantDrawer
+          isOpen={isAIDrawerOpen}
+          onClose={() => setIsAIDrawerOpen(false)}
+          activeTab={activeTab as ActiveModule}
+        />
 
         {/* Modenized Map Detail Modal */}
         {mapDetailItem && (
@@ -339,10 +349,10 @@ const App: React.FC = () => {
               {/* Divider before AI utility */}
               <div className="w-px h-6 bg-slate-200/80 mx-1 shrink-0 hidden md:block" />
 
-              {/* AI Consultant — Global Utility (special styling) */}
+              {/* AI Consultant — Global Utility (opens drawer from any tab) */}
               <button
-                onClick={() => setActiveTab(Tab.AI)}
-                className={`flex flex-col items-center justify-center min-w-[44px] min-h-[52px] px-1 md:px-4 py-2 rounded-xl transition-all duration-200 shrink-0 ${activeTab === Tab.AI
+                onClick={() => setIsAIDrawerOpen((prev) => !prev)}
+                className={`relative flex flex-col items-center justify-center min-w-[44px] min-h-[52px] px-1 md:px-4 py-2 rounded-xl transition-all duration-200 shrink-0 ${isAIDrawerOpen
                   ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200'
                   : 'text-indigo-400 hover:bg-indigo-50/50 hover:text-indigo-600'
                   }`}
@@ -350,7 +360,11 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-center">
                   <Sparkles strokeWidth={2.5} className="w-5 h-5" />
                 </div>
-                <span className={`text-[10px] md:text-xs mt-1 transition-all duration-200 ${activeTab === Tab.AI ? 'font-bold' : 'font-medium'}`}>Konsultan</span>
+                <span className={`text-[10px] md:text-xs mt-1 transition-all duration-200 ${isAIDrawerOpen ? 'font-bold' : 'font-medium'}`}>Konsultan</span>
+                {/* Pulse dot when drawer is active */}
+                {isAIDrawerOpen && (
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                )}
               </button>
             </div>
           </div>
