@@ -309,9 +309,9 @@ const App: React.FC = () => {
         )}
 
         {/* --- Navigation Bar (Mobile-First Bottom Nav — Workflow Grouped) --- */}
-        <nav className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-auto md:max-w-full">
-          <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 md:border md:shadow-lg md:rounded-2xl px-2 py-2 safe-area-inset-bottom">
-            <div className="flex items-center justify-around md:gap-1 overflow-x-auto scrollbar-hide gap-0.5">
+        <nav className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:right-auto z-50 md:w-fit">
+          <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 md:border md:shadow-lg md:rounded-2xl px-3 md:px-4 py-2 safe-area-inset-bottom">
+            <div className="flex items-center justify-evenly md:justify-center md:gap-1 md:min-w-max overflow-x-auto scrollbar-hide gap-0.5">
               {navGroups.map((group, groupIndex) => (
                 <React.Fragment key={groupIndex}>
                   {/* Divider between groups */}
@@ -343,8 +343,8 @@ const App: React.FC = () => {
               <button
                 onClick={() => setActiveTab(Tab.AI)}
                 className={`flex flex-col items-center justify-center min-w-[44px] min-h-[52px] px-1 md:px-4 py-2 rounded-xl transition-all duration-200 shrink-0 ${activeTab === Tab.AI
-                    ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200'
-                    : 'text-indigo-400 hover:bg-indigo-50/50 hover:text-indigo-600'
+                  ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200'
+                  : 'text-indigo-400 hover:bg-indigo-50/50 hover:text-indigo-600'
                   }`}
               >
                 <div className="flex items-center justify-center">
