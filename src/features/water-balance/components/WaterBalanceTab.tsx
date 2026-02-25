@@ -387,8 +387,8 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                             if (val !== '') setLuasDas(val);
                           }}
                           className={`w-full h-10 px-3 pr-12 text-sm bg-white rounded-lg font-semibold text-right focus:ring-2 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isLuasDasOverridden
-                              ? 'border-2 border-amber-400 focus:border-amber-500 focus:ring-amber-500/20'
-                              : 'border border-slate-200 focus:border-blue-500 focus:ring-blue-500/20'
+                            ? 'border-2 border-amber-400 focus:border-amber-500 focus:ring-amber-500/20'
+                            : 'border border-slate-200 focus:border-blue-500 focus:ring-blue-500/20'
                             }`}
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">km²</span>
@@ -847,96 +847,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </div>
             </div>
 
-            {/* TABLE SECTION - Collapsible */}
-            <Collapsible title="Tabel Detail Bulanan" defaultOpen={true} badge="12 Bulan">
-              <p className="text-xs text-slate-500 mb-4">Data lengkap neraca air per bulan</p>
-
-              {/* Desktop: Table */}
-              <div className="hidden md:block overflow-x-auto overflow-y-auto max-h-[400px] border border-white/50 rounded-xl relative shadow-inner bg-white/40 backdrop-blur-md">
-                <table className="w-full">
-                  <thead className="bg-slate-50/80 backdrop-blur-md border-b border-white/50 sticky top-0 z-10 shadow-sm">
-                    <tr>
-                      <th className="text-left py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Bulan</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-blue-600 uppercase tracking-wide">Debit Andalan</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Domestik</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Irigasi</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-emerald-600 uppercase tracking-wide">Debit Lingkungan</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-orange-600 uppercase tracking-wide">Total Demand</th>
-                      <th className="text-right py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Neraca</th>
-                      <th className="text-center py-3 px-4 text-xs font-bold text-slate-600 uppercase tracking-wide">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((row, i) => (
-                      <tr key={i} className={`border-b border-slate-100 ${row.balance < 0 ? 'bg-rose-50/30' : ''} even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors`}>
-                        <td className="py-3 px-4 font-bold text-slate-700">{row.month}</td>
-                        <td className="py-3 px-4 text-right font-semibold text-blue-600 font-mono">{row.supply}</td>
-                        <td className="py-3 px-4 text-right text-slate-600 font-mono">{row.domesticDemand}</td>
-                        <td className="py-3 px-4 text-right text-slate-600 font-mono">{row.agricultureDemand}</td>
-                        <td className="py-3 px-4 text-right text-emerald-600 font-mono">{row.environmentalFlow}</td>
-                        <td className="py-3 px-4 text-right font-semibold text-orange-600 font-mono">{row.totalDemand}</td>
-                        <td className={`py-3 px-4 text-right font-bold font-mono ${row.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {row.balance >= 0 ? '+' : ''}{row.balance}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
-                            row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>
-                            {row.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile: Card View */}
-              <div className="md:hidden space-y-3">
-                {results.map((row, i) => (
-                  <div key={i} className={`p-4 rounded-lg border space-y-3 ${row.balance < 0 ? 'bg-rose-50/30 border-rose-200' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-base font-bold text-slate-900">{row.month}</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${row.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
-                        row.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                        {row.status}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Supply</div>
-                        <div className="font-bold text-blue-600">{row.supply} m³/s</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Total Demand</div>
-                        <div className="font-bold text-orange-600">{row.totalDemand} m³/s</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Domestik</div>
-                        <div className="font-semibold text-slate-700">{row.domesticDemand} m³/s</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Pertanian</div>
-                        <div className="font-semibold text-slate-700">{row.agricultureDemand} m³/s</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Debit Lingkungan</div>
-                        <div className="font-semibold text-emerald-700">{row.environmentalFlow} m³/s</div>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-slate-200">
-                      <div className="text-xs text-slate-500 font-medium mb-1">Neraca</div>
-                      <div className={`text-lg font-bold ${row.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {row.balance >= 0 ? '+' : ''}{row.balance} m³/s
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Collapsible>
           </div>
         </div>
 
@@ -996,6 +906,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           document.body
         )
       }
-    </div>
+    </div >
   );
 };
