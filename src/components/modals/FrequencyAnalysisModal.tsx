@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckCircle } from 'lucide-react';
+import { X, CheckCircle, Download, Save, AlertTriangle } from 'lucide-react';
 import { DataInputTable } from './FrequencyAnalysisModal/DataInputTable';
 import { StatCard } from './FrequencyAnalysisModal/StatCard';
 import { calculateStatistics, performFrequencyAnalysis, type DistributionMethod } from '@/lib/engine/statistics/frequency';
 import { validateDistributionFit } from '@/lib/engine/statistics/goodnessOfFit';
+import { useHydrologyStore, type HasilAnalisisFrekuensi } from '@/stores/useHydrologyStore';
 
 export interface RainfallDataPoint {
   year: number;
@@ -39,6 +40,62 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
   const [goodnessOfFit, setGoodnessOfFit] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
 
+  // Track which rows were manually edited (for amber border)
+  const [editedRows, setEditedRows] = useState<Set<number>>(new Set());
+  // Track whether data was autofilled from store
+  const [isAutofilled, setIsAutofilled] = useState(false);
+
+  // ── Global Store ──
+  const dataHujan = useHydrologyStore(s => s.dataHujan);
+  const selectedStasiun = useHydrologyStore(s => s.selectedStasiun);
+  const setHasilAnalisisFrekuensi = useHydrologyStore(s => s.setHasilAnalisisFrekuensi);
+
+  // ── Extract Annual Maximum from Master Data ──
+  const annualMaxData = useMemo(() => {
+    if (!dataHujan || dataHujan.length === 0) return [];
+
+    // Group by year, find daily max per year
+    const byYear = new Map<number, number>();
+    dataHujan.forEach(d => {
+      const year = new Date(d.tanggal).getFullYear();
+      const current = byYear.get(year) || 0;
+      if (d.curah_hujan > current) {
+        byYear.set(year, d.curah_hujan);
+      }
+    });
+
+    return Array.from(byYear.entries())
+      .map(([year, value]) => ({ year, value }))
+      .sort((a, b) => a.year - b.year);
+  }, [dataHujan]);
+
+  const canAutofill = annualMaxData.length > 0 && selectedStasiun !== null;
+
+  // ── Autofill Handler ──
+  const handleAutofill = useCallback(() => {
+    if (annualMaxData.length === 0) return;
+    setData(annualMaxData);
+    setEditedRows(new Set());
+    setIsAutofilled(true);
+  }, [annualMaxData]);
+
+  // ── Hybrid data handler ──
+  const handleDataChange = useCallback((newData: RainfallDataPoint[]) => {
+    // Detect which rows changed vs autofill
+    if (isAutofilled) {
+      const newEdited = new Set(editedRows);
+      newData.forEach((row, i) => {
+        const original = annualMaxData.find(d => d.year === row.year);
+        if (original && original.value !== row.value) {
+          newEdited.add(i);
+        }
+      });
+      setEditedRows(newEdited);
+    }
+    setData(newData);
+  }, [isAutofilled, editedRows, annualMaxData]);
+
+  // ── Analysis calculation ──
   useEffect(() => {
     if (data.length >= 3) {
       try {
@@ -60,11 +117,34 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
     }
   }, [data, method]);
 
+  // ── Save to Global Store ──
+  const handleSaveToStore = useCallback(() => {
+    if (!results || !goodnessOfFit) return;
+
+    const hasil: HasilAnalisisFrekuensi = {
+      metodeTerpilih: method === 'logpearson3' ? 'Log-Pearson III'
+        : method === 'gumbel' ? 'Gumbel'
+          : method === 'lognormal' ? 'Log-Normal'
+            : 'Normal',
+      lulusUjiKecocokan: goodnessOfFit.isValid,
+      curahHujanRencana: results.designValues.map((item: any) => ({
+        kalaUlang: item.returnPeriod,
+        curahHujan: Number(item.designValue.toFixed(2)),
+      })),
+      selectedKalaUlang: null,
+    };
+
+    setHasilAnalisisFrekuensi(hasil);
+    onClose();
+  }, [results, goodnessOfFit, method, setHasilAnalisisFrekuensi, onClose]);
+
   if (!isOpen) return null;
+
+  const canSave = results && goodnessOfFit;
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Backdrop — must receive pointer events to dismiss on click */}
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
 
       {/* Modal */}
@@ -72,7 +152,14 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
         {/* Header (Fixed) */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
-          <h2 className="text-lg font-bold text-gray-900">Analisis Frekuensi Hujan</h2>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Analisis Frekuensi Hujan</h2>
+            {selectedStasiun && (
+              <p className="text-xs text-slate-500 mt-0.5">
+                Stasiun: <span className="font-semibold text-blue-600">{selectedStasiun.nama_stasiun}</span>
+              </p>
+            )}
+          </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -83,8 +170,31 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
 
             {/* Left Column - Data Input */}
-            <div className="col-span-12 md:col-span-5">
-              <DataInputTable data={data} onChange={setData} />
+            <div className="col-span-12 md:col-span-5 space-y-3">
+              {/* Autofill Button */}
+              {canAutofill && (
+                <button
+                  onClick={handleAutofill}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300"
+                >
+                  <Download className="w-4 h-4" />
+                  Tarik Data Maksimum Tahunan dari Master Data
+                </button>
+              )}
+
+              {/* Autofill status */}
+              {isAutofilled && editedRows.size > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {editedRows.size} baris diedit manual
+                </div>
+              )}
+
+              <DataInputTable
+                data={data}
+                onChange={handleDataChange}
+                editedRows={editedRows}
+              />
             </div>
 
             {/* Right Column - Analysis & Results */}
@@ -139,7 +249,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-slate-900">Metode Distribusi</h3>
                     <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
-                      {method === 'logpearson3' ? 'Log-Pearson III' : method === 'gumbel' ? 'Gumbel' : 'Normal'}
+                      {method === 'logpearson3' ? 'Log-Pearson III' : method === 'gumbel' ? 'Gumbel' : method === 'lognormal' ? 'Log-Normal' : 'Normal'}
                     </span>
                   </div>
                   <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
@@ -220,18 +330,32 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
           </div>
         </div>
 
-        {/* Footer - Compact */}
+        {/* Footer - Save & Close */}
         <div className="bg-white border-t border-slate-200 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-500">
               Pilih nilai untuk digunakan dalam perhitungan
             </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors text-sm"
-            >
-              Tutup
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Save All to Store */}
+              <button
+                onClick={handleSaveToStore}
+                disabled={!canSave}
+                className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-sm transition-all ${canSave
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/40'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+              >
+                <Save className="w-4 h-4" />
+                Simpan & Gunakan untuk Modul Banjir
+              </button>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors text-sm"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       </div>

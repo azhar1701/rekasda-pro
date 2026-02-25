@@ -22,6 +22,18 @@ export interface DataHujan {
   created_at?: string;
 }
 
+export interface DesignRainfallValue {
+  kalaUlang: number;    // 2, 5, 10, 25, 50, 100
+  curahHujan: number;   // mm
+}
+
+export interface HasilAnalisisFrekuensi {
+  metodeTerpilih: string;           // e.g. "Log Pearson III"
+  lulusUjiKecocokan: boolean;       // Chi-Square + KS pass
+  curahHujanRencana: DesignRainfallValue[];
+  selectedKalaUlang: number | null; // Kala ulang yang dipilih
+}
+
 export interface HasilBanjir {
   debitPuncak: number;
   hidrograf: { time: number; inflow: number }[];
@@ -50,6 +62,7 @@ export interface HydrologyState {
   
   // State Data Output
   dataHujan: DataHujan[];
+  hasilAnalisisFrekuensi: HasilAnalisisFrekuensi | null;
   hasilBanjir: HasilBanjir | null;
   hasilNeraca: HasilNeraca | null;
   hasilEmbung: HasilEmbung | null;
@@ -67,6 +80,8 @@ export interface HydrologyState {
   fetchStasiun: () => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
   fetchDataHujan: (stasiunId: string, tahun?: number) => Promise<void>;
+  setHasilAnalisisFrekuensi: (hasil: HasilAnalisisFrekuensi | null) => void;
+  setSelectedKalaUlang: (kalaUlang: number) => void;
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
@@ -135,6 +150,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   stasiunList: [],
   selectedStasiun: null,
   dataHujan: [],
+  hasilAnalisisFrekuensi: null,
   hasilBanjir: null,
   hasilNeraca: {
     isSurplus: true, 
@@ -197,6 +213,20 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
 
+  setHasilAnalisisFrekuensi: (hasil) => set({ 
+    hasilAnalisisFrekuensi: hasil, 
+    isBanjirDirty: true 
+  }),
+  setSelectedKalaUlang: (kalaUlang) => set((state) => {
+    const freq = state.hasilAnalisisFrekuensi;
+    if (!freq) return state;
+    const match = freq.curahHujanRencana.find(v => v.kalaUlang === kalaUlang);
+    return {
+      hasilAnalisisFrekuensi: { ...freq, selectedKalaUlang: kalaUlang },
+      curahHujanRencana: match ? String(match.curahHujan) : state.curahHujanRencana,
+      isBanjirDirty: true,
+    };
+  }),
   setHasilBanjir: (hasil) => set({ hasilBanjir: hasil, isBanjirDirty: false }),
   setHasilNeraca: (hasil) => set({ hasilNeraca: hasil, isNeracaDirty: false }),
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),

@@ -4,11 +4,13 @@ import { SmartOverrideInput } from '@/components/ui/SmartOverrideInput';
 import { MasterDataSelector } from '@/features/master-data/components/MasterDataSelector';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
+import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisModal';
 import { Button } from '@/components/ui/Button';
 import {
     CloudRain, Calculator, Activity, ChevronDown,
     Beaker, BarChart3, Waves, FlaskConical,
-    TrendingUp, Droplets, Mountain, Layers
+    TrendingUp, Droplets, Mountain, Layers,
+    BarChart2, AlertTriangle
 } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
@@ -64,9 +66,14 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
         luasDas: globalLuasDas,
         panjangSungai: globalPanjangSungai,
         curahHujanRencana: globalCurahHujan,
+        hasilAnalisisFrekuensi,
+        setSelectedKalaUlang,
         setHasilBanjir,
         isBanjirDirty,
     } = useHydrologyStore();
+
+    // ── Frequency Analysis Modal ──
+    const [showFreqModal, setShowFreqModal] = useState(false);
 
     // ── Tier-1 category ──
     const [category, setCategory] = useState<CategoryType>('empiris');
@@ -369,273 +376,378 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
     // ────────────────────────────────────────
 
     return (
-        <ModuleLayout
-            title="Debit Banjir Rencana"
-            description="Two-Tier Method Selector · Hybrid Input System · 9 Metode Standar"
-            icon={<CloudRain className="w-6 h-6" />}
-            iconColorClass="bg-blue-50 text-blue-600"
-        >
-            <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
-                {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
-                <div className="md:col-span-5 flex flex-col gap-5">
-                    <div className="bg-white/60 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5 space-y-5">
+        <>
+            <ModuleLayout
+                title="Debit Banjir Rencana"
+                description="Two-Tier Method Selector · Hybrid Input System · 9 Metode Standar"
+                icon={<CloudRain className="w-6 h-6" />}
+                iconColorClass="bg-blue-50 text-blue-600"
+            >
+                <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
+                    {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
+                    <div className="md:col-span-5 flex flex-col gap-5">
+                        <div className="bg-white/60 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5 space-y-5">
 
-                        {/* Master Data Selector */}
-                        <MasterDataSelector />
-                        <hr className="border-slate-100" />
+                            {/* Master Data Selector */}
+                            <MasterDataSelector />
+                            <hr className="border-slate-100" />
 
-                        {/* ─── TIER 1: Category Selector ─── */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">
-                                Tingkat 1 — Kategori Metode
-                            </label>
-                            <div className="flex gap-2 p-1 bg-slate-100/80 rounded-xl">
-                                {([
-                                    { value: 'empiris' as const, label: 'Metode Empiris', icon: <Beaker className="w-4 h-4" /> },
-                                    { value: 'hss' as const, label: 'Metode HSS', icon: <Activity className="w-4 h-4" /> },
-                                ] as const).map(opt => (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onClick={() => handleCategoryChange(opt.value)}
-                                        className={cn(
-                                            'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all duration-200',
-                                            category === opt.value
-                                                ? 'bg-white text-blue-700 shadow-md shadow-blue-200/40'
-                                                : 'text-slate-500 hover:text-slate-700 hover:bg-white/40'
-                                        )}
-                                    >
-                                        {opt.icon}
-                                        {opt.label}
-                                    </button>
-                                ))}
+                            {/* ─── TIER 1: Category Selector ─── */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">
+                                    Tingkat 1 — Kategori Metode
+                                </label>
+                                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-xl">
+                                    {([
+                                        { value: 'empiris' as const, label: 'Metode Empiris', icon: <Beaker className="w-4 h-4" /> },
+                                        { value: 'hss' as const, label: 'Metode HSS', icon: <Activity className="w-4 h-4" /> },
+                                    ] as const).map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => handleCategoryChange(opt.value)}
+                                            className={cn(
+                                                'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all duration-200',
+                                                category === opt.value
+                                                    ? 'bg-white text-blue-700 shadow-md shadow-blue-200/40'
+                                                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/40'
+                                            )}
+                                        >
+                                            {opt.icon}
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* ─── TIER 2: Method Dropdown ─── */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">
-                                Tingkat 2 — Metode Spesifik
-                            </label>
-                            <Select.Root value={method} onValueChange={(val) => { setMethod(val as MethodType); setChartData([]); setResultSummary(null); }}>
-                                <Select.Trigger
-                                    className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                                            {currentMethodInfo?.icon}
-                                        </div>
-                                        <div>
-                                            <Select.Value />
-                                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">{currentMethodInfo?.description}</p>
-                                        </div>
-                                    </div>
-                                    <Select.Icon>
-                                        <ChevronDown className="w-4 h-4 text-slate-400" />
-                                    </Select.Icon>
-                                </Select.Trigger>
-
-                                <Select.Portal>
-                                    <Select.Content
-                                        className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-[9999]"
-                                        position="popper"
-                                        sideOffset={4}
+                            {/* ─── TIER 2: Method Dropdown ─── */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">
+                                    Tingkat 2 — Metode Spesifik
+                                </label>
+                                <Select.Root value={method} onValueChange={(val) => { setMethod(val as MethodType); setChartData([]); setResultSummary(null); }}>
+                                    <Select.Trigger
+                                        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     >
-                                        <Select.Viewport className="p-1.5">
-                                            {currentMethods.map(m => (
-                                                <Select.Item
-                                                    key={m.value}
-                                                    value={m.value}
-                                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer outline-none data-[highlighted]:bg-blue-50 transition-colors"
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                                                {currentMethodInfo?.icon}
+                                            </div>
+                                            <div>
+                                                <Select.Value />
+                                                <p className="text-[10px] text-slate-400 font-medium mt-0.5">{currentMethodInfo?.description}</p>
+                                            </div>
+                                        </div>
+                                        <Select.Icon>
+                                            <ChevronDown className="w-4 h-4 text-slate-400" />
+                                        </Select.Icon>
+                                    </Select.Trigger>
+
+                                    <Select.Portal>
+                                        <Select.Content
+                                            className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-[9999]"
+                                            position="popper"
+                                            sideOffset={4}
+                                        >
+                                            <Select.Viewport className="p-1.5">
+                                                {currentMethods.map(m => (
+                                                    <Select.Item
+                                                        key={m.value}
+                                                        value={m.value}
+                                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer outline-none data-[highlighted]:bg-blue-50 transition-colors"
+                                                    >
+                                                        <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center text-slate-600">
+                                                            {m.icon}
+                                                        </div>
+                                                        <div>
+                                                            <Select.ItemText>{m.label}</Select.ItemText>
+                                                            <p className="text-[10px] text-slate-400 font-medium">{m.description}</p>
+                                                        </div>
+                                                    </Select.Item>
+                                                ))}
+                                            </Select.Viewport>
+                                        </Select.Content>
+                                    </Select.Portal>
+                                </Select.Root>
+                            </div>
+
+                            <hr className="border-slate-100" />
+
+                            {/* ─── FUNDAMENTAL PARAMETERS (Smart Override) ─── */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
+                                    Parameter Fundamental
+                                </label>
+                                <div className="space-y-3">
+                                    <SmartOverrideInput
+                                        label="Luas DAS (A)"
+                                        unit="km²"
+                                        globalValue={globalLuasDas}
+                                        value={localA}
+                                        onChange={setLocalA}
+                                        placeholder="Masukkan luas catchment area..."
+                                        tooltip="Luas daerah tangkapan air hingga titik tinjau"
+                                    />
+                                    <SmartOverrideInput
+                                        label="Panjang Sungai (L)"
+                                        unit="km"
+                                        globalValue={globalPanjangSungai}
+                                        value={localL}
+                                        onChange={setLocalL}
+                                        placeholder="Panjang sungai utama..."
+                                        tooltip="Panjang sungai utama dari hulu hingga outlet"
+                                    />
+                                    {/* ─── CURAH HUJAN RENCANA (with Kala Ulang dropdown) ─── */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                                            Curah Hujan Rencana
+                                            <span
+                                                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-slate-400 text-[9px] font-bold cursor-help"
+                                                title="Curah hujan rencana sesuai kala ulang terpilih"
+                                            >?</span>
+                                        </label>
+
+                                        {/* Kala Ulang Dropdown + Value */}
+                                        {hasilAnalisisFrekuensi ? (
+                                            <div className="space-y-2">
+                                                {/* Source badge */}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+                                                        <BarChart2 className="w-3 h-3" />
+                                                        {hasilAnalisisFrekuensi.metodeTerpilih}
+                                                        {hasilAnalisisFrekuensi.lulusUjiKecocokan && ' ✓'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Kala Ulang Selector */}
+                                                <Select.Root
+                                                    value={hasilAnalisisFrekuensi.selectedKalaUlang?.toString() || ''}
+                                                    onValueChange={(val) => {
+                                                        const ku = parseInt(val);
+                                                        setSelectedKalaUlang(ku);
+                                                        // Also sync to localR
+                                                        const match = hasilAnalisisFrekuensi.curahHujanRencana.find(v => v.kalaUlang === ku);
+                                                        if (match) setLocalR(String(match.curahHujan));
+                                                    }}
                                                 >
-                                                    <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center text-slate-600">
-                                                        {m.icon}
+                                                    <Select.Trigger className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm hover:border-emerald-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                                        <div className="flex items-center gap-2">
+                                                            <CloudRain className="w-4 h-4 text-emerald-600" />
+                                                            <Select.Value placeholder="Pilih Kala Ulang..." />
+                                                        </div>
+                                                        <Select.Icon>
+                                                            <ChevronDown className="w-4 h-4 text-slate-400" />
+                                                        </Select.Icon>
+                                                    </Select.Trigger>
+                                                    <Select.Portal>
+                                                        <Select.Content
+                                                            className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-[9999]"
+                                                            position="popper"
+                                                            sideOffset={4}
+                                                        >
+                                                            <Select.Viewport className="p-1.5">
+                                                                {hasilAnalisisFrekuensi.curahHujanRencana.map(v => (
+                                                                    <Select.Item
+                                                                        key={v.kalaUlang}
+                                                                        value={v.kalaUlang.toString()}
+                                                                        className="flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer outline-none data-[highlighted]:bg-emerald-50 transition-colors"
+                                                                    >
+                                                                        <Select.ItemText>Kala Ulang {v.kalaUlang} Tahun</Select.ItemText>
+                                                                        <span className="text-xs font-bold text-emerald-600">{v.curahHujan} mm</span>
+                                                                    </Select.Item>
+                                                                ))}
+                                                            </Select.Viewport>
+                                                        </Select.Content>
+                                                    </Select.Portal>
+                                                </Select.Root>
+
+                                                {/* Value display (still overrideable) */}
+                                                <SmartOverrideInput
+                                                    label=""
+                                                    unit="mm"
+                                                    globalValue={globalCurahHujan}
+                                                    value={localR}
+                                                    onChange={setLocalR}
+                                                    placeholder="Curah hujan rencana..."
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {/* Warning: not yet analyzed */}
+                                                <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                                                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                                                    <div className="text-xs font-medium">
+                                                        Analisis Frekuensi Hujan belum dilakukan.
+                                                        <button
+                                                            onClick={() => setShowFreqModal(true)}
+                                                            className="ml-1 text-blue-600 hover:text-blue-700 underline font-bold"
+                                                        >
+                                                            Buka Analisis Frekuensi
+                                                        </button>
+                                                        {' '}atau input manual di bawah.
                                                     </div>
-                                                    <div>
-                                                        <Select.ItemText>{m.label}</Select.ItemText>
-                                                        <p className="text-[10px] text-slate-400 font-medium">{m.description}</p>
-                                                    </div>
-                                                </Select.Item>
-                                            ))}
-                                        </Select.Viewport>
-                                    </Select.Content>
-                                </Select.Portal>
-                            </Select.Root>
-                        </div>
+                                                </div>
 
-                        <hr className="border-slate-100" />
-
-                        {/* ─── FUNDAMENTAL PARAMETERS (Smart Override) ─── */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
-                                Parameter Fundamental
-                            </label>
-                            <div className="space-y-3">
-                                <SmartOverrideInput
-                                    label="Luas DAS (A)"
-                                    unit="km²"
-                                    globalValue={globalLuasDas}
-                                    value={localA}
-                                    onChange={setLocalA}
-                                    placeholder="Masukkan luas catchment area..."
-                                    tooltip="Luas daerah tangkapan air hingga titik tinjau"
-                                />
-                                <SmartOverrideInput
-                                    label="Panjang Sungai (L)"
-                                    unit="km"
-                                    globalValue={globalPanjangSungai}
-                                    value={localL}
-                                    onChange={setLocalL}
-                                    placeholder="Panjang sungai utama..."
-                                    tooltip="Panjang sungai utama dari hulu hingga outlet"
-                                />
-                                <SmartOverrideInput
-                                    label="Curah Hujan Rencana"
-                                    unit="mm"
-                                    globalValue={globalCurahHujan}
-                                    value={localR}
-                                    onChange={setLocalR}
-                                    placeholder="Curah hujan rencana kala ulang..."
-                                    tooltip="Curah hujan rencana sesuai kala ulang terpilih"
-                                />
-                            </div>
-                        </div>
-
-                        <hr className="border-slate-100" />
-
-                        {/* ─── METHOD-SPECIFIC PARAMETERS ─── */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
-                                Parameter {currentMethodInfo?.label}
-                            </label>
-                            <div className="bg-slate-50/80 rounded-xl p-4 border border-slate-100 border-dashed">
-                                {renderMethodParams()}
-                            </div>
-                        </div>
-
-                        {/* ─── ACTION BUTTON ─── */}
-                        <div className="pt-1">
-                            <Button
-                                className="w-full py-6 rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all"
-                                onClick={handleCalculate}
-                                disabled={isCalculating}
-                            >
-                                {isCalculating ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Memproses Simulasi...
+                                                {/* Manual input fallback */}
+                                                <SmartOverrideInput
+                                                    label=""
+                                                    unit="mm"
+                                                    globalValue={globalCurahHujan}
+                                                    value={localR}
+                                                    onChange={setLocalR}
+                                                    placeholder="Curah hujan rencana kala ulang..."
+                                                    tooltip="Curah hujan rencana sesuai kala ulang terpilih"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
+                                </div>
+                            </div>
+
+                            <hr className="border-slate-100" />
+
+                            {/* ─── METHOD-SPECIFIC PARAMETERS ─── */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
+                                    Parameter {currentMethodInfo?.label}
+                                </label>
+                                <div className="bg-slate-50/80 rounded-xl p-4 border border-slate-100 border-dashed">
+                                    {renderMethodParams()}
+                                </div>
+                            </div>
+
+                            {/* ─── ACTION BUTTON ─── */}
+                            <div className="pt-1">
+                                <Button
+                                    className="w-full py-6 rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all"
+                                    onClick={handleCalculate}
+                                    disabled={isCalculating}
+                                >
+                                    {isCalculating ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Memproses Simulasi...
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <Calculator className="w-5 h-5" />
+                                            Hitung & Simpan Analisis
+                                        </div>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ═══════════════════════════════ RIGHT COLUMN ══════════════════════ */}
+                    <div className="md:col-span-7 flex flex-col gap-5 min-h-[400px]">
+                        <DependencyWarningBanner module="banjir" />
+
+                        {/* Result Summary Cards */}
+                        {resultSummary && (
+                            <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Debit Puncak (Qp)</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.debitPuncak}</span>
+                                        <span className="text-sm font-bold text-slate-400">m³/s</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Metode: {currentMethodInfo?.label}</p>
+                                </div>
+                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.waktuPuncak}</span>
+                                        <span className="text-sm font-bold text-slate-400">jam</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Kategori: {category === 'empiris' ? 'Empiris' : 'HSS'}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Hydrograph Chart */}
+                        <div className={cn(
+                            'flex-1 bg-white/60 backdrop-blur border rounded-2xl shadow-sm p-5 flex flex-col transition-all duration-300',
+                            isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'
+                        )}>
+                            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 mb-4">
+                                <Activity className="w-5 h-5 text-blue-500" />
+                                Kurva Hidrograf Banjir
+                                {currentMethodInfo && (
+                                    <span className="ml-auto text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
+                                        {currentMethodInfo.label}
+                                    </span>
+                                )}
+                            </h3>
+
+                            <div className="flex-1 bg-slate-50/50 rounded-xl border border-slate-100 p-4 border-dashed relative min-h-[300px]">
+                                {chartData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="hydroGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                                                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                            <XAxis
+                                                dataKey="time"
+                                                tick={{ fontSize: 11, fill: '#64748B' }}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -2, fontSize: 11, fill: '#94A3B8' }}
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 11, fill: '#64748B' }}
+                                                tickLine={false}
+                                                axisLine={false}
+                                                label={{ value: 'Q (m³/s)', angle: -90, position: 'insideLeft', fontSize: 11, fill: '#94A3B8' }}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                                                formatter={(value: number) => [`${value} m³/s`, 'Debit (Q)']}
+                                                labelFormatter={(label) => `Jam ke-${label}`}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="inflow"
+                                                stroke="#3B82F6"
+                                                strokeWidth={3}
+                                                fill="url(#hydroGradient)"
+                                                dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
+                                                activeDot={{ r: 5, strokeWidth: 0, fill: '#2563EB' }}
+                                                animationDuration={1200}
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
                                 ) : (
-                                    <div className="flex items-center gap-2">
-                                        <Calculator className="w-5 h-5" />
-                                        Hitung & Simpan Analisis
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                                        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                                            <Activity className="w-8 h-8 text-blue-300" />
+                                        </div>
+                                        <p className="text-slate-500 font-medium">Belum ada kalkulasi.</p>
+                                        <p className="text-sm text-slate-400 mt-1 max-w-xs">
+                                            Pilih metode, sesuaikan parameter, lalu klik <strong>"Hitung & Simpan Analisis"</strong> untuk melihat hidrograf.
+                                        </p>
                                     </div>
                                 )}
-                            </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </ModuleLayout>
 
-                {/* ═══════════════════════════════ RIGHT COLUMN ══════════════════════ */}
-                <div className="md:col-span-7 flex flex-col gap-5 min-h-[400px]">
-                    <DependencyWarningBanner module="banjir" />
-
-                    {/* Result Summary Cards */}
-                    {resultSummary && (
-                        <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-                            <div className="bg-white/80 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Debit Puncak (Qp)</p>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.debitPuncak}</span>
-                                    <span className="text-sm font-bold text-slate-400">m³/s</span>
-                                </div>
-                                <p className="text-[10px] text-slate-400 mt-2 font-medium">Metode: {currentMethodInfo?.label}</p>
-                            </div>
-                            <div className="bg-white/80 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</p>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.waktuPuncak}</span>
-                                    <span className="text-sm font-bold text-slate-400">jam</span>
-                                </div>
-                                <p className="text-[10px] text-slate-400 mt-2 font-medium">Kategori: {category === 'empiris' ? 'Empiris' : 'HSS'}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Hydrograph Chart */}
-                    <div className={cn(
-                        'flex-1 bg-white/60 backdrop-blur border rounded-2xl shadow-sm p-5 flex flex-col transition-all duration-300',
-                        isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'
-                    )}>
-                        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 mb-4">
-                            <Activity className="w-5 h-5 text-blue-500" />
-                            Kurva Hidrograf Banjir
-                            {currentMethodInfo && (
-                                <span className="ml-auto text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
-                                    {currentMethodInfo.label}
-                                </span>
-                            )}
-                        </h3>
-
-                        <div className="flex-1 bg-slate-50/50 rounded-xl border border-slate-100 p-4 border-dashed relative min-h-[300px]">
-                            {chartData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="hydroGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
-                                                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                                        <XAxis
-                                            dataKey="time"
-                                            tick={{ fontSize: 11, fill: '#64748B' }}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -2, fontSize: 11, fill: '#94A3B8' }}
-                                        />
-                                        <YAxis
-                                            tick={{ fontSize: 11, fill: '#64748B' }}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            label={{ value: 'Q (m³/s)', angle: -90, position: 'insideLeft', fontSize: 11, fill: '#94A3B8' }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
-                                            formatter={(value: number) => [`${value} m³/s`, 'Debit (Q)']}
-                                            labelFormatter={(label) => `Jam ke-${label}`}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="inflow"
-                                            stroke="#3B82F6"
-                                            strokeWidth={3}
-                                            fill="url(#hydroGradient)"
-                                            dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
-                                            activeDot={{ r: 5, strokeWidth: 0, fill: '#2563EB' }}
-                                            animationDuration={1200}
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                                        <Activity className="w-8 h-8 text-blue-300" />
-                                    </div>
-                                    <p className="text-slate-500 font-medium">Belum ada kalkulasi.</p>
-                                    <p className="text-sm text-slate-400 mt-1 max-w-xs">
-                                        Pilih metode, sesuaikan parameter, lalu klik <strong>"Hitung & Simpan Analisis"</strong> untuk melihat hidrograf.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </ModuleLayout>
+            {/* Frequency Analysis Modal Portal */}
+            <FrequencyAnalysisModal
+                isOpen={showFreqModal}
+                onClose={() => setShowFreqModal(false)}
+            />
+        </>
     );
 };
+
+
 
 // ────────────────────────────────────────────
 // Helper: Simple input field (for method-specific params)
