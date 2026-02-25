@@ -63,9 +63,9 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
   if (!isOpen) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none" onClick={onClose}></div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Backdrop — must receive pointer events to dismiss on click */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
 
       {/* Modal */}
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
