@@ -93,6 +93,18 @@ export interface HasilMock {
   metode: 'mock' | 'manual' | 'weibull';
 }
 
+/** Hasil akhir neraca air per bulan */
+export interface NeracaFinalRow {
+  month: string;
+  ketersediaan: number;
+  irigasi: number;
+  airBaku: number;
+  lingkungan: number;
+  totalKebutuhan: number;
+  neraca: number;
+  status: 'Surplus' | 'Defisit' | 'Seimbang';
+}
+
 export interface HydrologyState {
   // State Fundamental
   luasDas: string;
@@ -110,6 +122,7 @@ export interface HydrologyState {
   hasilNeraca: HasilNeraca | null;
   hasilEmbung: HasilEmbung | null;
   hasilMock: HasilMock | null;
+  neracaFinal: NeracaFinalRow[] | null;
   
   // State Tracking / Validation
   isBanjirDirty: boolean;
@@ -132,6 +145,7 @@ export interface HydrologyState {
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
   setHasilMock: (hasil: HasilMock | null) => void;
+  setNeracaFinal: (data: NeracaFinalRow[] | null) => void;
   
   // Setters statis murni untuk keperluan internal/mocking
   setLoading: (loading: boolean) => void;
@@ -218,6 +232,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     umurSedimen: 50
   },
   hasilMock: null,
+  neracaFinal: null,
   isBanjirDirty: false,
   isNeracaDirty: false,
   isLoading: false,
@@ -289,6 +304,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setHasilNeraca: (hasil) => set({ hasilNeraca: hasil, isNeracaDirty: false }),
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),
   setHasilMock: (hasil) => set({ hasilMock: hasil, isNeracaDirty: true }),
+  setNeracaFinal: (data) => set({ neracaFinal: data, isNeracaDirty: false }),
 
   // Fetch semua stasiun dari sumber data/API
   fetchStasiun: async () => {

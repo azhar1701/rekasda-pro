@@ -22,6 +22,7 @@ import {
   type MockMonthlyInput,
   type MockMonthlyResult,
 } from '@/lib/engine/fjMock';
+import { KalkulatorIrigasi } from './KalkulatorIrigasi';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -59,7 +60,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const kpiCardsRef = useStaggerAnimation(50);
 
   // ── F.J. Mock Integration ──
-  const { luasDas, hasilMock, setHasilMock } = useHydrologyStore();
+  const { luasDas, hasilMock, setHasilMock, neracaFinal } = useHydrologyStore();
   const [supplyMethod, setSupplyMethod] = useState<'manual' | 'mock'>('manual');
   const [mockParams, setMockParams] = useState({
     smc: 200,
@@ -514,6 +515,11 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   </>
                 )}
               </Collapsible>
+
+              {/* SECTION 3: KEBUTUHAN AIR & NERACA FINAL */}
+              <KalkulatorIrigasi
+                monthlySupply={inputs.monthlySupply}
+              />
             </div>
           </div>
 
@@ -595,6 +601,80 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   </div>
                 </div>
               </>
+            )}
+
+            {/* FINAL NERACA TABLE — Conditional */}
+            {neracaFinal && (
+              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-lg border border-white/50 overflow-hidden">
+                <div className="px-5 py-3 border-b border-slate-200/50 bg-white/40 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Neraca Air Final (Surplus/Defisit)</h3>
+                    <p className="text-[10px] text-slate-500">Ketersediaan − (Irigasi + Air Baku + Lingkungan)</p>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] font-bold">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      Surplus: {neracaFinal.filter(r => r.status === 'Surplus').length} bln
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      Defisit: {neracaFinal.filter(r => r.status === 'Defisit').length} bln
+                    </span>
+                  </div>
+                </div>
+                <div className="overflow-x-auto overflow-y-auto max-h-80">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
+                      <tr>
+                        <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-blue-600">Supply</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-teal-600">Irigasi</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-orange-600">Air Baku</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-emerald-600">Lingk.</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-slate-600">Total</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-slate-800 bg-slate-100/80">Neraca</th>
+                        <th className="text-center py-2.5 px-3 font-bold text-slate-600">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {neracaFinal.map((r, i) => (
+                        <tr key={i} className={`border-b border-slate-100 transition-colors ${r.status === 'Defisit' ? 'bg-rose-50/40' : 'even:bg-slate-50/50'
+                          } hover:bg-slate-100/50`}>
+                          <td className="py-2 px-3 font-bold text-slate-700">{r.month}</td>
+                          <td className="py-2 px-3 text-right font-mono text-blue-600">{r.ketersediaan.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-teal-600">{r.irigasi.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-orange-600">{r.airBaku.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-emerald-600">{r.lingkungan.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono font-semibold">{r.totalKebutuhan.toFixed(4)}</td>
+                          <td className={`py-2 px-3 text-right font-mono font-bold bg-slate-50/50 ${r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                            }`}>
+                            {r.neraca >= 0 ? '+' : ''}{r.neraca.toFixed(4)}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                              r.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>
+                              {r.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Critical Month Alert */}
+                {neracaFinal.some(r => r.status === 'Defisit') && (
+                  <div className="px-5 py-3 bg-rose-50/60 border-t border-rose-200/50 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <p className="text-xs text-rose-800 font-medium">
+                      Bulan kritis: <strong>
+                        {neracaFinal.reduce((min, r) => r.neraca < min.neraca ? r : min).month}
+                      </strong> dengan defisit {Math.abs(neracaFinal.reduce((min, r) => r.neraca < min.neraca ? r : min).neraca).toFixed(4)} m³/s
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* KPI CARDS — Glassmorphism */}
