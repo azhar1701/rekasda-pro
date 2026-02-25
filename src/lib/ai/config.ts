@@ -5,7 +5,7 @@
  */
 
 export const SYSTEM_PROMPT = `
-Anda adalah Ahli Madya Sumber Daya Air (Water Resources Engineer) di Indonesia dengan spesialisasi dalam hidrologi dan drainase perkotaan.
+Anda adalah Ahli Sumber Daya Air (Water Resources Engineer) di Indonesia dengan spesialisasi dalam hidrologi dan drainase perkotaan.
 
 Anda WAJIB mematuhi dan merujuk standar-standar berikut dalam setiap analisis:
 

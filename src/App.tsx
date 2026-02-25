@@ -44,6 +44,7 @@ const App: React.FC = () => {
   const [mapDetailItem, setMapDetailItem] = useState<any>(null);
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
+  const [aiTriggerCount, setAiTriggerCount] = useState<number>(0);
   const [scrolled, setScrolled] = useState(false);
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
   const { calculations, saveCalculation } = useDatabase();
@@ -97,6 +98,7 @@ const App: React.FC = () => {
     const contextStr = `Tipe: ${type}\nIdentitas: ${JSON.stringify(inputs.site)}\nInput: ${JSON.stringify(inputs)}\nOutput: ${JSON.stringify(outputs)}`;
     setLastContext(contextStr);
     setAiInitialQuery(`Analisis hasil perhitungan ${type === CalculationType.MANNING ? 'Saluran Manning' : 'Debit Rasional'} di ${inputs.site?.channelName || 'lokasi ini'} menurut SNI.`);
+    setAiTriggerCount(prev => prev + 1);
     setIsAIDrawerOpen(true); // Open drawer instead of switching tab
   };
 
@@ -162,15 +164,22 @@ const App: React.FC = () => {
               onConsultAI={() => {
                 setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');
                 setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
+                setAiTriggerCount(prev => prev + 1);
                 setIsAIDrawerOpen(true);
               }}
             />}
             {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
               setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
               setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
+              setAiTriggerCount(prev => prev + 1);
               setIsAIDrawerOpen(true);
             }} />}
-            {activeTab === Tab.EMBUNG && <EmbungDashboard />}
+            {activeTab === Tab.EMBUNG && <EmbungDashboard onConsultAI={(tabType, data, result) => {
+              setLastContext(`Modul Embung: ${tabType}\nInput: ${JSON.stringify(data)}\nOutput: ${JSON.stringify(result)}`);
+              setAiInitialQuery(`Berikan analisis teknis komprehensif mengenai hasil perhitungan ${tabType} ini. Sebutkan poin-poin penting, potensi isu, dan rekomendasi desain yang sesuai dengan SNI.`);
+              setAiTriggerCount(prev => prev + 1);
+              setIsAIDrawerOpen(true);
+            }} />}
             {activeTab === Tab.MASTER && <MasterHidrologiTab />}
             {activeTab === Tab.EXEC && <ExecutiveDashboard />}
             {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
@@ -182,7 +191,8 @@ const App: React.FC = () => {
                 const typeLabel = item.type === 'manning' ? 'Saluran Manning' : item.type === 'flood' ? 'Banjir' : 'Neraca Air';
                 setLastContext(`Tipe: ${typeLabel}\nProyek: ${item.project_name}\nData: ${JSON.stringify(item.data)}`);
                 setAiInitialQuery(`Analisis hasil perhitungan ${typeLabel} untuk proyek ${item.project_name} menurut SNI.`);
-                setActiveTab(Tab.AI);
+                setAiTriggerCount(prev => prev + 1);
+                setIsAIDrawerOpen(true);
               }}
             />}
           </div>
@@ -196,6 +206,9 @@ const App: React.FC = () => {
           isOpen={isAIDrawerOpen}
           onClose={() => setIsAIDrawerOpen(false)}
           activeTab={activeTab as ActiveModule}
+          initialQuery={aiInitialQuery}
+          lastContext={lastContext}
+          triggerCount={aiTriggerCount}
         />
 
         {/* Modenized Map Detail Modal */}

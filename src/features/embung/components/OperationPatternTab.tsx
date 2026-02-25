@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Calculator, Info, Waves, CheckCircle2, AlertCircle, Droplets } from 'lucide-react';
+import { Calculator, Info, Waves, CheckCircle2, AlertCircle, Droplets, Sparkles } from 'lucide-react';
 import { simulateReservoirOperation } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
 import { HydroValidationError } from '@/features/embung/types/embung.types';
@@ -30,7 +30,11 @@ const CONFIG = {
     seepageLoss: 0
 };
 
-export const OperationPatternTab = () => {
+interface OperationPatternTabProps {
+    onConsultAI?: (data: any, result: any) => void;
+}
+
+export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onConsultAI }) => {
     const [isCalculating, setIsCalculating] = useState(false);
 
     // States
@@ -127,23 +131,34 @@ export const OperationPatternTab = () => {
                     </div>
                 </div>
 
-                <Button
-                    onClick={handleCalculate}
-                    disabled={isCalculating}
-                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm shrink-0"
-                >
-                    {isCalculating ? (
-                        <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>Menghitung...</span>
-                        </div>
-                    ) : (
-                        <>
-                            <Calculator className="w-4 h-4 mr-2" />
-                            Simulasi Operasi
-                        </>
+                <div className="flex items-center gap-2">
+                    <Button
+                        onClick={handleCalculate}
+                        disabled={isCalculating}
+                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm shrink-0"
+                    >
+                        {isCalculating ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Menghitung...</span>
+                            </div>
+                        ) : (
+                            <>
+                                <Calculator className="w-4 h-4 mr-2" />
+                                Simulasi Operasi
+                            </>
+                        )}
+                    </Button>
+                    {summary && onConsultAI && (
+                        <Button
+                            onClick={() => onConsultAI({ inputs, config: CONFIG }, { resultData, summary })}
+                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group shrink-0"
+                        >
+                            <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:scale-110 transition-transform" />
+                            Analisis AI
+                        </Button>
                     )}
-                </Button>
+                </div>
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col xl:flex-row gap-6">

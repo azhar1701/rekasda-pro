@@ -13,10 +13,15 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { consultHydrologist } from '@/services/geminiService';
 import { useAIContext, type ActiveModule, type SuggestionChip } from '@/hooks/useAIContext';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { Bot, User, Send, X, Sparkles, Zap, ChevronRight, AlertTriangle, Info, ArrowRight } from 'lucide-react';
+import { Bot, User, Send, X, Sparkles, Zap, ChevronRight, AlertTriangle, Info, ArrowRight, Maximize2, Minimize2 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -38,6 +43,9 @@ interface AIConsultantDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     activeTab: ActiveModule;
+    initialQuery?: string;
+    lastContext?: string;
+    triggerCount?: number;
 }
 
 // ─── Actionable Suggestion Parser ───────────────────────────────────
@@ -123,10 +131,14 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
     isOpen,
     onClose,
     activeTab,
+    initialQuery,
+    lastContext,
+    triggerCount = 0,
 }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [query, setQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -146,7 +158,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
     }, [isOpen]);
 
     // ── Send Message ──
-    const handleSend = useCallback(async (customPrompt?: string) => {
+    const handleSend = useCallback(async (customPrompt?: string, additionalContext?: string) => {
         const userMessage = customPrompt || query.trim();
         if (!userMessage || isLoading) return;
 
@@ -162,8 +174,13 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         setIsLoading(true);
 
         try {
+            // Include both global system context and any specific module context passed
+            const fullContext = additionalContext
+                ? `${systemContext}\n\n[MODULE CONTEXT]\n${additionalContext}`
+                : systemContext;
+
             // Inject invisible context into the prompt
-            const response = await consultHydrologist(userMessage, systemContext);
+            const response = await consultHydrologist(userMessage, fullContext);
 
             // Parse actionable suggestions from response
             const actions = parseActionableSuggestions(response);
@@ -190,6 +207,15 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         }
     }, [query, isLoading, systemContext]);
 
+    // ── Auto-submit on triggerCount change ──
+    useEffect(() => {
+        if (isOpen && initialQuery && triggerCount > 0) {
+            handleSend(initialQuery, lastContext);
+        }
+        // Exclude handleSend from deps to avoid infinite loops if handlesend changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [triggerCount, isOpen]);
+
     // ── Handle chip click ──
     const handleChipClick = (chip: SuggestionChip) => {
         handleSend(chip.prompt);
@@ -209,47 +235,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         setMessages((prev) => [...prev, confirmMsg]);
     };
 
-    // ── Simple markdown-ish rendering ──
-    const renderContent = (text: string) => {
-        return text.split('\n').map((line, i) => {
-            const trimmed = line.trim();
-            if (!trimmed) return <br key={i} />;
-
-            // Bold
-            const parts = trimmed.split(/\*\*(.*?)\*\*/g);
-            const rendered = parts.map((part, j) =>
-                j % 2 === 1 ? (
-                    <strong key={j} className="font-bold text-slate-900">{part}</strong>
-                ) : (
-                    <span key={j}>{part}</span>
-                )
-            );
-
-            // Headers
-            if (trimmed.startsWith('#')) {
-                const content = trimmed.replace(/^#+\s*/, '');
-                return (
-                    <h4 key={i} className="text-sm font-black text-slate-800 mt-4 mb-2 uppercase tracking-wide border-l-2 border-indigo-400 pl-3">
-                        {content}
-                    </h4>
-                );
-            }
-
-            // Bullet points
-            if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-                return (
-                    <div key={i} className="flex gap-2 items-start my-1">
-                        <span className="mt-2 w-1 h-1 bg-indigo-400 rounded-full flex-shrink-0" />
-                        <span className="text-sm text-slate-600 leading-relaxed">{rendered}</span>
-                    </div>
-                );
-            }
-
-            return (
-                <p key={i} className="text-sm text-slate-600 leading-relaxed my-1">{rendered}</p>
-            );
-        });
-    };
+    // Removed custom renderContent in favor of ReactMarkdown
 
     return (
         <>
@@ -263,7 +249,8 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
 
             {/* Drawer Panel */}
             <div
-                className={`fixed top-0 right-0 z-[70] h-full w-full sm:w-[420px] lg:w-[480px] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed top-0 right-0 z-[70] h-full transform transition-all duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                    } ${isFullScreen ? 'w-full' : 'w-full sm:w-[420px] lg:w-[480px]'
                     }`}
             >
                 <div className="h-full flex flex-col bg-white/95 backdrop-blur-2xl border-l border-slate-200/60 shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)]">
@@ -285,12 +272,22 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                     <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{moduleSummary}</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={onClose}
-                                className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => setIsFullScreen(!isFullScreen)}
+                                    className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-indigo-50 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all"
+                                    title={isFullScreen ? "Perkecil ukuran konsultan" : "Perbesar konsultan AI ke full-screen"}
+                                >
+                                    {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
+                                    title="Tutup konsultan"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -327,21 +324,28 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                 <div className={`max-w-[88%] flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                                     {/* Avatar */}
                                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 ${msg.role === 'user'
-                                            ? 'bg-indigo-100 text-indigo-600'
-                                            : 'bg-slate-100 text-slate-500'
+                                        ? 'bg-indigo-100 text-indigo-600'
+                                        : 'bg-slate-100 text-slate-500'
                                         }`}>
                                         {msg.role === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                                     </div>
 
                                     {/* Bubble */}
                                     <div className={`${msg.role === 'user'
-                                            ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm px-4 py-3'
-                                            : 'bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm'
+                                        ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm px-4 py-3'
+                                        : 'bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm'
                                         }`}>
                                         {msg.role === 'user' ? (
                                             <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                                         ) : (
-                                            <div className="space-y-1">{renderContent(msg.content)}</div>
+                                            <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-headings:font-black prose-headings:text-slate-800 prose-a:text-indigo-600">
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                                    rehypePlugins={[rehypeKatex]}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
                                         )}
 
                                         {/* Actionable Suggestion Buttons */}
@@ -412,10 +416,10 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                         onClick={() => handleChipClick(chip)}
                                         disabled={isLoading}
                                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all hover:shadow-sm active:scale-95 disabled:opacity-50 ${chip.severity === 'critical'
-                                                ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                                                : chip.severity === 'warning'
-                                                    ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                            ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                                            : chip.severity === 'warning'
+                                                ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                             }`}
                                     >
                                         <span>{chip.icon}</span>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
-import { Calculator, Info, Mountain, CalendarClock, ArrowRightSquare, Trash2 } from 'lucide-react';
+import { Calculator, Info, Mountain, CalendarClock, ArrowRightSquare, Trash2, Sparkles } from 'lucide-react';
 import { calculateSedimentYield } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
 import { HydroValidationError } from '@/features/embung/types/embung.types';
@@ -22,7 +22,11 @@ const DEFAULT_SAMPLES = [
     { id: 5, q: 45.0, cs: 2100, days: 10 },
 ];
 
-export const SedimentationTab = () => {
+interface SedimentationTabProps {
+    onConsultAI?: (data: any, result: any) => void;
+}
+
+export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI }) => {
     const [isCalculating, setIsCalculating] = useState(false);
 
     // States
@@ -221,24 +225,33 @@ export const SedimentationTab = () => {
                                 </div>
                             </div>
                         </CardContent>
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2">
                             <Button
                                 onClick={handleCalculate}
                                 disabled={isCalculating}
-                                className="w-full bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
+                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
                             >
                                 {isCalculating ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 justify-center">
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         <span>Menghitung Laju...</span>
                                     </div>
                                 ) : (
-                                    <>
-                                        <Calculator className="w-4 h-4 mr-2" />
+                                    <div className="flex items-center gap-2 justify-center">
+                                        <Calculator className="w-4 h-4" />
                                         Kalkulasi Sedimentasi
-                                    </>
+                                    </div>
                                 )}
                             </Button>
+                            {result && onConsultAI && (
+                                <Button
+                                    onClick={() => onConsultAI({ params, samples }, result)}
+                                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group shrink-0"
+                                    title="Analisis AI"
+                                >
+                                    <Sparkles className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
+                                </Button>
+                            )}
                         </div>
                     </Card>
                 </div>

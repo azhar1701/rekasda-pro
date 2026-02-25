@@ -6,7 +6,11 @@ import { SedimentationTab } from './SedimentationTab';
 import { Droplets, Activity, Spline, Waves, Database } from 'lucide-react';
 import { EmbungProvider } from '../hooks/useEmbungStore';
 
-export const EmbungDashboard = () => {
+interface EmbungDashboardProps {
+    onConsultAI?: (type: string, data: any, result: any) => void;
+}
+
+export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI }) => {
 
     return (
         <EmbungProvider>
@@ -70,19 +74,19 @@ export const EmbungDashboard = () => {
                         {/* Tab Contents - Scrollable internally */}
                         <div className="flex-1 overflow-y-auto pr-1 pb-4">
                             <TabsContent value="capacity" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
-                                <CapacityAnalysisTab />
+                                <CapacityAnalysisTab onConsultAI={(data, result) => onConsultAI?.('Kapasitas Waduk (Metode Rippl)', data, result)} />
                             </TabsContent>
 
                             <TabsContent value="routing" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
-                                <RoutingAnalysisTab />
+                                <RoutingAnalysisTab onConsultAI={(data, result) => onConsultAI?.('Penelusuran Banjir (Routing)', data, result)} />
                             </TabsContent>
 
                             <TabsContent value="operation" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
-                                <OperationPatternTab />
+                                <OperationPatternTab onConsultAI={(data, result) => onConsultAI?.('Pola Operasi Waduk', data, result)} />
                             </TabsContent>
 
                             <TabsContent value="sediment" className="h-full m-0 data-[state=active]:flex flex-col outline-none">
-                                <SedimentationTab />
+                                <SedimentationTab onConsultAI={(data, result) => onConsultAI?.('Analisis Laju Sedimen', data, result)} />
                             </TabsContent>
                         </div>
                     </Tabs>

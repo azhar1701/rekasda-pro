@@ -1,4 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { consultHydrologist } from '@/services/geminiService';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -43,132 +48,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
     }
   };
 
-  const cleanLatex = (text: string) => {
-    let cleaned = text
-      .replace(/\$\$(.*?)\$\$/g, '$1')
-      .replace(/\$(.*?)\$/g, '$1')
-      .replace(/\\(text|mathrm|frac)\{([^}]+)\}/g, '$2')
-      .replace(/(text|mathrm|frac)\{([^}]+)\}/g, '$2')
-      .replace(/\\approx/g, '≈')
-      .replace(/\\times/g, '×')
-      .replace(/\\cdot/g, '·')
-      .replace(/\s\*\s/g, ' × ')
-      .replace(/\\le/g, '≤')
-      .replace(/\\ge/g, '≥')
-      .replace(/\\pm/g, '±')
-      .replace(/\\alpha/g, 'α')
-      .replace(/\\beta/g, 'β')
-      .replace(/\\Delta/g, 'Δ')
-      .replace(/\\theta/g, 'θ')
-      .replace(/\\pi/g, 'π')
-      .replace(/\^2/g, '²')
-      .replace(/\^3/g, '³')
-      .replace(/_\{([^}]+)\}/g, '$1')
-      .replace(/_(\w+)/g, '$1')
-      .replace(/\\(left|right|big|Big)/g, '')
-      .replace(/\\,/g, ' ')
-      .replace(/\\;/g, ' ')
-      .replace(/\\:/g, ' ')
-      .replace(/\\\[/g, '')
-      .replace(/\\\]/g, '')
-      .replace(/\\\\/g, '')
-      .replace(/\\/g, '')
-      .replace(/\{/g, '')
-      .replace(/\}/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    return cleaned;
-  };
-
-  const renderFormattedResponse = (text: string) => {
-    const lines = text.split('\n');
-    const elements: React.ReactNode[] = [];
-    let listBuffer: React.ReactNode[] = [];
-
-    const flushList = () => {
-      if (listBuffer.length > 0) {
-        elements.push(
-          <ul key={`ul-${elements.length}`} className="space-y-3 mb-6 pl-2">
-            {listBuffer}
-          </ul>
-        );
-        listBuffer = [];
-      }
-    };
-
-    const parseBold = (str: string) => {
-      const cleaned = cleanLatex(str);
-      const parts = cleaned.split(/\*\*(.*?)\*\*/g);
-      return parts.map((part, i) => {
-        const cleanPart = part.replace(/\*/g, '');
-        return i % 2 === 1 ? <strong key={i} className="font-extrabold text-slate-900 bg-slate-50 px-1 rounded">{cleanPart}</strong> : cleanPart;
-      });
-    };
-
-    lines.forEach((line, index) => {
-      const trimmed = line.trim();
-
-      if (trimmed === '---' || trimmed === '***') {
-        flushList();
-        elements.push(<hr key={index} className="my-6 border-slate-200 border-dashed" />);
-        return;
-      }
-
-      if (!trimmed) {
-        flushList();
-        return;
-      }
-
-      const isBoldHeader = /^\*\*(.*?)\*\*$/.test(trimmed);
-      const isNumberedSection = /^\d+\.\s+[A-Z]/.test(trimmed) && trimmed.length < 60;
-
-      if (trimmed.startsWith('#') || isBoldHeader || isNumberedSection) {
-        flushList();
-
-        let content = '';
-        if (trimmed.startsWith('#')) {
-          content = trimmed.replace(/^#+\s*/, '');
-        } else if (isBoldHeader) {
-          content = trimmed.replace(/^\*\*\s*(.*?)\s*\*\*$/, '$1');
-        } else {
-          content = trimmed;
-        }
-
-        const cleanedContent = cleanLatex(content).replace(/\*/g, '');
-
-        elements.push(
-          <div key={index} className="mt-8 mb-4 border-l-4 border-primary-500 pl-4">
-            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-tight">
-              {cleanedContent}
-            </h3>
-          </div>
-        );
-      }
-      else if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
-        const content = trimmed.replace(/^[\*\-]\s*/, '');
-        listBuffer.push(
-          <li key={index} className="flex gap-3 text-slate-600 items-start text-sm leading-relaxed group">
-            <span className="mt-2 w-1.5 h-1.5 bg-primary-500 rounded-full flex-shrink-0 group-hover:scale-150 transition-transform shadow-sm ring-2 ring-blue-50"></span>
-            <span className="flex-1">{parseBold(content)}</span>
-          </li>
-        );
-      }
-      else {
-        flushList();
-        const isKeyValue = /^[A-Za-z\s]+:\s/.test(trimmed);
-
-        elements.push(
-          <p key={index} className={`text-slate-600 text-sm leading-relaxed mb-3 ${isKeyValue ? 'font-medium text-slate-700' : 'text-justify'}`}>
-            {parseBold(trimmed)}
-          </p>
-        );
-      }
-    });
-
-    flushList();
-    return elements;
-  };
+  // Removed cleanLatex and renderFormattedResponse in favor of ReactMarkdown
 
   return (
     <ModuleLayout
@@ -242,8 +122,13 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                         <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded uppercase tracking-widest">Terkonfirmasi AI</span>
                         <span className="text-xs text-slate-400">Pakar Hidrologi</span>
                       </div>
-                      <div className="prose prose-sm sm:prose-base max-w-none text-slate-700">
-                        {renderFormattedResponse(response)}
+                      <div className="prose prose-sm sm:prose-base max-w-none prose-p:leading-relaxed prose-headings:font-black prose-headings:text-slate-800 prose-a:text-indigo-600">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                        >
+                          {response}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </div>

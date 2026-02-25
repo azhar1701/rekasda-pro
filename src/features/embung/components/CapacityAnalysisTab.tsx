@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
-import { Download, Calculator, Info, Waves, Spline, Loader2 } from 'lucide-react';
+import { Download, Calculator, Info, Waves, Spline, Loader2, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { calculateSequentPeak } from '@/lib/engine/embung';
 import { HydroValidationError } from '../types/embung.types';
@@ -25,7 +25,11 @@ const INITIAL_DATA: MonthlyData[] = [
     { id: '12', month: 'Des', inflow: 160, outflow: 80 },
 ];
 
-export const CapacityAnalysisTab = () => {
+interface CapacityAnalysisTabProps {
+    onConsultAI?: (data: any, result: any) => void;
+}
+
+export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onConsultAI }) => {
     const [data, setData] = useState<MonthlyData[]>(INITIAL_DATA);
     const [result, setResult] = useState<SequentPeakResult | null>(null);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -97,24 +101,36 @@ export const CapacityAnalysisTab = () => {
                                     <CardTitle className="text-lg text-slate-800">Data Hidrologi Bulanan</CardTitle>
                                     <CardDescription className="text-xs">Input dalam satuan Juta m³</CardDescription>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    onClick={handleCalculate}
-                                    disabled={isCalculating}
-                                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm disabled:opacity-60"
-                                >
-                                    {isCalculating ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Menghitung...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Calculator className="w-4 h-4 mr-2" />
-                                            Kalkulasi
-                                        </>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        size="sm"
+                                        onClick={handleCalculate}
+                                        disabled={isCalculating}
+                                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm disabled:opacity-60"
+                                    >
+                                        {isCalculating ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Menghitung...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Calculator className="w-4 h-4 mr-2" />
+                                                Kalkulasi
+                                            </>
+                                        )}
+                                    </Button>
+                                    {result && onConsultAI && (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onConsultAI({ inputData: data }, result)}
+                                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group"
+                                        >
+                                            <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:scale-110 transition-transform" />
+                                            Analisis AI
+                                        </Button>
                                     )}
-                                </Button>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-1 overflow-auto p-0 z-0 border border-slate-200 rounded-b-xl border-t-0 bg-white">

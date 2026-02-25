@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
-import { Download, Calculator, Info, Activity, ArrowDownRight, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Download, Calculator, Info, Activity, ArrowDownRight, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { calculateFloodRouting } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
 import { HydroValidationError } from '@/features/embung/types/embung.types';
@@ -34,7 +34,11 @@ const MOCK_STAGE_DISCHARGE = {
     discharge: [0, 5, 15, 35, 65, 110]
 };
 
-export const RoutingAnalysisTab = () => {
+interface RoutingAnalysisTabProps {
+    onConsultAI?: (data: any, result: any) => void;
+}
+
+export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsultAI }) => {
     const [isCalculating, setIsCalculating] = useState(false);
     const { hasilBanjir, isBanjirDirty } = useHydrologyStore();
     const isAutoFilled = Boolean(hasilBanjir?.hidrograf?.length);
@@ -148,24 +152,36 @@ export const RoutingAnalysisTab = () => {
                                     <CardTitle className="text-lg text-slate-800">Hidrograf Masuk (Inflow)</CardTitle>
                                     <CardDescription className="text-xs">Debit setiap jam (m³/s)</CardDescription>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    onClick={handleCalculate}
-                                    disabled={isCalculating || Boolean(isAutoFilled && isBanjirDirty)}
-                                    className={`shadow-sm transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
-                                >
-                                    {isCalculating ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Menghitung...</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <Calculator className="w-4 h-4 mr-2" />
-                                            Simulasi Routing
-                                        </>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        size="sm"
+                                        onClick={handleCalculate}
+                                        disabled={isCalculating || Boolean(isAutoFilled && isBanjirDirty)}
+                                        className={`shadow-sm transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
+                                    >
+                                        {isCalculating ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <span>Menghitung...</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Calculator className="w-4 h-4 mr-2" />
+                                                Simulasi Routing
+                                            </>
+                                        )}
+                                    </Button>
+                                    {summary && onConsultAI && (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onConsultAI({ hydrograph }, { resultData, summary })}
+                                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group"
+                                        >
+                                            <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:scale-110 transition-transform" />
+                                            Analisis AI
+                                        </Button>
                                     )}
-                                </Button>
+                                </div>
                             </div>
                         </CardHeader>
 
