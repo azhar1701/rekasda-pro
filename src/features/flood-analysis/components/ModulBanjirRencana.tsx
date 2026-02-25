@@ -6,6 +6,7 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisModal';
 import { AreaReductionCard } from '@/features/flood-analysis/components/AreaReductionCard';
+import { HyetographGenerator } from '@/features/flood/components/HyetographGenerator';
 import { Button } from '@/components/ui/Button';
 import {
     CloudRain, Calculator, Activity, ChevronDown,
@@ -648,6 +649,9 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     {/* ═══════════════════════════════ RIGHT COLUMN ══════════════════════ */}
                     <div className="md:col-span-7 flex flex-col gap-5 min-h-[400px]">
                         <DependencyWarningBanner module="banjir" />
+
+                        {/* Hyetograph Generator (Mononobe + ABM) */}
+                        <HyetographGenerator />
 
                         {/* Result Summary Cards */}
                         {resultSummary && (

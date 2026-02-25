@@ -123,6 +123,8 @@ export interface HydrologyState {
   hasilEmbung: HasilEmbung | null;
   hasilMock: HasilMock | null;
   neracaFinal: NeracaFinalRow[] | null;
+  distribusiHujanJamJaman: number[] | null;
+  durasiHujan: number;
   
   // State Tracking / Validation
   isBanjirDirty: boolean;
@@ -233,6 +235,8 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   },
   hasilMock: null,
   neracaFinal: null,
+  distribusiHujanJamJaman: null,
+  durasiHujan: 6,
   isBanjirDirty: false,
   isNeracaDirty: false,
   isLoading: false,
