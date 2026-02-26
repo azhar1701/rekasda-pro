@@ -160,9 +160,9 @@ export const MasterHidrologiTab: React.FC = () => {
                                     <div
                                         key={stasiun.id}
                                         onClick={() => selectStasiun(stasiun)}
-                                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                                             isActive
-                                                ? 'bg-gradient-to-br from-teal-500 to-teal-600 border-teal-600 shadow-lg text-white'
+                                                ? 'bg-gradient-to-br from-teal-500 to-teal-600 border-teal-600 shadow-lg text-white scale-[1.02]'
                                                 : 'bg-white/80 border-slate-200 hover:border-teal-300 hover:shadow-md text-slate-700'
                                         }`}
                                     >
@@ -264,28 +264,46 @@ export const MasterHidrologiTab: React.FC = () => {
                                                 dataHujan.map((row, index) => {
                                                     let statusLabel = "Kering";
                                                     let statusColor = "bg-slate-100 text-slate-600";
+                                                    let barWidth = 0;
                                                     if (row.curah_hujan > 0 && row.curah_hujan <= 20) {
                                                         statusLabel = "Ringan";
                                                         statusColor = "bg-blue-50 text-blue-600";
+                                                        barWidth = (row.curah_hujan / 20) * 100;
                                                     } else if (row.curah_hujan > 20 && row.curah_hujan <= 50) {
                                                         statusLabel = "Sedang";
                                                         statusColor = "bg-indigo-50 text-indigo-600";
+                                                        barWidth = 100;
                                                     } else if (row.curah_hujan > 50) {
                                                         statusLabel = "Lebat";
                                                         statusColor = "bg-rose-50 text-rose-600";
+                                                        barWidth = 100;
                                                     }
 
                                                     return (
-                                                        <tr key={row.id} className="hover:bg-teal-50/30 transition-colors">
-                                                            <td className="py-2.5 px-4 text-center text-slate-400 font-mono text-xs">{index + 1}</td>
-                                                            <td className="py-2.5 px-4 font-medium text-slate-700">
+                                                        <tr key={row.id} className="hover:bg-teal-50/30 transition-all duration-200 group cursor-pointer">
+                                                            <td className="py-2.5 px-4 text-center text-slate-400 font-mono text-xs group-hover:text-teal-600 transition-colors">{index + 1}</td>
+                                                            <td className="py-2.5 px-4 font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
                                                                 {new Date(row.tanggal).toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
                                                             </td>
-                                                            <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-800">
-                                                                {row.curah_hujan.toFixed(1)}
+                                                            <td className="py-2.5 px-4">
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                        <div 
+                                                                            className={`h-full rounded-full transition-all duration-500 ${
+                                                                                row.curah_hujan > 50 ? 'bg-gradient-to-r from-rose-400 to-rose-600' :
+                                                                                row.curah_hujan > 20 ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' :
+                                                                                row.curah_hujan > 0 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-slate-300'
+                                                                            }`}
+                                                                            style={{ width: `${barWidth}%` }}
+                                                                        />
+                                                                    </div>
+                                                                    <span className="font-mono font-bold text-slate-800 min-w-[50px] text-right">
+                                                                        {row.curah_hujan.toFixed(1)}
+                                                                    </span>
+                                                                </div>
                                                             </td>
                                                             <td className="py-2.5 px-4 text-center">
-                                                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${statusColor}`}>
+                                                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md transition-all duration-200 group-hover:scale-105 inline-block ${statusColor}`}>
                                                                     {statusLabel}
                                                                 </span>
                                                             </td>
