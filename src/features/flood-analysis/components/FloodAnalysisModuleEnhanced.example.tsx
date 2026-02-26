@@ -50,7 +50,7 @@ export const FloodAnalysisModuleEnhanced: React.FC = () => {
 
     // Perform QC
     const results = performQualityControl(annualMaxSeries);
-    setQCResults(results);
+    setQCResults({ '_default': results });
     setIsQCPassed(results.overallPassed);
 
     if (!results.overallPassed) {
@@ -133,18 +133,27 @@ export const FloodAnalysisModuleEnhanced: React.FC = () => {
           Jalankan Uji QC
         </Button>
 
-        {qcResults && (
+        {qcResults && (() => {
+          const entries = Object.entries(qcResults);
+          if (entries.length === 0) return null;
+          const allPassed = Object.values(qcResults).every(r => r.overallPassed);
+          return (
           <div className="mt-4 space-y-2">
-            <QCResultDisplay result={qcResults.konsistensi} title="Uji Konsistensi" />
-            <QCResultDisplay result={qcResults.homogenitas} title="Uji Homogenitas" />
-            <QCResultDisplay result={qcResults.outlier} title="Uji Outlier" />
+            {entries.map(([stasiunId, result]) => (
+              <div key={stasiunId} className="space-y-1">
+                <QCResultDisplay result={{ isPassed: result.konsistensi.isPassed, message: result.konsistensi.message }} title={`Konsistensi (${stasiunId.slice(0,8)})`} />
+                <QCResultDisplay result={{ isPassed: result.homogenitas.isPassed, message: result.homogenitas.message }} title={`Homogenitas (${stasiunId.slice(0,8)})`} />
+                <QCResultDisplay result={{ isPassed: result.outlier.isPassed, message: result.outlier.message }} title={`Outlier (${stasiunId.slice(0,8)})`} />
+              </div>
+            ))}
             
-            <div className={`p-4 rounded ${qcResults.overallPassed ? 'bg-green-50' : 'bg-red-50'}`}>
+            <div className={`p-4 rounded ${allPassed ? 'bg-green-50' : 'bg-red-50'}`}>
               <strong>Status: </strong>
-              {qcResults.overallPassed ? '✅ Data Lolos QC' : '❌ Data Tidak Lolos QC'}
+              {allPassed ? '✅ Data Lolos QC' : '❌ Data Tidak Lolos QC'}
             </div>
           </div>
-        )}
+          );
+        })()}
       </Card>
 
       {/* EXISTING: Frequency Analysis Section */}

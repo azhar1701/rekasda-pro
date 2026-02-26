@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const ROOT_DIR = path.join(__dirname, '..');
 
 console.log('🧪 Starting Integration Tests...\n');
 
@@ -24,12 +25,12 @@ function test(name, fn) {
 
 // Test 1: Environment Variables
 test('Environment variables loaded', () => {
-  const envPath = path.join(__dirname, '.env.local');
-  
+  const envPath = path.join(ROOT_DIR, '.env.local');
+
   if (!fs.existsSync(envPath)) {
     throw new Error('.env.local not found');
   }
-  
+
   const envContent = fs.readFileSync(envPath, 'utf8');
   if (!envContent.includes('VITE_SUPABASE_URL')) {
     throw new Error('VITE_SUPABASE_URL not configured');
@@ -41,12 +42,12 @@ test('Environment variables loaded', () => {
 
 // Test 2: Build artifacts exist
 test('Production build artifacts exist', () => {
-  
-  const distPath = path.join(__dirname, 'dist');
+
+  const distPath = path.join(ROOT_DIR, 'dist');
   if (!fs.existsSync(distPath)) {
     throw new Error('dist/ folder not found - run npm run build');
   }
-  
+
   const indexPath = path.join(distPath, 'index.html');
   if (!fs.existsSync(indexPath)) {
     throw new Error('dist/index.html not found');
@@ -55,17 +56,17 @@ test('Production build artifacts exist', () => {
 
 // Test 3: TypeScript types
 test('TypeScript types are valid', () => {
-  
-  const typesPath = path.join(__dirname, 'src', 'types', 'types.ts');
-  const commonTypesPath = path.join(__dirname, 'src', 'types', 'common.types.ts');
-  
+
+  const typesPath = path.join(ROOT_DIR, 'src', 'types', 'types.ts');
+  const commonTypesPath = path.join(ROOT_DIR, 'src', 'types', 'common.types.ts');
+
   if (!fs.existsSync(typesPath)) {
     throw new Error('types.ts not found');
   }
   if (!fs.existsSync(commonTypesPath)) {
     throw new Error('common.types.ts not found');
   }
-  
+
   const typesContent = fs.readFileSync(typesPath, 'utf8');
   if (!typesContent.includes('WATER_BALANCE')) {
     throw new Error('WATER_BALANCE type not found');
@@ -74,13 +75,13 @@ test('TypeScript types are valid', () => {
 
 // Test 4: No duplicate files
 test('No duplicate Supabase clients', () => {
-  
-  const oldSupabasePath = path.join(__dirname, 'src', 'lib', 'supabase.ts');
+
+  const oldSupabasePath = path.join(ROOT_DIR, 'src', 'lib', 'supabase.ts');
   if (fs.existsSync(oldSupabasePath)) {
     throw new Error('Duplicate supabase.ts found in lib/');
   }
-  
-  const correctPath = path.join(__dirname, 'src', 'lib', 'api', 'supabase.ts');
+
+  const correctPath = path.join(ROOT_DIR, 'src', 'lib', 'api', 'supabase.ts');
   if (!fs.existsSync(correctPath)) {
     throw new Error('lib/api/supabase.ts not found');
   }
@@ -88,10 +89,10 @@ test('No duplicate Supabase clients', () => {
 
 // Test 5: Package.json integrity
 test('Package.json is valid', () => {
-  
-  const pkgPath = path.join(__dirname, 'package.json');
+
+  const pkgPath = path.join(ROOT_DIR, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  
+
   if (!pkg.scripts.build) {
     throw new Error('Build script not found');
   }
@@ -105,7 +106,7 @@ test('Package.json is valid', () => {
 
 // Test 6: Critical files exist
 test('Critical source files exist', () => {
-  
+
   const criticalFiles = [
     'src/App.tsx',
     'src/lib/api/supabase.ts',
@@ -114,9 +115,9 @@ test('Critical source files exist', () => {
     'src/types/types.ts',
     'src/types/common.types.ts'
   ];
-  
+
   for (const file of criticalFiles) {
-    const filePath = path.join(__dirname, file);
+    const filePath = path.join(ROOT_DIR, file);
     if (!fs.existsSync(filePath)) {
       throw new Error(`${file} not found`);
     }
@@ -125,15 +126,15 @@ test('Critical source files exist', () => {
 
 // Test 7: No example/test files in production
 test('No example files in production', () => {
-  
+
   const exampleFiles = [
     'src/pages/ExamplePage.tsx',
     'src/components/examples/PolishedInputCard.tsx',
     'src/lib/debugSupabase.ts'
   ];
-  
+
   for (const file of exampleFiles) {
-    const filePath = path.join(__dirname, file);
+    const filePath = path.join(ROOT_DIR, file);
     if (fs.existsSync(filePath)) {
       throw new Error(`${file} should be deleted`);
     }
@@ -142,16 +143,16 @@ test('No example files in production', () => {
 
 // Test 8: Documentation exists
 test('Documentation files exist', () => {
-  
+
   const docs = [
     'README.md',
-    'AUDIT_REPORT.md',
-    'REFACTORING_COMPLETE.md',
-    'DEPLOYMENT_CHECKLIST.md'
+    'CHANGELOG.md',
+    'CONTRIBUTING.md',
+    'SECURITY.md'
   ];
-  
+
   for (const doc of docs) {
-    const docPath = path.join(__dirname, doc);
+    const docPath = path.join(ROOT_DIR, doc);
     if (!fs.existsSync(docPath)) {
       throw new Error(`${doc} not found`);
     }

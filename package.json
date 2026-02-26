@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "audit:prod": "npm audit --omit=dev"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
