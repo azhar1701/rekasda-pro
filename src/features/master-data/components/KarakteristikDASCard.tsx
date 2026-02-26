@@ -22,21 +22,29 @@ export const KarakteristikDASCard: React.FC = () => {
   }, [morfometriDAS]);
 
   const handleChange = (field: keyof MorfometriDAS, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setFormData(prev => ({ ...prev, [field]: numValue }));
+    setFormData(prev => ({ ...prev, [field]: value as unknown as number }));
     setIsSaved(false);
   };
 
+  const safeA = typeof formData.luasDAS === 'string' ? parseFloat(formData.luasDAS) || 0 : formData.luasDAS;
+  const safeL = typeof formData.panjangSungai === 'string' ? parseFloat(formData.panjangSungai) || 0 : formData.panjangSungai;
+
   const handleSave = () => {
-    if (formData.luasDAS <= 0 || formData.panjangSungai <= 0) {
+    const safeData = {
+      luasDAS: safeA,
+      panjangSungai: safeL,
+      kemiringanSungai: typeof formData.kemiringanSungai === 'string' ? parseFloat(formData.kemiringanSungai) || 0 : formData.kemiringanSungai,
+      elevasi: typeof formData.elevasi === 'string' ? parseFloat(formData.elevasi) || 0 : formData.elevasi,
+    };
+    if (safeData.luasDAS <= 0 || safeData.panjangSungai <= 0) {
       alert('Luas DAS dan Panjang Sungai harus lebih dari 0');
       return;
     }
-    setMorfometriDAS(formData);
+    setMorfometriDAS(safeData);
     setIsSaved(true);
   };
 
-  const isValid = formData.luasDAS > 0 && formData.panjangSungai > 0;
+  const isValid = safeA > 0 && safeL > 0;
 
   return (
     <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
@@ -56,9 +64,9 @@ export const KarakteristikDASCard: React.FC = () => {
             Luas DAS (A)
           </label>
           <div className="relative">
-            <input
+              <input
               type="number"
-              value={formData.luasDAS || ''}
+              value={formData.luasDAS === 0 ? 0 : (formData.luasDAS ?? '')}
               onChange={(e) => handleChange('luasDAS', e.target.value)}
               className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0.00"
@@ -75,7 +83,7 @@ export const KarakteristikDASCard: React.FC = () => {
           <div className="relative">
             <input
               type="number"
-              value={formData.panjangSungai || ''}
+              value={formData.panjangSungai === 0 ? 0 : (formData.panjangSungai ?? '')}
               onChange={(e) => handleChange('panjangSungai', e.target.value)}
               className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0.00"
@@ -92,7 +100,7 @@ export const KarakteristikDASCard: React.FC = () => {
           <div className="relative">
             <input
               type="number"
-              value={formData.kemiringanSungai || ''}
+              value={formData.kemiringanSungai === 0 ? 0 : (formData.kemiringanSungai ?? '')}
               onChange={(e) => handleChange('kemiringanSungai', e.target.value)}
               className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0.0000"
@@ -109,7 +117,7 @@ export const KarakteristikDASCard: React.FC = () => {
           <div className="relative">
             <input
               type="number"
-              value={formData.elevasi || ''}
+              value={formData.elevasi === 0 ? 0 : (formData.elevasi ?? '')}
               onChange={(e) => handleChange('elevasi', e.target.value)}
               className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="0"

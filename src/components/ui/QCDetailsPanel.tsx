@@ -24,20 +24,20 @@ export const QCDetailsPanel: React.FC<QCDetailsPanelProps> = ({ result }) => {
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-gray-600">Sk* (Hitung):</span>
-            <span className="ml-2 font-mono">{Math.abs(details.raps.Sk).toFixed(4)}</span>
+            <span className="text-gray-600">Q (Hitung):</span>
+            <span className="ml-2 font-mono">{details.raps.QHitung.toFixed(4)}</span>
           </div>
           <div>
             <span className="text-gray-600">Q/√n (Kritis):</span>
-            <span className="ml-2 font-mono">{details.raps.QLimit.toFixed(4)}</span>
+            <span className="ml-2 font-mono">{details.raps.QKritis.toFixed(4)}</span>
           </div>
           <div>
-            <span className="text-gray-600">Sk** (Hitung):</span>
-            <span className="ml-2 font-mono">{Math.abs(details.raps.Skk).toFixed(4)}</span>
+            <span className="text-gray-600">R (Hitung):</span>
+            <span className="ml-2 font-mono">{details.raps.RHitung.toFixed(4)}</span>
           </div>
           <div>
             <span className="text-gray-600">R/√n (Kritis):</span>
-            <span className="ml-2 font-mono">{details.raps.RLimit.toFixed(4)}</span>
+            <span className="ml-2 font-mono">{details.raps.RKritis.toFixed(4)}</span>
           </div>
         </div>
         <p className="text-sm text-gray-700 mt-3 p-2 bg-gray-50 rounded">{details.raps.pesan}</p>

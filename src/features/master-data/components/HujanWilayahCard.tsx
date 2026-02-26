@@ -34,7 +34,7 @@ export const HujanWilayahCard: React.FC = () => {
   }, [stasiunList]);
 
   const { totalLuasPengaruh, bobotError } = useMemo(() => {
-    const total = configs.reduce((sum, c) => sum + c.luasPengaruh, 0);
+    const total = configs.reduce((sum, c) => sum + (typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh), 0);
     const dasLuas = morfometriDAS?.luasDAS || 0;
     const error = dasLuas > 0 ? Math.abs(total - dasLuas) : 0;
     
@@ -45,29 +45,36 @@ export const HujanWilayahCard: React.FC = () => {
   }, [configs, morfometriDAS]);
 
   const configsWithBobot = useMemo(() => {
-    return configs.map(c => ({
-      ...c,
-      bobot: totalLuasPengaruh > 0 ? (c.luasPengaruh / totalLuasPengaruh) * 100 : 0,
-    }));
+    return configs.map(c => {
+      const safeluas = typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh;
+      return {
+        ...c,
+        bobot: totalLuasPengaruh > 0 ? (safeluas / totalLuasPengaruh) * 100 : 0,
+      }
+    });
   }, [configs, totalLuasPengaruh]);
 
   const hasError = metode === 'thiessen' && bobotError > 0.01 && morfometriDAS !== null;
 
   const handleLuasChange = (stasiunId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
     setConfigs(configs.map(c => 
-      c.stasiunId === stasiunId ? { ...c, luasPengaruh: numValue } : c
+      c.stasiunId === stasiunId ? { ...c, luasPengaruh: value as unknown as number } : c
     ));
     setIsSaved(false);
   };
 
   const handleSave = () => {
+    const safeConfigs = configsWithBobot.map(c => ({
+      ...c,
+      luasPengaruh: typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh
+    }));
     const data: CurahHujanWilayah = {
       metode,
-      stasiunConfigs: configsWithBobot,
+      stasiunConfigs: safeConfigs,
       hujanRataRata: 0,
     };
     setCurahHujanWilayah(data);
+    setConfigs(safeConfigs);
     setIsSaved(true);
   };
 
@@ -134,11 +141,11 @@ export const HujanWilayahCard: React.FC = () => {
                       <tr key={config.stasiunId} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="px-3 py-2 font-medium text-slate-900">{config.namaStasiun}</td>
                         <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            value={config.luasPengaruh || ''}
-                            onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
-                            className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                            <input
+                              type="number"
+                              value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
+                              onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
+                              className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                             placeholder="0.00"
                             step="0.01"
                           />

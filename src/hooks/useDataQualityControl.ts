@@ -10,9 +10,11 @@ export const useDataQualityControl = () => {
       const result = runFullQC(data);
       
       setQCStatus({
-        konsisten: result.isKonsisten,
-        bebasOutlier: result.isBebasOutlier,
-        homogen: result.isHomogen,
+        '_default': {
+          konsisten: result.isKonsisten,
+          bebasOutlier: result.isBebasOutlier,
+          homogen: result.isHomogen,
+        }
       });
 
       // Log summary for debugging

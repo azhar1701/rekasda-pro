@@ -21,9 +21,15 @@ export const TutupanLahanCard: React.FC = () => {
   }, [tutupanLahan]);
 
   const { totalLuas, cGabungan, cnGabungan, luasError } = useMemo(() => {
-    const total = items.reduce((sum, item) => sum + item.luas, 0);
-    const cWeighted = total > 0 ? items.reduce((sum, item) => sum + (item.nilaiC * item.luas), 0) / total : 0;
-    const cnWeighted = total > 0 ? items.reduce((sum, item) => sum + (item.nilaiCN * item.luas), 0) / total : 0;
+    const safeItems = items.map(i => ({
+      ...i,
+      luas: typeof i.luas === 'string' ? parseFloat(i.luas) || 0 : i.luas,
+      nilaiC: typeof i.nilaiC === 'string' ? parseFloat(i.nilaiC) || 0 : i.nilaiC,
+      nilaiCN: typeof i.nilaiCN === 'string' ? parseFloat(i.nilaiCN) || 0 : i.nilaiCN,
+    }));
+    const total = safeItems.reduce((sum, item) => sum + item.luas, 0);
+    const cWeighted = total > 0 ? safeItems.reduce((sum, item) => sum + (item.nilaiC * item.luas), 0) / total : 0;
+    const cnWeighted = total > 0 ? safeItems.reduce((sum, item) => sum + (item.nilaiCN * item.luas), 0) / total : 0;
     
     const dasLuas = morfometriDAS?.luasDAS || 0;
     const error = dasLuas > 0 ? Math.abs(total - dasLuas) : 0;
@@ -52,19 +58,26 @@ export const TutupanLahanCard: React.FC = () => {
 
   const handleChange = (id: string, field: keyof TutupanLahanItem, value: string | number) => {
     setItems(items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
+      item.id === id ? { ...item, [field]: value as unknown as number } : item
     ));
     setIsSaved(false);
   };
 
   const handleSave = () => {
+    const safeItems = items.map(i => ({
+      ...i,
+      luas: typeof i.luas === 'string' ? parseFloat(i.luas) || 0 : i.luas,
+      nilaiC: typeof i.nilaiC === 'string' ? parseFloat(i.nilaiC) || 0 : i.nilaiC,
+      nilaiCN: typeof i.nilaiCN === 'string' ? parseFloat(i.nilaiCN) || 0 : i.nilaiCN,
+    }));
     const data: TutupanLahan = {
-      items,
+      items: safeItems,
       koefisienPengaliranGabungan: cGabungan,
       curveNumberGabungan: cnGabungan,
       totalLuas,
     };
     setTutupanLahan(data);
+    setItems(safeItems);
     setIsSaved(true);
   };
 
@@ -115,8 +128,8 @@ export const TutupanLahanCard: React.FC = () => {
                 <td className="px-3 py-2">
                   <input
                     type="number"
-                    value={item.luas || ''}
-                    onChange={(e) => handleChange(item.id, 'luas', parseFloat(e.target.value) || 0)}
+                    value={item.luas === 0 ? 0 : (item.luas ?? '')}
+                    onChange={(e) => handleChange(item.id, 'luas', e.target.value)}
                     className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="0.00"
                     step="0.01"
@@ -125,8 +138,8 @@ export const TutupanLahanCard: React.FC = () => {
                 <td className="px-3 py-2">
                   <input
                     type="number"
-                    value={item.nilaiC || ''}
-                    onChange={(e) => handleChange(item.id, 'nilaiC', parseFloat(e.target.value) || 0)}
+                    value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
+                    onChange={(e) => handleChange(item.id, 'nilaiC', e.target.value)}
                     className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="0.00"
                     step="0.01"
@@ -137,8 +150,8 @@ export const TutupanLahanCard: React.FC = () => {
                 <td className="px-3 py-2">
                   <input
                     type="number"
-                    value={item.nilaiCN || ''}
-                    onChange={(e) => handleChange(item.id, 'nilaiCN', parseFloat(e.target.value) || 0)}
+                    value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
+                    onChange={(e) => handleChange(item.id, 'nilaiCN', e.target.value)}
                     className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="0"
                     step="1"

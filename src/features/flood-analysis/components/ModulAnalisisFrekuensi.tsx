@@ -20,7 +20,7 @@ const METHOD_LABELS: Record<string, string> = {
 };
 
 export const ModulAnalisisFrekuensi: React.FC = () => {
-  const { analisisFrekuensi, setAnalisisFrekuensi, dataHujan, selectedStasiun, curahHujanWilayah } = useHydrologyStore();
+  const { analisisFrekuensi, setAnalisisFrekuensi, dataHujan, selectedStasiun, hasilThiessen } = useHydrologyStore();
   
   const [dataInput, setDataInput] = useState<number[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -28,23 +28,37 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ params: true, gof: false, results: true });
 
   const hasValidData = useMemo(() => {
-    return curahHujanWilayah && curahHujanWilayah.hujanRataRata > 0;
-  }, [curahHujanWilayah]);
+    // Check if we have minimum 10 years of data either from a selected point station OR computed areal rainfall
+    // FREQUENCY ANALYSIS only needs RAIN data to start. Morphometry is needed later for Flood.
+    const hasEnoughData = dataHujan.length >= 10 || (hasilThiessen && hasilThiessen.hujanRataRataDAS.length >= 10);
+    return hasEnoughData;
+  }, [dataHujan, hasilThiessen]);
 
   useEffect(() => {
     if (dataHujan.length > 0) {
-      const byYear = new Map<number, number>();
-      dataHujan.forEach(d => {
-        const year = new Date(d.tanggal).getFullYear();
-        const current = byYear.get(year) || 0;
-        if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
-      });
-      const annualMax = Array.from(byYear.values());
-      if (annualMax.length >= 10) {
-        setDataInput(annualMax);
+      // Filter by selected station if applicable
+      const stasiunData = selectedStasiun 
+        ? dataHujan.filter(d => d.stasiun_id === selectedStasiun.id)
+        : dataHujan;
+
+      if (stasiunData.length > 0) {
+        const byYear = new Map<number, number>();
+        stasiunData.forEach(d => {
+          const year = new Date(d.tanggal).getFullYear();
+          const current = byYear.get(year) || 0;
+          if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
+        });
+        const annualMax = Array.from(byYear.values());
+        if (annualMax.length >= 10) {
+          setDataInput(annualMax);
+        } else {
+          setDataInput([]); // Reset if not enough
+        }
+      } else {
+        setDataInput([]);
       }
     }
-  }, [dataHujan]);
+  }, [dataHujan, selectedStasiun]);
 
   useEffect(() => {
     if (analisisFrekuensi) {
@@ -186,10 +200,11 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       }
     >
     <div className="space-y-6 py-2">
-      {selectedStasiun && dataInput.length > 0 && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-900">
-            <strong>📊 Data Source:</strong> {dataInput.length} tahun data maksimum tahunan dari stasiun <strong>{selectedStasiun.nama_stasiun}</strong>
+      {dataInput.length > 0 && (
+        <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+          <p className="text-sm text-indigo-900">
+            <strong>📊 Sumber Data Terdeteksi:</strong> {dataInput.length} tahun Annual Maximum Series (AMS) 
+            {selectedStasiun ? ` dari Stasiun ${selectedStasiun.nama_stasiun}` : ' (Hujan Wilayah/DAS)'}
           </p>
         </div>
       )}
@@ -223,6 +238,18 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               <Clipboard className="w-4 h-4" />
               📋 Paste dari Excel
             </button>
+            {hasilThiessen && hasilThiessen.hujanRataRataDAS && hasilThiessen.hujanRataRataDAS.length > 0 && (
+              <button
+                onClick={() => {
+                  setDataInput(hasilThiessen.hujanRataRataDAS);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                title="Gunakan Hujan Rata-rata DAS (Thiessen)"
+              >
+                <Upload className="w-4 h-4" />
+                Load Hujan Wilayah (DAS)
+              </button>
+            )}
             {dataHujan.length > 0 && (
               <button
                 onClick={() => {
@@ -234,10 +261,11 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   });
                   setDataInput(Array.from(byYear.values()));
                 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+                title="Gunakan Hujan Titik (Stasiun Terpilih)"
               >
                 <Upload className="w-4 h-4" />
-                Load dari Master Data
+                Load Hujan Stasiun Terpilih
               </button>
             )}
           </div>

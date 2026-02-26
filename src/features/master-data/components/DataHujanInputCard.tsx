@@ -15,14 +15,19 @@ export const DataHujanInputCard: React.FC = () => {
   }, [dataHujan]);
 
   useEffect(() => {
-    if (debouncedData.length > 0 && JSON.stringify(debouncedData) !== JSON.stringify(dataHujan)) {
-      updateDataHujanManual(debouncedData);
+    if (debouncedData.length > 0) {
+      const cleanedData = debouncedData.map(d => ({
+        ...d,
+        curah_hujan: typeof d.curah_hujan === 'string' ? (d.curah_hujan === '' ? 0 : parseFloat(d.curah_hujan) || 0) : d.curah_hujan
+      }));
+      if (JSON.stringify(cleanedData) !== JSON.stringify(dataHujan)) {
+        updateDataHujanManual(cleanedData);
+      }
     }
   }, [debouncedData]);
 
   const handleValueChange = (id: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setLocalData(prev => prev.map(d => d.id === id ? { ...d, curah_hujan: numValue } : d));
+    setLocalData(prev => prev.map(d => d.id === id ? { ...d, curah_hujan: value as unknown as number } : d));
   };
 
   const handleAddRow = () => {
@@ -59,13 +64,13 @@ export const DataHujanInputCard: React.FC = () => {
           </div>
         )}
         
-        {!isCalculating && qcStatus && (
+        {!isCalculating && qcStatus && selectedStasiun && qcStatus[selectedStasiun.id] && (
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-            qcStatus.konsisten && qcStatus.bebasOutlier && qcStatus.homogen
+            qcStatus[selectedStasiun.id].konsisten && qcStatus[selectedStasiun.id].bebasOutlier && qcStatus[selectedStasiun.id].homogen
               ? 'bg-green-50 border border-green-200'
               : 'bg-amber-50 border border-amber-200'
           }`}>
-            {qcStatus.konsisten && qcStatus.bebasOutlier && qcStatus.homogen ? (
+            {qcStatus[selectedStasiun.id].konsisten && qcStatus[selectedStasiun.id].bebasOutlier && qcStatus[selectedStasiun.id].homogen ? (
               <>
                 <CheckCircle className="w-4 h-4 text-green-600" />
                 <span className="text-xs font-medium text-green-700">QC Lulus</span>
@@ -102,7 +107,7 @@ export const DataHujanInputCard: React.FC = () => {
                 <td className="px-3 py-2">
                   <input
                     type="number"
-                    value={item.curah_hujan || ''}
+                    value={item.curah_hujan === 0 ? 0 : (item.curah_hujan ?? '')}
                     onChange={(e) => handleValueChange(item.id, e.target.value)}
                     className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
                     placeholder="0.0"

@@ -12,104 +12,78 @@ interface DataQualityDashboardProps {
 export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({ 
   onProceed
 }) => {
-  const { qcStatus, isQCOverridden, setQCOverride } = useHydrologyStore();
+  const { qcStatus, qcResults, isQCOverridden, setQCOverride, rentangTahun, stasiunList } = useHydrologyStore();
 
-  if (!qcStatus) {
+  if (!qcStatus || Object.keys(qcStatus).length === 0) {
     return (
       <Card className="p-6">
         <div className="text-center text-gray-500">
           <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-          <p>Belum ada hasil Quality Control. Jalankan uji QC terlebih dahulu.</p>
+          <p>Belum ada hasil Quality Control. Masukkan data curah hujan terlebih dahulu.</p>
         </div>
       </Card>
     );
   }
 
-  const { konsisten, bebasOutlier, homogen } = qcStatus;
-  const allPassed = konsisten && bebasOutlier && homogen;
-  const canProceed = allPassed || isQCOverridden;
-  const failedTests = [!konsisten && 'Konsistensi', !bebasOutlier && 'Outlier', !homogen && 'Homogenitas'].filter(Boolean);
-
-  const getStatusIcon = (passed: boolean) => (
-    passed ? <CheckCircle2 className="w-6 h-6 text-green-600" /> : <XCircle className="w-6 h-6 text-red-600" />
+  // TAHAP 3: Aggregation Logic (Zero Trust Policy)
+  // Evaluates to true IF AND ONLY IF all stations pass ALL 3 tests
+  const allStasiunValid = Object.values(qcStatus).every(
+    status => status.konsisten && status.bebasOutlier && status.homogen
   );
 
-  const getStatusColor = (passed: boolean) => (
-    passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+  const canProceed = allStasiunValid || isQCOverridden;
+
+  // Find all failed tests across all stations to display in the warning
+  const failedTestsSet = new Set<string>();
+  Object.values(qcStatus).forEach(status => {
+    if (!status.konsisten) failedTestsSet.add('Konsistensi');
+    if (!status.bebasOutlier) failedTestsSet.add('Outlier');
+    if (!status.homogen) failedTestsSet.add('Homogenitas');
+  });
+  const failedTests = Array.from(failedTestsSet);
+
+  const getStatusIcon = (passed: boolean) => (
+    passed ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <XCircle className="w-5 h-5 text-red-600" />
+  );
+
+  const getBadgeColor = (passed: boolean) => (
+    passed ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
   );
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Quality Control Data Hujan</h3>
-        {allPassed && (
-          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-            ✓ Semua Uji Lulus
+        <div>
+           <h3 className="text-lg font-semibold text-gray-900">Quality Control Data Hujan Summary</h3>
+           {rentangTahun && (
+              <p className="text-sm text-gray-500">
+                 Rentang Data Evaluasi: <span className="font-semibold text-slate-700">{rentangTahun.min} - {rentangTahun.max}</span> ({rentangTahun.max - rentangTahun.min + 1} Tahun)
+              </p>
+           )}
+        </div>
+        {allStasiunValid && (
+          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full border border-green-200 shadow-sm flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4"/> Semua Uji Stasiun Lolos
           </span>
         )}
       </div>
 
-      {/* QC Test Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Konsistensi RAPS */}
-        <Card className={`p-4 border-2 ${getStatusColor(konsisten)}`}>
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-900">Konsistensi</h4>
-              <p className="text-xs text-gray-600 mt-1">RAPS Test</p>
-            </div>
-            {getStatusIcon(konsisten)}
-          </div>
-          <p className="text-sm text-gray-700 mt-2">
-            {konsisten ? 'Data konsisten secara statistik' : 'Data tidak konsisten'}
-          </p>
-        </Card>
-
-        {/* Outlier Grubbs */}
-        <Card className={`p-4 border-2 ${getStatusColor(bebasOutlier)}`}>
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-900">Outlier</h4>
-              <p className="text-xs text-gray-600 mt-1">Smirnov-Grubbs</p>
-            </div>
-            {getStatusIcon(bebasOutlier)}
-          </div>
-          <p className="text-sm text-gray-700 mt-2">
-            {bebasOutlier ? 'Tidak ada data ekstrem' : 'Ditemukan data outlier'}
-          </p>
-        </Card>
-
-        {/* Homogenitas */}
-        <Card className={`p-4 border-2 ${getStatusColor(homogen)}`}>
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-900">Homogenitas</h4>
-              <p className="text-xs text-gray-600 mt-1">F-Test & t-Test</p>
-            </div>
-            {getStatusIcon(homogen)}
-          </div>
-          <p className="text-sm text-gray-700 mt-2">
-            {homogen ? 'Data homogen' : 'Data tidak homogen'}
-          </p>
-        </Card>
-      </div>
-
-      {/* Blocking Banner - Gagal QC */}
-      {!allPassed && !isQCOverridden && (
+      {/* Aggregate Blocking Banner - Gagal QC */}
+      {!allStasiunValid && !isQCOverridden && (
         <Card className="p-4 bg-red-50 border-2 border-red-300">
           <div className="flex items-start gap-3">
             <ShieldAlert className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-semibold text-red-900 mb-1">
-                ⛔ Data Tidak Memenuhi Standar Quality Control
+                ⛔ Peringatan: Standar Quality Control Gagal Pada Salah Satu Stasiun
               </h4>
               <p className="text-sm text-red-800 mb-2">
-                Uji gagal: <strong>{failedTests.join(', ')}</strong>. Data tidak direkomendasikan untuk Analisis Frekuensi.
+                Evaluasi gagal pada uji: <strong>{failedTests.join(', ')}</strong>. Data gabungan (Areally averaged) tidak direkomendasikan untuk Analisis Frekuensi.
               </p>
               <div className="flex items-center gap-2 text-xs text-red-700 mb-3 bg-red-100 p-2 rounded">
                 <Info className="w-4 h-4" />
-                <span>Perbaiki data atau gunakan override jika Anda yakin data valid berdasarkan analisis lapangan.</span>
+                <span>Perbaiki data stasiun yang memicu outlier, atau gunakan override jika Anda yakin anomali data diakibatkan gejala lokal ekstrim yang valid.</span>
               </div>
               <Button
                 onClick={() => setQCOverride(true)}
@@ -117,15 +91,77 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
                 className="bg-amber-100 border-amber-400 text-amber-900 hover:bg-amber-200"
               >
                 <AlertTriangle className="w-4 h-4 mr-2" />
-                ⚠️ Force Override: Saya Yakin Data Valid
+                ⚠️ Force Override: Lanjutkan Dengan Risiko
               </Button>
             </div>
           </div>
         </Card>
       )}
 
+      {/* TAHAP 4: Dynamic Iterations of Detailed QC per Station */}
+      <div className="space-y-3 mt-6">
+        <h4 className="font-semibold text-gray-800 border-b pb-2">Detail QC Per Stasiun</h4>
+        {Object.entries(qcStatus).map(([stasiunId, status]) => {
+          const stasiun = stasiunList.find(s => s.id === stasiunId);
+          const results = qcResults ? qcResults[stasiunId] : null;
+          
+          return (
+            <Card key={stasiunId} className="p-4 border border-slate-200 overflow-hidden relative">
+               <div className="absolute top-0 left-0 w-1 h-full bg-slate-300"></div>
+               <div className="pl-2">
+                 <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                   <h5 className="font-semibold text-slate-800">Stasiun: {stasiun?.nama_stasiun || 'Unknown'}</h5>
+                   {status.konsisten && status.bebasOutlier && status.homogen ? (
+                     <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">✅ VALID</span>
+                   ) : (
+                     <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">❌ PERINGATAN</span>
+                   )}
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                   {/* Konsistensi */}
+                   <div className={`p-3 rounded-lg border ${getBadgeColor(status.konsisten)}`}>
+                     <div className="flex justify-between items-start mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider">Konsistensi</span>
+                        {getStatusIcon(status.konsisten)}
+                     </div>
+                     <p className="text-xs mt-1 leading-snug">
+                       {results?.konsistensi?.message || (status.konsisten ? 'Data konsisten (RAPS test)' : 'Data tidak konsisten')}
+                     </p>
+                   </div>
+                   
+                   {/* Homogenitas */}
+                   <div className={`p-3 rounded-lg border ${getBadgeColor(status.homogen)}`}>
+                     <div className="flex justify-between items-start mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider">Homogenitas</span>
+                        {getStatusIcon(status.homogen)}
+                     </div>
+                     <p className="text-xs mt-1 leading-snug">
+                       {results?.homogenitas?.message || (status.homogen ? 'Rata-rata homogen (F-Test/t-test)' : 'Ragam / varians data tidak homogen')}
+                     </p>
+                   </div>
+
+                   {/* Outlier */}
+                   <div className={`p-3 rounded-lg border ${getBadgeColor(status.bebasOutlier)}`}>
+                     <div className="flex justify-between items-start mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider">Pencilan (Outlier)</span>
+                        {getStatusIcon(status.bebasOutlier)}
+                     </div>
+                     <p className="text-xs mt-1 leading-snug">
+                       {results?.outlier?.message || (status.bebasOutlier ? 'Tidak terdeteksi Grubbs-beck outlier' : 'Ditemukan outlier tinggi/rendah')}
+                     </p>
+                   </div>
+                 </div>
+               </div>
+            </Card>
+          );
+        })}
+      </div>
+
+
+
       {/* Warning Banner - Override Aktif */}
-      {isQCOverridden && !allPassed && (
+      {isQCOverridden && !allStasiunValid && (
         <Card className="p-4 bg-amber-50 border-2 border-amber-400">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -150,14 +186,14 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
       )}
 
       {/* Success Banner */}
-      {allPassed && (
+      {allStasiunValid && (
         <Card className="p-4 bg-green-50 border-2 border-green-300">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-6 h-6 text-green-600" />
             <div className="flex-1">
-              <h4 className="font-semibold text-green-900">✓ Data Lolos Quality Control</h4>
+              <h4 className="font-semibold text-green-900">✓ Seluruh Data Lolos Quality Control</h4>
               <p className="text-sm text-green-800">
-                Data siap digunakan untuk Analisis Frekuensi dan perhitungan selanjutnya.
+                Data stasiun gabungan tervalidasi aman. Anda dipersilakan untuk melanjutkan ke Analisis Frekuensi.
               </p>
             </div>
           </div>
@@ -169,9 +205,9 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
         <div className="flex justify-end pt-2">
           <Button 
             onClick={onProceed} 
-            className={allPassed ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'}
+            className={allStasiunValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'}
           >
-            {allPassed ? 'Lanjut ke Analisis Frekuensi →' : 'Lanjut dengan Override →'}
+            {allStasiunValid ? 'Lanjut ke Analisis Frekuensi →' : 'Lanjut dengan Override →'}
           </Button>
         </div>
       )}

@@ -64,9 +64,14 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
   const qcStatus = useMemo(() => {
     if (!qcResults) return null;
     
-    const rapsValid = 'raps' in qcResults ? qcResults.raps?.isConsistent ?? false : qcResults.konsistensi?.isPassed ?? false;
-    const grubbsValid = 'grubbs' in qcResults ? qcResults.grubbs?.hasOutliers === false : qcResults.outlier?.isPassed ?? false;
-    const homogeneityValid = 'homogeneity' in qcResults ? qcResults.homogeneity?.isHomogeneous ?? false : qcResults.homogenitas?.isPassed ?? false;
+    // qcResults is now Record<string, QualityControlResults>
+    const entries = Object.values(qcResults);
+    if (entries.length === 0) return null;
+    
+    // Aggregate across all stations
+    const rapsValid = entries.every(r => r.konsistensi?.isPassed ?? false);
+    const grubbsValid = entries.every(r => r.outlier?.isPassed ?? false);
+    const homogeneityValid = entries.every(r => r.homogenitas?.isPassed ?? false);
     
     return {
       rapsValid,

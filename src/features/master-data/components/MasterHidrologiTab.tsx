@@ -3,8 +3,7 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download } from 'lucide-react';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
-import * as XLSX from 'xlsx';
-
+import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 export const MasterHidrologiTab: React.FC = () => {
     const {
         stasiunList,
@@ -71,9 +70,7 @@ export const MasterHidrologiTab: React.FC = () => {
 
         try {
             const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data);
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json<{ Tanggal: string; 'Curah Hujan (mm)': number }>(worksheet, { range: 4 });
+            const jsonData = parseExcelData<{ Tanggal: string; 'Curah Hujan (mm)': number }>(data, 4);
 
             const dataList = jsonData
                 .filter(row => row.Tanggal && row['Curah Hujan (mm)'] !== undefined)
@@ -104,23 +101,7 @@ export const MasterHidrologiTab: React.FC = () => {
             alert('Pilih stasiun terlebih dahulu');
             return;
         }
-        const template = [
-            { 'Tanggal': '2024-01-01', 'Curah Hujan (mm)': 0 },
-            { 'Tanggal': '2024-01-02', 'Curah Hujan (mm)': 12.5 },
-            { 'Tanggal': '2024-01-03', 'Curah Hujan (mm)': 0 }
-        ];
-        const ws = XLSX.utils.json_to_sheet(template);
-        
-        // Add header info
-        XLSX.utils.sheet_add_aoa(ws, [['TEMPLATE IMPORT DATA CURAH HUJAN']], { origin: 'A1' });
-        XLSX.utils.sheet_add_aoa(ws, [[`Stasiun: ${selectedStasiun.nama_stasiun}`]], { origin: 'A2' });
-        XLSX.utils.sheet_add_aoa(ws, [['Format: Tanggal (YYYY-MM-DD), Curah Hujan (mm)']], { origin: 'A3' });
-        XLSX.utils.sheet_add_aoa(ws, [['']], { origin: 'A4' });
-        XLSX.utils.sheet_add_aoa(ws, [['Tanggal', 'Curah Hujan (mm)']], { origin: 'A5' });
-        
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Data Curah Hujan');
-        XLSX.writeFile(wb, `Template-${selectedStasiun.nama_stasiun.replace(/\s+/g, '-')}.xlsx`);
+        exportHidrologiTemplate(selectedStasiun.nama_stasiun);
     };
 
     return (
