@@ -70,7 +70,7 @@ export const MasterHidrologiTab: React.FC = () => {
 
         try {
             const data = await file.arrayBuffer();
-            const jsonData = parseExcelData<{ Tanggal: string; 'Curah Hujan (mm)': number }>(data, 4);
+            const jsonData = await parseExcelData<{ Tanggal: string; 'Curah Hujan (mm)': number }>(data, 4);
 
             const dataList = jsonData
                 .filter(row => row.Tanggal && row['Curah Hujan (mm)'] !== undefined)
@@ -96,12 +96,12 @@ export const MasterHidrologiTab: React.FC = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const downloadTemplate = () => {
+    const downloadTemplate = async () => {
         if (!selectedStasiun) {
             alert('Pilih stasiun terlebih dahulu');
             return;
         }
-        exportHidrologiTemplate(selectedStasiun.nama_stasiun);
+        await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
     };
 
     return (

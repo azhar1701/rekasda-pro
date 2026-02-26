@@ -35,6 +35,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 5242880, // 5MB limit
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -43,7 +44,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -68,41 +69,35 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Only chunk app-level code, let Rollup handle vendor dependencies
-          // to avoid initialization order issues
-
-          // App services - shared across features
-          if (id.includes('src/services')) {
-            return 'services';
+          // Vendor chunks - node_modules splitting
+          if (id.includes('node_modules')) {
+            // React ecosystem
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            // Charts & visualization
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts';
+            }
+            // Excel & utilities
+            if (id.includes('exceljs') || id.includes('file-saver') || id.includes('katex') || id.includes('zustand')) {
+              return 'vendor-utils';
+            }
+            // Supabase
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            // Other vendors
+            return 'vendor';
           }
 
-          // Library chunks
-          if (id.includes('src/lib/supabase') || id.includes('src/lib/debugSupabase')) {
-            return 'lib-supabase';
-          }
-          if (id.includes('src/lib/engine')) {
-            return 'lib-engine';
-          }
-          if (id.includes('src/lib/utils')) {
-            return 'lib-utils';
-          }
-          if (id.includes('src/lib/api')) {
-            return 'lib-api';
-          }
-
-          // Shared hooks and types
-          if (id.includes('src/types')) {
-            return 'types';
-          }
-
-          // Combine hooks and ui-components to avoid circular dependencies
-          if (
-            id.includes('src/hooks') || 
-            id.includes('src/components/common') || 
-            id.includes('src/components/ui')
-          ) {
-            return 'ui-shared';
-          }
+          // App code splitting
+          if (id.includes('src/services')) return 'services';
+          if (id.includes('src/lib/engine')) return 'lib-engine';
+          if (id.includes('src/lib/utils')) return 'lib-utils';
+          if (id.includes('src/lib/api')) return 'lib-api';
+          if (id.includes('src/types')) return 'types';
+          if (id.includes('src/hooks') || id.includes('src/components/ui')) return 'ui-shared';
         },
       },
     },
