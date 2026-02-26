@@ -57,7 +57,7 @@ export const DataInputTable: React.FC<DataInputTableProps> = ({ data, onChange, 
                       type="number"
                       value={row.year}
                       onChange={(e) => handleChange(index, 'year', parseInt(e.target.value) || 0)}
-                      className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 tabular-nums tracking-tight"
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -66,7 +66,7 @@ export const DataInputTable: React.FC<DataInputTableProps> = ({ data, onChange, 
                       step="0.01"
                       value={row.value}
                       onChange={(e) => handleChange(index, 'value', parseFloat(e.target.value) || 0)}
-                      className={`w-full px-2 py-1 text-sm rounded focus:outline-none focus:ring-2 ${isEdited
+                      className={`w-full px-2 py-1 text-sm rounded focus:outline-none focus:ring-2 tabular-nums tracking-tight ${isEdited
                           ? 'border-2 border-amber-400 bg-amber-50 focus:ring-amber-300'
                           : 'border border-slate-200 focus:ring-teal-500'
                         }`}

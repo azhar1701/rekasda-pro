@@ -135,8 +135,8 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
             {/* Quick Actions */}
             <Section title="Tindakan Cepat">
               <div className="flex gap-2">
-                <Button variant="default" className="flex-1 font-bold" onClick={loadPilotData}>
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                <Button variant="primary" className="flex-1 font-bold" onClick={loadPilotData}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
                   Load Pilot
                 </Button>
               </div>
@@ -230,11 +230,12 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                   <Button
+                    variant="primary"
                     className="w-full"
                     onClick={saveToDatabase}
                     disabled={saving || !projectName.trim()}
                   >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     {saving ? 'Menyimpan...' : 'Simpan'}
                   </Button>
                 </CardContent>
@@ -264,7 +265,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata</span>
                           <HelpTooltip content="Rata-rata keseimbangan bulanan" />
                         </div>
-                        <span className="text-3xl font-black text-slate-900">{results.avgBalance}</span>
+                        <span className="text-3xl font-black text-slate-900 tabular-nums tracking-tight">{results.avgBalance}</span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                       </div>
 
@@ -273,7 +274,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
                           <HelpTooltip content="Keseimbangan terendah" />
                         </div>
-                        <span className={`text-3xl font-black ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                        <span className={`text-3xl font-black tabular-nums tracking-tight ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                           {results.minBalance}
                         </span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
@@ -284,7 +285,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
                           <HelpTooltip content="Keseimbangan tertinggi" />
                         </div>
-                        <span className="text-3xl font-black text-emerald-500">{results.maxBalance}</span>
+                        <span className="text-3xl font-black text-emerald-500 tabular-nums tracking-tight">{results.maxBalance}</span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                       </div>
                     </div>
@@ -304,7 +305,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       ].map((item, i) => (
                         <div key={i} className={`p-4 rounded-lg border ${item.color}`}>
                           <div className="text-xs font-bold text-slate-600 uppercase mb-2">{item.label}</div>
-                          <div className="text-xl font-bold text-slate-800">{item.value}</div>
+                          <div className="text-xl font-bold text-slate-800 tabular-nums tracking-tight">{item.value}</div>
                           <div className="text-xs text-slate-500">{item.unit}</div>
                         </div>
                       ))}
@@ -337,7 +338,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                             type="number"
                             value={data.monthlySupply[index]}
                             onChange={(e) => handleMonthlySupplyChange(index, parseFloat(e.target.value) || 0)}
-                            className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums tracking-tight"
                           />
                         </div>
                       ))}
@@ -347,12 +348,12 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
                 {/* Action buttons */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button className="w-full flex-1" onClick={() => onSave?.(data, results)}>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                  <Button variant="primary" className="w-full flex-1" onClick={() => onSave?.(data, results)}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                     Simpan Hasil
                   </Button>
-                  <Button variant="outline" className="w-full flex-1" onClick={() => onConsultAI?.(data, results)}>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  <Button variant="secondary" className="w-full flex-1" onClick={() => onConsultAI?.(data, results)}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                     Konsultasi AI
                   </Button>
                 </div>

@@ -19,7 +19,6 @@ export const ExecutiveDashboard = () => {
     } = useHydrologyStore();
 
     const targetRef = useRef<HTMLDivElement>(null);
-
     const isDirty = isBanjirDirty || isNeracaDirty;
 
     const exportToPDF = () => {
@@ -32,17 +31,13 @@ export const ExecutiveDashboard = () => {
     return (
         <ModuleLayout
             title="Executive Summary & Pelaporan"
-            description="Laporan akhir kelayakan proyek dari hulu (Banjir) ke hilir (Embung)."
+            description="Laporan akhir kelayakan proyek dari hulu (Banjir) ke hilir (Embung)"
             icon={<FileText className="w-6 h-6" />}
-            iconColorClass="bg-indigo-50 text-indigo-600"
+            iconColorClass="bg-primary-50 text-primary-600"
             actions={
-                <Button
-                    onClick={exportToPDF}
-                    disabled={isDirty}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all flex items-center gap-2"
-                >
-                    <Printer className="w-4 h-4" />
-                    Cetak Laporan Lengkap (PDF)
+                <Button variant="primary" onClick={exportToPDF} disabled={isDirty}>
+                    <Printer />
+                    Cetak Laporan PDF
                 </Button>
             }
         >
@@ -54,123 +49,116 @@ export const ExecutiveDashboard = () => {
 
             <div
                 ref={targetRef}
-                className={`flex-1 flex flex-col gap-6 w-full ${isDirty ? 'opacity-30 pointer-events-none grayscale-[0.5]' : ''}`}
+                className={`flex-1 flex flex-col gap-6 w-full ${isDirty ? 'opacity-30 pointer-events-none' : ''}`}
             >
-                {/* Header Kop Surat (Tersembunyi di UI web, tapi masuk PDF jika perlu, atau selalu tampil) */}
-                <div className="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/3" />
-
-                    {/* Card 1: Identitas Proyek */}
-                    <div className="flex flex-col justify-center">
-                        <h2 className="text-xl font-extrabold text-slate-800 mb-2">Identitas Proyek</h2>
-                        <p className="text-sm text-slate-500 mb-6 max-w-sm">Lembar konfirmasi kelayakan parameter perencanaan sumber daya air.</p>
-
+                {/* Project Identity Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Card 1: Project Info */}
+                    <div className="bg-white border border-neutral-200 rounded-xl p-6">
+                        <h2 className="text-lg font-bold text-neutral-900 mb-4">Identitas Proyek</h2>
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                                    <MapPin className="w-5 h-5 text-slate-600" />
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
+                                    <MapPin className="w-5 h-5 text-neutral-600" />
                                 </div>
-                                <div>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Stasiun Hujan</p>
-                                    <p className="text-sm font-semibold text-slate-700">{selectedStasiun?.nama_stasiun || 'Belum diatur'}</p>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Stasiun Hujan</p>
+                                    <p className="text-sm font-semibold text-neutral-900">{selectedStasiun?.nama_stasiun || 'Belum diatur'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                                    <Activity className="w-5 h-5 text-slate-600" />
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
+                                    <Activity className="w-5 h-5 text-neutral-600" />
                                 </div>
-                                <div>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Luas DAS (Catchment)</p>
-                                    <p className="text-sm font-semibold text-slate-700">{luasDas ? `${luasDas} km²` : 'Belum diatur'}</p>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Luas DAS</p>
+                                    <p className="text-sm font-semibold text-neutral-900 tabular-nums">{luasDas ? `${luasDas} km²` : 'Belum diatur'}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Card 2: Hidrologi Banjir */}
-                    <div className="bg-slate-50/80 backdrop-blur border border-slate-100 p-5 rounded-2xl flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 bg-red-100 text-red-600 rounded-lg"><Activity className="w-4 h-4" /></div>
-                                <h3 className="font-bold text-slate-700">Analisis Banjir Rencana</h3>
+                    {/* Card 2: Flood Analysis */}
+                    <div className="bg-white border border-neutral-200 rounded-xl p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-error-light rounded-lg">
+                                <Activity className="w-4 h-4 text-error" />
                             </div>
-                            <p className="text-xs text-slate-500 mb-4">Mempresentasikan potensi ancaman banjir tertinggi pada kala ulang terpilih.</p>
+                            <h3 className="text-lg font-bold text-neutral-900">Analisis Banjir</h3>
                         </div>
-                        <div>
-                            <p className="text-3xl font-black text-slate-800 mb-1">
-                                {hasilBanjir?.debitPuncak || '0'} <span className="text-lg font-medium text-slate-500">m³/s</span>
+                        <div className="mt-6">
+                            <p className="text-4xl font-bold text-neutral-900 tabular-nums tracking-tight mb-2">
+                                {hasilBanjir?.debitPuncak || '0'}
                             </p>
-                            <p className="text-xs font-bold text-red-500 uppercase tracking-widest">Debit Puncak Aktual</p>
+                            <p className="text-sm font-semibold text-neutral-500">m³/s · Debit Puncak</p>
                         </div>
                     </div>
 
-                    {/* Card 4: Kelayakan Embung */}
-                    <div className="bg-teal-50/50 backdrop-blur border border-teal-100 p-5 rounded-2xl flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 bg-teal-100 text-teal-600 rounded-lg"><CheckCircle className="w-4 h-4" /></div>
-                                <h3 className="font-bold text-slate-700">Kelayakan Embung</h3>
+                    {/* Card 3: Embung Feasibility */}
+                    <div className="bg-white border border-neutral-200 rounded-xl p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-success-light rounded-lg">
+                                <CheckCircle className="w-4 h-4 text-success" />
                             </div>
-                            <p className="text-xs text-slate-500 mb-4">Kinerja mitigasi waduk dan durabilitas penampungan sedimen jangka panjang.</p>
+                            <h3 className="text-lg font-bold text-neutral-900">Kelayakan Embung</h3>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4 mt-6">
                             <div>
-                                <p className="text-2xl font-black text-teal-700 mb-1">{hasilEmbung?.reduksiPuncak}%</p>
-                                <p className="text-[10px] font-bold text-teal-600/70 uppercase tracking-wider">Reduksi Puncak</p>
+                                <p className="text-3xl font-bold text-neutral-900 tabular-nums tracking-tight mb-1">{hasilEmbung?.reduksiPuncak || 0}%</p>
+                                <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Reduksi</p>
                             </div>
                             <div>
-                                <p className="text-2xl font-black text-slate-700 mb-1">{hasilEmbung?.umurSedimen} <span className="text-sm font-medium text-slate-500">Thn</span></p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Umur Guna</p>
+                                <p className="text-3xl font-bold text-neutral-900 tabular-nums tracking-tight mb-1">{hasilEmbung?.umurSedimen || 0}</p>
+                                <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Tahun</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Card 3: Grafik Neraca Air (Bento Span Full) */}
-                <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col min-h-[350px]">
+                {/* Water Balance Chart */}
+                <div className="bg-white border border-neutral-200 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><Droplets className="w-5 h-5" /></div>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary-50 rounded-lg">
+                                <Droplets className="w-5 h-5 text-primary-600" />
+                            </div>
                             <div>
-                                <h3 className="font-bold text-slate-800 text-lg">Neraca Air Tahunan</h3>
-                                <p className="text-xs text-slate-500">Perbandingan probabilitas Ketersediaan vs Kebutuhan air irigasi.</p>
+                                <h3 className="text-lg font-bold text-neutral-900">Neraca Air Tahunan</h3>
+                                <p className="text-sm text-neutral-500">Ketersediaan vs Kebutuhan Air Irigasi</p>
                             </div>
                         </div>
-
-                        <div className="text-right">
-                            <div className="flex items-center justify-end gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
-                                <Calendar className="w-3.5 h-3.5" />
-                                <span className="text-xs font-bold uppercase tracking-wider">Bulan Kritis: {hasilNeraca?.bulanKritis}</span>
+                        {hasilNeraca?.bulanKritis && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-warning-light border border-warning rounded-lg">
+                                <Calendar className="w-4 h-4 text-warning-dark" />
+                                <span className="text-xs font-semibold text-warning-dark uppercase tracking-wide">Kritis: {hasilNeraca.bulanKritis}</span>
                             </div>
-                        </div>
+                        )}
                     </div>
 
-                    <div className="flex-1 w-full min-h-[250px]">
+                    <div className="w-full h-[300px]">
                         {!isDirty && hasilNeraca?.chartData ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={hasilNeraca.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                    <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E0F2FE" />
+                                    <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#0EA5E9' }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#0EA5E9' }} />
                                     <Tooltip
-                                        cursor={{ fill: '#f1f5f9' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        cursor={{ fill: '#F0F9FF' }}
+                                        contentStyle={{ borderRadius: '8px', border: '1px solid #BAE6FD', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
                                     />
-                                    <ReferenceLine y={0} stroke="#94a3b8" />
-                                    <Bar dataKey="ketersediaan" name="Ketersediaan (Q80)" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
-                                    <Bar dataKey="kebutuhan" name="Kebutuhan Irigasi" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
+                                    <ReferenceLine y={0} stroke="#0EA5E9" strokeDasharray="3 3" />
+                                    <Bar dataKey="ketersediaan" name="Ketersediaan (Q80)" fill="#2563EB" radius={[4, 4, 0, 0]} barSize={24} />
+                                    <Bar dataKey="kebutuhan" name="Kebutuhan Irigasi" fill="#DC2626" radius={[4, 4, 0, 0]} barSize={24} />
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                <AlertTriangle className="w-8 h-8 mb-2 opacity-50" />
-                                <p className="text-sm font-medium">Data grafik disembunyikan karena status parameter kotor (Dirty State).</p>
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-50 rounded-lg border border-dashed border-neutral-200">
+                                <AlertTriangle className="w-8 h-8 text-neutral-400 mb-2" />
+                                <p className="text-sm font-medium text-neutral-500">Data tidak tersedia</p>
                             </div>
                         )}
                     </div>
                 </div>
-
             </div>
         </ModuleLayout>
     );

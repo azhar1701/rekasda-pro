@@ -26,6 +26,20 @@ export default {
 				]
 			},
 			colors: {
+				// Base/Neutral - Blue-gray spectrum (Eye-comfort)
+				neutral: {
+					'50': '#F0F9FF',   // Background utama (blue tint)
+					'100': '#E0F2FE',  // Background sekunder
+					'200': '#BAE6FD',  // Border
+					'300': '#7DD3FC',  // Border hover
+					'400': '#38BDF8',  // Disabled
+					'500': '#0EA5E9',  // Teks sekunder/label
+					'600': '#0284C7',  // Teks medium
+					'700': '#0369A1',  // Teks emphasis
+					'800': '#075985',  // Teks utama
+					'900': '#0C4A6E'   // Teks heading
+				},
+				// Primary - Biru profesional
 				primary: {
 					'50': '#EFF6FF',
 					'100': '#DBEAFE',
@@ -33,60 +47,52 @@ export default {
 					'600': '#2563EB',
 					'700': '#1D4ED8',
 					DEFAULT: '#2563EB',
-					foreground: '#F8FAFC'
+					foreground: '#FFFFFF'
 				},
-				accent: {
-					'500': '#06B6D4',
-					'600': '#0891B2',
-					DEFAULT: '#0891B2',
-					foreground: '#F8FAFC'
+				// Semantic
+				success: {
+					DEFAULT: '#10B981',
+					light: '#D1FAE5',
+					dark: '#059669'
 				},
-				neutral: {
-					'50': '#F8FAFC',
-					'100': '#F1F5F9',
-					'200': '#E2E8F0',
-					'300': '#CBD5E1',
-					'400': '#94A3B8',
-					'500': '#64748B',
-					'600': '#475569',
-					'700': '#334155',
-					'800': '#1E293B',
-					'900': '#0F172A'
+				error: {
+					DEFAULT: '#DC2626',
+					light: '#FEE2E2',
+					dark: '#991B1B'
 				},
-				success: '#10B981',
-				error: '#EF4444',
-				warning: '#F59E0B',
-				background: '#F8FAFC',
-				foreground: '#0F172A',
+				warning: {
+					DEFAULT: '#F59E0B',
+					light: '#FEF3C7',
+					dark: '#D97706'
+				},
+				// System
+				background: '#F0F9FF',
+				foreground: '#075985',
 				card: {
 					DEFAULT: '#FFFFFF',
-					foreground: '#0F172A'
-				},
-				popover: {
-					DEFAULT: '#FFFFFF',
-					foreground: '#0F172A'
+					foreground: '#075985'
 				},
 				secondary: {
-					DEFAULT: '#F1F5F9',
-					foreground: '#0F172A'
+					DEFAULT: '#E0F2FE',
+					foreground: '#075985'
 				},
 				muted: {
-					DEFAULT: '#F1F5F9',
-					foreground: '#64748B'
+					DEFAULT: '#E0F2FE',
+					foreground: '#0EA5E9'
 				},
 				destructive: {
-					DEFAULT: '#EF4444',
-					foreground: '#F8FAFC'
+					DEFAULT: '#DC2626',
+					foreground: '#FFFFFF'
 				},
-				border: '#E2E8F0',
-				input: '#E2E8F0',
-				ring: '#0F172A',
+				border: '#BAE6FD',
+				input: '#BAE6FD',
+				ring: '#2563EB',
 				chart: {
 					'1': '#2563EB',
-					'2': '#0891B2',
-					'3': '#10B981',
-					'4': '#F59E0B',
-					'5': '#EF4444'
+					'2': '#10B981',
+					'3': '#F59E0B',
+					'4': '#8B5CF6',
+					'5': '#EC4899'
 				}
 			},
 			spacing: {

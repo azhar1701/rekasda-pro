@@ -52,15 +52,15 @@ export const FrequencyAnalysisSummary: React.FC<FrequencyAnalysisSummaryProps> =
             </div>
             <div>
               <span className="text-green-700">Data:</span>
-              <span className="ml-1 font-semibold text-green-900">{summary.dataCount} tahun</span>
+              <span className="ml-1 font-semibold text-green-900 tabular-nums tracking-tight">{summary.dataCount} tahun</span>
             </div>
             <div>
               <span className="text-green-700">Uji Lulus:</span>
-              <span className="ml-1 font-semibold text-green-900">{summary.passedTests}/{summary.totalTests}</span>
+              <span className="ml-1 font-semibold text-green-900 tabular-nums tracking-tight">{summary.passedTests}/{summary.totalTests}</span>
             </div>
             <div>
               <span className="text-green-700">Kala Ulang:</span>
-              <span className="ml-1 font-semibold text-green-900">{selectedDistribution?.values.length || 0} nilai</span>
+              <span className="ml-1 font-semibold text-green-900 tabular-nums tracking-tight">{selectedDistribution?.values.length || 0} nilai</span>
             </div>
           </div>
         </div>

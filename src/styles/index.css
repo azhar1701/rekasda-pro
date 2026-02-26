@@ -154,6 +154,14 @@ body {
     border: 1px solid #f1f5f9;
     box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.04);
   }
+
+  /* Tabular Numbers - WAJIB untuk semua angka */
+  input[type="number"],
+  .numeric,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
 }
 
 /* ========================================
