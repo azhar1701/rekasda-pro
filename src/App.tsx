@@ -38,7 +38,7 @@ enum Tab {
 }
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>(Tab.SALURAN);
+  const [activeTab, setActiveTab] = useState<Tab>(Tab.MASTER);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [tempCalculation, setTempCalculation] = useState<Partial<CalculationResult> | null>(null);
   const [history, setHistory] = useState<CalculationResult[]>([]);
