@@ -5,6 +5,7 @@ import { MasterDataSelector } from '@/features/master-data/components/MasterData
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisModal';
+import { FrequencyAnalysisSummary } from '@/components/ui/FrequencyAnalysisSummary';
 import { AreaReductionCard } from '@/features/flood-analysis/components/AreaReductionCard';
 import { HyetographGenerator } from '@/features/flood/components/HyetographGenerator';
 import { Button } from '@/components/ui/Button';
@@ -392,6 +393,10 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                             {/* Master Data Selector */}
                             <MasterDataSelector />
+                            
+                            {/* Frequency Analysis Summary */}
+                            <FrequencyAnalysisSummary onNavigate={() => setShowFreqModal(true)} />
+                            
                             <hr className="border-slate-100" />
 
                             {/* ─── TIER 1: Category Selector ─── */}

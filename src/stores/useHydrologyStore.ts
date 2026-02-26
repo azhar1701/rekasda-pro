@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
 
 // TAHAP 2: Global State Management (Zustand) dengan TypeScript yang Ketat
 
@@ -48,15 +49,122 @@ export interface DesignRainfallValue {
 }
 
 export interface HasilAnalisisFrekuensi {
-  metodeTerpilih: string;           // e.g. "Log Pearson III"
-  lulusUjiKecocokan: boolean;       // Chi-Square + KS pass
+  metodeTerpilih: string;
+  lulusUjiKecocokan: boolean;
   curahHujanRencana: DesignRainfallValue[];
-  selectedKalaUlang: number | null; // Kala ulang yang dipilih
+  selectedKalaUlang: number | null;
+  qcResults?: QualityControlResults;
+}
+
+/** Hasil Uji Kualitas Data (QC) */
+export interface QualityControlResults {
+  konsistensi: {
+    isPassed: boolean;
+    method: 'RAPS' | 'DoubleMass';
+    rapsValue?: number;
+    threshold?: number;
+    message: string;
+  };
+  homogenitas: {
+    isPassed: boolean;
+    method: 'F-Test' | 'T-Test';
+    fValue?: number;
+    tValue?: number;
+    criticalValue?: number;
+    message: string;
+  };
+  outlier: {
+    isPassed: boolean;
+    method: 'Grubbs-Beck' | 'Rosner';
+    outlierIndices: number[];
+    message: string;
+  };
+  overallPassed: boolean;
+}
+
+/** Parameter Tutupan Lahan untuk Hujan Efektif */
+export interface LandCoverParameters {
+  C?: number;
+  CN?: number;
+  phiIndex?: number;
+  method: 'C' | 'CN' | 'PhiIndex';
+  description?: string;
+}
+
+/** Morfometri DAS */
+export interface MorfometriDAS {
+  luasDAS: number;           // km²
+  panjangSungai: number;     // km
+  kemiringanSungai: number;  // m/m atau %
+  elevasi: number;           // m
+}
+
+/** Tutupan Lahan Item */
+export interface TutupanLahanItem {
+  id: string;
+  jenis: string;
+  luas: number;    // km²
+  nilaiC: number;  // Koefisien Pengaliran
+  nilaiCN: number; // Curve Number
+}
+
+/** Tutupan Lahan State */
+export interface TutupanLahan {
+  items: TutupanLahanItem[];
+  koefisienPengaliranGabungan: number; // C weighted
+  curveNumberGabungan: number;         // CN weighted
+  totalLuas: number;                   // km²
+}
+
+/** Curah Hujan Wilayah Config */
+export interface CurahHujanWilayah {
+  metode: 'aljabar' | 'thiessen';
+  stasiunConfigs: ThiessenStasiunConfig[];
+  hujanRataRata: number; // mm
+}
+
+/** Analisis Frekuensi State */
+export interface AnalisisFrekuensi {
+  parameterStatistik: {
+    asli: { mean: number; stdDev: number; cv: number; cs: number; ck: number };
+    log: { mean: number; stdDev: number; cv: number; cs: number; ck: number };
+  } | null;
+  hasilDistribusi: Array<{
+    method: string;
+    values: Array<{ Tr: number; R24: number }>;
+  }> | null;
+  ujiKecocokan: Array<{
+    method: string;
+    chiSquare: { statistic: number; critical: number; accepted: boolean };
+    kolmogorovSmirnov: { statistic: number; critical: number; accepted: boolean };
+  }> | null;
+  metodeTerpilih: string | null;
+  dataHujanInput: number[];
+}
+
+/** Hasil Hujan Efektif */
+export interface EffectiveRainfallResult {
+  totalRainfall: number;
+  effectiveRainfall: number;
+  losses: number;
+  method: string;
+  hourlyDistribution?: number[];
 }
 
 export interface HasilBanjir {
   debitPuncak: number;
   hidrograf: { time: number; inflow: number }[];
+  method?: string;
+}
+
+/** Hasil Perbandingan Multi-Metode HSS */
+export interface HSSComparisonResult {
+  method: string;
+  Qp: number;
+  Tp: number;
+  Tb: number;
+  hydrograph: { time: number; discharge: number }[];
+  color: string;
 }
 
 export interface HasilKonvolusi {
@@ -121,6 +229,14 @@ export interface HydrologyState {
   stasiunList: StasiunHidrologi[];
   selectedStasiun: StasiunHidrologi | null;
   
+  // Parameter Spasial & Kewilayahan
+  morfometriDAS: MorfometriDAS | null;
+  tutupanLahan: TutupanLahan | null;
+  curahHujanWilayah: CurahHujanWilayah | null;
+  
+  // Analisis Frekuensi
+  analisisFrekuensi: AnalisisFrekuensi | null;
+  
   // State Data Output
   dataHujan: DataHujan[];
   hasilThiessen: HasilThiessen | null;
@@ -134,6 +250,16 @@ export interface HydrologyState {
   neracaFinal: NeracaFinalRow[] | null;
   distribusiHujanJamJaman: number[] | null;
   durasiHujan: number;
+  
+  // TAHAP 1: QC & Hujan Efektif
+  qcResults: QualityControlResults | null;
+  qcStatus: { konsisten: boolean; bebasOutlier: boolean; homogen: boolean } | null;
+  isQCOverridden: boolean;
+  landCoverParams: LandCoverParameters | null;
+  effectiveRainfall: EffectiveRainfallResult | null;
+  
+  // TAHAP 2: Multi-Method Comparison
+  hssComparisonResults: HSSComparisonResult[] | null;
   
   // State Tracking / Validation
   isBanjirDirty: boolean;
@@ -153,6 +279,27 @@ export interface HydrologyState {
   setHasilThiessen: (hasil: HasilThiessen | null) => void;
   setHasilARF: (hasil: HasilARF | null) => void;
   
+  // Parameter Spasial Setters with Cascade Invalidation
+  setMorfometriDAS: (data: MorfometriDAS | null) => void;
+  updateMorfometriDAS: (data: MorfometriDAS | null) => void; // With cascade
+  setTutupanLahan: (data: TutupanLahan | null) => void;
+  setCurahHujanWilayah: (data: CurahHujanWilayah | null) => void;
+  
+  // Analisis Frekuensi Setters
+  setAnalisisFrekuensi: (data: AnalisisFrekuensi | null) => void;
+  
+  // Derived State Getters
+  getTimeOfConcentration: () => number;
+  getDesignRainfall: (returnPeriod: number) => number | null;
+  getDesignDischarge: (type: 'flood' | 'irrigation') => number | null;
+  
+  // Pipeline 1.5: QC & Hujan Efektif (TAHAP 1)
+  setQCResults: (results: QualityControlResults | null) => void;
+  setQCStatus: (status: { konsisten: boolean; bebasOutlier: boolean; homogen: boolean } | null) => void;
+  setQCOverride: (override: boolean) => void;
+  setLandCoverParams: (params: LandCoverParameters | null) => void;
+  setEffectiveRainfall: (result: EffectiveRainfallResult | null) => void;
+  
   // Pipeline 2: Hujan Rata-rata DAS -> Analisis Frekuensi -> Hujan Rencana
   setHasilAnalisisFrekuensi: (hasil: HasilAnalisisFrekuensi | null) => void;
   setSelectedKalaUlang: (kalaUlang: number) => void;
@@ -160,6 +307,9 @@ export interface HydrologyState {
   // Pipeline 3: Hujan Rencana -> Distribusi Jam-jaman -> Konvolusi -> Banjir
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
   setHasilKonvolusi: (hasil: HasilKonvolusi | null) => void;
+  
+  // Pipeline 3.5: Multi-Method HSS Comparison (TAHAP 2)
+  setHSSComparisonResults: (results: HSSComparisonResult[] | null) => void;
   
   // Pipeline 4: Evapotranspirasi + Hujan Rencana -> Neraca Air (Mock)
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
@@ -233,6 +383,15 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   stasiunList: [],
   selectedStasiun: null,
   dataHujan: [],
+  
+  // Parameter Spasial
+  morfometriDAS: null,
+  tutupanLahan: null,
+  curahHujanWilayah: null,
+  
+  // Analisis Frekuensi
+  analisisFrekuensi: null,
+  
   hasilThiessen: null,
   hasilARF: null,
   hasilAnalisisFrekuensi: null,
@@ -258,6 +417,17 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   neracaFinal: null,
   distribusiHujanJamJaman: null,
   durasiHujan: 6,
+  
+  // TAHAP 1: QC & Hujan Efektif
+  qcResults: null,
+  qcStatus: null,
+  isQCOverridden: false,
+  landCoverParams: null,
+  effectiveRainfall: null,
+  
+  // TAHAP 2: Multi-Method Comparison
+  hssComparisonResults: null,
+  
   isBanjirDirty: false, // Menandakan bahwa parameter banjir berubah dan perlu re-kalkulasi
   isNeracaDirty: false, // Menandakan bahwa parameter neraca air berubah dan perlu re-kalkulasi
   isLoading: false,
@@ -318,14 +488,101 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setHasilThiessen: (hasil) => set({
     hasilThiessen: hasil,
     isBanjirDirty: true,
-    isNeracaDirty: true, // Thiessen affects water balance API eventually
-    hasilAnalisisFrekuensi: null, // cascade invalidation
+    isNeracaDirty: true,
+    hasilAnalisisFrekuensi: null,
     curahHujanRencana: '',
     hasilKonvolusi: null,
     hasilBanjir: null,
+    qcResults: null,
   }),
   setHasilARF: (hasil) => set({
     hasilARF: hasil,
+    isBanjirDirty: true,
+  }),
+  
+  // Parameter Spasial Setters (Simple - no cascade)
+  setMorfometriDAS: (data) => set({ 
+    morfometriDAS: data,
+    luasDas: data ? String(data.luasDAS) : '',
+    panjangSungai: data ? String(data.panjangSungai) : '',
+  }),
+  
+  // Parameter Spasial Setters with CASCADE INVALIDATION
+  updateMorfometriDAS: (data) => set({ 
+    morfometriDAS: data,
+    luasDas: data ? String(data.luasDAS) : '',
+    panjangSungai: data ? String(data.panjangSungai) : '',
+    // CASCADE: Invalidate all downstream calculations
+    analisisFrekuensi: null,
+    hasilBanjir: null,
+    hasilKonvolusi: null,
+    hasilMock: null,
+    neracaFinal: null,
+    hasilEmbung: null,
+    isBanjirDirty: true,
+    isNeracaDirty: true,
+  }),
+  setTutupanLahan: (data) => set({ 
+    tutupanLahan: data,
+    isBanjirDirty: true,
+  }),
+  setCurahHujanWilayah: (data) => set({ 
+    curahHujanWilayah: data,
+    isBanjirDirty: true,
+    isNeracaDirty: true,
+  }),
+  
+  // Analisis Frekuensi Setter with CASCADE
+  setAnalisisFrekuensi: (data) => set({ 
+    analisisFrekuensi: data,
+    // CASCADE: Invalidate flood calculations when frequency changes
+    hasilBanjir: null,
+    hasilKonvolusi: null,
+    isBanjirDirty: true,
+  }),
+  
+  // DERIVED STATE GETTERS (Computed from SSOT)
+  getTimeOfConcentration: () => {
+    const state = get();
+    const L = state.morfometriDAS?.panjangSungai || 0;
+    const S = state.morfometriDAS?.kemiringanSungai || 0;
+    return calculateTimeOfConcentration(L, S);
+  },
+  
+  getDesignRainfall: (returnPeriod: number) => {
+    const state = get();
+    if (!state.analisisFrekuensi?.hasilDistribusi) return null;
+    
+    const selectedDist = state.analisisFrekuensi.hasilDistribusi.find(
+      d => d.method === state.analisisFrekuensi?.metodeTerpilih
+    );
+    
+    if (!selectedDist) return null;
+    const value = selectedDist.values.find(v => v.Tr === returnPeriod);
+    return value?.R24 || null;
+  },
+  
+  getDesignDischarge: (type: 'flood' | 'irrigation') => {
+    const state = get();
+    if (type === 'flood') {
+      return state.hasilBanjir?.debitPuncak || null;
+    }
+    if (type === 'irrigation') {
+      return state.hasilMock?.qAndalan || null;
+    }
+    return null;
+  },
+  // TAHAP 1: QC & Hujan Efektif Setters
+  setQCResults: (results) => set({ qcResults: results }),
+  setQCStatus: (status) => set({ qcStatus: status, isQCOverridden: false }),
+  setQCOverride: (override) => set({ isQCOverridden: override }),
+  setLandCoverParams: (params) => set({ 
+    landCoverParams: params,
+    effectiveRainfall: null,
+    isBanjirDirty: true,
+  }),
+  setEffectiveRainfall: (result) => set({ 
+    effectiveRainfall: result,
     isBanjirDirty: true,
   }),
   setHasilAnalisisFrekuensi: (hasil) => set({ 
@@ -354,12 +611,17 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setHasilBanjir: (hasil) => set({ 
     hasilBanjir: hasil, 
     isBanjirDirty: false,
-    // When flood changes, Reservoir Routing (Embung) must be invalidated
+    // CASCADE: When flood changes, invalidate embung
     hasilEmbung: null
   }),
   setHasilKonvolusi: (hasil) => set({ 
     hasilKonvolusi: hasil,
-    // When Convolution updates, it usually implies a Flood hydrograph update, we should track this
+  }),
+  
+  // TAHAP 2: Multi-Method HSS Comparison
+  setHSSComparisonResults: (results) => set({ 
+    hssComparisonResults: results,
+    isBanjirDirty: false,
   }),
   setHasilNeraca: (hasil) => set({ 
     hasilNeraca: hasil, 

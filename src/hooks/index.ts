@@ -1,2 +1,9 @@
+export { useAIContext } from './useAIContext';
+export { useAuth } from './useAuth';
 export { useDatabase } from './useDatabase';
+export { useHydraulicCalculations } from './useHydraulicCalculations';
+export { useSNI2415Workflow } from './useSNI2415Workflow';
+export { useStaggerAnimation } from './useStaggerAnimation';
 export { useToast } from './useToast';
+export { useDataQualityControl } from './useDataQualityControl';
+export { useFrequencyAnalysis } from './useFrequencyAnalysis';

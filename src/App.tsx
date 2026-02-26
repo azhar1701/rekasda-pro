@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, FileText } from 'lucide-react';
+import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, FileText, TrendingUp } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
 import { ModulBanjirRencana } from '@/features/flood-analysis/components/ModulBanjirRencana';
+import { ModulBanjirStepper } from '@/features/flood-analysis/components/ModulBanjirStepper';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
 import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
 import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
 import { AIConsultantDrawer } from '@/features/ai-consultant/AIConsultantDrawer';
-import { MasterHidrologiTab } from '@/features/master-data/components/MasterHidrologiTab';
+import { MasterDataPage } from '@/features/master-data/components/MasterDataPage';
+import { ModulAnalisisFrekuensi } from '@/features/flood-analysis/components/ModulAnalisisFrekuensi';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataTab } from '@/features/history/components/AllDataTab';
 import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
@@ -30,6 +32,7 @@ enum Tab {
   NERACA = 'NERACA',
   EMBUNG = 'EMBUNG',
   MASTER = 'MASTER',
+  FREKUENSI = 'FREKUENSI',
   HISTORY = 'HISTORY',
   AI = 'AI',
   EXEC = 'EXEC'
@@ -118,6 +121,7 @@ const App: React.FC = () => {
     // Grup 2: Analisis
     {
       items: [
+        { tab: Tab.FREKUENSI, label: 'Frekuensi', icon: <TrendingUp strokeWidth={2.5} className="w-5 h-5" /> },
         { tab: Tab.BANJIR, label: 'Banjir', icon: <CloudRain strokeWidth={2.5} className="w-5 h-5" /> },
         { tab: Tab.NERACA, label: 'Neraca', icon: <Scale strokeWidth={2.5} className="w-5 h-5" /> },
       ],
@@ -159,15 +163,7 @@ const App: React.FC = () => {
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-2 md:py-4 pb-28 md:pb-32">
           <div className="transition-opacity duration-300">
             {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-            {activeTab === Tab.BANJIR && <ModulBanjirRencana
-              onSave={handleCalculationSave}
-              onConsultAI={() => {
-                setLastContext('Analisis Banjir - Perhitungan debit puncak dan hidrograf');
-                setAiInitialQuery('Berikan analisis komprehensif tentang hasil perhitungan banjir ini, termasuk interpretasi debit puncak, waktu puncak, dan rekomendasi desain saluran.');
-                setAiTriggerCount(prev => prev + 1);
-                setIsAIDrawerOpen(true);
-              }}
-            />}
+            {activeTab === Tab.BANJIR && <ModulBanjirStepper />}
             {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
               setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
               setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
@@ -180,7 +176,8 @@ const App: React.FC = () => {
               setAiTriggerCount(prev => prev + 1);
               setIsAIDrawerOpen(true);
             }} />}
-            {activeTab === Tab.MASTER && <MasterHidrologiTab />}
+            {activeTab === Tab.MASTER && <MasterDataPage />}
+            {activeTab === Tab.FREKUENSI && <ModulAnalisisFrekuensi />}
             {activeTab === Tab.EXEC && <ExecutiveDashboard />}
             {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
 
