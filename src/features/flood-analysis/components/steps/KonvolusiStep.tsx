@@ -23,7 +23,8 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
   const hujanEfektif = effectiveRainfall?.hourlyDistribution || [];
 
   const { hydrograph, peakDischarge, timeToPeak } = useMemo(() => {
-    if (!calculated || hujanEfektif.length === 0 || hssOrdinates.length === 0) {
+    // Safeguard: Return empty if not calculated or data missing
+    if (!calculated || !hujanEfektif?.length || !hssOrdinates?.length) {
       return { hydrograph: [], peakDischarge: 0, timeToPeak: 0 };
     }
 
@@ -34,19 +35,23 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
     
     const Q: number[] = new Array(totalLength).fill(0);
     
+    // Discrete convolution (superposition)
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < m; j++) {
         Q[i + j] += hujanEfektif[i] * hssOrdinates[j];
       }
     }
 
-    const hydrograph = Q.map((q, i) => ({
+    // Filter out NaN/Infinity
+    const validQ = Q.map(q => (isFinite(q) ? q : 0));
+
+    const hydrograph = validQ.map((q, i) => ({
       time: Number((i * 0.5).toFixed(1)),
       inflow: Number(q.toFixed(2))
     }));
 
-    const peak = Math.max(...Q);
-    const peakIndex = Q.indexOf(peak);
+    const peak = Math.max(...validQ, 0);
+    const peakIndex = validQ.indexOf(peak);
     const tPeak = peakIndex * 0.5;
 
     return {
@@ -101,10 +106,12 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
 
         <button
           onClick={handleCalculate}
-          className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+          disabled={hujanEfektif.length === 0 || hssOrdinates.length === 0}
+          className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+          title={hujanEfektif.length === 0 ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
         >
           <TrendingUp className="w-5 h-5" />
-          Hitung Konvolusi
+          {hujanEfektif.length === 0 ? 'Menunggu Data Hujan...' : 'Hitung Konvolusi'}
         </button>
       </Card>
 
