@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, FileText, TrendingUp } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
-import { ModulBanjirRencana } from '@/features/flood-analysis/components/ModulBanjirRencana';
 import { ModulBanjirStepper } from '@/features/flood-analysis/components/ModulBanjirStepper';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
 import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
@@ -52,6 +51,17 @@ const App: React.FC = () => {
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
   const { calculations, saveCalculation } = useDatabase();
   const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
+
+  useEffect(() => {
+    const handleNavigateToTab = (e: CustomEvent) => {
+      const tabName = e.detail as string;
+      if (tabName in Tab) {
+        setActiveTab(Tab[tabName as keyof typeof Tab]);
+      }
+    };
+    window.addEventListener('navigateToTab', handleNavigateToTab as EventListener);
+    return () => window.removeEventListener('navigateToTab', handleNavigateToTab as EventListener);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);

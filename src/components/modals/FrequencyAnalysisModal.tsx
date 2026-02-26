@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckCircle, Download, Save, AlertTriangle, Shield, Activity } from 'lucide-react';
+import { X, CheckCircle, Download, Save, AlertTriangle, Activity } from 'lucide-react';
 import { DataInputTable } from './FrequencyAnalysisModal/DataInputTable';
 import { StatCard } from './FrequencyAnalysisModal/StatCard';
 import { calculateStatistics, performFrequencyAnalysis, type DistributionMethod } from '@/lib/engine/statistics/frequency';
 import { validateDistributionFit } from '@/lib/engine/statistics/goodnessOfFit';
 import { useHydrologyStore, type HasilAnalisisFrekuensi } from '@/stores/useHydrologyStore';
-import { calculatePMP } from '@/lib/engine/rainfallAnalysis';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { QCDetailsPanel } from '@/components/ui/QCDetailsPanel';
 import { useDataQualityControl } from '@/hooks/useDataQualityControl';
@@ -48,7 +47,6 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
   const [showQCDetails, setShowQCDetails] = useState(false);
   const [editedRows, setEditedRows] = useState<Set<number>>(new Set());
   const [isAutofilled, setIsAutofilled] = useState(false);
-  const [showPMP, setShowPMP] = useState(false);
 
   const dataHujan = useHydrologyStore(s => s.dataHujan);
   const selectedStasiun = useHydrologyStore(s => s.selectedStasiun);

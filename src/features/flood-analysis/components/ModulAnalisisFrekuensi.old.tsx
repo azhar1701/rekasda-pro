@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Save, Download, Upload, ChevronDown, ChevronUp, Clipboard } from 'lucide-react';
+import { BarChart3, CheckCircle2, XCircle, AlertTriangle, Save, Download, Upload } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { ActionableEmptyState } from '@/components/ui/ActionableEmptyState';
-import { WhiteBoxFormula } from '@/components/ui/WhiteBoxFormula';
 import {
   calculateStatisticalParams,
   calculateDistributions,
   calculateGoodnessOfFit,
-  selectBestMethod
+  selectBestMethod,
+  type StatisticalParams
 } from '@/lib/utils/frequencyMath';
 
 const METHOD_LABELS: Record<string, string> = {
@@ -20,19 +19,16 @@ const METHOD_LABELS: Record<string, string> = {
 };
 
 export const ModulAnalisisFrekuensi: React.FC = () => {
-  const { analisisFrekuensi, setAnalisisFrekuensi, dataHujan, selectedStasiun, curahHujanWilayah } = useHydrologyStore();
+  const { analisisFrekuensi, setAnalisisFrekuensi, dataHujan, selectedStasiun } = useHydrologyStore();
   
   const [dataInput, setDataInput] = useState<number[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ params: true, gof: false, results: true });
 
-  const hasValidData = useMemo(() => {
-    return curahHujanWilayah && curahHujanWilayah.hujanRataRata > 0;
-  }, [curahHujanWilayah]);
-
+  // Auto-load from master data
   useEffect(() => {
     if (dataHujan.length > 0) {
+      // Extract annual maximum
       const byYear = new Map<number, number>();
       dataHujan.forEach(d => {
         const year = new Date(d.tanggal).getFullYear();
@@ -46,6 +42,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     }
   }, [dataHujan]);
 
+  // Load saved state
   useEffect(() => {
     if (analisisFrekuensi) {
       setDataInput(analisisFrekuensi.dataHujanInput);
@@ -80,22 +77,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     if (recommendedMethod && !selectedMethod) {
       setSelectedMethod(recommendedMethod);
     }
-  }, [recommendedMethod, selectedMethod]);
-
-  const handlePasteFromExcel = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      const lines = text.trim().split('\n');
-      const values = lines
-        .map(line => parseFloat(line.split('\t')[0]))
-        .filter(v => !isNaN(v));
-      if (values.length >= 10) {
-        setDataInput(values);
-      }
-    } catch (err) {
-      alert('Gagal membaca clipboard. Pastikan Anda sudah menyalin data dari Excel.');
-    }
-  };
+  }, [recommendedMethod]);
 
   const handleCalculate = () => {
     if (!paramsAsli || !paramsLog || !distributions || !goodnessOfFit || !selectedMethod) return;
@@ -121,51 +103,16 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     a.click();
   };
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
-  const getWhiteBoxFormula = (method: string, tr: number, value: number) => {
-    if (!paramsAsli) return null;
-
-    if (method === 'gumbel') {
-      const yn = 0.5236;
-      const sn = 1.128;
-      const ytr = tr === 2 ? 0.3665 : tr === 5 ? 1.4999 : tr === 10 ? 2.2504 : tr === 25 ? 3.1985 : tr === 50 ? 3.9019 : 4.6001;
-      
-      return {
-        title: `Gumbel - Kala Ulang ${tr} Tahun`,
-        theoretical: `X_T = \\bar{X} + \\frac{Y_T - Y_n}{S_n} \\cdot S`,
-        substituted: `X_{${tr}} = ${paramsAsli.mean.toFixed(2)} + \\frac{${ytr.toFixed(4)} - ${yn.toFixed(4)}}{${sn.toFixed(3)}} \\cdot ${paramsAsli.stdDev.toFixed(2)}`,
-        result: `= ${value.toFixed(2)} \\text{ mm}`,
-        variables: {
-          '\\bar{X}': parseFloat(paramsAsli.mean.toFixed(2)),
-          'S': parseFloat(paramsAsli.stdDev.toFixed(2)),
-          'Y_T': parseFloat(ytr.toFixed(4)),
-          'Y_n': parseFloat(yn.toFixed(4)),
-          'S_n': parseFloat(sn.toFixed(3))
-        }
-      };
+  const getTheoreticalFit = (params: StatisticalParams) => {
+    const badges = [];
+    if (Math.abs(params.cs - 1.14) < 0.3 && Math.abs(params.ck - 5.4) < 1.0) {
+      badges.push('Gumbel');
     }
-    
-    return null;
+    if (Math.abs(params.cs) < 0.5) {
+      badges.push('Normal');
+    }
+    return badges;
   };
-
-  if (!hasValidData) {
-    return (
-      <ModuleLayout
-        title="Analisis Frekuensi Hujan Ekstrem"
-        description="Perhitungan probabilitas hujan rencana (SNI 2415:2016)"
-        icon={<BarChart3 className="w-6 h-6" />}
-        iconColorClass="bg-purple-50 text-purple-600"
-      >
-        <ActionableEmptyState 
-          title="Data Belum Lengkap"
-          description="Lengkapi Data Master terlebih dahulu: (1) Data Curah Hujan minimal 10 tahun, (2) Morfometri DAS, (3) Tutupan Lahan."
-        />
-      </ModuleLayout>
-    );
-  }
 
   return (
     <ModuleLayout
@@ -186,6 +133,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       }
     >
     <div className="space-y-6 py-2">
+      {/* Data Source Info */}
       {selectedStasiun && dataInput.length > 0 && (
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
           <p className="text-sm text-blue-900">
@@ -194,6 +142,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         </div>
       )}
 
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl shadow-lg">
@@ -211,36 +160,27 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         )}
       </div>
 
+      {/* Data Input */}
       <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-bold text-slate-900">Data Hujan Maksimum Tahunan</h3>
-          <div className="flex items-center gap-2">
+          {dataHujan.length > 0 && (
             <button
-              onClick={handlePasteFromExcel}
-              className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
-              title="Paste data dari Excel (TSV format)"
+              onClick={() => {
+                const byYear = new Map<number, number>();
+                dataHujan.forEach(d => {
+                  const year = new Date(d.tanggal).getFullYear();
+                  const current = byYear.get(year) || 0;
+                  if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
+                });
+                setDataInput(Array.from(byYear.values()));
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              <Clipboard className="w-4 h-4" />
-              📋 Paste dari Excel
+              <Upload className="w-4 h-4" />
+              Load dari Master Data
             </button>
-            {dataHujan.length > 0 && (
-              <button
-                onClick={() => {
-                  const byYear = new Map<number, number>();
-                  dataHujan.forEach(d => {
-                    const year = new Date(d.tanggal).getFullYear();
-                    const current = byYear.get(year) || 0;
-                    if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
-                  });
-                  setDataInput(Array.from(byYear.values()));
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                <Upload className="w-4 h-4" />
-                Load dari Master Data
-              </button>
-            )}
-          </div>
+          )}
         </div>
         <textarea
           value={dataInput.join(', ')}
@@ -257,16 +197,9 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
 
       {dataInput.length >= 10 && paramsAsli && paramsLog && (
         <>
+          {/* Section 1: Parameter Statistik */}
           <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-            <button
-              onClick={() => toggleSection('params')}
-              className="w-full flex items-center justify-between mb-4 hover:bg-slate-50 -m-2 p-2 rounded-lg transition-colors"
-            >
-              <h3 className="text-lg font-bold text-slate-900">1. Parameter Statistik</h3>
-              {expandedSections.params ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
-            
-            {expandedSections.params && (
+            <h3 className="text-lg font-bold text-slate-900 mb-4">1. Parameter Statistik</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b-2 border-slate-200">
@@ -274,6 +207,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     <th className="px-3 py-2 text-left font-semibold text-slate-700">Parameter</th>
                     <th className="px-3 py-2 text-right font-semibold text-slate-700">Data Asli</th>
                     <th className="px-3 py-2 text-right font-semibold text-slate-700">Data Log</th>
+                    <th className="px-3 py-2 text-center font-semibold text-slate-700">Indikasi Metode</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -281,6 +215,15 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     <td className="px-3 py-2 font-medium">Mean (X̄)</td>
                     <td className="px-3 py-2 text-right font-mono">{paramsAsli.mean.toFixed(2)}</td>
                     <td className="px-3 py-2 text-right font-mono">{paramsLog.mean.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-center" rowSpan={5}>
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {getTheoreticalFit(paramsAsli).map(method => (
+                          <span key={method} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+                            {method}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
                   </tr>
                   <tr className="border-b border-slate-100">
                     <td className="px-3 py-2 font-medium">Std Dev (S)</td>
@@ -305,20 +248,12 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            )}
           </Card>
 
+          {/* Section 2: Uji Kecocokan */}
           {goodnessOfFit && (
             <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-              <button
-                onClick={() => toggleSection('gof')}
-                className="w-full flex items-center justify-between mb-4 hover:bg-slate-50 -m-2 p-2 rounded-lg transition-colors"
-              >
-                <h3 className="text-lg font-bold text-slate-900">2. Uji Kecocokan (Goodness of Fit)</h3>
-                {expandedSections.gof ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              
-              {expandedSections.gof && (
+              <h3 className="text-lg font-bold text-slate-900 mb-4">2. Uji Kecocokan (Goodness of Fit)</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 border-b-2 border-slate-200">
@@ -372,23 +307,14 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              )}
             </Card>
           )}
 
+          {/* Section 3: Hujan Rencana */}
           {distributions && (
             <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-              <button
-                onClick={() => toggleSection('results')}
-                className="w-full flex items-center justify-between mb-4 hover:bg-slate-50 -m-2 p-2 rounded-lg transition-colors"
-              >
-                <h3 className="text-lg font-bold text-slate-900">3. Hujan Rencana (R₂₄)</h3>
-                {expandedSections.results ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              
-              {expandedSections.results && (
-              <>
               <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900">3. Hujan Rencana (R₂₄)</h3>
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-slate-700">Metode Terpilih:</label>
                   <select
@@ -435,17 +361,11 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                         <td className="px-3 py-2 text-center font-bold">Q{tr}</td>
                         {distributions.map(d => {
                           const value = d.values.find(v => v.Tr === tr);
-                          const formula = d.method === selectedMethod ? getWhiteBoxFormula(d.method, tr, value?.R24 || 0) : null;
                           return (
                             <td key={d.method} className={`px-3 py-2 text-right font-mono ${
                               d.method === selectedMethod ? 'bg-blue-50 font-bold text-blue-900' : ''
                             }`}>
-                              <div className="flex items-center justify-end gap-2">
-                                <span>{value?.R24.toFixed(2)} mm</span>
-                                {formula && d.method === selectedMethod && (
-                                  <WhiteBoxFormula {...formula} />
-                                )}
-                              </div>
+                              {value?.R24.toFixed(2)} mm
                             </td>
                           );
                         })}
@@ -454,11 +374,10 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              </>
-              )}
             </Card>
           )}
 
+          {/* Save Button */}
           <div className="flex gap-3">
             <button
               onClick={handleCalculate}

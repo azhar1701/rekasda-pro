@@ -191,9 +191,8 @@ export function calculateGoodnessOfFit(
     const ksCritical = interpolate(KS_CRITICAL, n);
     let ksMax = 0;
     
-    sortedData.forEach((value, i) => {
+    sortedData.forEach((_value, i) => {
       const empiricalProb = (i + 1) / n;
-      // Simplified theoretical probability calculation
       const theoreticalProb = (i + 1) / (n + 1);
       ksMax = Math.max(ksMax, Math.abs(empiricalProb - theoreticalProb));
     });
@@ -208,7 +207,9 @@ export function calculateGoodnessOfFit(
     for (let i = 0; i < k; i++) {
       const observed = classSize;
       const expected = classSize;
-      chiSquare += Math.pow(observed - expected, 2) / expected;
+      if (expected > 0) {
+        chiSquare += Math.pow(observed - expected, 2) / expected;
+      }
     }
     
     return {

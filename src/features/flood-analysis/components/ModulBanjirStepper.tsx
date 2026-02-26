@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { CloudRain, Activity, Waves, CheckCircle2, Lock } from 'lucide-react';
-import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { useFrequencyAnalysis } from '@/hooks/useFrequencyAnalysis';
 import { DistribusiHujanStep } from './steps/DistribusiHujanStep';
 import { HSSComparisonStep } from './steps/HSSComparisonStep';
@@ -41,20 +40,10 @@ export const ModulBanjirStepper: React.FC = () => {
   const [activeStep, setActiveStep] = useState<Step>(1);
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
   
-  // Step 1 outputs
-  const [hujanEfektif, setHujanEfektif] = useState<number[]>([]);
-  const [durasiHujan, setDurasiHujan] = useState<number>(6);
-  
-  // Step 2 outputs
   const [selectedHSS, setSelectedHSS] = useState<string | null>(null);
   const [hssOrdinates, setHssOrdinates] = useState<number[]>([]);
-  
-  // Step 3 outputs
-  const [finalHydrograph, setFinalHydrograph] = useState<{ time: number; discharge: number }[]>([]);
-  const [peakDischarge, setPeakDischarge] = useState<number>(0);
 
   const { isComplete: freqComplete } = useFrequencyAnalysis();
-  const { morfometriDAS, tutupanLahan } = useHydrologyStore();
 
   const canProceedToStep = (step: Step): boolean => {
     if (step === 1) return freqComplete;
@@ -68,9 +57,7 @@ export const ModulBanjirStepper: React.FC = () => {
     if (step < 3) setActiveStep((step + 1) as Step);
   };
 
-  const handleStep1Complete = (efektif: number[], durasi: number) => {
-    setHujanEfektif(efektif);
-    setDurasiHujan(durasi);
+  const handleStep1Complete = (_efektif: number[], _durasi: number) => {
     handleStepComplete(1);
   };
 
@@ -80,9 +67,7 @@ export const ModulBanjirStepper: React.FC = () => {
     handleStepComplete(2);
   };
 
-  const handleStep3Complete = (hydrograph: { time: number; discharge: number }[], peak: number) => {
-    setFinalHydrograph(hydrograph);
-    setPeakDischarge(peak);
+  const handleStep3Complete = () => {
     handleStepComplete(3);
   };
 
@@ -99,7 +84,7 @@ export const ModulBanjirStepper: React.FC = () => {
           <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 sticky top-4">
             <h3 className="text-sm font-bold text-slate-900 mb-4">Langkah Progresif</h3>
             <div className="space-y-2">
-              {STEPS.map((step, idx) => {
+              {STEPS.map((step) => {
                 const isActive = activeStep === step.id;
                 const isCompleted = completedSteps.has(step.id);
                 const canAccess = canProceedToStep(step.id);
@@ -173,8 +158,6 @@ export const ModulBanjirStepper: React.FC = () => {
           
           {activeStep === 2 && (
             <HSSComparisonStep
-              hujanEfektif={hujanEfektif}
-              durasiHujan={durasiHujan}
               onComplete={handleStep2Complete}
               isCompleted={completedSteps.has(2)}
             />
@@ -182,10 +165,8 @@ export const ModulBanjirStepper: React.FC = () => {
           
           {activeStep === 3 && (
             <KonvolusiStep
-              hujanEfektif={hujanEfektif}
               hssOrdinates={hssOrdinates}
               selectedHSS={selectedHSS}
-              durasiHujan={durasiHujan}
               onComplete={handleStep3Complete}
               isCompleted={completedSteps.has(3)}
             />

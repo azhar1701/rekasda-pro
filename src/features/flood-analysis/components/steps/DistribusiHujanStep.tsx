@@ -11,7 +11,7 @@ interface DistribusiHujanStepProps {
 }
 
 export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComplete, isCompleted }) => {
-  const { getR24, selectedDistribution } = useFrequencyAnalysis();
+  const { getR24 } = useFrequencyAnalysis();
   const { tutupanLahan } = useHydrologyStore();
   
   const [returnPeriod, setReturnPeriod] = useState(25);

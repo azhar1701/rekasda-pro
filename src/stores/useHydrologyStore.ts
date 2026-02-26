@@ -251,10 +251,11 @@ export interface HydrologyState {
   distribusiHujanJamJaman: number[] | null;
   durasiHujan: number;
   
-  // TAHAP 1: QC & Hujan Efektif
+  // QC State
   qcResults: QualityControlResults | null;
   qcStatus: { konsisten: boolean; bebasOutlier: boolean; homogen: boolean } | null;
   isQCOverridden: boolean;
+  isQCCalculating: boolean;
   landCoverParams: LandCoverParameters | null;
   effectiveRainfall: EffectiveRainfallResult | null;
   
@@ -274,6 +275,9 @@ export interface HydrologyState {
   
   // Pipeline 1: Master Data -> Hujan Rata-rata DAS
   fetchStasiun: () => Promise<void>;
+  addStasiun: (stasiun: Omit<StasiunHidrologi, 'id' | 'created_at'>) => Promise<void>;
+  addDataHujan: (data: Omit<DataHujan, 'id' | 'created_at'>) => Promise<void>;
+  importDataHujanBatch: (dataList: Omit<DataHujan, 'id' | 'created_at'>[]) => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
   fetchDataHujan: (stasiunId: string, tahun?: number) => Promise<void>;
   setHasilThiessen: (hasil: HasilThiessen | null) => void;
@@ -293,10 +297,11 @@ export interface HydrologyState {
   getDesignRainfall: (returnPeriod: number) => number | null;
   getDesignDischarge: (type: 'flood' | 'irrigation') => number | null;
   
-  // Pipeline 1.5: QC & Hujan Efektif (TAHAP 1)
   setQCResults: (results: QualityControlResults | null) => void;
   setQCStatus: (status: { konsisten: boolean; bebasOutlier: boolean; homogen: boolean } | null) => void;
   setQCOverride: (override: boolean) => void;
+  setQCCalculating: (calculating: boolean) => void;
+  updateDataHujanManual: (data: DataHujan[]) => void;
   setLandCoverParams: (params: LandCoverParameters | null) => void;
   setEffectiveRainfall: (result: EffectiveRainfallResult | null) => void;
   
@@ -418,10 +423,10 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   distribusiHujanJamJaman: null,
   durasiHujan: 6,
   
-  // TAHAP 1: QC & Hujan Efektif
   qcResults: null,
   qcStatus: null,
   isQCOverridden: false,
+  isQCCalculating: false,
   landCoverParams: null,
   effectiveRainfall: null,
   
@@ -479,7 +484,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
         isNeracaDirty: true 
       });
       
-      if (stasiun) {
+      if (stasiun && state.stasiunList.some(s => s.id === stasiun.id && MOCK_STASIUN_LIST.some(m => m.id === s.id))) {
         get().fetchDataHujan(stasiun.id, new Date().getFullYear());
       }
     }
@@ -572,10 +577,51 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
     return null;
   },
-  // TAHAP 1: QC & Hujan Efektif Setters
   setQCResults: (results) => set({ qcResults: results }),
   setQCStatus: (status) => set({ qcStatus: status, isQCOverridden: false }),
   setQCOverride: (override) => set({ isQCOverridden: override }),
+  setQCCalculating: (calculating) => set({ isQCCalculating: calculating }),
+  
+  updateDataHujanManual: (data) => {
+    set({ dataHujan: data, isQCCalculating: true });
+    
+    if (data.length < 10) {
+      set({ 
+        qcStatus: null, 
+        qcResults: null,
+        isQCCalculating: false 
+      });
+      return;
+    }
+    
+    try {
+      const { runFullQC } = require('@/lib/utils/qc/dataQualityMath');
+      const byYear = new Map<number, number>();
+      data.forEach(d => {
+        const year = new Date(d.tanggal).getFullYear();
+        const current = byYear.get(year) || 0;
+        if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
+      });
+      const annualMax = Array.from(byYear.entries()).map(([tahun, hujan]) => ({ tahun, hujan }));
+      
+      if (annualMax.length >= 10) {
+        const qcResult = runFullQC(annualMax);
+        set({
+          qcStatus: {
+            konsisten: qcResult.isKonsisten,
+            bebasOutlier: qcResult.isBebasOutlier,
+            homogen: qcResult.isHomogen
+          },
+          isQCCalculating: false
+        });
+      } else {
+        set({ qcStatus: null, isQCCalculating: false });
+      }
+    } catch (error) {
+      console.error('QC calculation error:', error);
+      set({ qcStatus: null, isQCCalculating: false });
+    }
+  },
   setLandCoverParams: (params) => set({ 
     landCoverParams: params,
     effectiveRainfall: null,
@@ -655,6 +701,94 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
       set({ stasiunList: MOCK_STASIUN_LIST, isLoading: false });
     } catch (err: any) {
       set({ error: err.message || 'Gagal mengambil data stasiun hidrologi', isLoading: false });
+    }
+  },
+
+  addStasiun: async (stasiun) => {
+    set({ isLoading: true, error: null });
+    try {
+      // TODO: Ganti dengan Supabase insert
+      // const { data, error } = await supabase.from('master_stasiun').insert([stasiun]).select().single();
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newStasiun: StasiunHidrologi = {
+        ...stasiun,
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString()
+      };
+      
+      set(state => ({ 
+        stasiunList: [...state.stasiunList, newStasiun],
+        selectedStasiun: newStasiun,
+        dataHujan: [],
+        isLoading: false 
+      }));
+    } catch (err: any) {
+      set({ error: err.message || 'Gagal menambah stasiun', isLoading: false });
+      throw err;
+    }
+  },
+
+  addDataHujan: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      // TODO: Ganti dengan Supabase insert
+      // const { data: newData, error } = await supabase.from('data_hujan').insert([data]).select().single();
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const newData: DataHujan = {
+        ...data,
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString()
+      };
+      
+      set(state => ({ 
+        dataHujan: [...state.dataHujan, newData].sort((a, b) => 
+          new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
+        ),
+        isLoading: false 
+      }));
+      
+      const state = get();
+      if (state.dataHujan.length >= 10) {
+        state.updateDataHujanManual(state.dataHujan);
+      }
+    } catch (err: any) {
+      set({ error: err.message || 'Gagal menambah data hujan', isLoading: false });
+      throw err;
+    }
+  },
+
+  importDataHujanBatch: async (dataList) => {
+    set({ isLoading: true, error: null });
+    try {
+      // TODO: Ganti dengan Supabase batch insert
+      // const { data, error } = await supabase.from('data_hujan').insert(dataList).select();
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newDataList: DataHujan[] = dataList.map(d => ({
+        ...d,
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString()
+      }));
+      
+      set(state => ({ 
+        dataHujan: [...state.dataHujan, ...newDataList].sort((a, b) => 
+          new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
+        ),
+        isLoading: false 
+      }));
+      
+      const state = get();
+      if (state.dataHujan.length >= 10) {
+        state.updateDataHujanManual(state.dataHujan);
+      }
+    } catch (err: any) {
+      set({ error: err.message || 'Gagal import data hujan', isLoading: false });
+      throw err;
     }
   },
 

@@ -5,24 +5,22 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface KonvolusiStepProps {
-  hujanEfektif: number[];
   hssOrdinates: number[];
   selectedHSS: string | null;
-  durasiHujan: number;
-  onComplete: (hydrograph: { time: number; discharge: number }[], peak: number) => void;
+  onComplete: () => void;
   isCompleted: boolean;
 }
 
 export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
-  hujanEfektif,
   hssOrdinates,
   selectedHSS,
-  durasiHujan,
   onComplete,
   isCompleted
 }) => {
-  const { setHasilBanjir } = useHydrologyStore();
+  const { setHasilBanjir, effectiveRainfall } = useHydrologyStore();
   const [calculated, setCalculated] = useState(false);
+
+  const hujanEfektif = effectiveRainfall?.hourlyDistribution || [];
 
   const { hydrograph, peakDischarge, timeToPeak } = useMemo(() => {
     if (!calculated || hujanEfektif.length === 0 || hssOrdinates.length === 0) {
@@ -44,7 +42,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
 
     const hydrograph = Q.map((q, i) => ({
       time: Number((i * 0.5).toFixed(1)),
-      discharge: Number(q.toFixed(2))
+      inflow: Number(q.toFixed(2))
     }));
 
     const peak = Math.max(...Q);
@@ -68,7 +66,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
       hidrograf: hydrograph,
       method: selectedHSS || 'unknown'
     });
-    onComplete(hydrograph, peakDischarge);
+    onComplete();
   };
 
   return (
@@ -129,7 +127,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
                 <span className="text-4xl font-black">{timeToPeak}</span>
                 <span className="text-lg font-bold opacity-80">jam</span>
               </div>
-              <p className="text-xs opacity-75 mt-2">Durasi: {durasiHujan} jam</p>
+              <p className="text-xs opacity-75 mt-2">Dari hidrograf konvolusi</p>
             </Card>
           </div>
 
@@ -158,7 +156,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
                 />
                 <Area
                   type="monotone"
-                  dataKey="discharge"
+                  dataKey="inflow"
                   stroke="#3b82f6"
                   strokeWidth={3}
                   fill="url(#floodGradient)"

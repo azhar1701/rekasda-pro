@@ -28,16 +28,18 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
   // Memoized computations
   const yearRange = useMemo(() => {
     if (!dataHujan || dataHujan.length === 0) return null;
-    return `${dataHujan[0].tahun} - ${dataHujan[dataHujan.length - 1].tahun}`;
+    const years = dataHujan.map(d => new Date(d.tanggal).getFullYear());
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    return `${minYear} - ${maxYear}`;
   }, [dataHujan]);
 
   const rainfallChartData = useMemo(() => {
-    if (!curahHujanWilayah?.hasilPerhitungan) return [];
-    return curahHujanWilayah.hasilPerhitungan
-      .filter(item => item.hujanWilayah != null && !isNaN(item.hujanWilayah))
+    if (!curahHujanWilayah?.stasiunConfigs) return [];
+    return curahHujanWilayah.stasiunConfigs
       .map((item, idx) => ({
-        tahun: item.tahun || `Tahun ${idx + 1}`,
-        hujan: Number(item.hujanWilayah.toFixed(2)),
+        tahun: item.namaStasiun || `Stasiun ${idx + 1}`,
+        hujan: Number(item.bobot.toFixed(2)),
       }));
   }, [curahHujanWilayah]);
 
@@ -49,7 +51,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
     const bars = tutupanLahan.items
       .map(item => ({
-        name: item.jenisTutupan || 'Unknown',
+        name: item.jenis || 'Unknown',
         luas: item.luas || 0,
         percentage: ((item.luas || 0) / totalArea) * 100,
       }))
@@ -62,9 +64,9 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
   const qcStatus = useMemo(() => {
     if (!qcResults) return null;
     
-    const rapsValid = qcResults.raps?.isConsistent ?? false;
-    const grubbsValid = qcResults.grubbs?.hasOutliers === false;
-    const homogeneityValid = qcResults.homogeneity?.isHomogeneous ?? false;
+    const rapsValid = 'raps' in qcResults ? qcResults.raps?.isConsistent ?? false : qcResults.konsistensi?.isPassed ?? false;
+    const grubbsValid = 'grubbs' in qcResults ? qcResults.grubbs?.hasOutliers === false : qcResults.outlier?.isPassed ?? false;
+    const homogeneityValid = 'homogeneity' in qcResults ? qcResults.homogeneity?.isHomogeneous ?? false : qcResults.homogenitas?.isPassed ?? false;
     
     return {
       rapsValid,
@@ -76,7 +78,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
   const metodeName = useMemo(() => {
     if (!curahHujanWilayah?.metode) return 'Belum dipilih';
-    const stationCount = curahHujanWilayah.stasiun?.length || 0;
+    const stationCount = curahHujanWilayah.stasiunConfigs?.length || 0;
     const method = curahHujanWilayah.metode === 'thiessen' ? 'Poligon Thiessen' : 'Rata-rata Aljabar';
     return stationCount > 0 ? `${method} (${stationCount} Stasiun)` : method;
   }, [curahHujanWilayah]);
@@ -243,19 +245,19 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
           <h3 className="font-semibold text-gray-800">Koefisien Limpasan</h3>
         </div>
 
-        {tutupanLahan?.cGabungan != null ? (
+        {tutupanLahan?.koefisienPengaliranGabungan != null ? (
           <div className="space-y-4">
             <div>
               <p className="text-xs text-gray-500 mb-1">C Gabungan (Rasional)</p>
               <p className="text-3xl font-bold text-blue-600">
-                {tutupanLahan.cGabungan.toFixed(3)}
+                {tutupanLahan.koefisienPengaliranGabungan.toFixed(3)}
               </p>
             </div>
 
             <div>
               <p className="text-xs text-gray-500 mb-1">CN Komposit (SCS)</p>
               <p className="text-3xl font-bold text-green-600">
-                {(tutupanLahan.cnKomposit || 0).toFixed(1)}
+                {(tutupanLahan.curveNumberGabungan || 0).toFixed(1)}
               </p>
             </div>
 

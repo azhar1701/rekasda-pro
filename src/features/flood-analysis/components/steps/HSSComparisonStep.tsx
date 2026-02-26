@@ -5,8 +5,6 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface HSSComparisonStepProps {
-  hujanEfektif: number[];
-  durasiHujan: number;
   onComplete: (method: string, ordinates: number[]) => void;
   isCompleted: boolean;
 }
@@ -19,8 +17,6 @@ const HSS_METHODS = [
 ];
 
 export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
-  hujanEfektif,
-  durasiHujan,
   onComplete,
   isCompleted
 }) => {

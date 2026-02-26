@@ -10,10 +10,9 @@ interface DataQualityDashboardProps {
 }
 
 export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({ 
-  onProceed,
-  showDetails = false 
+  onProceed
 }) => {
-  const { qcStatus, isQCOverridden, setQCOverride, hasilAnalisisFrekuensi } = useHydrologyStore();
+  const { qcStatus, isQCOverridden, setQCOverride } = useHydrologyStore();
 
   if (!qcStatus) {
     return (
