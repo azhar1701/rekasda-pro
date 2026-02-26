@@ -21,6 +21,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
   const [calculated, setCalculated] = useState(false);
 
   const hujanEfektif = effectiveRainfall?.hourlyDistribution || [];
+  const isDataReady = hujanEfektif.length > 0 && hssOrdinates.length > 0;
 
   const { hydrograph, peakDischarge, timeToPeak } = useMemo(() => {
     // Safeguard: Return empty if not calculated or data missing
@@ -76,6 +77,34 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Smart Empty State - Data Belum Tersedia */}
+      {!isDataReady && (
+        <Card className="p-6 bg-yellow-50 border-2 border-yellow-200">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-yellow-100 rounded-full">
+              <Waves className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-yellow-900 mb-2">
+                ⚠️ Data Hujan Efektif Belum Tersedia
+              </h3>
+              <p className="text-sm text-yellow-800 mb-4">
+                Sistem membutuhkan distribusi hujan jam-jaman untuk melakukan konvolusi.
+                Silakan hitung <strong>Distribusi Hujan</strong> di langkah sebelumnya.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => window.history.back()}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                >
+                  👈 Kembali ke Distribusi Hujan
+                </button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-purple-100 rounded-lg">
@@ -106,12 +135,12 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
 
         <button
           onClick={handleCalculate}
-          disabled={hujanEfektif.length === 0 || hssOrdinates.length === 0}
+          disabled={!isDataReady}
           className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-          title={hujanEfektif.length === 0 ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
+          title={!isDataReady ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
         >
           <TrendingUp className="w-5 h-5" />
-          {hujanEfektif.length === 0 ? 'Menunggu Data Hujan...' : 'Hitung Konvolusi'}
+          {!isDataReady ? 'Menunggu Data Hujan...' : 'Hitung Konvolusi'}
         </button>
       </Card>
 

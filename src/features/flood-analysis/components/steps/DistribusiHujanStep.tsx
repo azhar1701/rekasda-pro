@@ -74,6 +74,17 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
   };
 
   const handleComplete = () => {
+    // CRITICAL: Simpan ke Global Store
+    const { setEffectiveRainfall } = useHydrologyStore.getState();
+    setEffectiveRainfall({
+      totalRainfall: hyetograph.reduce((a, b) => a + b, 0),
+      effectiveRainfall: effectiveRainfall.reduce((a, b) => a + b, 0),
+      losses: hyetograph.reduce((a, b) => a + b, 0) - effectiveRainfall.reduce((a, b) => a + b, 0),
+      method: lossMethod === 'C' ? `Koef. C = ${C.toFixed(3)}` : `CN = ${CN}`,
+      hourlyDistribution: effectiveRainfall
+    });
+    
+    console.log('✅ Menyimpan Hujan Efektif ke Store:', effectiveRainfall);
     onComplete(effectiveRainfall, durasi);
   };
 
