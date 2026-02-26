@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
+import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
 
 // TAHAP 2: Global State Management (Zustand) dengan TypeScript yang Ketat
 
@@ -221,6 +222,19 @@ export interface NeracaFinalRow {
   status: 'Surplus' | 'Defisit' | 'Seimbang';
 }
 
+/** Identitas Lokasi Proyek (SSOT) */
+export interface IdentitasLokasi {
+  namaPekerjaan: string;
+  namaDAS: string;
+  namaSungai: string;
+  provinsi: string;
+  kabupaten: string;
+  koordinat: {
+    lat: number | null;
+    lng: number | null;
+  };
+}
+
 export interface HydrologyState {
   // State Fundamental
   luasDas: string;
@@ -228,6 +242,9 @@ export interface HydrologyState {
   curahHujanRencana: string;
   stasiunList: StasiunHidrologi[];
   selectedStasiun: StasiunHidrologi | null;
+  
+  // Identitas Lokasi (SSOT)
+  identitasLokasi: IdentitasLokasi;
   
   // Parameter Spasial & Kewilayahan
   morfometriDAS: MorfometriDAS | null;
@@ -252,10 +269,11 @@ export interface HydrologyState {
   durasiHujan: number;
   
   // QC State
-  qcResults: QualityControlResults | null;
-  qcStatus: { konsisten: boolean; bebasOutlier: boolean; homogen: boolean } | null;
+  qcResults: Record<string, QualityControlResults> | null;
+  qcStatus: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean }> | null;
   isQCOverridden: boolean;
   isQCCalculating: boolean;
+  rentangTahun: { min: number, max: number } | null;
   landCoverParams: LandCoverParameters | null;
   effectiveRainfall: EffectiveRainfallResult | null;
   
@@ -297,8 +315,8 @@ export interface HydrologyState {
   getDesignRainfall: (returnPeriod: number) => number | null;
   getDesignDischarge: (type: 'flood' | 'irrigation') => number | null;
   
-  setQCResults: (results: QualityControlResults | null) => void;
-  setQCStatus: (status: { konsisten: boolean; bebasOutlier: boolean; homogen: boolean } | null) => void;
+  setQCResults: (results: Record<string, QualityControlResults> | null) => void;
+  setQCStatus: (status: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean }> | null) => void;
   setQCOverride: (override: boolean) => void;
   setQCCalculating: (calculating: boolean) => void;
   updateDataHujanManual: (data: DataHujan[]) => void;
@@ -315,6 +333,9 @@ export interface HydrologyState {
   
   // Pipeline 3.5: Multi-Method HSS Comparison (TAHAP 2)
   setHSSComparisonResults: (results: HSSComparisonResult[] | null) => void;
+  
+  // Identitas Lokasi Actions
+  setIdentitasLokasi: (data: Partial<IdentitasLokasi>) => void;
   
   // Pipeline 4: Evapotranspirasi + Hujan Rencana -> Neraca Air (Mock)
   setHasilNeraca: (hasil: HasilNeraca | null) => void;
@@ -357,26 +378,75 @@ const MOCK_STASIUN_LIST: StasiunHidrologi[] = [
   }
 ];
 
-const generateMockDataHujan = (stasiunId: string, tahun: number = 2026): DataHujan[] => {
+/**
+ * Generate realistic 15-year daily rainfall time-series for a station.
+ * The data is designed to be statistically consistent and pass QC.
+ * Each year generates 365 daily records with seasonal pattern.
+ */
+const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026): DataHujan[] => {
   const data: DataHujan[] = [];
+  const startYear = 2010;
+  const endYear = 2024;
   
-  // Simulate 1 month of dummy data for the selected year
-  for (let i = 1; i <= 30; i++) {
-    const mm = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-    const dd = String(i).padStart(2, '0');
-    const curah_hujan = Math.random() > 0.6 ? Math.floor(Math.random() * 50) + 0.5 : 0;
+  // Simple seeded pseudo-random based on stasiunId to get deterministic data per station
+  let seed = 0;
+  for (let i = 0; i < stasiunId.length; i++) seed += stasiunId.charCodeAt(i);
+  const seededRandom = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return (seed % 10000) / 10000;
+  };
+  
+  // Station-specific baseline (each station has its own climate characteristics)
+  const baseline = 120 + (seed % 60); // 120-180mm annual max baseline
+  
+  for (let year = startYear; year <= endYear; year++) {
+    // Generate max daily rainfall for this year — normally distributed around baseline
+    // Box-Muller transform for normal distribution
+    const u1 = Math.max(0.0001, seededRandom());
+    const u2 = seededRandom();
+    const normalRandom = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const annualMax = Math.max(50, baseline + normalRandom * 25);  // stdDev ~25mm
+    
+    // Generate the annual maximum event (put in rainy season: Nov-Mar)
+    const peakMonth = [11, 12, 1, 2, 3][Math.floor(seededRandom() * 5)];
+    const peakDay = Math.min(28, Math.max(1, Math.floor(seededRandom() * 28) + 1));
+    const peakDate = peakMonth <= 3 ? `${year}-${String(peakMonth).padStart(2, '0')}-${String(peakDay).padStart(2, '0')}`
+      : `${year}-${String(peakMonth).padStart(2, '0')}-${String(peakDay).padStart(2, '0')}`;
     
     data.push({
       id: crypto.randomUUID(),
       stasiun_id: stasiunId,
-      tanggal: `${tahun}-${mm}-${dd}`,
-      curah_hujan: parseFloat(curah_hujan.toFixed(1))
+      tanggal: peakDate,
+      curah_hujan: parseFloat(annualMax.toFixed(1))
     });
+    
+    // Add a few more daily records per year (non-peak rainy days)
+    const nonPeakCount = 3 + Math.floor(seededRandom() * 3);
+    for (let j = 0; j < nonPeakCount; j++) {
+      const month = [10, 11, 12, 1, 2, 3, 4][Math.floor(seededRandom() * 7)];
+      const day = Math.min(28, Math.max(1, Math.floor(seededRandom() * 28) + 1));
+      const adjYear = month >= 10 ? year : year;
+      const dateStr = `${adjYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      // Non-peak rainfall (much smaller than peak)
+      const rainfall = parseFloat((seededRandom() * annualMax * 0.6).toFixed(1));
+      
+      data.push({
+        id: crypto.randomUUID(),
+        stasiun_id: stasiunId,
+        tanggal: dateStr,
+        curah_hujan: rainfall
+      });
+    }
   }
   
   // Sort by date ascending
   return data.sort((a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime());
 };
+
+// Mock QC data is no longer used — QC is always calculated from real data.
+// This is kept only as a type-safe fallback structure.
+const MOCK_QC_DATA: Record<string, { status: any, results: any }> = {};
 
 // --- Store Implementation ---
 
@@ -388,6 +458,16 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   stasiunList: [],
   selectedStasiun: null,
   dataHujan: [],
+  
+  // Identitas Lokasi (SSOT)
+  identitasLokasi: {
+    namaPekerjaan: '',
+    namaDAS: '',
+    namaSungai: '',
+    provinsi: '',
+    kabupaten: '',
+    koordinat: { lat: null, lng: null }
+  },
   
   // Parameter Spasial
   morfometriDAS: null,
@@ -427,6 +507,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   qcStatus: null,
   isQCOverridden: false,
   isQCCalculating: false,
+  rentangTahun: null,
   landCoverParams: null,
   effectiveRainfall: null,
   
@@ -477,9 +558,12 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   selectStasiun: (stasiun) => {
     const state = get();
     if (state.selectedStasiun?.id !== stasiun?.id) {
+      const mockQc = stasiun ? MOCK_QC_DATA[stasiun.id] : null;
       set({ 
         selectedStasiun: stasiun, 
         dataHujan: [],
+        qcStatus: mockQc ? mockQc.status : null,
+        qcResults: mockQc ? mockQc.results : null,
         isBanjirDirty: true, 
         isNeracaDirty: true 
       });
@@ -546,6 +630,10 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     isBanjirDirty: true,
   }),
   
+  setIdentitasLokasi: (data) => set((state) => ({
+    identitasLokasi: { ...state.identitasLokasi, ...data }
+  })),
+  
   // DERIVED STATE GETTERS (Computed from SSOT)
   getTimeOfConcentration: () => {
     const state = get();
@@ -577,49 +665,114 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
     return null;
   },
-  setQCResults: (results) => set({ qcResults: results }),
-  setQCStatus: (status) => set({ qcStatus: status, isQCOverridden: false }),
+  setQCResults: (results: Record<string, QualityControlResults> | null) => set({ qcResults: results }),
+  setQCStatus: (status: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean }> | null) => set({ qcStatus: status, isQCOverridden: false }),
   setQCOverride: (override) => set({ isQCOverridden: override }),
   setQCCalculating: (calculating) => set({ isQCCalculating: calculating }),
   
   updateDataHujanManual: (data) => {
     set({ dataHujan: data, isQCCalculating: true });
     
-    if (data.length < 10) {
+    if (data.length === 0) {
       set({ 
         qcStatus: null, 
         qcResults: null,
+        rentangTahun: null,
         isQCCalculating: false 
       });
       return;
     }
     
+    // Tahap 2: Ekstraksi Rentang Tahun
+    const years = data.map(d => {
+      const year = new Date(d.tanggal).getFullYear();
+      if (isNaN(year)) throw new Error(`Format tanggal tidak valid pada ${d.tanggal}`);
+      return year;
+    }).filter(y => !isNaN(y));
+    
+    if (years.length === 0) {
+         set({ isQCCalculating: false });
+         return;
+    }
+
+    const rentangTahun = {
+      min: Math.min(...years),
+      max: Math.max(...years)
+    };
+    set({ rentangTahun });
+
+    // Tahap 3: Iterasi Per Stasiun — QC dihitung secara live
     try {
-      const { runFullQC } = require('@/lib/utils/qc/dataQualityMath');
-      const byYear = new Map<number, number>();
-      data.forEach(d => {
-        const year = new Date(d.tanggal).getFullYear();
-        const current = byYear.get(year) || 0;
-        if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
-      });
-      const annualMax = Array.from(byYear.entries()).map(([tahun, hujan]) => ({ tahun, hujan }));
-      
-      if (annualMax.length >= 10) {
-        const qcResult = runFullQC(annualMax);
-        set({
-          qcStatus: {
+      // Group data by Stasiun ID
+      const byStation = new Map<string, typeof data>();
+      for (const d of data) {
+         const list = byStation.get(d.stasiun_id) || [];
+         list.push(d);
+         byStation.set(d.stasiun_id, list);
+      }
+
+      const qcStat: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean }> = {};
+      const qcRes: Record<string, QualityControlResults> = {};
+
+      for (const [stasiunId, stasiunData] of byStation.entries()) {
+        // Ambil curah hujan maksimum tahunan per stasiun
+        const byYear = new Map<number, number>();
+        stasiunData.forEach(d => {
+          const y = new Date(d.tanggal).getFullYear();
+          const current = byYear.get(y) || 0;
+          if (d.curah_hujan > current) byYear.set(y, d.curah_hujan);
+        });
+        const annualMax = Array.from(byYear.entries()).map(([tahun, hujan]) => ({ tahun, hujan }));
+
+        if (annualMax.length >= 10) {
+          // Jalankan QC sesungguhnya
+          const qcResult = runFullQC(annualMax);
+          qcStat[stasiunId] = {
             konsisten: qcResult.isKonsisten,
             bebasOutlier: qcResult.isBebasOutlier,
             homogen: qcResult.isHomogen
-          },
-          isQCCalculating: false
-        });
-      } else {
-        set({ qcStatus: null, isQCCalculating: false });
+          };
+          // Gunakan pesan detail dari hasil kalkulasi (bukan string hardcoded)
+          qcRes[stasiunId] = {
+            konsistensi: {
+              isPassed: qcResult.isKonsisten,
+              method: 'RAPS',
+              message: qcResult.details.raps.pesan
+            },
+            homogenitas: {
+              isPassed: qcResult.isHomogen,
+              method: 'F-Test',
+              message: qcResult.details.homogenitas.pesan
+            },
+            outlier: {
+              isPassed: qcResult.isBebasOutlier,
+              method: 'Grubbs-Beck',
+              outlierIndices: qcResult.details.grubbs.outliers.map((_, idx) => idx),
+              message: qcResult.details.grubbs.pesan
+            },
+            overallPassed: qcResult.isKonsisten && qcResult.isHomogen && qcResult.isBebasOutlier
+          };
+        } else {
+            // Data tidak cukup untuk QC — tandai sebagai gagal
+            qcStat[stasiunId] = { konsisten: false, bebasOutlier: false, homogen: false };
+            qcRes[stasiunId] = {
+              konsistensi: { isPassed: false, method: 'RAPS', message: `✗ Data terlalu pendek (${annualMax.length} tahun, minimal 10)` },
+              homogenitas: { isPassed: false, method: 'F-Test', message: `✗ Data terlalu pendek (${annualMax.length} tahun, minimal 10)` },
+              outlier: { isPassed: false, method: 'Grubbs-Beck', outlierIndices: [], message: `✗ Data terlalu pendek (${annualMax.length} tahun, minimal 10)` },
+              overallPassed: false
+            };
+        }
       }
+
+      set({
+        qcStatus: Object.keys(qcStat).length > 0 ? qcStat : null,
+        qcResults: Object.keys(qcRes).length > 0 ? qcRes : null,
+        isQCCalculating: false
+      });
+      
     } catch (error) {
       console.error('QC calculation error:', error);
-      set({ qcStatus: null, isQCCalculating: false });
+      set({ isQCCalculating: false });
     }
   },
   setLandCoverParams: (params) => set({ 
@@ -810,8 +963,13 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
       const data = mockedData; // Simulate data from query
       const error = null; // Simulate no error
       
+      const mockQc = MOCK_QC_DATA[stasiunId];
       if (error) throw error;
-      set({ dataHujan: data || [] });
+      set({ 
+        dataHujan: data || [],
+        qcStatus: mockQc ? mockQc.status : null,
+        qcResults: mockQc ? mockQc.results : null,
+      });
     } catch (err: any) {
       set({ error: err.message, dataHujan: [] });
     } finally {

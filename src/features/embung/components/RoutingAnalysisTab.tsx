@@ -9,6 +9,7 @@ import { toast } from '@/hooks/useToast';
 import { HydroValidationError } from '@/features/embung/types/embung.types';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 
 // Default Data for Initialization
 const DEFAULT_HYDROGRAPH = [
@@ -123,7 +124,10 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
     };
 
     return (
-        <div className="flex flex-col h-full gap-6">
+        <div className="flex flex-col h-full gap-5">
+            {/* Project Banner (SSOT) */}
+            <ProjectContextBanner />
+
             {/* Header Info */}
             <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                 <div className="flex gap-3">

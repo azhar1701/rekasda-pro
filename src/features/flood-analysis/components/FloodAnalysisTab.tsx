@@ -51,7 +51,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
   const handleQC = () => {
     const mockData = [45, 67, 89, 34, 56, 78, 90, 43, 55, 72];
     const results = performQualityControl(mockData);
-    setQCResults(results);
+    setQCResults({ '_default': results });
     setShowQC(true);
     toast.success(results.overallPassed ? 'Data lolos QC' : 'Data tidak lolos QC');
   };
@@ -151,22 +151,27 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
                   Uji QC
                 </Button>
               </div>
-              {showQC && qcResults && (
+              {showQC && qcResults && (() => {
+                const firstKey = Object.keys(qcResults)[0];
+                const firstResult = firstKey ? qcResults[firstKey] : null;
+                if (!firstResult) return null;
+                return (
                 <div className="space-y-2 text-sm">
-                  <div className={`flex items-center gap-2 ${qcResults.konsistensi.isPassed ? 'text-green-600' : 'text-red-600'}`}>
-                    {qcResults.konsistensi.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  <div className={`flex items-center gap-2 ${firstResult.konsistensi.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                    {firstResult.konsistensi.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                     <span>Konsistensi</span>
                   </div>
-                  <div className={`flex items-center gap-2 ${qcResults.homogenitas.isPassed ? 'text-green-600' : 'text-red-600'}`}>
-                    {qcResults.homogenitas.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  <div className={`flex items-center gap-2 ${firstResult.homogenitas.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                    {firstResult.homogenitas.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                     <span>Homogenitas</span>
                   </div>
-                  <div className={`flex items-center gap-2 ${qcResults.outlier.isPassed ? 'text-green-600' : 'text-red-600'}`}>
-                    {qcResults.outlier.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                  <div className={`flex items-center gap-2 ${firstResult.outlier.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                    {firstResult.outlier.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                     <span>Outlier</span>
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* Effective Rainfall Section */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MANNING_ROUGHNESS } from '@/constants';
 import { saveManningCalculation } from '@/services/calculationService';
 import { ManningInputs, CalculationType, ChannelShape } from '@/types/types';
@@ -9,14 +9,15 @@ import { Alert } from '@/components/ui/feedback/Alert';
 import { ChannelVisualizer } from './ChannelVisualizer';
 import { useHydraulicCalculations } from '@/hooks/useHydraulicCalculations';
 
-import { LocationIdentity } from '@/components/common/LocationIdentity';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ManningPilotDataLoader } from './ManningPilotDataLoader';
 import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
 import { ManningFormulaDisplay } from '@/components/ui/data-display/ManningFormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { getCurrentLocation } from '@/lib/utils/geolocation';
+// getCurrentLocation removed as it is not used directly here
 
 import { StatCard } from '@/components/ui/StatCard';
 import { Waves } from 'lucide-react';
@@ -28,7 +29,11 @@ interface Props {
 
 export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const { calculateManningChannel, manningResults, isCalculating: isHookCalculating, error: calcError } = useHydraulicCalculations();
-  const [, setLocationData] = useState<any>(null);
+  const { getDesignDischarge, identitasLokasi } = useHydrologyStore();
+  
+  // Ambil Debit Rencana dari modul Banjir (SSOT)
+  const qDesign = getDesignDischarge('flood');
+  
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [inputs, setInputs] = useState<ManningInputs>({
@@ -49,21 +54,10 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
   const handleLoadPilotData = (data: any) => {
-    setInputs({
-      site: {
-        channelName: data.location.channelName,
-        regency: data.location.kabupaten,
-        district: data.location.kecamatan,
-        village: data.location.desa,
-        location: data.location.coordinates ? {
-          latitude: data.location.coordinates.lat,
-          longitude: data.location.coordinates.lng,
-          accuracy: 10,
-          timestamp: Date.now()
-        } : undefined
-      },
+    setInputs(prev => ({
+      ...prev,
       ...data.inputs
-    });
+    }));
     setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
     setTimeout(() => setLoadMessage(null), 3000);
   };
@@ -77,26 +71,19 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
     }
 
     setIsSaving(true);
-    setSaveMessage(null);
     try {
-      // Try to get precise location if not already present
-      let currentLoc = inputs.site?.location;
-      if (!currentLoc) {
-        try {
-          currentLoc = await getCurrentLocation();
-        } catch (locErr) {
-          console.warn('Geolocation capture failed:', locErr);
-          // Continue without location if user denies/fails
-        }
-      }
-
       const { error } = await saveManningCalculation({
-        projectName,
+        projectName: identitasLokasi.namaPekerjaan || 'Untitled Project',
         inputs: {
           ...inputs,
           site: {
             ...inputs.site,
-            location: currentLoc || inputs.site?.location || null
+            location: identitasLokasi.koordinat ? {
+              latitude: identitasLokasi.koordinat.lat || 0,
+              longitude: identitasLokasi.koordinat.lng || 0,
+              accuracy: 10,
+              timestamp: Date.now()
+            } : null
           }
         },
         results: manningResults
@@ -153,25 +140,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
     validate(updatedInputs);
   };
 
-  const handleLocationChange = useCallback((data: any) => {
-    setLocationData(data);
-    setInputs(prev => ({
-      ...prev,
-      site: {
-        channelName: data.channelName || '',
-        regency: data.kabupaten || '',
-        district: data.kecamatan || '',
-        village: data.desa || '',
-        location: data.coordinates ? {
-          latitude: data.coordinates.lat,
-          longitude: data.coordinates.lng,
-          accuracy: 10,
-          timestamp: Date.now()
-        } : undefined,
-        photoUrl: data.photoUrl
-      }
-    }));
-  }, []);
+  // handleLocationChange removed (SSOT)
 
 
 
@@ -228,13 +197,13 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
           {/* LEFT SIDEBAR (Span 5) */}
           <div className="md:col-span-5 flex flex-col gap-4">
 
-            {/* Data Pilot & Location Identity - Combined */}
-            <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={true}>
+            {/* Project Banner (SSOT) */}
+            <ProjectContextBanner />
+
+            {/* Data Pilot Loader */}
+            <Collapsible title="Data Pilot & Konfigurasi" defaultOpen={true}>
               <div className="space-y-4">
                 <ManningPilotDataLoader onLoad={handleLoadPilotData} />
-                <div className="border-t border-white/20 pt-4">
-                  <LocationIdentity onLocationChange={handleLocationChange} />
-                </div>
               </div>
             </Collapsible>
 
@@ -368,7 +337,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                       </div>
                     )}
                     <StatCard
-                      label="Kapasitas Debit"
+                      label="Kapasitas Debit (Q Cap)"
                       value={manningResults.Discharge}
                       unit="m³/s"
                       valueColorClass="text-blue-700"
@@ -381,6 +350,38 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                       valueColorClass="text-slate-800"
                     />
                   </div>
+                  
+                  {/* Evaluasi Kapasitas vs Debit Banjir Rencana */}
+                  {qDesign !== null && qDesign > 0 && (
+                     <div className={`p-4 rounded-xl border ${manningResults.Discharge >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-sm`}>
+                        <div className={`mt-0.5 p-1.5 rounded-full ${manningResults.Discharge >= qDesign ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                           {manningResults.Discharge >= qDesign ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                           ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                           )}
+                        </div>
+                        <div className="flex-1">
+                           <h3 className={`text-sm font-bold ${manningResults.Discharge >= qDesign ? 'text-emerald-800' : 'text-red-800'}`}>
+                              {manningResults.Discharge >= qDesign ? 'Kapasitas Saluran Aman' : 'Peringatan: Potensi Saluran Meluap (Overtopping)'}
+                           </h3>
+                           <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1 text-xs">
+                              <span className={manningResults.Discharge >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
+                                 Debit Banjir Rencana (Q Design): <strong className="font-mono">{qDesign.toFixed(3)} m³/s</strong>
+                              </span>
+                              <span className="hidden sm:inline text-slate-300">|</span>
+                              <span className={manningResults.Discharge >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
+                                 Kapasitas Saluran (Q Cap): <strong className="font-mono">{manningResults.Discharge.toFixed(3)} m³/s</strong>
+                              </span>
+                           </div>
+                           <p className={`mt-2 text-xs ${manningResults.Discharge >= qDesign ? 'text-emerald-600' : 'text-red-600 font-medium'}`}>
+                              {manningResults.Discharge >= qDesign 
+                                 ? 'Dimensi saluran ini cukup untuk menampung debit banjir dari hasil perhitungan hidrologi.' 
+                                 : 'Kapasitas saluran lebih kecil dari debit rencana. Pertimbangkan untuk memperlebar dasar saluran (b) atau memperdalam tinggi jagaan (H).'}
+                           </p>
+                        </div>
+                     </div>
+                  )}
 
                   {/* Detailed Results */}
                   <Card className="glass-card shadow-lg border-white/20 p-4 sm:p-6 opacity-ransition duration-300" style={{ opacity: isHookCalculating ? 0.7 : 1 }}>

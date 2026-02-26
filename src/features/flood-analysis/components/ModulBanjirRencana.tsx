@@ -4,6 +4,7 @@ import { SmartOverrideInput } from '@/components/ui/SmartOverrideInput';
 import { MasterDataSelector } from '@/features/master-data/components/MasterDataSelector';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisModal';
 import { FrequencyAnalysisSummary } from '@/components/ui/FrequencyAnalysisSummary';
 import { AreaReductionCard } from '@/features/flood-analysis/components/AreaReductionCard';
@@ -390,6 +391,9 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
                     <div className="md:col-span-5 flex flex-col gap-5">
                         <div className="bg-white/60 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5 space-y-5">
+
+                            {/* Project Banner (SSOT) */}
+                            <ProjectContextBanner />
 
                             {/* Master Data Selector */}
                             <MasterDataSelector />

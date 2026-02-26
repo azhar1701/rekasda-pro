@@ -4,6 +4,7 @@ import { Database, CloudRain, MapPin, LayoutDashboard } from 'lucide-react';
 import { MasterHidrologiTab } from './MasterHidrologiTab';
 import { ParameterSpasial } from './ParameterSpasial';
 import { MasterDataDashboard } from './MasterDataDashboard';
+import { FormIdentitasLokasi } from './FormIdentitasLokasi';
 
 type TabType = 'dashboard' | 'data-hujan' | 'parameter-spasial';
 
@@ -18,6 +19,9 @@ export const MasterDataPage: React.FC = () => {
       iconColorClass="bg-teal-50 text-teal-600"
     >
       <div className="space-y-6">
+        {/* Identitas Lokasi (SSOT) */}
+        <FormIdentitasLokasi />
+
         {/* Tab Navigation */}
         <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
           <button

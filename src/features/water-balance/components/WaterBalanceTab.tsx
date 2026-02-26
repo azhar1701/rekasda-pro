@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '@/services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { DependableFlowModal } from '@/components/ui/modals/DependableFlowModal';
-import { LocationIdentity } from '@/components/common/LocationIdentity';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { saveWaterBalance } from '@/services/calculationService';
 import { WaterBalancePilotDataLoader } from './WaterBalancePilotDataLoader';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
@@ -26,14 +26,7 @@ import { KalkulatorIrigasi } from './KalkulatorIrigasi';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-interface LocationData {
-  channelName: string;
-  kabupaten: string;
-  kecamatan: string;
-  desa: string;
-  coordinates?: { lat: number; lng: number };
-  photoUrl?: string;
-}
+// Location type removed in favor of ProjectContextBanner
 
 interface Props {
   onConsultAI?: () => void;
@@ -42,7 +35,6 @@ interface Props {
 export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
-  const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
@@ -60,7 +52,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const kpiCardsRef = useStaggerAnimation(50);
 
   // ── F.J. Mock Integration ──
-  const { luasDas, hasilMock, setHasilMock, neracaFinal, setLuasDas } = useHydrologyStore();
+  const { luasDas, hasilMock, setHasilMock, neracaFinal, setLuasDas, identitasLokasi } = useHydrologyStore();
   const [luasDasLocal, setLuasDasLocal] = useState<string>('');
   const luasDasGlobal = parseFloat(luasDas) || 0;
   // Effective value: local override → global store → 0
@@ -169,31 +161,18 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
       irrigationDemand: data.inputs.irrigationDemand,
       monthlySupply: data.inputs.monthlySupply
     });
-    setLocationData({
-      channelName: data.location.channelName,
-      kabupaten: data.location.kabupaten,
-      kecamatan: data.location.kecamatan,
-      desa: data.location.desa,
-      coordinates: data.location.coordinates
-    });
     setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
     setTimeout(() => setLoadMessage(null), 3000);
   };
 
   const handleSaveWaterBalance = async () => {
-    const projectName = locationData?.channelName;
-    if (!projectName) {
-      setSaveMessage({ type: 'error', text: 'Mohon isi Nama Saluran di Identitas Lokasi terlebih dahulu' });
-      setTimeout(() => setSaveMessage(null), 3000);
-      return;
-    }
-
     setIsSaving(true);
     setSaveMessage(null);
+
     try {
       const { error } = await saveWaterBalance({
-        projectName,
-        monthlyInputs: { ...inputs, location: locationData },
+        projectName: identitasLokasi.namaPekerjaan || 'Untitled Project',
+        monthlyInputs: { ...inputs, location: identitasLokasi },
         monthlyResults: results,
         summary
       });
@@ -247,13 +226,13 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           <div className="lg:col-span-5 flex flex-col gap-4">
             <div className="space-y-4 pb-4">
 
-              {/* Data Pilot & Location Identity - Combined */}
-              <Collapsible title="Data Pilot & Identitas Lokasi" defaultOpen={true}>
+              {/* Project Banner (SSOT) */}
+              <ProjectContextBanner />
+
+              {/* Data Pilot Loader */}
+              <Collapsible title="Data Pilot & Konfigurasi" defaultOpen={true}>
                 <div className="space-y-4">
                   <WaterBalancePilotDataLoader onLoad={handleLoadPilotData} />
-                  <div className="border-t border-white/20 pt-4">
-                    <LocationIdentity onLocationChange={setLocationData} />
-                  </div>
                 </div>
               </Collapsible>
 
