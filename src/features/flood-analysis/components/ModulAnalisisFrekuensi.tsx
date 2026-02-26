@@ -504,7 +504,10 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             </button>
             {isCalculated && (
               <button
-                onClick={() => window.location.hash = '#banjir'}
+                onClick={() => {
+                  const event = new CustomEvent('navigateToTab', { detail: 'BANJIR' });
+                  window.dispatchEvent(event);
+                }}
                 className="px-6 py-4 rounded-xl font-bold text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all"
               >
                 Lanjut ke Modul Banjir →
