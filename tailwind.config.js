@@ -26,18 +26,26 @@ export default {
 				]
 			},
 			colors: {
+				// PUPR Official Colors (GovTech Identity)
+				pupr: {
+					blue: '#0c3a66',      // Biru institusi PUPR
+					yellow: '#f2c114',    // Kuning aksen PUPR
+					surface: '#f8fafc',   // Latar netral
+					border: '#e2e8f0',    // Border tegas
+					text: '#1e293b'       // Teks kontras tinggi
+				},
 				// Base/Neutral - Blue-gray spectrum (Eye-comfort)
 				neutral: {
-					'50': '#F0F9FF',   // Background utama (blue tint)
-					'100': '#E0F2FE',  // Background sekunder
-					'200': '#BAE6FD',  // Border
-					'300': '#7DD3FC',  // Border hover
-					'400': '#38BDF8',  // Disabled
-					'500': '#0EA5E9',  // Teks sekunder/label
-					'600': '#0284C7',  // Teks medium
-					'700': '#0369A1',  // Teks emphasis
-					'800': '#075985',  // Teks utama
-					'900': '#0C4A6E'   // Teks heading
+					'50': '#F0F9FF',
+					'100': '#E0F2FE',
+					'200': '#BAE6FD',
+					'300': '#7DD3FC',
+					'400': '#38BDF8',
+					'500': '#0EA5E9',
+					'600': '#0284C7',
+					'700': '#0369A1',
+					'800': '#075985',
+					'900': '#0C4A6E'
 				},
 				// Primary - Biru profesional
 				primary: {
