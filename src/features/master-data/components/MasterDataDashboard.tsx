@@ -1,16 +1,13 @@
-import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { useMemo, useState } from 'react';
-import { mockQCResults, mockMorfometriDAS, mockTutupanLahan, mockCurahHujanWilayah, mockDataHujan } from '../data/mockData';
+import { useMemo } from 'react';
 
 interface MasterDataDashboardProps {
   onNavigateToSection?: (section: 'qc' | 'morfometri' | 'tutupan' | 'hujan') => void;
 }
 
 export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboardProps) {
-  const [demoMode, setDemoMode] = useState(false);
-  
   const {
     qcResults: storeQCResults,
     morfometriDAS: storeMorfometri,
@@ -19,11 +16,11 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     dataHujan: storeDataHujan,
   } = useHydrologyStore();
 
-  const qcResults = demoMode ? mockQCResults : storeQCResults;
-  const morfometriDAS = demoMode ? mockMorfometriDAS : storeMorfometri;
-  const tutupanLahan = demoMode ? mockTutupanLahan : storeTutupan;
-  const curahHujanWilayah = demoMode ? mockCurahHujanWilayah : storeHujan;
-  const dataHujan = demoMode ? mockDataHujan : storeDataHujan;
+  const qcResults = storeQCResults;
+  const morfometriDAS = storeMorfometri;
+  const tutupanLahan = storeTutupan;
+  const curahHujanWilayah = storeHujan;
+  const dataHujan = storeDataHujan;
 
   // Memoized computations
   const yearRange = useMemo(() => {
@@ -90,31 +87,6 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
   return (
     <div className="space-y-4 p-6">
-      {/* Demo Mode Toggle */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-            {demoMode ? <Eye className="w-5 h-5 text-indigo-600" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-800 text-sm">Mode Demo</h3>
-            <p className="text-xs text-gray-600">Tampilkan contoh data untuk preview dashboard</p>
-          </div>
-        </div>
-        <button
-          onClick={() => setDemoMode(!demoMode)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            demoMode ? 'bg-indigo-600' : 'bg-gray-300'
-          }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              demoMode ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1: QC Status */}
       <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden">

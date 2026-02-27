@@ -17,33 +17,28 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
   onComplete,
   isCompleted
 }) => {
-  const { setHasilBanjir, effectiveRainfall } = useHydrologyStore();
+  const { setHasilBanjir, hujanEfektif } = useHydrologyStore();
   const [calculated, setCalculated] = useState(false);
 
-  const hujanEfektif = effectiveRainfall?.hourlyDistribution || [];
-  const isDataReady = hujanEfektif.length > 0 && hssOrdinates.length > 0;
+  const isDataReady = hujanEfektif && hujanEfektif.length > 0 && hssOrdinates.length > 0;
 
   const { hydrograph, peakDischarge, timeToPeak } = useMemo(() => {
-    // Safeguard: Return empty if not calculated or data missing
     if (!calculated || !hujanEfektif?.length || !hssOrdinates?.length) {
       return { hydrograph: [], peakDischarge: 0, timeToPeak: 0 };
     }
 
-    // Convolution: Q(t) = Σ [Pe(i) × U(t-i)]
     const n = hujanEfektif.length;
     const m = hssOrdinates.length;
     const totalLength = n + m - 1;
     
     const Q: number[] = new Array(totalLength).fill(0);
     
-    // Discrete convolution (superposition)
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < m; j++) {
         Q[i + j] += hujanEfektif[i] * hssOrdinates[j];
       }
     }
 
-    // Filter out NaN/Infinity
     const validQ = Q.map(q => (isFinite(q) ? q : 0));
 
     const hydrograph = validQ.map((q, i) => ({
@@ -72,6 +67,16 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
       hidrograf: hydrograph,
       method: selectedHSS || 'unknown'
     });
+    
+    const { setHasilKonvolusi } = useHydrologyStore.getState();
+    setHasilKonvolusi({
+      floodHydrograph: hydrograph.map(h => ({ time: h.time, discharge: h.inflow })),
+      peakDischarge,
+      timeToPeak,
+      totalVolume: hydrograph.reduce((sum, h) => sum + h.inflow, 0) * 0.5 * 3600,
+      componentHydrographs: []
+    });
+    
     onComplete();
   };
 
@@ -117,16 +122,16 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-xs text-blue-700 font-medium">Hujan Efektif</p>
-            <p className="text-lg font-bold text-blue-900">{hujanEfektif.length} ordinat</p>
-            <p className="text-xs text-blue-600 mt-1">
-              Total: {hujanEfektif.reduce((a, b) => a + b, 0).toFixed(2)} mm
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-xs font-semibold text-blue-700">Hujan Efektif</p>
+            <p className="text-lg font-bold text-blue-900 tabular-nums tracking-tight">{hujanEfektif?.length || 0} ordinat</p>
+            <p className="text-xs text-blue-600 mt-1 tabular-nums tracking-tight">
+              Total: {(hujanEfektif?.reduce((a, b) => a + b, 0) || 0).toFixed(2)} mm
             </p>
           </div>
-          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-            <p className="text-xs text-green-700 font-medium">HSS Ordinates</p>
-            <p className="text-lg font-bold text-green-900">{hssOrdinates.length} ordinat</p>
+          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-xs font-semibold text-green-700">HSS Ordinates</p>
+            <p className="text-lg font-bold text-green-900 tabular-nums tracking-tight">{hssOrdinates.length} ordinat</p>
             <p className="text-xs text-green-600 mt-1">
               Metode: {selectedHSS?.toUpperCase()}
             </p>
@@ -136,7 +141,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         <button
           onClick={handleCalculate}
           disabled={!isDataReady}
-          className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-[#0c3a66] hover:bg-[#0d4578] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
           title={!isDataReady ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
         >
           <TrendingUp className="w-5 h-5" />
@@ -148,19 +153,19 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         <>
           {/* Peak Discharge Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <Card className="p-6 bg-gradient-to-br from-[#0c3a66] to-[#0d4578] text-white rounded-md">
               <p className="text-sm font-semibold opacity-90 mb-1">Debit Puncak (Qp)</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black">{peakDischarge}</span>
+                <span className="text-4xl font-black tabular-nums tracking-tight">{peakDischarge}</span>
                 <span className="text-lg font-bold opacity-80">m³/s</span>
               </div>
               <p className="text-xs opacity-75 mt-2">Metode: {selectedHSS?.toUpperCase()}</p>
             </Card>
 
-            <Card className="p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <Card className="p-6 bg-gradient-to-br from-slate-600 to-slate-700 text-white rounded-md">
               <p className="text-sm font-semibold opacity-90 mb-1">Waktu Puncak (Tp)</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black">{timeToPeak}</span>
+                <span className="text-4xl font-black tabular-nums tracking-tight">{timeToPeak}</span>
                 <span className="text-lg font-bold opacity-80">jam</span>
               </div>
               <p className="text-xs opacity-75 mt-2">Dari hidrograf konvolusi</p>

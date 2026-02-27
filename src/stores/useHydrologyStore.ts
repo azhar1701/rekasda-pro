@@ -266,6 +266,7 @@ export interface HydrologyState {
   hasilMock: HasilMock | null;
   neracaFinal: NeracaFinalRow[] | null;
   distribusiHujanJamJaman: number[] | null;
+  hujanEfektif: number[] | null;
   durasiHujan: number;
   
   // QC State
@@ -330,6 +331,9 @@ export interface HydrologyState {
   // Pipeline 3: Hujan Rencana -> Distribusi Jam-jaman -> Konvolusi -> Banjir
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
   setHasilKonvolusi: (hasil: HasilKonvolusi | null) => void;
+  setDistribusiHujanJamJaman: (data: number[] | null) => void;
+  setHujanEfektif: (data: number[] | null) => void;
+  setDurasiHujan: (durasi: number) => void;
   
   // Pipeline 3.5: Multi-Method HSS Comparison (TAHAP 2)
   setHSSComparisonResults: (results: HSSComparisonResult[] | null) => void;
@@ -501,6 +505,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   hasilKonvolusi: null,
   neracaFinal: null,
   distribusiHujanJamJaman: null,
+  hujanEfektif: null,
   durasiHujan: 6,
   
   qcResults: null,
@@ -839,6 +844,26 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     neracaFinal: data, 
     isNeracaDirty: false,
     hasilEmbung: null 
+  }),
+  
+  // TAHAP 2: IDF & ABM Setters
+  setDistribusiHujanJamJaman: (data) => set({ 
+    distribusiHujanJamJaman: data,
+    isBanjirDirty: true,
+    hasilKonvolusi: null,
+    hasilBanjir: null,
+  }),
+  setHujanEfektif: (data) => set({ 
+    hujanEfektif: data,
+    isBanjirDirty: true,
+    hasilKonvolusi: null,
+    hasilBanjir: null,
+  }),
+  setDurasiHujan: (durasi) => set({ 
+    durasiHujan: durasi,
+    distribusiHujanJamJaman: null,
+    hujanEfektif: null,
+    isBanjirDirty: true,
   }),
 
   // Fetch semua stasiun dari sumber data/API

@@ -114,7 +114,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
     return newInputs;
   };
 
-  const validate = (newInputs: ManningInputs) => {
+  const validateInputs = (newInputs: ManningInputs): Record<string, string> => {
     const newErrors: Record<string, string> = {};
     if (newInputs.roughness <= 0) newErrors.roughness = "Manning coefficient must be > 0";
     if (newInputs.slope <= 0) newErrors.slope = "Slope must be > 0";
@@ -127,8 +127,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
       if (newInputs.depth <= 0 || newInputs.depth > newInputs.diameter)
         newErrors.depth = "Water depth must be between 0 and diameter";
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const handleInputChange = (field: keyof ManningInputs, value: any) => {
@@ -137,7 +136,9 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
       updatedInputs = updateGeometricParams(updatedInputs);
     }
     setInputs(updatedInputs);
-    validate(updatedInputs);
+    
+    const validationErrors = validateInputs(updatedInputs);
+    setErrors(validationErrors);
   };
 
   // handleLocationChange removed (SSOT)
@@ -146,12 +147,14 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
   useEffect(() => {
     const runCalc = async () => {
-      if (validate(inputs)) {
+      const validationErrors = validateInputs(inputs);
+      if (Object.keys(validationErrors).length === 0) {
         await calculateManningChannel(inputs);
       }
     };
     runCalc();
-  }, [inputs, calculateManningChannel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputs]);
 
   return (
     <div className="w-full h-full flex flex-col bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
@@ -338,14 +341,14 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     )}
                     <StatCard
                       label="Kapasitas Debit (Q Cap)"
-                      value={manningResults.Discharge}
+                      value={Number(manningResults?.Discharge || 0).toFixed(3)}
                       unit="m³/s"
                       valueColorClass="text-blue-700"
                       className="bg-blue-50/50 border-blue-100"
                     />
                     <StatCard
                       label="Kecepatan Aliran"
-                      value={manningResults.Velocity}
+                      value={Number(manningResults?.Velocity || 0).toFixed(3)}
                       unit="m/s"
                       valueColorClass="text-slate-800"
                     />
@@ -353,29 +356,29 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   
                   {/* Evaluasi Kapasitas vs Debit Banjir Rencana */}
                   {qDesign !== null && qDesign > 0 && (
-                     <div className={`p-4 rounded-xl border ${manningResults.Discharge >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-sm`}>
-                        <div className={`mt-0.5 p-1.5 rounded-full ${manningResults.Discharge >= qDesign ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                           {manningResults.Discharge >= qDesign ? (
+                     <div className={`p-4 rounded-xl border ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-sm`}>
+                        <div className={`mt-0.5 p-1.5 rounded-full ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                           {Number(manningResults?.Discharge || 0) >= qDesign ? (
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                            ) : (
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                            )}
                         </div>
                         <div className="flex-1">
-                           <h3 className={`text-sm font-bold ${manningResults.Discharge >= qDesign ? 'text-emerald-800' : 'text-red-800'}`}>
-                              {manningResults.Discharge >= qDesign ? 'Kapasitas Saluran Aman' : 'Peringatan: Potensi Saluran Meluap (Overtopping)'}
+                           <h3 className={`text-sm font-bold ${Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-800' : 'text-red-800'}`}>
+                              {Number(manningResults?.Discharge || 0) >= qDesign ? 'Kapasitas Saluran Aman' : 'Peringatan: Potensi Saluran Meluap (Overtopping)'}
                            </h3>
                            <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1 text-xs">
-                              <span className={manningResults.Discharge >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
-                                 Debit Banjir Rencana (Q Design): <strong className="font-mono">{qDesign.toFixed(3)} m³/s</strong>
+                              <span className={Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
+                                 Debit Banjir Rencana (Q Design): <strong className="font-mono">{Number(qDesign || 0).toFixed(3)} m³/s</strong>
                               </span>
                               <span className="hidden sm:inline text-slate-300">|</span>
-                              <span className={manningResults.Discharge >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
-                                 Kapasitas Saluran (Q Cap): <strong className="font-mono">{manningResults.Discharge.toFixed(3)} m³/s</strong>
+                              <span className={Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
+                                 Kapasitas Saluran (Q Cap): <strong className="font-mono">{Number(manningResults?.Discharge || 0).toFixed(3)} m³/s</strong>
                               </span>
                            </div>
-                           <p className={`mt-2 text-xs ${manningResults.Discharge >= qDesign ? 'text-emerald-600' : 'text-red-600 font-medium'}`}>
-                              {manningResults.Discharge >= qDesign 
+                           <p className={`mt-2 text-xs ${Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-600' : 'text-red-600 font-medium'}`}>
+                              {Number(manningResults?.Discharge || 0) >= qDesign 
                                  ? 'Dimensi saluran ini cukup untuk menampung debit banjir dari hasil perhitungan hidrologi.' 
                                  : 'Kapasitas saluran lebih kecil dari debit rencana. Pertimbangkan untuk memperlebar dasar saluran (b) atau memperdalam tinggi jagaan (H).'}
                            </p>
@@ -389,10 +392,10 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                     <CardContent className="p-0 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         {[
-                          { label: 'Jari-jari Hidrolis', val: manningResults.Radius, unit: 'm', help: 'Rasio luas penampang terhadap keliling basah' },
-                          { label: 'Lebar Permukaan', val: manningResults.TopWidth, unit: 'm', help: 'Lebar permukaan air di bagian atas' },
-                          { label: 'Energi Spesifik', val: manningResults.SpecificEnergy, unit: 'm', help: 'Total energi per satuan berat air' },
-                          { label: 'Tegangan Geser', val: manningResults.ShearStress, unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
+                          { label: 'Jari-jari Hidrolis', val: Number(manningResults?.Radius || 0).toFixed(3), unit: 'm', help: 'Rasio luas penampang terhadap keliling basah' },
+                          { label: 'Lebar Permukaan', val: Number(manningResults?.TopWidth || 0).toFixed(3), unit: 'm', help: 'Lebar permukaan air di bagian atas' },
+                          { label: 'Energi Spesifik', val: Number(manningResults?.SpecificEnergy || 0).toFixed(3), unit: 'm', help: 'Total energi per satuan berat air' },
+                          { label: 'Tegangan Geser', val: Number(manningResults?.ShearStress || 0).toFixed(2), unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
                         ].map((item, i) => (
                           <div key={i} className="bg-slate-50 p-3 rounded-lg">
                             <span className="text-xs font-bold text-slate-600 uppercase block mb-1 flex items-center gap-1">

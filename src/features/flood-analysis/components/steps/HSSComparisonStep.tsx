@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Activity, TrendingUp } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
@@ -20,9 +20,15 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
   onComplete,
   isCompleted
 }) => {
-  const { morfometriDAS } = useHydrologyStore();
+  const { morfometriDAS, distribusiHujanJamJaman, hujanEfektif } = useHydrologyStore();
   const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
   const [calculated, setCalculated] = useState(false);
+
+  useEffect(() => {
+    if (!distribusiHujanJamJaman || distribusiHujanJamJaman.length === 0) {
+      setCalculated(false);
+    }
+  }, [distribusiHujanJamJaman]);
 
   const A = morfometriDAS?.luasDAS || 100;
   const L = morfometriDAS?.panjangSungai || 20;
@@ -136,7 +142,39 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
+      {/* Data Upstream Check */}
+      {(!distribusiHujanJamJaman || distribusiHujanJamJaman.length === 0) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+          <p className="text-sm font-semibold text-amber-900">⚠️ Selesaikan Step Distribusi Hujan terlebih dahulu</p>
+          <p className="text-xs text-amber-700 mt-1">Data hujan efektif diperlukan untuk konvolusi HSS</p>
+        </div>
+      )}
+
+      {/* TAHAP 2: Contextual Header - Data Upstream dari Store */}
+      {morfometriDAS && distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-blue-600" />
+            <p className="text-xs font-bold text-slate-700">Data dari Step Sebelumnya (Read-Only)</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-xs">
+            <div>
+              <span className="text-slate-600">Luas DAS:</span>
+              <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{A.toFixed(2)} km²</span>
+            </div>
+            <div>
+              <span className="text-slate-600">Panjang Sungai:</span>
+              <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{L.toFixed(2)} km</span>
+            </div>
+            <div>
+              <span className="text-slate-600">Durasi Hujan:</span>
+              <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{distribusiHujanJamJaman.length} jam</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-green-100 rounded-lg">
             <Activity className="w-5 h-5 text-green-600" />
@@ -148,19 +186,19 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <p className="text-xs text-slate-600">Luas DAS (A)</p>
-            <p className="text-lg font-bold text-slate-900">{A.toFixed(2)} km²</p>
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+            <p className="text-xs font-semibold text-slate-600">Luas DAS (A)</p>
+            <p className="text-lg font-bold text-slate-900 tabular-nums tracking-tight">{A.toFixed(2)} km²</p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <p className="text-xs text-slate-600">Panjang Sungai (L)</p>
-            <p className="text-lg font-bold text-slate-900">{L.toFixed(2)} km</p>
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+            <p className="text-xs font-semibold text-slate-600">Panjang Sungai (L)</p>
+            <p className="text-lg font-bold text-slate-900 tabular-nums tracking-tight">{L.toFixed(2)} km</p>
           </div>
         </div>
 
         <button
           onClick={handleCalculate}
-          className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-[#0c3a66] hover:bg-[#0d4578] text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
         >
           <TrendingUp className="w-5 h-5" />
           Hitung & Bandingkan HSS
@@ -169,15 +207,26 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
 
       {calculated && chartData.length > 0 && (
         <>
-          <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
+          <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
             <h4 className="text-sm font-bold text-slate-900 mb-4">Kurva Perbandingan HSS</h4>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5 }} />
-                <YAxis label={{ value: 'Q (m³/s/mm)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Legend />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="time" 
+                  label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis 
+                  label={{ value: 'Q (m³/s/mm)', angle: -90, position: 'insideLeft', style: { fontSize: 12, fontWeight: 600 } }}
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value) => value.toFixed(2)}
+                />
+                <Tooltip 
+                  contentStyle={{ fontSize: 12, fontFamily: 'monospace' }}
+                  formatter={(value: any) => value?.toFixed(3)}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
                 {HSS_METHODS.map(method => (
                   <Line
                     key={method.id}
@@ -193,16 +242,16 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
             </ResponsiveContainer>
           </Card>
 
-          <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
+          <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
             <h4 className="text-sm font-bold text-slate-900 mb-3">Pilih Metode HSS</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {HSS_METHODS.map(method => (
                 <button
                   key={method.id}
                   onClick={() => setSelectedMethod(method.id)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
+                  className={`p-3 rounded-md border-2 transition-all ${
                     selectedMethod === method.id
-                      ? 'border-green-500 bg-green-50'
+                      ? 'border-[#0c3a66] bg-[#0c3a66]/5'
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
@@ -215,7 +264,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
             <button
               onClick={handleComplete}
               disabled={isCompleted}
-              className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
+              className={`w-full px-6 py-3 rounded-md font-semibold transition-colors ${
                 isCompleted
                   ? 'bg-green-600 text-white cursor-default'
                   : 'bg-green-600 hover:bg-green-700 text-white'

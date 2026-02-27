@@ -26,6 +26,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
+  const [showAllData, setShowAllData] = useState(false);
   const [hoveredTr, setHoveredTr] = useState<number | null>(null);
   const [selectedTr, setSelectedTr] = useState<number>(25);
 
@@ -113,6 +114,14 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
   const handleCalculate = () => {
     if (!paramsAsli || !paramsLog || !distributions || !goodnessOfFit || !selectedMethod) return;
     
+    const selectedDist = distributions.find(d => d.method === selectedMethod);
+    if (!selectedDist) return;
+
+    const curahHujanRencana = selectedDist.values.map(v => ({
+      kalaUlang: v.Tr,
+      curahHujan: v.R24
+    }));
+
     setAnalisisFrekuensi({
       parameterStatistik: { asli: paramsAsli, log: paramsLog },
       hasilDistribusi: distributions,
@@ -120,6 +129,16 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       metodeTerpilih: selectedMethod,
       dataHujanInput: dataInput
     });
+
+    const { setHasilAnalisisFrekuensi, setSelectedKalaUlang } = useHydrologyStore.getState();
+    setHasilAnalisisFrekuensi({
+      metodeTerpilih: selectedMethod,
+      lulusUjiKecocokan: goodnessOfFit.find(g => g.method === selectedMethod)?.chiSquare.accepted || false,
+      curahHujanRencana,
+      selectedKalaUlang: 25
+    });
+    setSelectedKalaUlang(25);
+    
     setIsCalculated(true);
   };
 
@@ -186,7 +205,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         isCalculated && (
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md font-semibold hover:bg-slate-50 transition-colors"
           >
             <Download className="w-4 h-4" />
             Export JSON
@@ -196,84 +215,162 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     >
     <div className="space-y-5 py-2">
       {/* TAHAP 1: Smart Data Context - Compressed Input */}
-      <Card className="p-4 bg-white border border-slate-200">
+      <div className="rounded-md border border-slate-300 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <h3 className="text-sm font-bold text-slate-900">Input Data Hujan</h3>
+        </div>
+        <div className="p-4">
         {dataInput.length >= 10 && !showManualInput ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-blue-600" />
+          <div className="space-y-3">
+            {/* Data Summary Card */}
+            <div className="flex items-start justify-between p-3 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900 mb-1">
+                    {dataInput.length} Tahun Data Hujan Maksimum
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    Sumber: {selectedStasiun ? `Stasiun ${selectedStasiun.nama_stasiun}` : hasilThiessen ? 'Hujan Wilayah (Thiessen)' : 'Data Master'}
+                  </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-medium text-slate-500">Min:</span>
+                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{Math.min(...dataInput).toFixed(1)} mm</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-medium text-slate-500">Max:</span>
+                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{Math.max(...dataInput).toFixed(1)} mm</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-medium text-slate-500">Rata-rata:</span>
+                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{(dataInput.reduce((a, b) => a + b, 0) / dataInput.length).toFixed(1)} mm</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  ✅ Sumber Data: {dataInput.length} Tahun {selectedStasiun ? `dari ${selectedStasiun.nama_stasiun}` : '(Hujan Wilayah)'}
-                </p>
-                <p className="text-xs text-slate-600 font-mono">
-                  Range: {Math.min(...dataInput).toFixed(1)} - {Math.max(...dataInput).toFixed(1)} mm
-                </p>
-              </div>
+              <button
+                onClick={() => setShowManualInput(true)}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors"
+              >
+                ✏️ Edit
+              </button>
             </div>
-            <button
-              onClick={() => setShowManualInput(true)}
-              className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              ✏️ Edit Manual
-            </button>
+
+            {/* Quick Preview Grid */}
+            <div>
+              <div className="grid grid-cols-5 gap-2">
+                {dataInput.slice(0, showAllData ? dataInput.length : 10).map((val, idx) => (
+                  <div key={idx} className="p-2 bg-slate-50 border border-slate-200 rounded text-center">
+                    <div className="text-[9px] font-medium text-slate-500">Tahun {idx + 1}</div>
+                    <div className="text-xs font-bold text-slate-900 font-mono tabular-nums">{val.toFixed(1)}</div>
+                  </div>
+                ))}
+              </div>
+              {dataInput.length > 10 && (
+                <button
+                  onClick={() => setShowAllData(!showAllData)}
+                  className="w-full mt-2 px-3 py-2 text-xs font-semibold text-[#0c3a66] hover:text-[#0d4578] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-md transition-colors"
+                >
+                  {showAllData ? '▲ Sembunyikan' : `▼ Tampilkan Semua (${dataInput.length} data)`}
+                </button>
+              )}
+            </div>
           </div>
         ) : (
-          <>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-slate-900">Input Data Hujan Maksimum Tahunan</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Input Data Hujan Maksimum Tahunan</h3>
+                <p className="text-xs text-slate-600 mt-0.5">Masukkan minimal 10 tahun data untuk analisis frekuensi</p>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePasteFromExcel}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0c3a66] hover:bg-[#0d4578] text-white text-xs font-semibold rounded-md transition-colors"
                 >
                   <Clipboard className="w-3.5 h-3.5" />
                   Paste Excel
                 </button>
-                {hasilThiessen?.hujanRataRataDAS && hasilThiessen.hujanRataRataDAS.length > 0 && (
+                {hasilThiessen?.hujanRataRataDAS && hasilThiessen.hujanRataRataDAS.length >= 10 && (
                   <button
                     onClick={() => { if (hasilThiessen) setDataInput(hasilThiessen.hujanRataRataDAS); setShowManualInput(false); }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md transition-colors"
                   >
                     <Upload className="w-3.5 h-3.5" />
-                    Load DAS
+                    Load dari Thiessen
+                  </button>
+                )}
+                {dataInput.length >= 10 && (
+                  <button
+                    onClick={() => setShowManualInput(false)}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors"
+                  >
+                    Selesai
                   </button>
                 )}
               </div>
             </div>
-            <textarea
-              value={dataInput.join(', ')}
-              onChange={(e) => setDataInput(e.target.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v)))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs"
-              rows={2}
-              placeholder="Masukkan data hujan (mm), pisahkan dengan koma"
-            />
-            <p className="text-xs text-slate-500 mt-1.5">
-              Jumlah: <strong>{dataInput.length}</strong> (min. 10 tahun)
-            </p>
-          </>
+            <div className="relative">
+              <textarea
+                value={dataInput.join(', ')}
+                onChange={(e) => setDataInput(e.target.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v)))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-xs focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
+                rows={3}
+                placeholder="Contoh: 120.5, 135.2, 98.7, 145.3, ... (pisahkan dengan koma)"
+              />
+              <div className="absolute bottom-2 right-2 px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold">
+                <span className={dataInput.length >= 10 ? 'text-green-600' : 'text-amber-600'}>
+                  {dataInput.length}/10
+                </span>
+              </div>
+            </div>
+            
+            {dataInput.length > 0 && dataInput.length < 10 && (
+              <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                <span className="text-xs text-amber-800">
+                  Tambahkan {10 - dataInput.length} data lagi untuk memulai analisis
+                </span>
+              </div>
+            )}
+            
+            {dataInput.length >= 10 && (
+              <div className="p-2.5 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                <span className="text-xs text-green-800 font-semibold">
+                  Data cukup! Klik "Selesai" untuk melanjutkan analisis
+                </span>
+              </div>
+            )}
+          </div>
         )}
-      </Card>
+        </div>
+      </div>
 
       {/* TAHAP 2: Grid 2 Kolom - Parameter Statistik & Uji Kecocokan */}
       {dataInput.length >= 10 && paramsAsli && paramsLog && goodnessOfFit && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Kolom Kiri: Parameter Statistik */}
-          <Card className="p-5 bg-white border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900 mb-3">1. Parameter Statistik</h3>
+          <div className="rounded-md border border-slate-300 bg-white shadow-sm">
+            <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+              <h3 className="text-sm font-bold text-slate-900">1. Parameter Statistik</h3>
+            </div>
+            <div className="p-4">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-2 py-2 text-left font-semibold text-slate-700">Parameter</th>
-                    <th className="px-2 py-2 text-right font-semibold text-slate-700">Asli</th>
-                    <th className="px-2 py-2 text-right font-semibold text-slate-700">Log</th>
+                <thead>
+                  <tr className="bg-[#0c3a66] text-white">
+                    <th className="px-3 py-2 text-left font-semibold text-sm">Parameter</th>
+                    <th className="px-3 py-2 text-right font-semibold text-sm">Asli</th>
+                    <th className="px-3 py-2 text-right font-semibold text-sm">Log</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
-                    <td className="px-2 py-1.5 font-medium flex items-center gap-1">
+                  <tr className="border-b border-slate-100 even:bg-slate-50">
+                    <td className="px-3 py-2 font-medium flex items-center gap-1">
                       Mean (X̄)
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="relative inline-block">
@@ -284,45 +381,49 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsAsli.mean.toFixed(2)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsLog.mean.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.mean.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.mean.toFixed(4)}</td>
                   </tr>
-                  <tr className="border-b border-slate-100">
-                    <td className="px-2 py-1.5 font-medium">Std Dev (S)</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsAsli.stdDev.toFixed(2)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsLog.stdDev.toFixed(4)}</td>
+                  <tr className="border-b border-slate-100 even:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">Std Dev (S)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.stdDev.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.stdDev.toFixed(4)}</td>
                   </tr>
-                  <tr className="border-b border-slate-100">
-                    <td className="px-2 py-1.5 font-medium">CV</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsAsli.cv.toFixed(3)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsLog.cv.toFixed(3)}</td>
+                  <tr className="border-b border-slate-100 even:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">CV</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.cv.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.cv.toFixed(3)}</td>
                   </tr>
-                  <tr className="border-b border-slate-100">
-                    <td className="px-2 py-1.5 font-medium">Skewness (Cs)</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsAsli.cs.toFixed(3)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsLog.cs.toFixed(3)}</td>
+                  <tr className="border-b border-slate-100 even:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">Skewness (Cs)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.cs.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.cs.toFixed(3)}</td>
                   </tr>
-                  <tr>
-                    <td className="px-2 py-1.5 font-medium">Kurtosis (Ck)</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsAsli.ck.toFixed(3)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{paramsLog.ck.toFixed(3)}</td>
+                  <tr className="even:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">Kurtosis (Ck)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.ck.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.ck.toFixed(3)}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </Card>
+            </div>
+          </div>
 
           {/* Kolom Kanan: Uji Kecocokan */}
-          <Card className="p-5 bg-white border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900 mb-3">2. Uji Kecocokan</h3>
+          <div className="rounded-md border border-slate-300 bg-white shadow-sm">
+            <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+              <h3 className="text-sm font-bold text-slate-900">2. Uji Kecocokan</h3>
+            </div>
+            <div className="p-4">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-2 py-2 text-left font-semibold text-slate-700">Metode</th>
-                    <th className="px-2 py-2 text-center font-semibold text-slate-700">Chi-Sq</th>
-                    <th className="px-2 py-2 text-center font-semibold text-slate-700">K-S</th>
-                    <th className="px-2 py-2 text-center font-semibold text-slate-700">Status</th>
+                <thead>
+                  <tr className="bg-[#0c3a66] text-white">
+                    <th className="px-3 py-2 text-left font-semibold text-sm">Metode</th>
+                    <th className="px-3 py-2 text-center font-semibold text-sm">Chi-Sq</th>
+                    <th className="px-3 py-2 text-center font-semibold text-sm">K-S</th>
+                    <th className="px-3 py-2 text-center font-semibold text-sm">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -332,33 +433,33 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     return (
                       <tr 
                         key={gof.method} 
-                        className={`border-b border-slate-100 transition-all cursor-pointer hover:bg-slate-50 ${
+                        className={`border-b border-slate-100 even:bg-slate-50 transition-all cursor-pointer hover:bg-blue-50 ${
                           isRecommended ? 'bg-blue-50/30' : ''
                         }`}
                         onClick={() => bothPassed && setSelectedMethod(gof.method)}
                         title={bothPassed ? 'Klik untuk memilih metode ini' : 'Metode ditolak'}
                       >
-                        <td className="px-2 py-1.5 font-semibold flex items-center gap-1">
+                        <td className="px-3 py-2 font-semibold flex items-center gap-1">
                           {METHOD_LABELS[gof.method]}
                           {isRecommended && <span className="text-[9px] bg-blue-600 text-white px-1 rounded">★</span>}
                         </td>
-                        <td className="px-2 py-1.5 text-center">
+                        <td className="px-3 py-2 text-center">
                           {gof.chiSquare.accepted ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mx-auto" />
                           ) : (
                             <XCircle className="w-3.5 h-3.5 text-red-600 mx-auto" />
                           )}
                         </td>
-                        <td className="px-2 py-1.5 text-center">
+                        <td className="px-3 py-2 text-center">
                           {gof.kolmogorovSmirnov.accepted ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mx-auto" />
                           ) : (
                             <XCircle className="w-3.5 h-3.5 text-red-600 mx-auto" />
                           )}
                         </td>
-                        <td className="px-2 py-1.5 text-center">
-                          <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${
-                            bothPassed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        <td className="px-3 py-2 text-center">
+                          <span className={`px-2 py-0.5 text-xs font-bold rounded border ${
+                            bothPassed ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
                           }`}>
                             {bothPassed ? 'PASS' : 'FAIL'}
                           </span>
@@ -369,21 +470,23 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
       {/* TAHAP 4: Tabel Hasil dengan Visual Hierarchy */}
       {distributions && (
-        <Card className="p-5 bg-white border border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900">3. Hujan Rencana (R₂₄)</h3>
-            <div className="flex items-center gap-2">
+        <div className="rounded-md border border-slate-300 bg-white shadow-sm">
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900">3. Hujan Rencana (R₂₄)</h3>
+              <div className="flex items-center gap-2">
               <label className="text-xs font-medium text-slate-700">Metode:</label>
               <select
                 value={selectedMethod || ''}
                 onChange={(e) => setSelectedMethod(e.target.value)}
-                className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
+                className="px-3 py-1.5 border border-slate-300 rounded-md text-xs font-semibold bg-white focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
               >
                 {distributions.map(d => (
                   <option key={d.method} value={d.method}>
@@ -396,19 +499,21 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               <button
                 onClick={handleCalculate}
                 disabled={!selectedMethod}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
                   !selectedMethod
-                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed opacity-50'
                     : isCalculated
-                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-md'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
+                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                    : 'bg-[#0c3a66] hover:bg-[#0d4578] text-white shadow-sm'
                 }`}
               >
                 <Save className="w-3.5 h-3.5" />
                 {isCalculated ? 'Tersimpan ✓' : 'Simpan'}
               </button>
             </div>
+            </div>
           </div>
+          <div className="p-4">
 
           {selectedMethod !== recommendedMethod && (
             <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
@@ -431,10 +536,10 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   <button
                     key={tr}
                     onClick={() => setSelectedTr(tr)}
-                    className={`px-2 py-1 text-[10px] font-bold rounded transition-all ${
+                    className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${
                       selectedTr === tr 
-                        ? 'bg-blue-600 text-white shadow-md' 
-                        : 'bg-white text-slate-600 hover:bg-blue-100'
+                        ? 'bg-[#0c3a66] text-white shadow-sm' 
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                     }`}
                   >
                     Q{tr}
@@ -462,8 +567,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     <div className="flex-1 bg-slate-200 rounded-full h-4 overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1.5 ${
-                          isSelected ? 'bg-gradient-to-r from-blue-500 to-blue-600' : 
-                          isFailed ? 'bg-slate-300' : 'bg-gradient-to-r from-slate-400 to-slate-500'
+                          isSelected ? 'bg-[#0c3a66]' : 
+                          isFailed ? 'bg-slate-300' : 'bg-slate-400'
                         }`}
                         style={{ width: `${percentage}%` }}
                       >
@@ -478,17 +583,17 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-3 py-2 text-center font-semibold text-slate-700">Tr</th>
+              <thead>
+                <tr className="bg-[#0c3a66] text-white">
+                  <th className="px-3 py-2 text-center font-semibold text-sm">Tr</th>
                   {distributions.map(d => {
                     const isSelected = d.method === selectedMethod;
                     const isFailed = goodnessOfFit?.find(g => g.method === d.method) && 
                                      !(goodnessOfFit.find(g => g.method === d.method)!.chiSquare.accepted && 
                                        goodnessOfFit.find(g => g.method === d.method)!.kolmogorovSmirnov.accepted);
                     return (
-                      <th key={d.method} className={`px-3 py-2 text-right font-semibold transition-colors ${
-                        isSelected ? 'bg-blue-50/50 text-blue-700' : isFailed ? 'text-slate-400' : 'text-slate-700'
+                      <th key={d.method} className={`px-3 py-2 text-right font-semibold text-sm transition-colors ${
+                        isSelected ? 'bg-[#0d4578] text-white' : isFailed ? 'text-slate-300' : 'text-white'
                       }`}>
                         {METHOD_LABELS[d.method]}
                       </th>
@@ -500,14 +605,14 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 {[2, 5, 10, 25, 50, 100].map(tr => (
                   <tr 
                     key={tr} 
-                    className={`border-b border-slate-100 transition-all cursor-pointer ${
+                    className={`border-b border-slate-100 even:bg-slate-50 transition-all cursor-pointer ${
                       hoveredTr === tr ? 'bg-blue-50/30 scale-[1.01]' : ''
                     }`}
                     onMouseEnter={() => setHoveredTr(tr)}
                     onMouseLeave={() => setHoveredTr(null)}
                     onClick={() => setSelectedTr(tr)}
                   >
-                    <td className={`px-3 py-2 text-center font-bold transition-colors ${
+                    <td className={`px-3 py-2 text-center font-bold tabular-nums tracking-tight transition-colors ${
                       selectedTr === tr ? 'text-blue-600' : 'text-slate-700'
                     }`}>
                       Q{tr}
@@ -521,7 +626,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                       const formula = isSelected ? getWhiteBoxFormula(d.method, tr, value?.R24 || 0) : null;
                       
                       return (
-                        <td key={d.method} className={`px-3 py-2 text-right font-mono transition-all ${
+                        <td key={d.method} className={`px-3 py-2 text-right font-mono tabular-nums tracking-tight transition-all ${
                           isSelected ? 'bg-blue-50/50 font-bold text-blue-700' : isFailed ? 'opacity-50 text-slate-400' : ''
                         }`}>
                           <div className="flex items-center justify-end gap-2">
@@ -536,7 +641,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </Card>
+          </div>
+        </div>
       )}
 
       {dataInput.length < 10 && (
