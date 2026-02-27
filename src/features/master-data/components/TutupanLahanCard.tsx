@@ -82,29 +82,30 @@ export const TutupanLahanCard: React.FC = () => {
   };
 
   return (
-    <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-      <div className="flex items-center justify-between mb-4">
+    <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <Trees className="w-5 h-5 text-green-600" />
+          <div className="p-2 bg-[#0c3a66]/10 rounded">
+            <Trees className="w-5 h-5 text-[#0c3a66]" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Analisis Tutupan Lahan</h3>
-            <p className="text-xs text-slate-500">Koefisien pengaliran dan curve number</p>
+            <h3 className="text-sm font-bold text-slate-900">Analisis Tutupan Lahan</h3>
+            <p className="text-xs text-slate-600 font-medium">Koefisien pengaliran dan curve number</p>
           </div>
         </div>
         <button
           onClick={handleAddRow}
-          className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-300 hover:border-[#0c3a66] hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-md transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Tambah Baris
+          Tambah
         </button>
       </div>
 
+      <div className="p-4">
       <div className="overflow-x-auto mb-4">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b-2 border-slate-200">
+          <thead className="bg-slate-100 border-b border-slate-300">
             <tr>
               <th className="px-3 py-2 text-left font-semibold text-slate-700">Jenis Tutupan Lahan</th>
               <th className="px-3 py-2 text-right font-semibold text-slate-700">Luas (km²)</th>
@@ -121,7 +122,7 @@ export const TutupanLahanCard: React.FC = () => {
                     type="text"
                     value={item.jenis}
                     onChange={(e) => handleChange(item.id, 'jenis', e.target.value)}
-                    className="w-full px-2 py-1 border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full py-1 px-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66]"
                     placeholder="Contoh: Hutan"
                   />
                 </td>
@@ -130,7 +131,7 @@ export const TutupanLahanCard: React.FC = () => {
                     type="number"
                     value={item.luas === 0 ? 0 : (item.luas ?? '')}
                     onChange={(e) => handleChange(item.id, 'luas', e.target.value)}
-                    className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] tabular-nums"
                     placeholder="0.00"
                     step="0.01"
                   />
@@ -140,7 +141,7 @@ export const TutupanLahanCard: React.FC = () => {
                     type="number"
                     value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
                     onChange={(e) => handleChange(item.id, 'nilaiC', e.target.value)}
-                    className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] tabular-nums"
                     placeholder="0.00"
                     step="0.01"
                     min="0"
@@ -152,7 +153,7 @@ export const TutupanLahanCard: React.FC = () => {
                     type="number"
                     value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
                     onChange={(e) => handleChange(item.id, 'nilaiCN', e.target.value)}
-                    className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] tabular-nums"
                     placeholder="0"
                     step="1"
                     min="0"
@@ -174,25 +175,23 @@ export const TutupanLahanCard: React.FC = () => {
         </table>
       </div>
 
-      {/* Summary & Validation */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-          <p className="text-xs text-slate-600 mb-1">Total Luas Tutupan</p>
-          <p className="text-lg font-bold text-slate-900">{totalLuas.toFixed(2)} <span className="text-sm font-normal text-slate-500">km²</span></p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
+          <p className="text-xs text-slate-600 font-medium mb-1">Total Luas Tutupan</p>
+          <p className="text-lg font-bold text-slate-900 tabular-nums">{totalLuas.toFixed(2)} <span className="text-sm font-normal text-slate-500">km²</span></p>
         </div>
-        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-600 mb-1">C Gabungan (Weighted)</p>
-          <p className="text-lg font-bold text-blue-900">{cGabungan.toFixed(3)}</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
+          <p className="text-xs text-slate-600 font-medium mb-1">C Gabungan (Weighted)</p>
+          <p className="text-lg font-bold text-[#0c3a66] tabular-nums">{cGabungan.toFixed(3)}</p>
         </div>
-        <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-          <p className="text-xs text-indigo-600 mb-1">CN Gabungan (Weighted)</p>
-          <p className="text-lg font-bold text-indigo-900">{cnGabungan.toFixed(1)}</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
+          <p className="text-xs text-slate-600 font-medium mb-1">CN Gabungan (Weighted)</p>
+          <p className="text-lg font-bold text-[#0c3a66] tabular-nums">{cnGabungan.toFixed(1)}</p>
         </div>
       </div>
 
-      {/* Error Warning */}
       {hasError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
           <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas DAS</p>
@@ -207,17 +206,18 @@ export const TutupanLahanCard: React.FC = () => {
       <button
         onClick={handleSave}
         disabled={hasError}
-        className={`w-full px-4 py-2.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+        className={`w-full px-4 py-2.5 font-semibold rounded-md transition-all flex items-center justify-center gap-2 ${
           hasError
-            ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+            ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
             : isSaved
             ? 'bg-green-600 hover:bg-green-700 text-white'
-            : 'bg-green-600 hover:bg-green-700 text-white'
+            : 'bg-[#0c3a66] hover:bg-[#0d4578] text-white'
         }`}
       >
         {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
         {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Tutupan Lahan'}
       </button>
+      </div>
     </Card>
   );
 };

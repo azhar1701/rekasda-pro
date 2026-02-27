@@ -17,6 +17,10 @@ const buttonVariants = cva(
           "bg-transparent text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200",
         danger:
           "bg-error text-white shadow-card hover:bg-error-dark active:scale-[0.98]",
+        outline:
+          "border-2 border-neutral-200 bg-white text-neutral-700 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
+        default:
+          "bg-primary-600 text-white shadow-card hover:bg-primary-700 active:scale-[0.98]",
       },
       size: {
         sm: "h-8 px-3 text-xs",

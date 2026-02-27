@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { Database, CloudRain, MapPin, LayoutDashboard, Zap, Building2 } from 'lucide-react';
+import { Database, CloudRain, MapPin, LayoutDashboard, Building2 } from 'lucide-react';
 import { MasterHidrologiTab } from './MasterHidrologiTab';
 import { ParameterSpasial } from './ParameterSpasial';
 import { MasterDataDashboard } from './MasterDataDashboard';
@@ -10,13 +10,12 @@ type TabType = 'dashboard' | 'identitas' | 'data-hujan' | 'parameter-spasial';
 
 export const MasterDataPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [hoveredTab, setHoveredTab] = useState<TabType | null>(null);
 
   const tabs = [
-    { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard, color: 'indigo' },
-    { id: 'identitas' as TabType, label: 'Identitas Lokasi', icon: Building2, color: 'purple' },
-    { id: 'data-hujan' as TabType, label: 'Data Curah Hujan', icon: CloudRain, color: 'teal' },
-    { id: 'parameter-spasial' as TabType, label: 'Parameter Spasial', icon: MapPin, color: 'blue' },
+    { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'identitas' as TabType, label: 'Identitas Lokasi', icon: Building2 },
+    { id: 'data-hujan' as TabType, label: 'Data Curah Hujan', icon: CloudRain },
+    { id: 'parameter-spasial' as TabType, label: 'Parameter Spasial', icon: MapPin },
   ];
 
   return (
@@ -27,38 +26,25 @@ export const MasterDataPage: React.FC = () => {
       iconColorClass="bg-teal-50 text-teal-600"
     >
       <div className="space-y-6">
-        {/* Interactive Tab Navigation */}
-        <div className="relative">
-          <div className="flex gap-2 p-1.5 bg-gradient-to-r from-slate-100 to-slate-50 rounded-xl w-fit shadow-inner">
+        {/* GovTech Grounded Tabs */}
+        <div className="border-b border-slate-300">
+          <div className="flex gap-0">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
-              const isHovered = hoveredTab === tab.id;
               
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  onMouseEnter={() => setHoveredTab(tab.id)}
-                  onMouseLeave={() => setHoveredTab(null)}
-                  className={`relative flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-4 ${
                     isActive
-                      ? `bg-white text-${tab.color}-700 shadow-lg scale-105`
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                      ? 'text-[#0c3a66] border-[#f2c114] bg-slate-50'
+                      : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50/50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-transform duration-300 ${
-                    isActive || isHovered ? 'scale-110' : ''
-                  }`} />
-                  <span className="relative">
-                    {tab.label}
-                    {isActive && (
-                      <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-current to-transparent animate-pulse" />
-                    )}
-                  </span>
-                  {isActive && (
-                    <Zap className="w-3 h-3 text-yellow-500 animate-pulse" />
-                  )}
+                  <Icon className="w-5 h-5" />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}

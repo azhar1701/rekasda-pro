@@ -79,37 +79,39 @@ export const HujanWilayahCard: React.FC = () => {
   };
 
   return (
-    <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-cyan-100 rounded-lg">
-          <CloudRain className="w-5 h-5 text-cyan-600" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">Curah Hujan Wilayah</h3>
-          <p className="text-xs text-slate-500">Metode rata-rata spasial</p>
+    <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#0c3a66]/10 rounded">
+            <CloudRain className="w-5 h-5 text-[#0c3a66]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Curah Hujan Wilayah</h3>
+            <p className="text-xs text-slate-600 font-medium">Metode rata-rata spasial</p>
+          </div>
         </div>
       </div>
 
-      {/* Method Selection */}
+      <div className="p-4">
       <div className="mb-4">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Metode Perhitungan</label>
-        <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+        <label className="block text-sm font-semibold text-slate-700 mb-2">Metode Perhitungan</label>
+        <div className="inline-flex border border-slate-300 rounded-md overflow-hidden">
           <button
             onClick={() => setMetode('aljabar')}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+            className={`px-4 py-2 text-sm font-semibold transition-all ${
               metode === 'aljabar'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r-2 border-[#0c3a66]'
+                : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
             }`}
           >
             Rata-rata Aljabar
           </button>
           <button
             onClick={() => setMetode('thiessen')}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+            className={`px-4 py-2 text-sm font-semibold transition-all ${
               metode === 'thiessen'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-[#0c3a66]/10 text-[#0c3a66]'
+                : 'bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
             Poligon Thiessen
@@ -117,11 +119,10 @@ export const HujanWilayahCard: React.FC = () => {
         </div>
       </div>
 
-      {/* Thiessen Configuration */}
       {metode === 'thiessen' && (
         <>
           {stasiunList.length === 0 ? (
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-amber-600" />
               <p className="text-sm text-amber-800">Belum ada stasiun hujan. Tambahkan stasiun terlebih dahulu.</p>
             </div>
@@ -129,7 +130,7 @@ export const HujanWilayahCard: React.FC = () => {
             <>
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b-2 border-slate-200">
+                  <thead className="bg-slate-100 border-b border-slate-300">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold text-slate-700">Stasiun</th>
                       <th className="px-3 py-2 text-right font-semibold text-slate-700">Luas Pengaruh (km²)</th>
@@ -141,17 +142,17 @@ export const HujanWilayahCard: React.FC = () => {
                       <tr key={config.stasiunId} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="px-3 py-2 font-medium text-slate-900">{config.namaStasiun}</td>
                         <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
-                              onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
-                              className="w-full px-2 py-1 text-right border border-slate-300 rounded focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                          <input
+                            type="number"
+                            value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
+                            onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
+                            className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] tabular-nums"
                             placeholder="0.00"
                             step="0.01"
                           />
                         </td>
                         <td className="px-3 py-2 text-right">
-                          <span className="inline-flex items-center px-2 py-1 bg-cyan-100 text-cyan-800 rounded font-medium">
+                          <span className="inline-flex items-center px-2 py-1 bg-slate-100 text-slate-700 rounded font-semibold text-xs tabular-nums">
                             {config.bobot.toFixed(2)}%
                           </span>
                         </td>
@@ -161,23 +162,21 @@ export const HujanWilayahCard: React.FC = () => {
                 </table>
               </div>
 
-              {/* Summary */}
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 mb-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-md p-3 mb-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Total Luas Pengaruh:</span>
-                  <span className="text-lg font-bold text-slate-900">{totalLuasPengaruh.toFixed(2)} km²</span>
+                  <span className="text-sm text-slate-600 font-medium">Total Luas Pengaruh:</span>
+                  <span className="text-lg font-bold text-slate-900 tabular-nums">{totalLuasPengaruh.toFixed(2)} km²</span>
                 </div>
                 {morfometriDAS && (
                   <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
-                    <span className="text-sm text-slate-600">Luas DAS:</span>
-                    <span className="text-sm font-semibold text-slate-700">{morfometriDAS.luasDAS.toFixed(2)} km²</span>
+                    <span className="text-sm text-slate-600 font-medium">Luas DAS:</span>
+                    <span className="text-sm font-semibold text-slate-700 tabular-nums">{morfometriDAS.luasDAS.toFixed(2)} km²</span>
                   </div>
                 )}
               </div>
 
-              {/* Error Warning */}
               {hasError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas Pengaruh</p>
@@ -193,11 +192,10 @@ export const HujanWilayahCard: React.FC = () => {
         </>
       )}
 
-      {/* Aljabar Info */}
       {metode === 'aljabar' && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama. 
+        <div className="mb-4 p-3 bg-blue-50 border-l-4 border-[#0c3a66] rounded-md">
+          <p className="text-sm text-slate-700">
+            <strong className="text-[#0c3a66]">Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama. 
             Hujan wilayah = (Σ Hujan Stasiun) / Jumlah Stasiun
           </p>
         </div>
@@ -206,17 +204,18 @@ export const HujanWilayahCard: React.FC = () => {
       <button
         onClick={handleSave}
         disabled={hasError}
-        className={`w-full px-4 py-2.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+        className={`w-full px-4 py-2.5 font-semibold rounded-md transition-all flex items-center justify-center gap-2 ${
           hasError
-            ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+            ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
             : isSaved
             ? 'bg-green-600 hover:bg-green-700 text-white'
-            : 'bg-cyan-600 hover:bg-cyan-700 text-white'
+            : 'bg-[#0c3a66] hover:bg-[#0d4578] text-white'
         }`}
       >
         {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-        {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi Hujan Wilayah'}
+        {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi'}
       </button>
+      </div>
     </Card>
   );
 };

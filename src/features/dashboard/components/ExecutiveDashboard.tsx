@@ -4,7 +4,7 @@ import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { ButtonGovTech } from '@/components/ui/ButtonGovTech';
 import { CardGovTech } from '@/components/ui/CardGovTech';
-import { FileText, Printer, CheckCircle, AlertTriangle, Droplets, MapPin, Activity, Calendar } from 'lucide-react';
+import { FileText, Printer, AlertTriangle, MapPin, Activity, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import generatePDF from 'react-to-pdf';
 
