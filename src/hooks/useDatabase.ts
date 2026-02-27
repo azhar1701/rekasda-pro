@@ -21,7 +21,11 @@ export const useDatabase = (): UseDatabaseReturn => {
       const response = await apiService.getCalculations();
       if (response.error) throw new Error(response.error.message);
       return response.data || [];
-    }
+    },
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours - data historis jarang berubah
+    gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days cache
+    refetchOnWindowFocus: false, // Jangan refetch saat user kembali ke tab
+    refetchOnMount: false, // Jangan refetch saat component mount ulang
   });
 
   const saveMutation = useMutation({

@@ -61,7 +61,7 @@ export function distributeRainfallABM(
     incrementalDepth.push(deltaX);
   }
 
-  // Step 4: Hitung persentase
+  // Step 4: Normalisasi - hitung persentase dari total incremental depth
   const totalDepth = incrementalDepth.reduce((sum, val) => sum + val, 0);
   const percentages = incrementalDepth.map(val => (val / totalDepth) * 100);
 
@@ -95,7 +95,13 @@ export function distributeRainfallABM(
   // Step 6: Kalikan persentase dengan R24
   const rainfallDistribution = hyetograph.map(pct => (pct / 100) * R24);
 
-  return rainfallDistribution;
+  // CRITICAL FIX: Normalisasi untuk memastikan 100% volume conservation
+  // Mononobe IDF tidak konservatif, jadi kita scale output ke R24
+  const totalDistributed = rainfallDistribution.reduce((sum, val) => sum + val, 0);
+  const scaleFactor = R24 / totalDistributed;
+  const normalized = rainfallDistribution.map(val => val * scaleFactor);
+
+  return normalized;
 }
 
 /**
@@ -160,7 +166,7 @@ export function generateABMTable(
     incrementalDepth.push(deltaX);
   }
 
-  // Step 4
+  // Step 4: Normalisasi - hitung persentase dari total incremental depth
   const totalDepth = incrementalDepth.reduce((sum, val) => sum + val, 0);
   const percentages = incrementalDepth.map(val => (val / totalDepth) * 100);
 
@@ -185,7 +191,13 @@ export function generateABMTable(
     hyetograph[position] = percentages[sortedIndices[i].idx];
   }
 
-  // Step 6 & Build table
+  // Step 6: Kalikan persentase dengan R24 dan normalisasi
+  const rainfallDistribution = hyetograph.map(pct => (pct / 100) * R24);
+  const totalDistributed = rainfallDistribution.reduce((sum, val) => sum + val, 0);
+  const scaleFactor = R24 / totalDistributed;
+  const normalized = rainfallDistribution.map(val => val * scaleFactor);
+
+  // Build table
   for (let i = 0; i < n; i++) {
     table.push({
       t: (i + 1) * interval,
@@ -193,7 +205,7 @@ export function generateABMTable(
       X: cumulativeDepth[i],
       deltaX: incrementalDepth[i],
       deltaXPercent: percentages[i],
-      hyetograph: (hyetograph[i] / 100) * R24
+      hyetograph: normalized[i]
     });
   }
 

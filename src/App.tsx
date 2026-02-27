@@ -13,7 +13,6 @@ import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataTab } from '@/features/history/components/AllDataTab';
 import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
 import { AllCalculationsData } from '@/services/allCalculationsService';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ToastContainer } from '@/components/ui/feedback/Toast';
 import { CalculationType } from '@/types/types';
 import type { CalculationResult } from '@/types/common.types';
@@ -146,7 +145,7 @@ const App: React.FC = () => {
   ];
 
   return (
-    <ErrorBoundary>
+    <>
       <ToastContainer />
       <div className="min-h-screen font-sans flex flex-col bg-gradient-to-b from-slate-50 to-white">
 
@@ -440,7 +439,7 @@ const App: React.FC = () => {
         <Footer />
 
       </div>
-    </ErrorBoundary>
+    </>
   );
 };
 
