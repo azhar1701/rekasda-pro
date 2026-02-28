@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { KarakteristikDASCard } from './KarakteristikDASCard';
+import { AutoDelineationCard } from './AutoDelineationCard';
 import { TutupanLahanCard } from './TutupanLahanCard';
 import { HujanWilayahCard } from './HujanWilayahCard';
 
@@ -71,13 +72,20 @@ export const ParameterSpasial: React.FC = () => {
           <TrendingUp className="w-4 h-4 text-[#0c3a66] mt-0.5 shrink-0" />
           <p className="text-sm text-slate-700">
             <strong className="text-[#0c3a66]">📍 Catatan Penting:</strong> Parameter ini akan digunakan oleh semua modul analisis (Banjir, Neraca Air, Saluran). 
-            Pastikan data yang diinput akurat dan konsisten.
+            Pastikan data yang diinput akurat and konsisten.
           </p>
         </div>
       </div>
 
       <div className="space-y-4">
-        <KarakteristikDASCard />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <KarakteristikDASCard />
+          </div>
+          <div className="lg:col-span-1">
+            <AutoDelineationCard />
+          </div>
+        </div>
         <TutupanLahanCard />
         <HujanWilayahCard />
       </div>
