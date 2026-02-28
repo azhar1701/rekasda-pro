@@ -41,14 +41,14 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.MASTER);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [tempCalculation, setTempCalculation] = useState<Partial<CalculationResult> | null>(null);
-  const [history, setHistory] = useState<CalculationResult[]>([]);
+
   const [viewAllDataDetail, setViewAllDataDetail] = useState<AllCalculationsData | null>(null);
   const [mapDetailItem, setMapDetailItem] = useState<any>(null);
   const [lastContext, setLastContext] = useState<string>('');
   const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
   const [aiTriggerCount, setAiTriggerCount] = useState<number>(0);
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
-  const { calculations, saveCalculation } = useDatabase();
+  const { saveCalculation } = useDatabase();
   const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
 
   useEffect(() => {
@@ -62,22 +62,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('navigateToTab', handleNavigateToTab as EventListener);
   }, []);
 
-  useEffect(() => {
-    const convertedHistory: CalculationResult[] = calculations.map(calc => {
-      const result: CalculationResult = {
-        id: calc.id || `calc-${Date.now()}`,
-        type: calc.calculation_type === 'manning' ? CalculationType.MANNING : CalculationType.RATIONAL,
-        date: calc.created_at || new Date().toISOString(),
-        inputs: calc.input_data as any,
-        outputs: calc.result_data as any,
-        location: calc.input_data?.location || calc.location,
-        notes: calc.input_data?.notes || calc.notes || '',
-        photoUrl: calc.photo_url || calc.input_data?.photoUrl || calc.input_data?.site?.photoUrl
-      };
-      return result;
-    });
-    setHistory(convertedHistory);
-  }, [calculations]);
+
 
 
 
@@ -90,8 +75,8 @@ const App: React.FC = () => {
       console.error('Error saving to database:', error);
       alert('Gagal menyimpan ke database. Data disimpan lokal.');
       // Fallback to localStorage
-      const updated = [record, ...history];
-      setHistory(updated);
+      const storedHistory = JSON.parse(localStorage.getItem('hydrofield_history') || '[]');
+      const updated = [record, ...storedHistory];
       localStorage.setItem('hydrofield_history', JSON.stringify(updated));
       setReportModalOpen(false);
       setActiveTab(Tab.HISTORY);
