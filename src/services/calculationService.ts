@@ -183,12 +183,16 @@ export const saveManningCalculation = async (data: { projectName: string; inputs
     return { data: null, error: { message: 'Supabase not configured' } };
   }
 
+  // Get current user for RLS association
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: result, error } = await supabase
     .from('manning_calculations')
     .insert({
       project_name: data.projectName,
       inputs: data.inputs,
-      results: data.results
+      results: data.results,
+      user_id: user?.id || null
     })
     .select()
     .single();
@@ -204,13 +208,17 @@ export const saveFloodCalculation = async (data: FloodCalcData) => {
     return { data: null, error: { message: 'Supabase not configured' } };
   }
 
+  // Get current user for RLS association
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: result, error } = await supabase
     .from('flood_calculations')
     .insert({
       method: data.method,
       project_name: data.projectName,
       inputs: data.inputs,
-      results: data.results
+      results: data.results,
+      user_id: user?.id || null
     })
     .select()
     .single();
@@ -226,13 +234,17 @@ export const saveWaterBalance = async (data: WaterBalanceData) => {
     return { data: null, error: { message: 'Supabase not configured' } };
   }
 
+  // Get current user for RLS association
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: result, error } = await supabase
     .from('water_balance_calculations')
     .insert({
       project_name: data.projectName,
       monthly_inputs: data.monthlyInputs,
       monthly_results: data.monthlyResults,
-      summary: data.summary
+      summary: data.summary,
+      user_id: user?.id || null
     })
     .select()
     .single();

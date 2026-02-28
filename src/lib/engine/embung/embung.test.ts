@@ -2,22 +2,24 @@
  * =============================================================================
  * Unit Tests — Embung Hydrology Services
  * =============================================================================
- * Self-contained test runner (no vitest/jest dependency needed).
- * Run with: npx tsx src/lib/engine/embung/embung.test.ts
+ * Vitest-compatible wrapper around custom assertion harness.
+ * Run with: npx vitest run src/lib/engine/embung/embung.test.ts
  * =============================================================================
  */
 
+import { test as vitestTest } from 'vitest';
 import { linearInterpolate, toCurvePoints, validateSortedCurve } from './mathUtils';
 import { calculateFloodRouting } from './floodRouting';
 import { calculateSequentPeak } from './capacityCalculator';
 import { calculateSedimentYield } from './sedimentation';
-import { calculateWaterBalance } from './waterBalance';
+import { simulateReservoirOperation } from './waterBalance';
 import { HydroValidationError, type CurvePoint } from '@/features/embung/types/embung.types';
 
 // ---------------------------------------------------------------------------
 // Minimal test harness
 // ---------------------------------------------------------------------------
 
+vitestTest('Embung Hydrology Services — comprehensive suite', () => {
 let passed = 0;
 let failed = 0;
 
@@ -152,73 +154,74 @@ describe('calculateFloodRouting', () => {
     discharge: [0, 0, 5, 20, 50, 100],
   };
 
-  const result = calculateFloodRouting({
+  const result = calculateFloodRouting(
     inflowHydrograph,
     stageStorageCurve,
     stageDischargeCurve,
-    deltaT: 3600,
-    initialElevation: 100,
-  });
+    3600,
+    100,
+  );
 
   assert(result.steps.length > 0, 'Produces routing steps');
   assert(result.peakInflow > 0, 'Peak inflow is positive');
-  // peakInflow tracks max of Iavg = (I1+I2)/2 per step, so max is (50+100)/2 = 75
-  assertApprox(result.peakInflow, 75, 0.01, 'Peak avg inflow is 75 m³/s (average of 50 & 100)');
+  // peakInflow uses absolutePeakInflow override: max(0,50,100,50,10,0) = 100
+  assertApprox(result.peakInflow, 100, 0.01, 'Peak inflow is 100 m³/s (absolute peak from hydrograph)');
   assert(result.peakOutflow <= result.peakInflow, 'Outflow peak ≤ inflow peak (attenuation)');
-  assert(result.attenuationRatio >= 0 && result.attenuationRatio <= 1, 'Attenuation ratio in [0,1]');
+  // attenuationRatio is a percentage [0, 100], not a fraction [0, 1]
+  assert(result.attenuationRatio >= 0 && result.attenuationRatio <= 100, 'Attenuation ratio in [0, 100]%');
   assert(result.maxElevation > 100, 'Water level rises above initial');
 
-  console.log(`  ℹ️  Peak attenuation: ${(result.attenuationRatio * 100).toFixed(1)}%`);
+  console.log(`  ℹ️  Peak attenuation: ${result.attenuationRatio.toFixed(1)}%`);
   console.log(`  ℹ️  Max elevation: ${result.maxElevation.toFixed(2)} m`);
   console.log(`  ℹ️  Peak outflow: ${result.peakOutflow.toFixed(2)} m³/s`);
 });
 
-describe('calculateWaterBalance', () => {
-  const config = {
-    maxStorage: 500000,
-    deadStorage: 50000,
-    initialStorage: 300000,
-    surfaceArea: 20000,
-  };
+describe('simulateReservoirOperation', () => {
+  // Matches actual function signature:
+  // simulateReservoirOperation(initialStorage, inflows, demands, evaporation, infiltration, sMax, sMin)
+  const initialStorage = 300000;
+  const sMax = 500000;
+  const sMin = 50000;
 
-  const steps = [
-    { inflow: 60000, demand: 40000, rainfall: 100, evaporation: 50 },
-    { inflow: 20000, demand: 50000, rainfall: 20, evaporation: 80 },
-    { inflow: 10000, demand: 60000, rainfall: 10, evaporation: 100 },
-  ];
+  const inflows       = [60000, 20000, 10000];
+  const demands        = [40000, 50000, 60000];
+  const evaporation    = [1000,  1600,  2000];  // volume, not depth
+  const infiltration   = [500,   500,   500];
 
-  const result = calculateWaterBalance(config, steps);
+  const result = simulateReservoirOperation(initialStorage, inflows, demands, evaporation, infiltration, sMax, sMin);
 
   assert(result.steps.length === 3, 'Produces 3 steps');
   assert(result.reliability >= 0 && result.reliability <= 100, 'Reliability is a percentage');
   assert(result.totalDeficit >= 0, 'Total deficit is non-negative');
-  assert(result.totalOverflow >= 0, 'Total overflow is non-negative');
+  assert(result.totalSpill >= 0, 'Total spill is non-negative');
 
   // First step should be surplus (inflow > demand)
-  assert(result.steps[0].storageEnd >= config.deadStorage, 'Storage never below dead storage');
+  assert(result.steps[0].finalStorage >= sMin, 'Storage never below dead storage');
 });
 
 describe('calculateSedimentYield', () => {
+  // Actual SedimentationInput: qData, qsData, luasDas, beratJenis, bedLoadPercentage
   const result = calculateSedimentYield({
-    samples: [
-      { concentration: 500, discharge: 10, duration: 86400 },
-      { concentration: 300, discharge: 5, duration: 86400 },
-    ],
-    bulkDensity: 1.2,
-    catchmentArea: 50,
-    activeStorage: 1000000,
-    trapEfficiency: 0.9,
+    qData: [10, 5, 20, 15],      // Debit Q (m³/s)
+    qsData: [500, 300, 800, 600], // Debit sedimen Qs (Ton/hari)
+    luasDas: 50,                  // Luas DAS (km²)
+    beratJenis: 1.2,              // Berat jenis sedimen (Ton/m³)
+    bedLoadPercentage: 15,        // 15% bed load
   });
 
-  assert(result.totalLoadTonnesPerYear > 0, 'Total load is positive');
-  assert(result.totalVolumeM3PerYear > 0, 'Total volume is positive');
+  // SedimentYieldResult fields: a, b, suspendedLoadTonnes, bedLoadTonnes,
+  // totalLoadTonnes, totalVolumeM3, erosionRateMm, specificYield
+  assert(result.a > 0, 'Regression coefficient a is positive');
+  assert(typeof result.b === 'number', 'Regression coefficient b is a number');
+  assert(result.totalLoadTonnes > 0, 'Total load is positive');
+  assert(result.totalVolumeM3 > 0, 'Total volume is positive');
   assert(result.specificYield > 0, 'Specific yield is positive');
-  assert(result.erosionRate > 0, 'Erosion rate is positive');
-  assert(result.reservoirUsefulLife > 0, 'Useful life is positive');
-  assert(result.sampleDetails.length === 2, 'Returns 2 sample details');
+  assert(result.erosionRateMm > 0, 'Erosion rate is positive');
+  assert(result.suspendedLoadTonnes > 0, 'Suspended load is positive');
+  assert(result.bedLoadTonnes > 0, 'Bed load is positive');
 
-  console.log(`  ℹ️  Total load: ${result.totalLoadTonnesPerYear.toFixed(2)} tonnes/year`);
-  console.log(`  ℹ️  Useful life: ${result.reservoirUsefulLife.toFixed(1)} years`);
+  console.log(`  ℹ️  Total load: ${result.totalLoadTonnes.toFixed(2)} tonnes/year`);
+  console.log(`  ℹ️  Rating curve: Qs = ${result.a.toFixed(4)} × Q^${result.b.toFixed(4)}`);
 });
 
 // ---------------------------------------------------------------------------
@@ -228,6 +231,7 @@ console.log(`\n${'='.repeat(50)}`);
 console.log(`📊 Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
 console.log(`${'='.repeat(50)}`);
 
-if (failed > 0) {
-  process.exit(1);
-}
+  if (failed > 0) {
+    throw new Error(`${failed} assertion(s) failed out of ${passed + failed}`);
+  }
+});

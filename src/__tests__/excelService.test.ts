@@ -15,8 +15,9 @@ describe('ExcelService QA', () => {
     await expect(exportHidrologiTemplate('Test Station')).resolves.not.toThrow();
   });
 
-  it('parseExcelData - handles buffer', async () => {
+  it('parseExcelData - rejects invalid buffer', async () => {
     const buffer = new ArrayBuffer(8);
-    await expect(parseExcelData(buffer, 0)).resolves.toBeDefined();
+    // An empty 8-byte buffer is not a valid xlsx (zip) file
+    await expect(parseExcelData(buffer, 0)).rejects.toThrow();
   });
 });
