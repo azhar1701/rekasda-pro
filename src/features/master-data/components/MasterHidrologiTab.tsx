@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/Button';
 import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download } from 'lucide-react';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
+import { Satellite, Wand2, AlertCircle } from 'lucide-react';
+import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
+import { infillMissingData } from '@/lib/utils/spatialMath';
+import { generateMockDataHujan } from '@/stores/useHydrologyStore';
 export const MasterHidrologiTab: React.FC = () => {
     const {
         stasiunList,
@@ -34,7 +38,8 @@ export const MasterHidrologiTab: React.FC = () => {
         tanggal: '',
         curah_hujan: ''
     });
-
+    const [isFetchingSatellite, setIsFetchingSatellite] = useState(false);
+    const [isInfilling, setIsInfilling] = useState(false);
     useEffect(() => {
         fetchStasiun();
     }, [fetchStasiun]);
@@ -104,6 +109,68 @@ export const MasterHidrologiTab: React.FC = () => {
         await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
     };
 
+    const handleFetchSatelliteData = async () => {
+        if (!selectedStasiun || selectedStasiun.koordinat_x === null || selectedStasiun.koordinat_y === null) {
+            alert('Stasiun tidak memiliki koordinat (X, Y). Silakan lengkapi data stasiun terlebih dahulu.');
+            return;
+        }
+
+        setIsFetchingSatellite(true);
+        try {
+            const satelliteData = await fetchSatelliteRainfall(
+                selectedStasiun.koordinat_y,
+                selectedStasiun.koordinat_x,
+                selectedYear,
+                selectedYear
+            );
+
+            const mappedData = satelliteData.map(d => ({
+                ...d,
+                stasiun_id: selectedStasiun.id
+            }));
+
+            await importDataHujanBatch(mappedData);
+            alert(`✅ Berhasil menarik ${mappedData.length} data satelit untuk tahun ${selectedYear}`);
+        } catch (error) {
+            console.error('Error fetching satellite data:', error);
+            alert('❌ Gagal mengambil data satelit. Silakan coba lagi.');
+        } finally {
+            setIsFetchingSatellite(false);
+        }
+    };
+
+    const handleInfillData = async () => {
+        if (!selectedStasiun) return;
+        setIsInfilling(true);
+        
+        try {
+            const allData = stasiunList.flatMap(stasiun => generateMockDataHujan(stasiun.id, selectedYear));
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const filledData = dataHujan.map(item => {
+                const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
+                if (value === 0) {
+                    const infilledValue = infillMissingData(
+                        selectedStasiun,
+                        stasiunList,
+                        allData,
+                        item.tanggal,
+                        'idw'
+                    );
+                    return { ...item, curah_hujan: infilledValue > 0 ? parseFloat(infilledValue.toFixed(1)) : 0 };
+                }
+                return item;
+            });
+
+            updateDataHujanManual(filledData);
+            alert('✅ Berhasil mengisi data kosong menggunakan metode IDW/Normal Ratio');
+        } catch (error) {
+            console.error('Error infilling data:', error);
+            alert('❌ Gagal mengisi data kosong.');
+        } finally {
+            setIsInfilling(false);
+        }
+    };
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -229,9 +296,17 @@ export const MasterHidrologiTab: React.FC = () => {
                                             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         </div>
                                     </div>
+                                    <Button onClick={handleFetchSatelliteData} disabled={isFetchingSatellite || !selectedStasiun || selectedStasiun.koordinat_x === null} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
+                                        <Satellite className={`w-4 h-4 mr-1 ${isFetchingSatellite ? 'animate-spin' : ''}`} />
+                                        <span className="hidden sm:inline">{isFetchingSatellite ? 'Menarik...' : 'Tarik Satelit'}</span>
+                                    </Button>
+                                    <Button onClick={handleInfillData} disabled={isInfilling || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
+                                        <Wand2 className={`w-4 h-4 mr-1 ${isInfilling ? 'animate-pulse' : ''}`} />
+                                        <span className="hidden sm:inline">{isInfilling ? 'Memproses...' : 'Isi Kosong'}</span>
+                                    </Button>
                                     <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-md bg-pupr-blue hover:bg-teal-700">
                                         <Plus className="w-4 h-4 mr-1" />
-                                        Tambah Data
+                                        <span className="hidden sm:inline">Tambah Data</span>
                                     </Button>
                                 </div>
                             </div>
@@ -285,7 +360,12 @@ export const MasterHidrologiTab: React.FC = () => {
                                                             <td className="py-2.5 px-4 font-medium text-slate-700 group-hover:text-slate-900 transition-colors tabular-nums tracking-tight">
                                                                 {new Date(row.tanggal).toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
                                                             </td>
-                                                            <td className="py-2.5 px-4 tabular-nums tracking-tight">
+                                                            <td className="py-2.5 px-4 tabular-nums tracking-tight relative">
+                                                                {row.curah_hujan > 300 && (
+                                                                    <span title="Outlier (>300 mm)" className="absolute left-2 top-1/2 -translate-y-1/2">
+                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
+                                                                    </span>
+                                                                )}
                                                                 <div className="flex items-center justify-end gap-2">
                                                                     <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-md overflow-hidden">
                                                                         <div 
