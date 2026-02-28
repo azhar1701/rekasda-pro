@@ -132,8 +132,8 @@ export const DataHujanInputCard: React.FC = () => {
               <tbody>
                 {localData.map((item, idx) => (
                   <tr key={item.id} className="border-b border-slate-200 even:bg-slate-50">
-                    <td className="px-3 py-2 text-slate-700">Tahun {idx + 1}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 text-slate-700 tabular-nums tracking-tight">Tahun {idx + 1}</td>
+                    <td className="px-3 py-2 tabular-nums tracking-tight">
                       <input
                         type="date"
                         value={item.tanggal}
@@ -141,7 +141,7 @@ export const DataHujanInputCard: React.FC = () => {
                         className="w-full px-2 py-1 border border-slate-300 rounded-md focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 tabular-nums tracking-tight">
                       <input
                         type="number"
                         value={item.curah_hujan === 0 ? 0 : (item.curah_hujan ?? '')}

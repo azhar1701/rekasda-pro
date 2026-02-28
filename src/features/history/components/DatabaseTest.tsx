@@ -78,7 +78,7 @@ export const useDatabaseStatus = () => {
       case 'success': return 'bg-green-500';
       case 'warning': return 'bg-yellow-500';
       case 'error': return 'bg-red-500';
-      case 'testing': return 'bg-blue-500';
+      case 'testing': return 'bg-pupr-blue';
       default: return 'bg-slate-500';
     }
   };

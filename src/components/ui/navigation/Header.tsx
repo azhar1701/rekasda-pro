@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   version,
 }) => {
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-[#0c3a66] via-[#0d4578] to-[#0c3a66] text-white shadow-md border-b-4 border-[#f2c114]">
+    <header className="sticky top-0 z-50 bg-pupr-blue text-white shadow-md border-b-4 border-pupr-yellow">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo & App Name */}
@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
             {statusBadge && (
               <div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
                 <div
-                  className={`w-2 h-2 rounded-full ${statusBadge.color} ${
+                  className={`w-2 h-2 rounded-sm ${statusBadge.color} ${
                     statusBadge.isLoading ? 'animate-pulse' : ''
                   }`}
                 />
@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
             {version && (
-              <span className="text-xs font-semibold px-2.5 md:px-3 py-1.5 rounded-lg text-white bg-white/10 backdrop-blur-sm border border-white/20">
+              <span className="text-xs font-semibold px-2.5 md:px-3 py-1.5 rounded-md text-white bg-white/10 backdrop-blur-sm border border-white/20">
                 v{version}
               </span>
             )}

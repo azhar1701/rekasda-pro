@@ -95,10 +95,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick={handleToggle}
         className="
           absolute -right-3 top-1/2 -translate-y-1/2
-          w-6 h-12 bg-white border border-slate-200 rounded-full
-          flex items-center justify-center text-slate-500 hover:text-slate-700
-          hover:border-slate-300 transition-all duration-200
-          shadow-sm hover:shadow-md
+          w-6 h-12 bg-white border border-slate-300 rounded-md
+          flex items-center justify-center text-slate-500 hover:text-slate-900
+          hover:border-slate-400 transition-all duration-200
+          shadow-sm
         "
         title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
@@ -133,12 +133,12 @@ interface SidebarNavItemProps {
 const SidebarNavItem: React.FC<SidebarNavItemProps> = ({ item, collapsed }) => {
   const baseStyles = `
     relative w-full flex items-center justify-start gap-3 px-4 py-3
-    rounded-xl transition-all duration-200
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
+    rounded-none transition-all duration-200 border-l-4 border-transparent
+    focus:outline-none focus:ring-1 focus:ring-inset focus:ring-pupr-blue
   `;
 
   const activeStyles = item.isActive
-    ? 'bg-primary-50 text-primary-700 border border-primary-100'
+    ? 'bg-pupr-blue/5 text-pupr-blue border-l-4 border-pupr-blue font-bold'
     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50';
 
   return (
@@ -148,7 +148,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({ item, collapsed }) => {
       title={collapsed ? item.label : undefined}
     >
       {/* Icon */}
-      <span className={`flex-shrink-0 w-5 h-5 ${item.isActive ? 'text-primary-600' : 'text-slate-500'}`}>
+      <span className={`flex-shrink-0 w-5 h-5 ${item.isActive ? 'text-pupr-blue' : 'text-slate-500'}`}>
         {item.icon}
       </span>
 
@@ -166,10 +166,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({ item, collapsed }) => {
         </div>
       )}
 
-      {/* Active Indicator Line */}
-      {item.isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-600 rounded-r-full" />
-      )}
+      {/* Active Indicator Line removed as it is now handled by border-l-4 */}
     </button>
   );
 };
@@ -195,8 +192,8 @@ export const NavBadge: React.FC<BadgeProps> = ({ count, variant = 'primary' }) =
   return (
     <span className={`
       inline-flex items-center justify-center
-      min-w-6 h-6 px-2 rounded-full
-      text-xs font-bold
+      min-w-6 h-6 px-2 rounded-md
+      text-xs font-bold tabular-nums tracking-tight
       ${variantStyles[variant]}
     `}>
       {count > 99 ? '99+' : count}

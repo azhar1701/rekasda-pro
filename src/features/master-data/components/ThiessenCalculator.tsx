@@ -132,7 +132,7 @@ export const ThiessenCalculator: React.FC = () => {
             <div
                 onClick={() => setIsExpanded(true)}
                 className={cn(
-                    'border rounded-xl p-4 cursor-pointer transition-all hover:shadow-md',
+                    'border rounded-md p-4 cursor-pointer transition-all hover:shadow-md',
                     hasilThiessen
                         ? 'bg-emerald-50/50 border-emerald-200 hover:border-emerald-300'
                         : 'bg-slate-50/50 border-slate-200 hover:border-blue-300'
@@ -141,15 +141,15 @@ export const ThiessenCalculator: React.FC = () => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className={cn(
-                            'w-9 h-9 rounded-lg flex items-center justify-center',
-                            hasilThiessen ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-50 text-blue-500'
+                            'w-9 h-9 rounded-md flex items-center justify-center',
+                            hasilThiessen ? 'bg-emerald-100 text-pupr-blue' : 'bg-blue-50 text-pupr-blue'
                         )}>
                             <Layers className="w-5 h-5" />
                         </div>
                         <div>
                             <h4 className="text-sm font-bold text-slate-800">Hujan Rata-rata DAS (Thiessen)</h4>
                             {hasilThiessen ? (
-                                <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                                <p className="text-xs text-pupr-blue font-medium mt-0.5">
                                     ✓ {hasilThiessen.stasiunConfigs.length} stasiun · {hasilThiessen.totalLuas.toFixed(1)} km²
                                 </p>
                             ) : (
@@ -157,7 +157,7 @@ export const ThiessenCalculator: React.FC = () => {
                             )}
                         </div>
                     </div>
-                    <span className="text-xs text-blue-500 font-semibold">Buka →</span>
+                    <span className="text-xs text-pupr-blue font-semibold">Buka →</span>
                 </div>
             </div>
         );
@@ -165,11 +165,11 @@ export const ThiessenCalculator: React.FC = () => {
 
     // ── Expanded panel ──
     return (
-        <div className="border border-blue-200 rounded-xl bg-white shadow-sm overflow-hidden">
+        <div className="border border-blue-200 rounded-md bg-white shadow-sm overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-blue-50/50 border-b border-blue-100">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                    <div className="w-8 h-8 rounded-md bg-blue-100 flex items-center justify-center text-pupr-blue">
                         <Layers className="w-4 h-4" />
                     </div>
                     <div>
@@ -187,7 +187,7 @@ export const ThiessenCalculator: React.FC = () => {
                 {availableStasiun.length > 0 && (
                     <div className="flex items-center gap-2">
                         <select
-                            className="flex-1 text-sm px-3 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+                            className="flex-1 text-sm px-3 py-2 border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
                             defaultValue=""
                             onChange={(e) => { handleAddStation(e.target.value); e.target.value = ''; }}
                         >
@@ -201,7 +201,7 @@ export const ThiessenCalculator: React.FC = () => {
 
                 {/* Station table */}
                 {configs.length > 0 && (
-                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="border border-slate-200 rounded-md overflow-hidden">
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50">
                                 <tr>
@@ -214,8 +214,8 @@ export const ThiessenCalculator: React.FC = () => {
                             <tbody className="divide-y divide-slate-100">
                                 {configsWithBobot.map(c => (
                                     <tr key={c.stasiunId} className="hover:bg-slate-50">
-                                        <td className="px-3 py-2 font-medium text-slate-700 text-xs">{c.namaStasiun}</td>
-                                        <td className="px-3 py-2">
+                                        <td className="px-3 py-2 font-medium text-slate-700 text-xs tabular-nums tracking-tight">{c.namaStasiun}</td>
+                                        <td className="px-3 py-2 tabular-nums tracking-tight">
                                             <input
                                                 type="number"
                                                 step="0.1"
@@ -226,12 +226,12 @@ export const ThiessenCalculator: React.FC = () => {
                                                 className="w-20 text-right px-2 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             />
                                         </td>
-                                        <td className="px-3 py-2 text-right">
-                                            <span className="text-xs font-bold text-blue-600">
+                                        <td className="px-3 py-2 text-right tabular-nums tracking-tight">
+                                            <span className="text-xs font-bold text-pupr-blue">
                                                 {(c.bobot * 100).toFixed(1)}%
                                             </span>
                                         </td>
-                                        <td className="px-3 py-2">
+                                        <td className="px-3 py-2 tabular-nums tracking-tight">
                                             <button
                                                 onClick={() => handleRemoveStation(c.stasiunId)}
                                                 className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -244,9 +244,9 @@ export const ThiessenCalculator: React.FC = () => {
                             </tbody>
                             <tfoot className="bg-slate-50">
                                 <tr>
-                                    <td className="px-3 py-2 text-xs font-bold text-slate-600">Total</td>
-                                    <td className="px-3 py-2 text-right text-xs font-bold text-slate-700">{totalLuas.toFixed(1)}</td>
-                                    <td className="px-3 py-2 text-right text-xs font-bold text-blue-600">
+                                    <td className="px-3 py-2 text-xs font-bold text-slate-600 tabular-nums tracking-tight">Total</td>
+                                    <td className="px-3 py-2 text-right text-xs font-bold text-slate-700 tabular-nums tracking-tight">{totalLuas.toFixed(1)}</td>
+                                    <td className="px-3 py-2 text-right text-xs font-bold text-pupr-blue tabular-nums tracking-tight">
                                         {totalLuas > 0 ? '100.0%' : '—'}
                                     </td>
                                     <td></td>
@@ -258,7 +258,7 @@ export const ThiessenCalculator: React.FC = () => {
 
                 {/* DAS area comparison */}
                 {luasDas && totalLuas > 0 && Math.abs(totalLuas - parseFloat(luasDas)) > 0.5 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-xs font-medium">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-xs font-medium">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         Total Thiessen ({totalLuas.toFixed(1)} km²) ≠ Luas DAS ({luasDas} km²)
                     </div>
@@ -266,7 +266,7 @@ export const ThiessenCalculator: React.FC = () => {
 
                 {/* Thiessen result summary */}
                 {hasilThiessen && hasilThiessen.hujanRataRataDAS.length > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-xs font-medium">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-md text-emerald-700 text-xs font-medium">
                         <CheckCircle className="w-3.5 h-3.5" />
                         Seri hujan rata-rata DAS: {hasilThiessen.hujanRataRataDAS.length} tahun ·
                         Rata-rata: {(hasilThiessen.hujanRataRataDAS.reduce((s, v) => s + v, 0) / hasilThiessen.hujanRataRataDAS.length).toFixed(1)} mm
@@ -277,7 +277,7 @@ export const ThiessenCalculator: React.FC = () => {
                 {configs.length >= 2 && (
                     <button
                         onClick={handleCalculate}
-                        className="w-full py-3 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200/40 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3 rounded-md font-bold text-sm bg-pupr-blue hover:bg-blue-700 text-white shadow-sm shadow-blue-200/40 transition-all flex items-center justify-center gap-2"
                     >
                         <Layers className="w-4 h-4" />
                         Hitung Thiessen & Simpan ke Pipeline

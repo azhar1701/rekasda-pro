@@ -112,7 +112,7 @@ export const MasterHidrologiTab: React.FC = () => {
                     <p className="text-sm text-slate-600 mt-1">Single Source of Truth untuk Data Curah Hujan</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-xl font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Download className="w-4 h-4 mr-2" />
                         Download Template
                     </Button>
@@ -125,13 +125,13 @@ export const MasterHidrologiTab: React.FC = () => {
                                 onChange={handleFileUpload}
                                 className="hidden"
                             />
-                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-xl font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
+                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
                                 <Upload className="w-4 h-4 mr-2" />
                                 Import Excel
                             </Button>
                         </>
                     )}
-                    <Button onClick={() => setShowModalStasiun(true)} className="rounded-xl font-bold bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-500/20">
+                    <Button onClick={() => setShowModalStasiun(true)} className="rounded-md font-bold bg-pupr-blue hover:bg-teal-700 shadow-sm shadow-teal-500/20">
                         <Plus className="w-4 h-4 mr-2" />
                         Tambah Stasiun
                     </Button>
@@ -139,19 +139,19 @@ export const MasterHidrologiTab: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
-                <div className="lg:col-span-4 flex flex-col overflow-hidden bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl">
+                <div className="lg:col-span-4 flex flex-col overflow-hidden bg-white/60 backdrop-blur-xl border border-white/60 rounded-md shadow-sm">
                     <div className="p-5 border-b border-slate-200/50 bg-white/40 flex justify-between items-center">
                         <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-teal-500" />
+                            <MapPin className="w-5 h-5 text-pupr-blue" />
                             Daftar Stasiun
                         </h3>
-                        <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">{stasiunList.length} Total</span>
+                        <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md">{stasiunList.length} Total</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {isLoading && stasiunList.length === 0 ? (
                             <div className="flex justify-center items-center h-40">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                                <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-8 w-8 border-b-2 border-teal-600"></div>
                             </div>
                         ) : (
                             stasiunList.map((stasiun) => {
@@ -160,9 +160,9 @@ export const MasterHidrologiTab: React.FC = () => {
                                     <div
                                         key={stasiun.id}
                                         onClick={() => selectStasiun(stasiun)}
-                                        className={`p-4 rounded-2xl border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+                                        className={`p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                                             isActive
-                                                ? 'bg-gradient-to-br from-teal-500 to-teal-600 border-teal-600 shadow-lg text-white scale-[1.02]'
+                                                ? 'bg-pupr-blue text-white border-teal-600 shadow-sm text-white scale-[1.02]'
                                                 : 'bg-white/80 border-slate-200 hover:border-teal-300 hover:shadow-md text-slate-700'
                                         }`}
                                     >
@@ -170,11 +170,11 @@ export const MasterHidrologiTab: React.FC = () => {
                                             {stasiun.nama_stasiun}
                                         </h4>
                                         <div className="grid grid-cols-2 gap-2 mt-3">
-                                            <div className={`text-xs px-2 py-1.5 rounded-lg ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
+                                            <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
                                                 <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Elevasi</span>
                                                 <span className="font-semibold font-mono">{stasiun.elevasi} m</span>
                                             </div>
-                                            <div className={`text-xs px-2 py-1.5 rounded-lg ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
+                                            <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
                                                 <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Koordinat</span>
                                                 <span className="font-semibold font-mono truncate">
                                                     {stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}
@@ -188,11 +188,11 @@ export const MasterHidrologiTab: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="lg:col-span-8 flex flex-col overflow-hidden bg-white/60 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl">
+                <div className="lg:col-span-8 flex flex-col overflow-hidden bg-white/60 backdrop-blur-xl border border-white/60 rounded-md shadow-sm">
                     {!selectedStasiun ? (
                         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                            <div className="w-24 h-24 mb-6 bg-white border border-teal-100 rounded-full shadow-sm flex items-center justify-center">
-                                <Activity className="w-10 h-10 text-teal-400" />
+                            <div className="w-24 h-24 mb-6 bg-white border border-teal-100 rounded-md shadow-sm flex items-center justify-center">
+                                <Activity className="w-10 h-10 text-pupr-blue" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Stasiun Terpilih</h3>
                             <p className="text-sm text-slate-500 max-w-sm">
@@ -204,7 +204,7 @@ export const MasterHidrologiTab: React.FC = () => {
                             <div className="p-5 border-b border-slate-200/50 bg-white/40 flex flex-wrap justify-between items-center gap-4">
                                 <div>
                                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                                        <CloudRain className="w-5 h-5 text-teal-500" />
+                                        <CloudRain className="w-5 h-5 text-pupr-blue" />
                                         Data Curah Hujan
                                     </h3>
                                     <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -213,7 +213,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
                                         <Calendar className="w-4 h-4 text-slate-400" />
                                         <span className="text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Tahun</span>
                                         <div className="relative">
@@ -229,7 +229,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         </div>
                                     </div>
-                                    <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-xl bg-teal-600 hover:bg-teal-700">
+                                    <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-md bg-pupr-blue hover:bg-teal-700">
                                         <Plus className="w-4 h-4 mr-1" />
                                         Tambah Data
                                     </Button>
@@ -239,11 +239,11 @@ export const MasterHidrologiTab: React.FC = () => {
                             <div className="flex-1 overflow-auto bg-slate-50/30 p-4 sm:p-6">
                                 {isLoading && (
                                     <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-10">
-                                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-teal-600"></div>
+                                        <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-10 w-10 border-4 border-slate-200 border-t-teal-600"></div>
                                     </div>
                                 )}
 
-                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
@@ -267,11 +267,11 @@ export const MasterHidrologiTab: React.FC = () => {
                                                     let barWidth = 0;
                                                     if (row.curah_hujan > 0 && row.curah_hujan <= 20) {
                                                         statusLabel = "Ringan";
-                                                        statusColor = "bg-blue-50 text-blue-600";
+                                                        statusColor = "bg-blue-50 text-pupr-blue";
                                                         barWidth = (row.curah_hujan / 20) * 100;
                                                     } else if (row.curah_hujan > 20 && row.curah_hujan <= 50) {
                                                         statusLabel = "Sedang";
-                                                        statusColor = "bg-indigo-50 text-indigo-600";
+                                                        statusColor = "bg-indigo-50 text-pupr-blue";
                                                         barWidth = 100;
                                                     } else if (row.curah_hujan > 50) {
                                                         statusLabel = "Lebat";
@@ -281,18 +281,18 @@ export const MasterHidrologiTab: React.FC = () => {
 
                                                     return (
                                                         <tr key={row.id} className="hover:bg-teal-50/30 transition-all duration-200 group cursor-pointer">
-                                                            <td className="py-2.5 px-4 text-center text-slate-400 font-mono text-xs group-hover:text-teal-600 transition-colors">{index + 1}</td>
-                                                            <td className="py-2.5 px-4 font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
+                                                            <td className="py-2.5 px-4 text-center text-slate-400 font-mono text-xs group-hover:text-pupr-blue transition-colors tabular-nums tracking-tight">{index + 1}</td>
+                                                            <td className="py-2.5 px-4 font-medium text-slate-700 group-hover:text-slate-900 transition-colors tabular-nums tracking-tight">
                                                                 {new Date(row.tanggal).toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
                                                             </td>
-                                                            <td className="py-2.5 px-4">
+                                                            <td className="py-2.5 px-4 tabular-nums tracking-tight">
                                                                 <div className="flex items-center justify-end gap-2">
-                                                                    <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                    <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-md overflow-hidden">
                                                                         <div 
-                                                                            className={`h-full rounded-full transition-all duration-500 ${
-                                                                                row.curah_hujan > 50 ? 'bg-gradient-to-r from-rose-400 to-rose-600' :
-                                                                                row.curah_hujan > 20 ? 'bg-gradient-to-r from-indigo-400 to-indigo-600' :
-                                                                                row.curah_hujan > 0 ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-slate-300'
+                                                                            className={`h-full rounded-md transition-all duration-500 ${
+                                                                                row.curah_hujan > 50 ? 'bg-pupr-blue text-white' :
+                                                                                row.curah_hujan > 20 ? 'bg-pupr-blue text-white' :
+                                                                                row.curah_hujan > 0 ? 'bg-pupr-blue text-white' : 'bg-slate-300'
                                                                             }`}
                                                                             style={{ width: `${barWidth}%` }}
                                                                         />
@@ -302,7 +302,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="py-2.5 px-4 text-center">
+                                                            <td className="py-2.5 px-4 text-center tabular-nums tracking-tight">
                                                                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md transition-all duration-200 group-hover:scale-105 inline-block ${statusColor}`}>
                                                                     {statusLabel}
                                                                 </span>
@@ -328,7 +328,7 @@ export const MasterHidrologiTab: React.FC = () => {
 
             {showModalStasiun && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+                    <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">Tambah Stasiun Baru</h3>
                             <button onClick={() => setShowModalStasiun(false)} className="text-slate-400 hover:text-slate-600">
@@ -358,7 +358,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                     required
                                     value={formStasiun.nama_stasiun}
                                     onChange={(e) => setFormStasiun(prev => ({ ...prev, nama_stasiun: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     placeholder="Stasiun Cikampak"
                                 />
                             </div>
@@ -370,7 +370,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                         step="any"
                                         value={formStasiun.koordinat_x}
                                         onChange={(e) => setFormStasiun(prev => ({ ...prev, koordinat_x: e.target.value }))}
-                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                         placeholder="106.7562"
                                     />
                                 </div>
@@ -381,7 +381,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                         step="any"
                                         value={formStasiun.koordinat_y}
                                         onChange={(e) => setFormStasiun(prev => ({ ...prev, koordinat_y: e.target.value }))}
-                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                         placeholder="-6.5872"
                                     />
                                 </div>
@@ -393,7 +393,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                     step="any"
                                     value={formStasiun.elevasi}
                                     onChange={(e) => setFormStasiun(prev => ({ ...prev, elevasi: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     placeholder="250"
                                 />
                             </div>
@@ -402,16 +402,16 @@ export const MasterHidrologiTab: React.FC = () => {
                                 <textarea
                                     value={formStasiun.keterangan}
                                     onChange={(e) => setFormStasiun(prev => ({ ...prev, keterangan: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     rows={2}
                                     placeholder="Tipe Manual. Terawat baik."
                                 />
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <Button type="button" onClick={() => setShowModalStasiun(false)} variant="outline" className="flex-1 rounded-xl">
+                                <Button type="button" onClick={() => setShowModalStasiun(false)} variant="outline" className="flex-1 rounded-md">
                                     Batal
                                 </Button>
-                                <Button type="submit" disabled={isLoading} className="flex-1 rounded-xl bg-teal-600 hover:bg-teal-700">
+                                <Button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700">
                                     {isLoading ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </div>
@@ -422,7 +422,7 @@ export const MasterHidrologiTab: React.FC = () => {
 
             {showModalHujan && selectedStasiun && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+                    <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">Tambah Data Curah Hujan</h3>
                             <button onClick={() => setShowModalHujan(false)} className="text-slate-400 hover:text-slate-600">
@@ -450,7 +450,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                     required
                                     value={formHujan.tanggal}
                                     onChange={(e) => setFormHujan(prev => ({ ...prev, tanggal: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 />
                             </div>
                             <div>
@@ -461,20 +461,20 @@ export const MasterHidrologiTab: React.FC = () => {
                                     required
                                     value={formHujan.curah_hujan}
                                     onChange={(e) => setFormHujan(prev => ({ ...prev, curah_hujan: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     placeholder="0.0"
                                 />
                             </div>
-                            <div className="bg-teal-50 border border-teal-200 rounded-xl p-3">
+                            <div className="bg-teal-50 border border-teal-200 rounded-md p-3">
                                 <p className="text-xs text-teal-700">
                                     <span className="font-bold">Stasiun:</span> {selectedStasiun.nama_stasiun}
                                 </p>
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <Button type="button" onClick={() => setShowModalHujan(false)} variant="outline" className="flex-1 rounded-xl">
+                                <Button type="button" onClick={() => setShowModalHujan(false)} variant="outline" className="flex-1 rounded-md">
                                     Batal
                                 </Button>
-                                <Button type="submit" disabled={isLoading} className="flex-1 rounded-xl bg-teal-600 hover:bg-teal-700">
+                                <Button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700">
                                     {isLoading ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </div>

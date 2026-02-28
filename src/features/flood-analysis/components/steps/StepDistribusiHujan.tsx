@@ -133,12 +133,12 @@ export const StepDistribusiHujan: React.FC = () => {
                 <tbody>
                   {abmTable.map((row, i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="px-2 py-1.5 text-center tabular-nums">{row.t}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{row.I.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{row.X.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{row.deltaX.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{row.deltaXPercent.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums font-semibold">{row.hyetograph.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-center tabular-nums tabular-nums tracking-tight">{row.t}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.I.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.X.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.deltaX.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.deltaXPercent.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums font-semibold tabular-nums tracking-tight">{row.hyetograph.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

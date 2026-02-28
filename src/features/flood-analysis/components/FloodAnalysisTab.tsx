@@ -134,15 +134,15 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
       title="Analisis Debit Banjir Rencana"
       description="Perhitungan hidrograf banjir dengan integrasi Master Data Dinamis."
       icon={<CloudRain className="w-6 h-6" />}
-      iconColorClass="bg-blue-50 text-blue-600"
+      iconColorClass="bg-blue-50 text-pupr-blue"
     >
       <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
         {/* KOLOM KIRI (Input - col-span-5) */}
         <div className="md:col-span-5 flex flex-col gap-5">
-          <div className="bg-white/60 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5 space-y-6">
+          <div className="bg-white/60 backdrop-blur border border-white/60 rounded-md shadow-sm p-5 space-y-6">
 
             {/* QC Section */}
-            <div className="bg-blue-50/50 rounded-xl p-4 space-y-3">
+            <div className="bg-blue-50/50 rounded-md p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">
                   1. Quality Control
@@ -175,7 +175,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
             </div>
 
             {/* Effective Rainfall Section */}
-            <div className="bg-green-50/50 rounded-xl p-4 space-y-3">
+            <div className="bg-green-50/50 rounded-md p-4 space-y-3">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-widest block">
                 2. Hujan Efektif
               </label>
@@ -190,7 +190,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
                 <select
                   value={landUse}
                   onChange={(e) => setLandUse(e.target.value)}
-                  className="w-full p-2 border rounded-lg text-sm"
+                  className="w-full p-2 border rounded-md text-sm"
                 >
                   <option value="Hutan">Hutan (C=0.15)</option>
                   <option value="Perumahan">Perumahan (C=0.50)</option>
@@ -216,7 +216,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
             </div>
 
             {/* HSS Comparison Section */}
-            <div className="bg-amber-50/50 rounded-xl p-4 space-y-3">
+            <div className="bg-amber-50/50 rounded-md p-4 space-y-3">
               <label className="text-xs font-bold text-slate-600 uppercase tracking-widest block">
                 3. Perbandingan HSS
               </label>
@@ -269,7 +269,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
                   placeholder="Masukkan Luas Catchment Area..."
                   value={luasDas}
                   onChange={(e) => setLuasDas(e.target.value)}
-                  className="pl-4 pr-12 py-6 text-lg rounded-xl border-slate-200 bg-white shadow-inner font-semibold"
+                  className="pl-4 pr-12 py-6 text-lg rounded-md border-slate-200 bg-white shadow-inner font-semibold"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
                   km²
@@ -280,13 +280,13 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
             {/* Action Button */}
             <div className="pt-2">
               <Button
-                className="w-full py-6 rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all"
+                className="w-full py-6 rounded-md font-bold text-base shadow-sm shadow-blue-500/20 bg-pupr-blue hover:bg-blue-700 transition-all"
                 onClick={handleCalculate}
                 disabled={isCalculating}
               >
                 {isCalculating ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md"></div>
                     Memproses Simulasi...
                   </div>
                 ) : (
@@ -304,13 +304,13 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
         {/* KOLOM KANAN (Visualisasi - col-span-7) */}
         <div className="md:col-span-7 flex flex-col min-h-[400px]">
           <DependencyWarningBanner module="banjir" />
-          <div className={`flex-1 bg-white/60 backdrop-blur border ${isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'} rounded-2xl shadow-sm p-5 flex flex-col transition-all duration-300`}>
+          <div className={`flex-1 bg-white/60 backdrop-blur border ${isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'} rounded-md shadow-sm p-5 flex flex-col transition-all duration-300`}>
             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 mb-6">
-              <Activity className="w-5 h-5 text-blue-500" />
+              <Activity className="w-5 h-5 text-pupr-blue" />
               Kurva Hidrograf Banjir
             </h3>
 
-            <div className="flex-1 bg-slate-50/50 rounded-xl border border-slate-100 p-4 border-dashed relative">
+            <div className="flex-1 bg-slate-50/50 rounded-md border border-slate-100 p-4 border-dashed relative">
               {showComparison && hssComparisonResults && hssComparisonResults.length > 0 ? (
                 <div className="space-y-4">
                   <ResponsiveContainer width="100%" height={300}>
@@ -363,13 +363,13 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
                       <tbody>
                         {hssComparisonResults.map((result) => (
                           <tr key={result.method} className="border-b">
-                            <td className="p-2">
-                              <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: result.color }} />
+                            <td className="p-2 tabular-nums tracking-tight">
+                              <span className="inline-block w-3 h-3 rounded-md mr-2" style={{ backgroundColor: result.color }} />
                               {result.method}
                             </td>
-                            <td className="p-2 text-right font-mono">{result.Qp.toFixed(2)}</td>
-                            <td className="p-2 text-right font-mono">{result.Tp.toFixed(2)}</td>
-                            <td className="p-2 text-right font-mono">{result.Tb.toFixed(2)}</td>
+                            <td className="p-2 text-right font-mono tabular-nums tracking-tight">{result.Qp.toFixed(2)}</td>
+                            <td className="p-2 text-right font-mono tabular-nums tracking-tight">{result.Tp.toFixed(2)}</td>
+                            <td className="p-2 text-right font-mono tabular-nums tracking-tight">{result.Tb.toFixed(2)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -410,7 +410,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-blue-50 rounded-md flex items-center justify-center mb-4">
                     <Activity className="w-8 h-8 text-blue-300" />
                   </div>
                   <p className="text-slate-500 font-medium">Belum ada simulasi.</p>

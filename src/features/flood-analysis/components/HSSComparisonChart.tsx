@@ -125,23 +125,23 @@ export const HSSComparisonChart: React.FC<HSSComparisonChartProps> = ({
                     opacity: visibleMethods.has(result.method) ? 1 : 0.4,
                   }}
                 >
-                  <td className="p-2 border">
+                  <td className="p-2 border tabular-nums tracking-tight">
                     <span
-                      className="inline-block w-3 h-3 rounded-full mr-2"
+                      className="inline-block w-3 h-3 rounded-md mr-2"
                       style={{ backgroundColor: result.color }}
                     />
                     {result.method}
                   </td>
-                  <td className="text-right p-2 border font-mono">
+                  <td className="text-right p-2 border font-mono tabular-nums tracking-tight">
                     {result.Qp.toFixed(2)}
                   </td>
-                  <td className="text-right p-2 border font-mono">
+                  <td className="text-right p-2 border font-mono tabular-nums tracking-tight">
                     {result.Tp.toFixed(2)}
                   </td>
-                  <td className="text-right p-2 border font-mono">
+                  <td className="text-right p-2 border font-mono tabular-nums tracking-tight">
                     {result.Tb.toFixed(2)}
                   </td>
-                  <td className="text-center p-2 border">
+                  <td className="text-center p-2 border tabular-nums tracking-tight">
                     <button
                       onClick={() => toggleMethod(result.method)}
                       className="text-xs px-2 py-1 rounded bg-blue-100 hover:bg-blue-200"
@@ -157,7 +157,7 @@ export const HSSComparisonChart: React.FC<HSSComparisonChartProps> = ({
       </div>
 
       {/* Recommendations */}
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+      <div className="mt-4 p-4 bg-blue-50 rounded-md">
         <p className="text-sm text-gray-700">
           <strong>Rekomendasi SNI 2415:2016:</strong> Pilih metode yang paling sesuai dengan
           karakteristik DAS. Untuk DAS di Indonesia, metode Nakayasu umumnya memberikan hasil

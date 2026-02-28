@@ -87,9 +87,9 @@ export const DistributionComparisonAnalysis: React.FC<DistributionComparisonAnal
     <div className="space-y-6">
       
       {/* Frequency Curve Chart */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div className="bg-white rounded-md shadow-sm border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
+          <TrendingUp className="w-5 h-5 text-pupr-blue" />
           <h3 className="text-base font-bold text-slate-800">Kurva Frekuensi - Perbandingan Distribusi</h3>
         </div>
         
@@ -107,7 +107,7 @@ export const DistributionComparisonAnalysis: React.FC<DistributionComparisonAnal
               stroke="#64748b"
               tick={{ fontSize: 12 }}
             />
-            <Tooltip 
+            <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} 
               contentStyle={{ 
                 backgroundColor: '#fff', 
                 border: '1px solid #e2e8f0', 
@@ -163,9 +163,9 @@ export const DistributionComparisonAnalysis: React.FC<DistributionComparisonAnal
       </div>
 
       {/* Parameter Insights */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5">
+      <div className="bg-pupr-blue text-white rounded-md border border-blue-200 p-5">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 bg-pupr-blue rounded-md flex items-center justify-center flex-shrink-0">
             <BrainCircuit className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
@@ -182,7 +182,7 @@ export const DistributionComparisonAnalysis: React.FC<DistributionComparisonAnal
       </div>
 
       {/* Q50 & Q100 Comparison Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-md shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-slate-100 px-5 py-3 border-b border-slate-200">
           <h4 className="text-sm font-bold text-slate-800">Perbandingan Q₅₀ dan Q₁₀₀</h4>
         </div>
@@ -201,7 +201,7 @@ export const DistributionComparisonAnalysis: React.FC<DistributionComparisonAnal
                 const diff = ((method.q100 - method.q50) / method.q50) * 100;
                 return (
                   <tr key={idx} className="border-t border-slate-200 even:bg-slate-50 hover:bg-blue-50">
-                    <td className="px-4 py-3 font-medium text-slate-700">{method.name}</td>
+                    <td className="px-4 py-3 font-medium text-slate-700 tabular-nums tracking-tight">{method.name}</td>
                     <td className={`px-4 py-3 text-right font-semibold tabular-nums ${
                       method.isMaxQ50 ? 'text-red-600 bg-red-50' : 
                       method.isMinQ50 ? 'text-green-600 bg-green-50' : 
@@ -220,7 +220,7 @@ export const DistributionComparisonAnalysis: React.FC<DistributionComparisonAnal
                       {method.isMaxQ100 && <span className="ml-1 text-[10px]">MAX</span>}
                       {method.isMinQ100 && <span className="ml-1 text-[10px]">MIN</span>}
                     </td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-600 tabular-nums">
+                    <td className="px-4 py-3 text-right font-medium text-slate-600 tabular-nums tabular-nums tracking-tight">
                       +{diff.toFixed(1)}%
                     </td>
                   </tr>

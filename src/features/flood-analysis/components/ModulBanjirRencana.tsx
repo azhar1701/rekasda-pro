@@ -359,7 +359,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                     className={cn(
                                         'flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all',
                                         itbVariant === v
-                                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300/40'
+                                            ? 'bg-pupr-blue text-white shadow-md shadow-indigo-300/40'
                                             : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                     )}
                                 >
@@ -390,7 +390,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                 <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
                     {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
                     <div className="md:col-span-5 flex flex-col gap-5">
-                        <div className="bg-white/60 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5 space-y-5">
+                        <div className="bg-white/60 backdrop-blur border border-white/60 rounded-md shadow-sm p-5 space-y-5">
 
                             {/* Project Banner (SSOT) */}
                             <ProjectContextBanner />
@@ -408,7 +408,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">
                                     Tingkat 1 — Kategori Metode
                                 </label>
-                                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-xl">
+                                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-md">
                                     {([
                                         { value: 'empiris' as const, label: 'Metode Empiris', icon: <Beaker className="w-4 h-4" /> },
                                         { value: 'hss' as const, label: 'Metode HSS', icon: <Activity className="w-4 h-4" /> },
@@ -438,7 +438,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 </label>
                                 <Select.Root value={method} onValueChange={(val) => { setMethod(val as MethodType); setChartData([]); setResultSummary(null); }}>
                                     <Select.Trigger
-                                        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-md border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
@@ -456,7 +456,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                                     <Select.Portal>
                                         <Select.Content
-                                            className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-[9999]"
+                                            className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden z-[9999]"
                                             position="popper"
                                             sideOffset={4}
                                         >
@@ -513,7 +513,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                                             Curah Hujan Rencana
                                             <span
-                                                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-slate-400 text-[9px] font-bold cursor-help"
+                                                className="inline-flex items-center justify-center w-4 h-4 rounded-md bg-slate-100 text-slate-400 text-[9px] font-bold cursor-help"
                                                 title="Curah hujan rencana sesuai kala ulang terpilih"
                                             >?</span>
                                         </label>
@@ -523,7 +523,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                             <div className="space-y-2">
                                                 {/* Source badge */}
                                                 <div className="flex items-center gap-2">
-                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
                                                         <BarChart2 className="w-3 h-3" />
                                                         {hasilAnalisisFrekuensi.metodeTerpilih}
                                                         {hasilAnalisisFrekuensi.lulusUjiKecocokan && ' ✓'}
@@ -541,7 +541,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                                         if (match) setLocalR(String(match.curahHujan));
                                                     }}
                                                 >
-                                                    <Select.Trigger className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm hover:border-emerald-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                                    <Select.Trigger className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-md border border-emerald-200 bg-emerald-50/30 shadow-sm hover:border-emerald-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-emerald-200">
                                                         <div className="flex items-center gap-2">
                                                             <CloudRain className="w-4 h-4 text-emerald-600" />
                                                             <Select.Value placeholder="Pilih Kala Ulang..." />
@@ -552,7 +552,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                                     </Select.Trigger>
                                                     <Select.Portal>
                                                         <Select.Content
-                                                            className="bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-[9999]"
+                                                            className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden z-[9999]"
                                                             position="popper"
                                                             sideOffset={4}
                                                         >
@@ -585,7 +585,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                         ) : (
                                             <div className="space-y-2">
                                                 {/* Warning: not yet analyzed */}
-                                                <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                                                <div className="flex items-start gap-2 px-3 py-2.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800">
                                                     <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                                                     <div className="text-xs font-medium">
                                                         Analisis Frekuensi Hujan belum dilakukan.
@@ -627,7 +627,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
                                     Parameter {currentMethodInfo?.label}
                                 </label>
-                                <div className="bg-slate-50/80 rounded-xl p-4 border border-slate-100 border-dashed">
+                                <div className="bg-slate-50/80 rounded-md p-4 border border-slate-100 border-dashed">
                                     {renderMethodParams()}
                                 </div>
                             </div>
@@ -635,13 +635,13 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                             {/* ─── ACTION BUTTON ─── */}
                             <div className="pt-1">
                                 <Button
-                                    className="w-full py-6 rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all"
+                                    className="w-full py-6 rounded-md font-bold text-base shadow-sm shadow-blue-500/20 bg-pupr-blue hover:bg-blue-700 transition-all"
                                     onClick={handleCalculate}
                                     disabled={isCalculating}
                                 >
                                     {isCalculating ? (
                                         <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md" />
                                             Memproses Simulasi...
                                         </div>
                                     ) : (
@@ -665,7 +665,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                         {/* Result Summary Cards */}
                         {resultSummary && (
                             <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5">
+                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-md shadow-sm p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Debit Puncak (Qp)</p>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.debitPuncak}</span>
@@ -673,7 +673,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2 font-medium">Metode: {currentMethodInfo?.label}</p>
                                 </div>
-                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-2xl shadow-sm p-5">
+                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-md shadow-sm p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</p>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.waktuPuncak}</span>
@@ -686,20 +686,20 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                         {/* Hydrograph Chart */}
                         <div className={cn(
-                            'flex-1 bg-white/60 backdrop-blur border rounded-2xl shadow-sm p-5 flex flex-col transition-all duration-300',
+                            'flex-1 bg-white/60 backdrop-blur border rounded-md shadow-sm p-5 flex flex-col transition-all duration-300',
                             isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'
                         )}>
                             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 mb-4">
                                 <Activity className="w-5 h-5 text-blue-500" />
                                 Kurva Hidrograf Banjir
                                 {currentMethodInfo && (
-                                    <span className="ml-auto text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
+                                    <span className="ml-auto text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-md">
                                         {currentMethodInfo.label}
                                     </span>
                                 )}
                             </h3>
 
-                            <div className="flex-1 bg-slate-50/50 rounded-xl border border-slate-100 p-4 border-dashed relative min-h-[300px]">
+                            <div className="flex-1 bg-slate-50/50 rounded-md border border-slate-100 p-4 border-dashed relative min-h-[300px]">
                                 {chartData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
@@ -742,7 +742,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                     </ResponsiveContainer>
                                 ) : (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                                        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                                        <div className="w-16 h-16 bg-blue-50 rounded-md flex items-center justify-center mb-4">
                                             <Activity className="w-8 h-8 text-blue-300" />
                                         </div>
                                         <p className="text-slate-500 font-medium">Belum ada kalkulasi.</p>
@@ -787,7 +787,7 @@ const InputField: React.FC<InputFieldProps> = ({ label, value, onChange, unit, t
             {label}
             {tooltip && (
                 <span
-                    className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-slate-100 text-slate-400 text-[8px] font-bold cursor-help"
+                    className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-md bg-slate-100 text-slate-400 text-[8px] font-bold cursor-help"
                     title={tooltip}
                 >?</span>
             )}

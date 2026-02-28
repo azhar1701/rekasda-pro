@@ -20,10 +20,10 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-4 rounded-lg shadow-xl border border-slate-200">
+        <div className="bg-white p-4 rounded-md shadow-sm border border-slate-200">
           <p className="font-bold text-slate-900 mb-2">{data.month}</p>
           <div className="space-y-1 text-sm">
-            <p className="text-blue-600 font-semibold">Ketersediaan: {data['Ketersediaan Air (Q80)']} m³/s</p>
+            <p className="text-pupr-blue font-semibold">Ketersediaan: {data['Ketersediaan Air (Q80)']} m³/s</p>
             <p className="text-orange-600 font-semibold">Kebutuhan: {data['Total Kebutuhan']} m³/s</p>
             <p className={`font-bold ${data['Surplus/Defisit'] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {data['Surplus/Defisit'] >= 0 ? 'Surplus' : 'Defisit'}: {Math.abs(data['Surplus/Defisit'])} m³/s
@@ -65,7 +65,7 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
             axisLine={{ stroke: '#cbd5e1' }}
             width={60}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} content={<CustomTooltip />} />
           <Legend 
             wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
             iconType="rect"

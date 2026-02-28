@@ -91,19 +91,19 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
           <label className="text-xs font-bold text-slate-600 uppercase">Data Curah Hujan Bulanan</label>
           <button
             onClick={loadSampleData}
-            className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+            className="text-xs font-bold text-pupr-blue hover:text-blue-700 px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
           >
             Load Contoh
           </button>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {MONTHS.map((month, index) => (
-            <div key={month} className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div key={month} className="bg-slate-50 p-3 rounded-md border border-slate-200">
               <div className="text-[10px] font-black text-slate-500 uppercase mb-2">{month}</div>
               <div className="space-y-2">
                 <div className="relative">
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                     </svg>
                   </div>
@@ -144,12 +144,12 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
       </div>
 
       {/* Results Preview */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
         <div className="text-xs font-bold text-blue-700 uppercase mb-2">Hasil Estimasi Debit (m³/s)</div>
         <div className="grid grid-cols-6 gap-2 text-xs">
           {MONTHS.map((month, index) => (
             <div key={month} className="text-center">
-              <div className="text-[10px] text-blue-600 font-bold">{month}</div>
+              <div className="text-[10px] text-pupr-blue font-bold">{month}</div>
               <div className="font-bold text-blue-900">{calculatedFlow[index]?.toFixed(2) || '0.00'}</div>
             </div>
           ))}

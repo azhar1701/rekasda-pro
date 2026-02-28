@@ -149,7 +149,7 @@ export default function ChannelCapacity() {
                     step="0.1"
                     value={params.b}
                     onChange={(e) => updateParam('b', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <span className="text-sm text-slate-500 w-8">m</span>
                 </div>
@@ -165,7 +165,7 @@ export default function ChannelCapacity() {
                     step="0.1"
                     value={params.h}
                     onChange={(e) => updateParam('h', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <span className="text-sm text-slate-500 w-8">m</span>
                 </div>
@@ -181,7 +181,7 @@ export default function ChannelCapacity() {
                     step="0.1"
                     value={params.m}
                     onChange={(e) => updateParam('m', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <span className="text-sm text-slate-500 w-8">-</span>
                 </div>
@@ -206,7 +206,7 @@ export default function ChannelCapacity() {
                     step="0.0001"
                     value={params.S}
                     onChange={(e) => updateParam('S', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <span className="text-sm text-slate-500 w-8">-</span>
                 </div>
@@ -222,7 +222,7 @@ export default function ChannelCapacity() {
                     step="0.001"
                     value={params.n}
                     onChange={(e) => updateParam('n', e.target.value)}
-                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <span className="text-sm text-slate-500 w-8">-</span>
                 </div>
@@ -230,7 +230,7 @@ export default function ChannelCapacity() {
 
               <button
                 onClick={() => setShowManningTable(!showManningTable)}
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="flex items-center gap-2 text-sm text-pupr-blue hover:text-blue-700 font-medium"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -239,7 +239,7 @@ export default function ChannelCapacity() {
               </button>
 
               {showManningTable && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md text-sm">
                   <h4 className="font-semibold text-slate-800 mb-2">Nilai n Manning</h4>
                   <ul className="space-y-1 text-slate-700">
                     <li>• Beton: 0.012 - 0.018</li>
@@ -257,13 +257,13 @@ export default function ChannelCapacity() {
       {/* RIGHT PANEL - Visualization & Results */}
       <div className="w-[70%] p-8">
         {/* Zone 1: Visualisasi Penampang */}
-        <div className="bg-slate-100 rounded-xl p-8 mb-8 h-80 flex items-center justify-center">
+        <div className="bg-slate-100 rounded-md p-8 mb-8 h-80 flex items-center justify-center">
           {renderChannelSVG()}
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
             <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -278,19 +278,19 @@ export default function ChannelCapacity() {
         {results && (
           <>
             <div className="grid grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
                 <div className="text-sm text-slate-600 mb-2">Debit Kapasitas</div>
-                <div className="text-3xl font-bold text-blue-600">{results.Q.toFixed(3)}</div>
+                <div className="text-3xl font-bold text-pupr-blue">{results.Q.toFixed(3)}</div>
                 <div className="text-sm text-slate-500 mt-1">m³/s</div>
               </div>
 
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
                 <div className="text-sm text-slate-600 mb-2">Kecepatan Aliran</div>
                 <div className="text-3xl font-bold text-slate-700">{results.V.toFixed(3)}</div>
                 <div className="text-sm text-slate-500 mt-1">m/s</div>
               </div>
 
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <div className="bg-white rounded-md p-6 border border-slate-200 shadow-sm">
                 <div className="text-sm text-slate-600 mb-2">Status Aliran</div>
                 <div className={`text-2xl font-bold ${results.Fr < 1 ? 'text-green-600' : 'text-orange-600'}`}>
                   {results.Fr < 1 ? 'Subkritis' : 'Superkritis'}
@@ -300,7 +300,7 @@ export default function ChannelCapacity() {
             </div>
 
             {/* Zone 3: Tabel Detail Hidrolis */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
                 <h3 className="font-semibold text-slate-800">Detail Parameter Hidrolis</h3>
               </div>
@@ -315,28 +315,28 @@ export default function ChannelCapacity() {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   <tr className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm text-slate-800">Luas Basah</td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-mono">A</td>
-                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium">{results.A.toFixed(3)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">m²</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 tabular-nums tracking-tight">Luas Basah</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 font-mono tabular-nums tracking-tight">A</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium tabular-nums tracking-tight">{results.A.toFixed(3)}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 tabular-nums tracking-tight">m²</td>
                   </tr>
                   <tr className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm text-slate-800">Keliling Basah</td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-mono">P</td>
-                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium">{results.P.toFixed(3)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">m</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 tabular-nums tracking-tight">Keliling Basah</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 font-mono tabular-nums tracking-tight">P</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium tabular-nums tracking-tight">{results.P.toFixed(3)}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 tabular-nums tracking-tight">m</td>
                   </tr>
                   <tr className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm text-slate-800">Jari-jari Hidrolis</td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-mono">R</td>
-                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium">{results.R.toFixed(3)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">m</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 tabular-nums tracking-tight">Jari-jari Hidrolis</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 font-mono tabular-nums tracking-tight">R</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium tabular-nums tracking-tight">{results.R.toFixed(3)}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 tabular-nums tracking-tight">m</td>
                   </tr>
                   <tr className="hover:bg-slate-50">
-                    <td className="px-6 py-4 text-sm text-slate-800">Lebar Atas</td>
-                    <td className="px-6 py-4 text-sm text-slate-600 font-mono">T</td>
-                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium">{results.T.toFixed(3)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">m</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 tabular-nums tracking-tight">Lebar Atas</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 font-mono tabular-nums tracking-tight">T</td>
+                    <td className="px-6 py-4 text-sm text-slate-800 text-right font-medium tabular-nums tracking-tight">{results.T.toFixed(3)}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600 tabular-nums tracking-tight">m</td>
                   </tr>
                 </tbody>
               </table>

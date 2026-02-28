@@ -35,14 +35,14 @@ export const Stepper: React.FC<StepperProps> = ({
               <button
                 onClick={() => onStepChange?.(index)}
                 className={`
-                  w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all
-                  flex-shrink-0
+                  w-10 h-10 rounded-md flex items-center justify-center font-bold transition-all
+                  flex-shrink-0 tabular-nums
                   ${
                     isCurrent(index)
-                      ? 'bg-teal-600 text-white shadow-lg'
+                      ? 'bg-pupr-blue text-white shadow-sm border border-pupr-blue'
                       : isCompleted(index)
-                      ? 'bg-teal-600 text-white'
-                      : 'bg-slate-200 text-slate-500'
+                      ? 'bg-pupr-blue text-white border border-pupr-blue'
+                      : 'bg-white text-slate-500 border border-slate-300'
                   }
                 `}
               >
@@ -64,8 +64,10 @@ export const Stepper: React.FC<StepperProps> = ({
                 <div
                   className={`
                     flex-1 h-1 mx-2 transition-colors
-                    ${isCompleted(index + 1) ? 'bg-teal-600' : 'bg-slate-200'}
+                    ${isCompleted(index + 1) ? 'bg-pupr-blue' : 'bg-slate-300'}
                   `}
+                />
+              )}
                 />
               )}
             </div>
@@ -81,14 +83,14 @@ export const Stepper: React.FC<StepperProps> = ({
                 <button
                   onClick={() => onStepChange?.(index)}
                   className={`
-                    w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all
-                    flex-shrink-0
+                    w-10 h-10 rounded-md flex items-center justify-center font-bold transition-all
+                    flex-shrink-0 tabular-nums
                     ${
                       isCurrent(index)
-                        ? 'bg-teal-600 text-white shadow-lg'
+                        ? 'bg-pupr-blue text-white shadow-sm border border-pupr-blue'
                         : isCompleted(index)
-                        ? 'bg-teal-600 text-white'
-                        : 'bg-slate-200 text-slate-500'
+                        ? 'bg-pupr-blue text-white border border-pupr-blue'
+                        : 'bg-white text-slate-500 border border-slate-300'
                     }
                   `}
                 >
@@ -107,8 +109,10 @@ export const Stepper: React.FC<StepperProps> = ({
                 {index < steps.length - 1 && (
                   <div
                     className={`w-1 h-12 transition-colors ${
-                      isCompleted(index + 1) ? 'bg-teal-600' : 'bg-slate-200'
+                      isCompleted(index + 1) ? 'bg-pupr-blue' : 'bg-slate-300'
                     }`}
+                  />
+                )}
                   />
                 )}
               </div>

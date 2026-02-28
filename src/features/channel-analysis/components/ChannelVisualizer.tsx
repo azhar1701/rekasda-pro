@@ -168,10 +168,10 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
   };
 
   return (
-    <div className="bg-slate-50 rounded-lg p-4 relative">
+    <div className="bg-slate-50 rounded-md p-4 relative">
       {/* Tooltip */}
       {hoveredPart && results && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium shadow-lg whitespace-nowrap animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-slate-900 text-white px-4 py-2 rounded-md text-xs font-medium shadow-sm whitespace-nowrap animate-in fade-in slide-in-from-top-2 duration-200">
           {hoveredPart === 'water' ? (
             <div className="space-y-1">
               <div className="font-bold text-teal-300">Badan Air</div>
@@ -212,7 +212,7 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
               <div className="text-slate-900 font-bold">{results.Perimeter} m</div>
             </div>
           </div>
-          <div className={`ml-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${getStatusColor()}`}>
+          <div className={`ml-3 px-3 py-2 rounded-md text-xs font-bold uppercase transition-all ${getStatusColor()}`}>
             {results.SafetyStatus}
           </div>
         </div>

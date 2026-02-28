@@ -110,11 +110,11 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Konsistensi RAPS</span>
               {qcStatus.rapsValid ? (
-                <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
                   <CheckCircle2 className="w-3 h-3" /> Valid
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
                   <XCircle className="w-3 h-3" /> Tidak Valid
                 </span>
               )}
@@ -123,11 +123,11 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Outlier Grubbs</span>
               {qcStatus.grubbsValid ? (
-                <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
                   <CheckCircle2 className="w-3 h-3" /> Valid
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
                   <XCircle className="w-3 h-3" /> Outlier Terdeteksi
                 </span>
               )}
@@ -136,11 +136,11 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Homogenitas</span>
               {qcStatus.homogeneityValid ? (
-                <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
                   <CheckCircle2 className="w-3 h-3" /> Valid
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
                   <XCircle className="w-3 h-3" /> Tidak Valid
                 </span>
               )}

@@ -31,7 +31,7 @@ interface FloodHydrographChartProps {
 const CustomHydrographTooltip: React.FC<any> = ({ active, payload }) => {
   if (active && payload && payload.length > 0) {
     return (
-      <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-2xl border border-white/10 pointer-events-none z-50 min-w-[160px]">
+      <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-md shadow-sm border border-white/10 pointer-events-none z-50 min-w-[160px]">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-white/10 pb-1">
           Waktu: <span className="text-white">{payload[0].payload.time.toFixed(1)} jam</span>
         </p>
@@ -39,7 +39,7 @@ const CustomHydrographTooltip: React.FC<any> = ({ active, payload }) => {
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.stroke || entry.fill }}></div>
+                <div className="w-2 h-2 rounded-md" style={{ backgroundColor: entry.stroke || entry.fill }}></div>
                 <span className="text-xs font-medium text-slate-300">{entry.name}:</span>
               </div>
               <span className="text-xs font-bold text-white">{entry.value.toFixed(3)} <span className="text-[10px] text-slate-400 font-normal">m³/s</span></span>
@@ -75,16 +75,16 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
   const gradientId = `hydrograph-gradient-${Math.random().toString(36).substr(2, 9)}`;
 
   return (
-    <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="w-full bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-transparent">
+      <div className="px-6 py-5 border-b border-slate-100 bg-pupr-blue text-white">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Left: Title & Volume */}
           <div>
             <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               {title}
               {secondaryData && (
-                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-md border border-indigo-200">
                   Dual Series
                 </span>
               )}
@@ -102,7 +102,7 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
               <div className="text-center md:text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Debit Puncak</p>
                 <div className="flex items-baseline md:justify-end gap-1">
-                  <span className="text-3xl font-black text-teal-600 leading-none tracking-tight">{qPeak.toFixed(2)}</span>
+                  <span className="text-3xl font-black text-pupr-blue leading-none tracking-tight">{qPeak.toFixed(2)}</span>
                   <span className="text-[10px] text-slate-500 font-bold uppercase">m³/s</span>
                 </div>
               </div>
@@ -262,14 +262,14 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 py-1 px-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-4 py-1 px-3 bg-white rounded-md border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: primaryColor }}></div>
             <span className="text-[10px] font-bold text-slate-600 uppercase">DFH (Konvolusi)</span>
           </div>
           {secondaryData && (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-slate-400 rounded-full"></div>
+              <div className="w-3 h-0.5 bg-slate-400 rounded-md"></div>
               <span className="text-[10px] font-bold text-slate-600 uppercase">Unit Hydrograph</span>
             </div>
           )}

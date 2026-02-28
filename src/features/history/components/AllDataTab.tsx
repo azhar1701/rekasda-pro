@@ -314,7 +314,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       title="Daftar Proyek"
       description="Database riwayat perhitungan RekaSDA"
       icon={<Database className="w-6 h-6" />}
-      iconColorClass="bg-indigo-50 text-indigo-600"
+      iconColorClass="bg-indigo-50 text-pupr-blue"
     >
       <div className="space-y-6 pb-6 page-enter relative z-10">
 
@@ -326,7 +326,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
               size="sm"
               onClick={loadData}
               disabled={loading || isSearchingNearby}
-              className="rounded-xl font-bold text-xs"
+              className="rounded-md font-bold text-xs"
             >
               <svg className="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
               Refresh
@@ -336,14 +336,14 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
               size="sm"
               onClick={handleSearchNearby}
               disabled={loading || isSearchingNearby}
-              className="rounded-xl font-bold text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
+              className="rounded-md font-bold text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
             >
               <svg className="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               {isSearchingNearby ? 'Mencari...' : 'Cari di Sekitar'}
             </Button>
           </div>
 
-          <div className="flex gap-2 p-1.5 bg-slate-100 rounded-xl w-full sm:w-auto">
+          <div className="flex gap-2 p-1.5 bg-slate-100 rounded-md w-full sm:w-auto">
             <button
               onClick={() => setViewMode('LIST')}
               className={`flex-1 sm:flex-none py-1.5 px-4 rounded-lg text-xs font-bold transition-all ${viewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
@@ -363,12 +363,12 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
 
         {loading ? (
           <div className="flex justify-center items-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-12 w-12 border-b-2 border-indigo-600"></div>
           </div>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-white/40 backdrop-blur-md rounded-2xl border border-white/60 shadow-inner text-center">
-            <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5 rotate-3 shadow-sm border border-white">
-              <Database className="w-10 h-10 text-indigo-400 -rotate-3" />
+          <div className="flex flex-col items-center justify-center py-24 bg-white/40 backdrop-blur-md rounded-md border border-white/60 shadow-inner text-center">
+            <div className="w-20 h-20 bg-indigo-50 rounded-md flex items-center justify-center mb-5 rotate-3 shadow-sm border border-white">
+              <Database className="w-10 h-10 text-pupr-blue -rotate-3" />
             </div>
             <h3 className="text-lg font-bold text-slate-800 mb-1">Database Kosong</h3>
             <p className="text-sm text-slate-500 max-w-sm">Belum ada riwayat perhitungan yang tersimpan. Mulai buat perhitungan di modul terkait untuk melihat datanya di sini.</p>
@@ -376,22 +376,22 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
         ) : (
           <>
             {viewMode === 'MAP' ? (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 sm:p-5">
+              <div className="bg-white rounded-md shadow-sm border border-slate-200 p-3 sm:p-5">
                 <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Peta Lokasi Proyek</h2>
                 <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
                   <div className="flex gap-3 text-[10px] sm:text-xs">
                     <span className="flex items-center gap-1.5 text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></span>
+                      <span className="w-2.5 h-2.5 rounded-md bg-[#2563eb]"></span>
                       Saluran Manning
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626]"></span>
+                      <span className="w-2.5 h-2.5 rounded-md bg-[#dc2626]"></span>
                       Banjir Rasional
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#059669]"></span>
+                      <span className="w-2.5 h-2.5 rounded-md bg-[#059669]"></span>
                       Neraca Air
                     </span>
                   </div>
@@ -400,8 +400,8 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {data.map((item) => (
-                  <div key={item.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-2xl p-5 hover:border-indigo-300/50 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-100/50 to-transparent rounded-bl-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div key={item.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-md p-5 hover:border-indigo-300/50 hover:shadow-sm hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-100 rounded-md -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                     <div>
                       <div className="flex justify-between items-start mb-4">
@@ -427,7 +427,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
                         {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
 
-                      <div className="mb-6 p-4 bg-gradient-to-br from-white/80 to-white/40 border border-white/60 shadow-inner rounded-xl group-hover:bg-white transition-colors duration-300">
+                      <div className="mb-6 p-4 bg-slate-50 border border-slate-200 shadow-sm rounded-md group-hover:bg-white transition-colors duration-300">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
                           {item.type === 'water_balance' ? 'Total Ketersediaan' : item.type === 'flood' ? 'Debit Puncak' : 'Kapasitas Saluran'}
                         </span>
@@ -440,7 +440,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
                     <div className="flex flex-col gap-2 mt-auto z-10">
                       <button
                         onClick={() => handleShowOnMap(item)}
-                        className="w-full py-2.5 text-[13px] font-bold text-blue-700 bg-blue-50/80 hover:bg-blue-100 rounded-xl transition-colors flex items-center justify-center gap-2 border border-blue-100/50"
+                        className="w-full py-2.5 text-[13px] font-bold text-blue-700 bg-blue-50/80 hover:bg-blue-100 rounded-md transition-colors flex items-center justify-center gap-2 border border-blue-100/50"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -451,13 +451,13 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => onViewDetail?.(item)}
-                          className="w-full py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl transition-all"
+                          className="w-full py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm rounded-md transition-all"
                         >
                           Detail
                         </button>
                         <button
                           onClick={() => onConsultAI?.(item)}
-                          className="w-full py-2.5 text-[13px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100/50 hover:bg-indigo-100 rounded-xl transition-all flex items-center justify-center gap-1.5"
+                          className="w-full py-2.5 text-[13px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100/50 hover:bg-indigo-100 rounded-md transition-all flex items-center justify-center gap-1.5"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

@@ -71,7 +71,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
             {/* Quick Actions */}
             <Section title="Tindakan Cepat">
               <div className="flex gap-2">
-                <Button variant="default" className="flex-1 font-bold bg-teal-600 hover:bg-teal-700" onClick={loadPilotData}>
+                <Button variant="default" className="flex-1 font-bold bg-pupr-blue hover:bg-teal-700" onClick={loadPilotData}>
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
                   Load Pilot
                 </Button>
@@ -93,7 +93,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     {calcError && (
-                      <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 mb-4 animate-shake">
+                      <div className="p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-100 mb-4 animate-shake">
                         Error Perhitungan: {calcError}
                       </div>
                     )}
@@ -123,7 +123,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                           variant="outline"
                           size="icon"
                           onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                          className="h-11 w-11 border-teal-200 text-teal-600 hover:bg-teal-50"
+                          className="h-11 w-11 border-teal-200 text-pupr-blue hover:bg-teal-50"
                           title="Slope Calculator"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,12 +165,12 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
             {rationalResults && (
               <div className="animate-fade-in space-y-6 relative">
                 {isHookCalculating && (
-                  <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
-                    <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-md">
+                    <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-md animate-pulse bg-slate-200 rounded-md"></div>
                   </div>
                 )}
                 {/* Result Card */}
-                <Card className="overflow-hidden shadow-xl border-white/20">
+                <Card className="overflow-hidden shadow-sm border-white/20">
                   {/* Header */}
                   <div className="bg-white border-b border-slate-200 p-6 md:p-8 relative overflow-hidden">
                     <div className="relative z-10">
@@ -198,14 +198,14 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                   <div className="p-6 md:p-8">
                     {/* Secondary metrics */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                      <div className="bg-slate-50 p-4 rounded-md border border-slate-200">
                         <div className="flex items-center gap-1 mb-2">
                           <span className="text-[9px] font-black text-slate-500 uppercase">Volume Est.</span>
                           <HelpTooltip content="Volume total selama banjir" />
                         </div>
                         <span className="text-lg font-bold text-slate-800">{rationalResults.TotalVolume} <span className="text-[10px] text-slate-400">m³</span></span>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                      <div className="bg-slate-50 p-4 rounded-md border border-slate-200">
                         <div className="flex items-center gap-1 mb-2">
                           <span className="text-[9px] font-black text-slate-500 uppercase">Debit Spesifik</span>
                           <HelpTooltip content="Debit per unit luas (m³/s/km²)" />

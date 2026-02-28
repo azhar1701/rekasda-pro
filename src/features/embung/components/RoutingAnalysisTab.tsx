@@ -129,15 +129,15 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
             <ProjectContextBanner />
 
             {/* Header Info */}
-            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-md border border-blue-100">
                 <div className="flex gap-3">
-                    <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                    <Info className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
                     <div>
                         <h3 className="text-sm font-semibold text-blue-900">Penelusuran Banjir (Flood Routing)</h3>
                         <p className="text-sm text-blue-700/80 mt-1">
                             Metode Level-Pool (Modified Puls) untuk menyimulasikan perjalanan hidrograf banjir melewati waduk. Evaluasi kemampuan embung dalam meredam puncak banjir (attenuation).
                         </p>
-                        <p className="text-xs text-blue-600 mt-2 font-medium bg-blue-100/50 inline-block px-2 py-1 rounded">
+                        <p className="text-xs text-pupr-blue mt-2 font-medium bg-blue-100/50 inline-block px-2 py-1 rounded">
                             *Catatan: Kurva Kapasitas & Lengkung Debit menggunakan profil embung yang terdaftar.
                         </p>
                     </div>
@@ -161,11 +161,11 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                                         size="sm"
                                         onClick={handleCalculate}
                                         disabled={isCalculating || Boolean(isAutoFilled && isBanjirDirty)}
-                                        className={`shadow-sm transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
+                                        className={`shadow-sm transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-pupr-blue hover:bg-teal-700 text-white'}`}
                                     >
                                         {isCalculating ? (
                                             <div className="flex items-center gap-2">
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md" />
                                                 <span>Menghitung...</span>
                                             </div>
                                         ) : (
@@ -181,7 +181,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                                             onClick={() => onConsultAI({ hydrograph }, { resultData, summary })}
                                             className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group"
                                         >
-                                            <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:scale-110 transition-transform" />
+                                            <Sparkles className="w-4 h-4 mr-2 text-pupr-blue group-hover:scale-110 transition-transform" />
                                             Analisis AI
                                         </Button>
                                     )}
@@ -192,11 +192,11 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                         <CardContent className="flex-1 overflow-auto p-0 z-0 border border-slate-200 rounded-b-xl border-t-0 bg-white flex flex-col">
                             {isAutoFilled ? (
                                 <div className="p-4 bg-teal-50/50 border-b border-teal-100 shrink-0">
-                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-teal-200 shadow-sm">
-                                        <CheckCircle className="w-5 h-5 text-teal-500 shrink-0 mt-0.5" />
+                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-md border border-teal-200 shadow-sm">
+                                        <CheckCircle className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-bold text-teal-800">Auto-fill Aktif</p>
-                                            <p className="text-xs text-teal-600 mt-0.5 leading-relaxed">
+                                            <p className="text-xs text-pupr-blue mt-0.5 leading-relaxed">
                                                 Data Hidrograf Inflow tersinkronisasi otomatis dari Modul Banjir.
                                             </p>
                                         </div>
@@ -204,7 +204,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                                 </div>
                             ) : (
                                 <div className="p-4 bg-amber-50/50 border-b border-amber-100 shrink-0">
-                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-amber-200 shadow-sm">
+                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-md border border-amber-200 shadow-sm">
                                         <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-bold text-amber-800">Data Inflow Belum Tersedia</p>
@@ -245,7 +245,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                                     {!isAutoFilled && (
                                         <button
                                             onClick={handleAddTime}
-                                            className="w-full py-3 text-xs font-medium text-teal-600 hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
+                                            className="w-full py-3 text-xs font-medium text-pupr-blue hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
                                         >
                                             + Tambah Baris Waktu
                                         </button>
@@ -283,7 +283,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                                     <h2 className="text-2xl font-bold text-teal-700">
                                         {summary ? summary.peakOutflow : "-"}
                                     </h2>
-                                    <span className="text-teal-500 text-xs font-medium">m³/s</span>
+                                    <span className="text-pupr-blue text-xs font-medium">m³/s</span>
                                 </div>
                             </CardContent>
                         </Card>
@@ -297,7 +297,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                                     <h2 className="text-2xl font-bold text-indigo-700">
                                         {summary ? summary.attenuation : "-"}
                                     </h2>
-                                    <span className="text-indigo-500 text-xs font-medium">%</span>
+                                    <span className="text-pupr-blue text-xs font-medium">%</span>
                                 </div>
                             </CardContent>
                         </Card>
@@ -307,7 +307,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                     <Card className="flex-1 shadow-sm border-slate-200 flex flex-col min-h-[350px]">
                         <CardHeader className="py-4 px-5 border-b border-slate-100 flex flex-row items-center justify-between shrink-0 bg-white/50 backdrop-blur-sm z-10">
                             <div className="flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-teal-600" />
+                                <Activity className="w-5 h-5 text-pupr-blue" />
                                 <CardTitle className="text-slate-800 text-base">Grafik Routing (Inflow vs Outflow)</CardTitle>
                             </div>
                             {resultData && (
@@ -321,7 +321,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                             {/* Loading Overlay */}
                             {isCalculating && (
                                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded-b-xl">
-                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-teal-500 rounded-full animate-spin mb-3" />
+                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-teal-500 rounded-md animate-pulse bg-slate-200 rounded-md mb-3" />
                                     <p className="text-slate-600 font-medium text-sm animate-pulse">Menghitung rute banjir...</p>
                                 </div>
                             )}

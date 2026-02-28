@@ -206,7 +206,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
           <Collapsible title="Pilih Metode" defaultOpen={true}>
             <div className="space-y-4">
               {inputs.area > 0 && sniWorkflow.warning && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                   <div className="text-xs text-red-800">
                     <p className="font-semibold mb-1">Peringatan SNI 2415:2016 Pasal 5.2</p>
@@ -215,7 +215,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                 </div>
               )}
 
-              <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-200">
+              <div className="bg-slate-50/50 p-3 rounded-md border border-slate-200">
                 <Tabs defaultValue="rational" value={method} onValueChange={(v) => setMethod(v as EmpiricalMethod)}>
                   <SegmentedControl
                     items={methods.map(m => ({
@@ -229,7 +229,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
 
               <FormulaDisplay method={method} />
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start gap-2">
                 <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-amber-800">
                   <p className="font-semibold mb-1">Panduan Pemilihan:</p>
@@ -246,14 +246,14 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
             <div className="space-y-4">
               {/* Input Form */}
               <div className="space-y-3">
-                <h3 className="text-xs font-bold text-blue-600 uppercase tracking-wide border-b border-blue-200 pb-1.5">Geometri DAS</h3>
+                <h3 className="text-xs font-bold text-pupr-blue uppercase tracking-wide border-b border-blue-200 pb-1.5">Geometri DAS</h3>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Luas DAS (km²)</label>
                   <input
                     type="number"
                     value={inputs.area || ''}
                     onChange={(e) => setInputs({ ...inputs, area: parseFloat(e.target.value) || 0 })}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     placeholder="0"
                   />
                 </div>
@@ -265,7 +265,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                         type="number"
                         value={inputs.L || ''}
                         onChange={(e) => setInputs({ ...inputs, L: parseFloat(e.target.value) || 0 })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         placeholder="5"
                       />
                     </div>
@@ -276,12 +276,12 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                         step="0.01"
                         value={inputs.S || ''}
                         onChange={(e) => setInputs({ ...inputs, S: parseFloat(e.target.value) || 0 })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         placeholder="0.5"
                       />
                       <button
                         onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                        className="mt-2 w-full px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 text-xs font-bold"
+                        className="mt-2 w-full px-3 py-2 text-pupr-blue bg-blue-50 hover:bg-blue-100 rounded-md transition-colors border border-blue-200 text-xs font-bold"
                       >
                         Kalkulator Kemiringan
                       </button>
@@ -309,7 +309,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                     <button
                       type="button"
                       onClick={() => setUseManualC(!useManualC)}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      className="text-xs text-pupr-blue hover:text-blue-700 font-medium"
                     >
                       {useManualC ? '📋 Gunakan Tabel SNI' : '✏️ Input Manual'}
                     </button>
@@ -320,7 +320,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                       step="0.01"
                       value={inputs.C || ''}
                       onChange={(e) => setInputs({ ...inputs, C: parseFloat(e.target.value) || 0 })}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       placeholder="0.75"
                     />
                   ) : (
@@ -336,7 +336,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                     type="number"
                     value={inputs.I || ''}
                     onChange={(e) => setInputs({ ...inputs, I: parseFloat(e.target.value) || 0 })}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     placeholder="100"
                   />
                   <p className="text-xs text-slate-500 mt-1">💡 Gunakan Analisis Frekuensi Hujan untuk menghitung nilai ini</p>
@@ -352,7 +352,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
         {result ? (
           <div className="space-y-4">
             {/* Main Result Card */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-md p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="text-xs font-bold uppercase text-slate-500 tracking-wider mb-1">Debit Puncak Banjir Rencana</div>
@@ -384,7 +384,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
             {/* Engineering Data Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Card A: Breakdown Variabel */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <div className="bg-white rounded-md shadow-sm border border-slate-200 p-4">
                 <h3 className="text-sm font-bold text-slate-800 mb-3">🔢 Breakdown Perhitungan</h3>
                 <div className="space-y-2">
                   {method === 'rational' && (
@@ -399,7 +399,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                       </div>
                       <div className="flex justify-between text-sm border-t border-slate-200 pt-2">
                         <span className="text-slate-600">Q = 0.00278 × C × I × A</span>
-                        <span className="font-bold text-blue-600">{result.Qp.toFixed(2)} m³/s</span>
+                        <span className="font-bold text-pupr-blue">{result.Qp.toFixed(2)} m³/s</span>
                       </div>
                     </>
                   )}
@@ -427,7 +427,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
               </div>
 
               {/* Card B: Intensitas Hujan Info */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+              <div className="bg-white border border-slate-200 rounded-md shadow-sm p-4">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">🌧️ Data Intensitas Hujan</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -446,7 +446,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
             </div>
 
             {/* Actions */}
-            <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <div className="bg-white rounded-md sm:rounded-md shadow-sm border border-slate-200 p-4 sm:p-5">
               <div className="flex gap-2">
                 <SaveButton
                   onClick={handleSave}
@@ -455,7 +455,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                 />
                 <button
                   onClick={onConsultAI}
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg px-4 py-2.5 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md px-4 py-2.5 transition-colors flex items-center justify-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   Konsultasi AI
@@ -464,8 +464,8 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-8 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-md sm:rounded-md shadow-sm border border-slate-200 p-8 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-md flex items-center justify-center mx-auto mb-4">
               <Calculator className="w-8 h-8 text-slate-400" />
             </div>
             <p className="text-slate-600 text-sm">Masukkan parameter untuk melihat hasil perhitungan</p>

@@ -194,7 +194,7 @@ export const FormIdentitasLokasi: React.FC = () => {
               />
             </div>
             <div className="mt-3 flex items-start gap-2 text-[11px] text-slate-500 bg-blue-50/50 p-2 rounded border border-blue-100">
-              <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <Info className="w-3.5 h-3.5 text-pupr-blue flex-shrink-0 mt-0.5" />
               <p>Mengubah angka secara manual akan menggeser marker di peta secara otomatis.</p>
             </div>
           </div>

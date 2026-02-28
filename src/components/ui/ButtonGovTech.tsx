@@ -27,10 +27,10 @@ export const ButtonGovTech: React.FC<ButtonGovTechProps> = ({
   
   const variants = {
     'pupr-primary': "bg-pupr-blue text-white hover:bg-pupr-blue/90 active:bg-pupr-blue/80 border border-pupr-blue",
-    'pupr-accent': "bg-pupr-yellow text-black hover:bg-pupr-yellow/90 active:bg-pupr-yellow/80 border border-pupr-yellow font-bold",
-    'secondary': "border-2 border-pupr-border bg-white text-pupr-text hover:bg-pupr-surface active:bg-neutral-100",
-    'ghost': "bg-transparent text-pupr-text hover:bg-pupr-surface active:bg-neutral-100",
-    'danger': "bg-error text-white hover:bg-error-dark active:bg-error-dark border border-error"
+    'pupr-accent': "bg-pupr-yellow text-slate-900 hover:bg-pupr-yellow/90 active:bg-pupr-yellow/80 border border-pupr-yellow font-bold",
+    'secondary': "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100",
+    'ghost': "bg-transparent text-slate-700 hover:bg-slate-50 active:bg-slate-100",
+    'danger': "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 border border-red-600"
   };
 
   const widthClass = fullWidth ? "w-full" : "";

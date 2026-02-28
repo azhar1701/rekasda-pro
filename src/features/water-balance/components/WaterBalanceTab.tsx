@@ -193,11 +193,11 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
+    <div className="w-full h-full flex flex-col bg-slate-50 rounded-md border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
       {/* Fixed Shell Header */}
       <div className="px-6 py-5 border-b border-slate-200 bg-white shadow-sm z-10">
         <div className="flex items-center gap-3 mb-1">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+          <div className="p-2 bg-blue-50 text-pupr-blue rounded-md shrink-0">
             <Droplet className="w-6 h-6" />
           </div>
           <div>
@@ -212,7 +212,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
         {/* Load Message Toast */}
         {loadMessage && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-2xl shadow-lg border border-slate-200 bg-blue-50 text-blue-800 flex items-center gap-3 animate-fade-in max-w-md pointer-events-none">
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-md shadow-sm border border-slate-200 bg-blue-50 text-blue-800 flex items-center gap-3 animate-fade-in max-w-md pointer-events-none">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
@@ -254,7 +254,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.population}
                         onChange={e => setInputs({ ...inputs, population: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">jiwa</span>
                     </div>
@@ -269,7 +269,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.agricultureArea}
                         onChange={e => setInputs({ ...inputs, agricultureArea: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">Ha</span>
                     </div>
@@ -286,7 +286,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.domesticStandard}
                         onChange={e => setInputs({ ...inputs, domesticStandard: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/org/hr</span>
                     </div>
@@ -302,7 +302,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         step="0.1"
                         value={inputs.irrigationDemand}
                         onChange={e => setInputs({ ...inputs, irrigationDemand: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/s/Ha</span>
                     </div>
@@ -314,7 +314,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               <Collapsible title="Ketersediaan Air (Debit Andalan)" defaultOpen={true} badge="SNI 6738:2015">
 
                 {/* Method Toggle */}
-                <div className="flex rounded-lg bg-slate-100 p-1 mb-4">
+                <div className="flex rounded-md bg-slate-100 p-1 mb-4">
                   <button
                     onClick={() => setSupplyMethod('mock')}
                     className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${supplyMethod === 'mock'
@@ -365,7 +365,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                             // Also sync back to global store
                             if (val !== '') setLuasDas(val);
                           }}
-                          className={`w-full h-10 px-3 pr-12 text-sm bg-white rounded-lg font-semibold text-right focus:ring-2 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isLuasDasOverridden
+                          className={`w-full h-10 px-3 pr-12 text-sm bg-white rounded-md font-semibold text-right focus:ring-2 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isLuasDasOverridden
                             ? 'border-2 border-amber-400 focus:border-amber-500 focus:ring-amber-500/20'
                             : 'border border-slate-200 focus:border-blue-500 focus:ring-blue-500/20'
                             }`}
@@ -393,7 +393,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                               step={step}
                               value={mockParams[key as keyof typeof mockParams]}
                               onChange={e => setMockParams(p => ({ ...p, [key]: parseFloat(e.target.value) || 0 }))}
-                              className="w-full h-10 px-3 pr-12 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-full h-10 px-3 pr-12 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                             {unit && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">{unit}</span>}
                           </div>
@@ -407,7 +407,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                             step={0.01}
                             value={mockParams.exposedSurface}
                             onChange={e => setMockParams(p => ({ ...p, exposedSurface: parseFloat(e.target.value) || 0 }))}
-                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </div>
                       </div>
@@ -419,7 +419,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       <select
                         value={targetProb}
                         onChange={e => setTargetProb(Number(e.target.value))}
-                        className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                        className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                       >
                         <option value={80}>Q80 — Irigasi</option>
                         <option value={90}>Q90 — PLTA</option>
@@ -469,7 +469,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
                     {/* Mock error */}
                     {mockError && (
-                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 font-medium">
+                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-md text-xs text-rose-800 font-medium">
                         {mockError}
                       </div>
                     )}
@@ -478,7 +478,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                     <button
                       onClick={handleMockCalculate}
                       disabled={luasDasNum <= 0}
-                      className="w-full min-h-[44px] py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-bold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Zap className="w-5 h-5" />
                       Hitung Ketersediaan Air (F.J. Mock)
@@ -489,7 +489,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   <>
                     <button
                       onClick={() => setIsCalcModalOpen(true)}
-                      className="w-full min-h-[44px] py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
+                      className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-semibold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -497,12 +497,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       Kalkulator Hujan
                     </button>
 
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                    <div className="bg-slate-50 rounded-md p-4 border border-slate-200">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data Bulanan (m³/s)</span>
                         <button
                           onClick={() => setIsInputModalOpen(true)}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                          className="text-xs font-semibold text-pupr-blue hover:text-blue-700 flex items-center gap-1"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -535,7 +535,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* Save Message Toast */}
             {saveMessage && (
-              <div className={`absolute top-0 right-0 z-50 px-6 py-4 rounded-lg shadow-lg border flex items-center gap-3 animate-fade-in pointer-events-none ${saveMessage.type === 'success' ? 'bg-emerald-50/90 backdrop-blur-md border-emerald-500 text-emerald-800' : 'bg-red-50/90 backdrop-blur-md border-red-500 text-red-800'
+              <div className={`absolute top-0 right-0 z-50 px-6 py-4 rounded-md shadow-sm border flex items-center gap-3 animate-fade-in pointer-events-none ${saveMessage.type === 'success' ? 'bg-emerald-50/90 backdrop-blur-md border-emerald-500 text-emerald-800' : 'bg-red-50/90 backdrop-blur-md border-red-500 text-red-800'
                 }`}>
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {saveMessage.type === 'success' ? (
@@ -552,15 +552,15 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             {mockResults && hasilMock && (
               <>
                 {/* Q Andalan Highlight Card */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-lg border border-blue-200/60 p-6 flex items-center gap-6">
-                  <div className="p-3 bg-blue-100 rounded-xl shrink-0">
-                    <Droplet className="w-8 h-8 text-blue-600" />
+                <div className="bg-white/80 backdrop-blur-xl rounded-md shadow-sm border border-blue-200/60 p-6 flex items-center gap-6">
+                  <div className="p-3 bg-blue-100 rounded-md shrink-0">
+                    <Droplet className="w-8 h-8 text-pupr-blue" />
                   </div>
                   <div className="flex-1">
                     <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">
                       Debit Andalan Q{hasilMock.probability}
                     </div>
-                    <div className="text-4xl font-bold text-blue-600 font-mono leading-none">
+                    <div className="text-4xl font-bold text-pupr-blue font-mono leading-none">
                       {hasilMock.qAndalan.toFixed(4)}
                     </div>
                     <div className="text-sm font-semibold text-slate-500 mt-1">m³/s · Metode F.J. Mock</div>
@@ -571,7 +571,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
 
                 {/* Mock Summary Table */}
-                <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-lg border border-white/50 overflow-hidden">
+                <div className="bg-white/60 backdrop-blur-xl rounded-md shadow-sm border border-white/50 overflow-hidden">
                   <div className="px-5 py-3 border-b border-slate-200/50 bg-white/40">
                     <h3 className="text-sm font-bold text-slate-800">Rekap Hasil F.J. Mock (12 Bulan)</h3>
                     <p className="text-[10px] text-slate-500">Transformasi Hujan → Aliran per bulan</p>
@@ -581,11 +581,11 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       <thead className="bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
                         <tr>
                           <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-blue-600">P (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">P (mm)</th>
                           <th className="text-right py-2.5 px-3 font-bold text-orange-600">ETo (mm)</th>
                           <th className="text-right py-2.5 px-3 font-bold text-cyan-600">WS (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-emerald-600">BF (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-purple-600">DRO (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">BF (mm)</th>
+                          <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">DRO (mm)</th>
                           <th className="text-right py-2.5 px-3 font-bold text-slate-600">TRO (mm)</th>
                           <th className="text-right py-2.5 px-3 font-bold text-blue-700 bg-blue-50/80">Q (m³/s)</th>
                         </tr>
@@ -593,14 +593,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       <tbody>
                         {mockResults.map((r, i) => (
                           <tr key={i} className="border-b border-slate-100 even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
-                            <td className="py-2 px-3 font-bold text-slate-700">{r.month}</td>
-                            <td className="py-2 px-3 text-right font-mono text-blue-600">{r.precipitation}</td>
-                            <td className="py-2 px-3 text-right font-mono text-orange-600">{r.eto}</td>
-                            <td className="py-2 px-3 text-right font-mono text-cyan-600">{r.waterSurplus}</td>
-                            <td className="py-2 px-3 text-right font-mono text-emerald-600">{r.baseFlow}</td>
-                            <td className="py-2 px-3 text-right font-mono text-purple-600">{r.directRunoff}</td>
-                            <td className="py-2 px-3 text-right font-mono font-semibold">{r.totalRunoff}</td>
-                            <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">{r.discharge}</td>
+                            <td className="py-2 px-3 font-bold text-slate-700 tabular-nums tracking-tight">{r.month}</td>
+                            <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.precipitation}</td>
+                            <td className="py-2 px-3 text-right font-mono text-orange-600 tabular-nums tracking-tight">{r.eto}</td>
+                            <td className="py-2 px-3 text-right font-mono text-cyan-600 tabular-nums tracking-tight">{r.waterSurplus}</td>
+                            <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.baseFlow}</td>
+                            <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.directRunoff}</td>
+                            <td className="py-2 px-3 text-right font-mono font-semibold tabular-nums tracking-tight">{r.totalRunoff}</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30 tabular-nums tracking-tight">{r.discharge}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -612,7 +612,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* FINAL NERACA TABLE — Conditional */}
             {neracaFinal && (
-              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-lg border border-white/50 overflow-hidden">
+              <div className="bg-white/60 backdrop-blur-xl rounded-md shadow-sm border border-white/50 overflow-hidden">
                 <div className="px-5 py-3 border-b border-slate-200/50 bg-white/40 flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-slate-800">Neraca Air Final (Surplus/Defisit)</h3>
@@ -620,11 +620,11 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   </div>
                   <div className="flex items-center gap-3 text-[10px] font-bold">
                     <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="w-2.5 h-2.5 rounded-md bg-pupr-blue" />
                       Surplus: {neracaFinal.filter(r => r.status === 'Surplus').length} bln
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      <span className="w-2.5 h-2.5 rounded-md bg-rose-500" />
                       Defisit: {neracaFinal.filter(r => r.status === 'Defisit').length} bln
                     </span>
                   </div>
@@ -634,10 +634,10 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                     <thead className="bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
                       <tr>
                         <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-blue-600">Supply</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-teal-600">Irigasi</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Supply</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Irigasi</th>
                         <th className="text-right py-2.5 px-3 font-bold text-orange-600">Air Baku</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-emerald-600">Lingk.</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Lingk.</th>
                         <th className="text-right py-2.5 px-3 font-bold text-slate-600">Total</th>
                         <th className="text-right py-2.5 px-3 font-bold text-slate-800 bg-slate-100/80">Neraca</th>
                         <th className="text-center py-2.5 px-3 font-bold text-slate-600">Status</th>
@@ -647,18 +647,18 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       {neracaFinal.map((r, i) => (
                         <tr key={i} className={`border-b border-slate-100 transition-colors ${r.status === 'Defisit' ? 'bg-rose-50/40' : 'even:bg-slate-50/50'
                           } hover:bg-slate-100/50`}>
-                          <td className="py-2 px-3 font-bold text-slate-700">{r.month}</td>
-                          <td className="py-2 px-3 text-right font-mono text-blue-600">{r.ketersediaan.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono text-teal-600">{r.irigasi.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono text-orange-600">{r.airBaku.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono text-emerald-600">{r.lingkungan.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono font-semibold">{r.totalKebutuhan.toFixed(4)}</td>
+                          <td className="py-2 px-3 font-bold text-slate-700 tabular-nums tracking-tight">{r.month}</td>
+                          <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.ketersediaan.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.irigasi.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-orange-600 tabular-nums tracking-tight">{r.airBaku.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.lingkungan.toFixed(4)}</td>
+                          <td className="py-2 px-3 text-right font-mono font-semibold tabular-nums tracking-tight">{r.totalKebutuhan.toFixed(4)}</td>
                           <td className={`py-2 px-3 text-right font-mono font-bold bg-slate-50/50 ${r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
                             }`}>
                             {r.neraca >= 0 ? '+' : ''}{r.neraca.toFixed(4)}
                           </td>
-                          <td className="py-2 px-3 text-center">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                          <td className="py-2 px-3 text-center tabular-nums tracking-tight">
+                            <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
                               r.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
                                 'bg-slate-100 text-slate-600'
                               }`}>
@@ -686,39 +686,39 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* KPI CARDS — Glassmorphism */}
             <div ref={kpiCardsRef} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
-              <div className="bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-5 group relative">
+              <div className="bg-white/80 backdrop-blur-md border border-white/40 rounded-md shadow-sm hover:shadow-sm transition-all duration-300 p-5 group relative">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Total Ketersediaan
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Total ketersediaan air dari sumber (debit andalan)
                     </div>
                   </span>
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-md bg-blue-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold text-blue-600 font-mono">{totalSupply.toFixed(1)}</div>
+                <div className="text-3xl font-bold text-pupr-blue font-mono">{totalSupply.toFixed(1)}</div>
                 <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-lg">
+              <div className="bg-white rounded-md shadow-sm border border-slate-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Total Kebutuhan
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Total kebutuhan air domestik dan pertanian
                     </div>
                   </span>
-                  <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-md bg-orange-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
@@ -728,27 +728,27 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
 
-              <div className={`bg-white rounded-xl shadow-sm border-2 ${netBalance >= 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-rose-300 bg-rose-50/30'} p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-lg`}>
+              <div className={`bg-white rounded-md shadow-sm border-2 ${netBalance >= 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-rose-300 bg-rose-50/30'} p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-sm`}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Status Neraca
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Selisih antara ketersediaan dan kebutuhan air
                     </div>
                   </span>
-                  <div className={`w-10 h-10 rounded-lg ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
-                    <svg className={`w-5 h-5 ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`w-10 h-10 rounded-md ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
+                    <svg className={`w-5 h-5 ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={netBalance >= 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
                     </svg>
                   </div>
                 </div>
-                <div className={`text-3xl font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-mono`}>
+                <div className={`text-3xl font-bold ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'} font-mono`}>
                   {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
                 </div>
-                <div className={`text-xs font-semibold mt-1 ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <div className={`text-xs font-semibold mt-1 ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'}`}>
                   {netBalance >= 0 ? 'SURPLUS' : 'DEFISIT'}
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-200">
@@ -756,18 +756,18 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-rose-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-lg">
+              <div className="bg-white rounded-md shadow-sm border border-rose-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Bulan Kritis
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Bulan dengan defisit air terbesar
                     </div>
                   </span>
-                  <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-md bg-rose-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -781,7 +781,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             </div>
 
             {/* CHART SECTION */}
-            <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-lg border border-white/50 p-4 md:p-6 transition-all duration-300">
+            <div className="bg-white/60 backdrop-blur-xl rounded-md shadow-sm border border-white/50 p-4 md:p-6 transition-all duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -794,7 +794,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   <button
                     onClick={handleSaveWaterBalance}
                     disabled={isSaving}
-                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-pupr-blue text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -805,7 +805,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   {onConsultAI && (
                     <button
                       onClick={onConsultAI}
-                      className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 active:bg-slate-900 transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-md"
+                      className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 active:bg-slate-900 transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-md"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -821,7 +821,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </div>
               <div className="mt-4 pt-4 border-t border-slate-200/60">
                 <p className="text-xs text-slate-600">
-                  <span className="font-semibold">Catatan:</span> Perhitungan mengikuti standar <span className="font-semibold text-blue-600">SNI 19-6728.1-2002</span> tentang Penyusunan Neraca Sumber Daya Air pada Wilayah Sungai.
+                  <span className="font-semibold">Catatan:</span> Perhitungan mengikuti standar <span className="font-semibold text-pupr-blue">SNI 19-6728.1-2002</span> tentang Penyusunan Neraca Sumber Daya Air pada Wilayah Sungai.
                 </p>
               </div>
             </div>
@@ -841,7 +841,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
       {
         isInputModalOpen && createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsInputModalOpen(false)}>
-            <div className="bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-white/90 backdrop-blur-xl border border-white/50 rounded-md shadow-sm w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/60">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800">Input Data Debit Bulanan</h3>
@@ -856,7 +856,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
                 {MONTHS.map((month, index) => (
-                  <div key={month} className="bg-white/50 backdrop-blur-md rounded-lg p-4 border border-white/60 shadow-inner">
+                  <div key={month} className="bg-white/50 backdrop-blur-md rounded-md p-4 border border-white/60 shadow-inner">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">{month}</label>
                     <div className="relative">
                       <input
@@ -864,7 +864,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         step="0.1"
                         value={inputs.monthlySupply[index]}
                         onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
-                        className="w-full h-12 px-4 pr-16 text-lg bg-white/70 border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-12 px-4 pr-16 text-lg bg-white/70 border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">m³/s</span>
                     </div>
@@ -875,7 +875,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               <div className="flex justify-end">
                 <button
                   onClick={() => setIsInputModalOpen(false)}
-                  className="px-6 py-3 bg-blue-600/90 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors shadow-md backdrop-blur-md"
+                  className="px-6 py-3 bg-pupr-blue/90 hover:bg-pupr-blue text-white rounded-md font-semibold transition-colors shadow-md backdrop-blur-md"
                 >
                   Simpan &amp; Tutup
                 </button>

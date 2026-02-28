@@ -70,14 +70,14 @@ export const AreaReductionCard: React.FC = () => {
 
     return (
         <div className={cn(
-            'border rounded-xl p-4 transition-all',
+            'border rounded-md p-4 transition-all',
             isOverridden
                 ? 'bg-amber-50/50 border-amber-200'
                 : 'bg-slate-50/50 border-slate-200'
         )}>
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                <div className="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center text-pupr-blue">
                     <Shield className="w-4 h-4" />
                 </div>
                 <div>
@@ -91,7 +91,7 @@ export const AreaReductionCard: React.FC = () => {
             {/* Flow visualization: Point → × ARF → = Areal */}
             <div className="flex items-center gap-2 text-sm">
                 {/* Point rainfall */}
-                <div className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-center">
+                <div className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-center">
                     <p className="text-[10px] font-semibold text-slate-400 uppercase">Hujan Titik</p>
                     <p className="text-lg font-black text-slate-800">{hujanTitik.toFixed(1)}</p>
                     <p className="text-[10px] text-slate-400">mm</p>
@@ -105,7 +105,7 @@ export const AreaReductionCard: React.FC = () => {
 
                 {/* ARF value (editable) */}
                 <div className={cn(
-                    'flex-1 rounded-lg px-3 py-2 text-center border',
+                    'flex-1 rounded-md px-3 py-2 text-center border',
                     isOverridden
                         ? 'bg-amber-50 border-amber-300'
                         : 'bg-white border-slate-200'
@@ -131,7 +131,7 @@ export const AreaReductionCard: React.FC = () => {
                         onChange={(e) => setArfOverride(e.target.value)}
                         className={cn(
                             'w-full text-center text-lg font-black bg-transparent outline-none',
-                            isOverridden ? 'text-amber-700' : 'text-indigo-600'
+                            isOverridden ? 'text-amber-700' : 'text-pupr-blue'
                         )}
                     />
                     <p className="text-[10px] text-slate-400">
@@ -145,10 +145,10 @@ export const AreaReductionCard: React.FC = () => {
                     <span className="text-[10px] font-bold text-slate-500">=</span>
                 </div>
 
-                <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-center">
-                    <p className="text-[10px] font-semibold text-emerald-500 uppercase">Hujan DAS</p>
+                <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 text-center">
+                    <p className="text-[10px] font-semibold text-pupr-blue uppercase">Hujan DAS</p>
                     <p className="text-lg font-black text-emerald-700">{effectiveHujanDAS.toFixed(1)}</p>
-                    <p className="text-[10px] text-emerald-400">mm</p>
+                    <p className="text-[10px] text-pupr-blue">mm</p>
                 </div>
             </div>
 

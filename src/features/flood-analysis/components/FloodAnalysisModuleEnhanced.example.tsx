@@ -200,7 +200,7 @@ export const FloodAnalysisModuleEnhanced: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Hujan Efektif</div>
-                    <div className="text-lg font-bold text-blue-600">
+                    <div className="text-lg font-bold text-pupr-blue">
                       {effectiveRainfall.effectiveRainfall.toFixed(2)} mm
                     </div>
                   </div>

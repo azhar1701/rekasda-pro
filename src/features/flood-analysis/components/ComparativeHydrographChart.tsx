@@ -33,7 +33,7 @@ const CustomComparativeTooltip: React.FC<any> = ({ active, payload }) => {
   if (active && payload && payload.length > 0) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-900/85 backdrop-blur-sm text-white px-4 py-3 rounded-lg shadow-xl border border-slate-700/50 pointer-events-none">
+      <div className="bg-slate-900/85 backdrop-blur-sm text-white px-4 py-3 rounded-md shadow-sm border border-slate-700/50 pointer-events-none">
         <p className="text-sm font-semibold text-slate-100 mb-2">
           Waktu: <span className="text-teal-300">{data.time.toFixed(1)}</span> jam
         </p>
@@ -58,9 +58,9 @@ export const ComparativeHydrographChart: React.FC<ComparativeHydrographProps> = 
 
 
   return (
-    <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
+    <div className="w-full bg-white rounded-md border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-transparent">
+      <div className="px-6 py-5 border-b border-slate-100 bg-pupr-blue text-white">
         <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
         <p className="text-sm text-slate-600 font-medium">
           Analisis perbandingan untuk berbagai kala ulang dan skenario
@@ -180,7 +180,7 @@ export const ComparativeHydrographChart: React.FC<ComparativeHydrographProps> = 
           <tbody>
             {scenarios.map((scenario, idx) => (
               <tr key={idx} className="border-b border-slate-100 hover:bg-slate-100/80 transition-colors">
-                <td className="py-3 px-3">
+                <td className="py-3 px-3 tabular-nums tracking-tight">
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded"
@@ -189,10 +189,10 @@ export const ComparativeHydrographChart: React.FC<ComparativeHydrographProps> = 
                     <span className="font-semibold text-slate-900">{scenario.label}</span>
                   </div>
                 </td>
-                <td className="text-right py-3 px-3 font-semibold text-slate-700">
+                <td className="text-right py-3 px-3 font-semibold text-slate-700 tabular-nums tracking-tight">
                   {scenario.qPeak ? scenario.qPeak.toFixed(2) : '-'} <span className="text-slate-500 font-normal text-xs">m³/s</span>
                 </td>
-                <td className="text-right py-3 px-3 font-semibold text-slate-700">
+                <td className="text-right py-3 px-3 font-semibold text-slate-700 tabular-nums tracking-tight">
                   {scenario.tPeak ? scenario.tPeak.toFixed(1) : '-'} <span className="text-slate-500 font-normal text-xs">jam</span>
                 </td>
               </tr>

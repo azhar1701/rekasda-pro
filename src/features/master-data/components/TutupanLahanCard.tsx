@@ -117,7 +117,7 @@ export const TutupanLahanCard: React.FC = () => {
           <tbody>
             {items.map((item) => (
               <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 tabular-nums tracking-tight">
                   <input
                     type="text"
                     value={item.jenis}
@@ -126,7 +126,7 @@ export const TutupanLahanCard: React.FC = () => {
                     placeholder="Contoh: Hutan"
                   />
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 tabular-nums tracking-tight">
                   <input
                     type="number"
                     value={item.luas === 0 ? 0 : (item.luas ?? '')}
@@ -136,7 +136,7 @@ export const TutupanLahanCard: React.FC = () => {
                     step="0.01"
                   />
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 tabular-nums tracking-tight">
                   <input
                     type="number"
                     value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
@@ -148,7 +148,7 @@ export const TutupanLahanCard: React.FC = () => {
                     max="1"
                   />
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 tabular-nums tracking-tight">
                   <input
                     type="number"
                     value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
@@ -160,7 +160,7 @@ export const TutupanLahanCard: React.FC = () => {
                     max="100"
                   />
                 </td>
-                <td className="px-3 py-2 text-center">
+                <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                   <button
                     onClick={() => handleRemoveRow(item.id)}
                     disabled={items.length === 1}

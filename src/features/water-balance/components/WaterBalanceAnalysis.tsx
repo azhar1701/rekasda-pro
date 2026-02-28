@@ -152,21 +152,21 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                       placeholder="Nama DAS / Lokasi"
                       value={data.site.channelName}
                       onChange={(e) => handleSiteChange({ ...data.site, channelName: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     <input
                       type="text"
                       placeholder="Kabupaten"
                       value={data.site.regency}
                       onChange={(e) => handleSiteChange({ ...data.site, regency: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     <input
                       type="text"
                       placeholder="Kecamatan"
                       value={data.site.district}
                       onChange={(e) => handleSiteChange({ ...data.site, district: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                 </CardContent>
@@ -227,7 +227,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                     placeholder="Nama Proyek"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                   <Button
                     variant="primary"
@@ -274,7 +274,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
                           <HelpTooltip content="Keseimbangan terendah" />
                         </div>
-                        <span className={`text-3xl font-black tabular-nums tracking-tight ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                        <span className={`text-3xl font-black tabular-nums tracking-tight ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-pupr-blue'}`}>
                           {results.minBalance}
                         </span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
@@ -285,7 +285,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
                           <HelpTooltip content="Keseimbangan tertinggi" />
                         </div>
-                        <span className="text-3xl font-black text-emerald-500 tabular-nums tracking-tight">{results.maxBalance}</span>
+                        <span className="text-3xl font-black text-pupr-blue tabular-nums tracking-tight">{results.maxBalance}</span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                       </div>
                     </div>
@@ -303,7 +303,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                         { label: 'Irigasi', value: results.irrigationDemand, unit: 'm³/s', color: 'bg-blue-50 border-blue-200' },
                         { label: 'Total', value: results.totalDemand, unit: 'm³/s', color: 'bg-slate-100 border-slate-300' }
                       ].map((item, i) => (
-                        <div key={i} className={`p-4 rounded-lg border ${item.color}`}>
+                        <div key={i} className={`p-4 rounded-md border ${item.color}`}>
                           <div className="text-xs font-bold text-slate-600 uppercase mb-2">{item.label}</div>
                           <div className="text-xl font-bold text-slate-800 tabular-nums tracking-tight">{item.value}</div>
                           <div className="text-xs text-slate-500">{item.unit}</div>
@@ -313,7 +313,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
                     {/* Critical months warning */}
                     {results.criticalMonths.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="bg-red-50 border border-red-200 rounded-md p-4">
                         <h4 className="font-bold text-red-800 mb-2 flex items-center gap-2">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                           Bulan Kritis Terdeteksi
@@ -338,7 +338,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                             type="number"
                             value={data.monthlySupply[index]}
                             onChange={(e) => handleMonthlySupplyChange(index, parseFloat(e.target.value) || 0)}
-                            className="w-full px-2 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums tracking-tight"
+                            className="w-full px-2 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums tracking-tight"
                           />
                         </div>
                       ))}

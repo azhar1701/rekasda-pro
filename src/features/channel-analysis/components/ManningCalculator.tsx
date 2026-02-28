@@ -157,11 +157,11 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
   }, [inputs]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
+    <div className="w-full h-full flex flex-col bg-slate-50 rounded-md border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
       {/* Fixed Shell Header */}
       <div className="px-6 py-5 border-b border-slate-200 bg-white shadow-sm z-10">
         <div className="flex items-center gap-3 mb-1">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+          <div className="p-2 bg-blue-50 text-pupr-blue rounded-md shrink-0">
             <Waves className="w-6 h-6" />
           </div>
           <div>
@@ -175,7 +175,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         {/* Toast Messages positioning adjusted for Fixed Shell */}
         {loadMessage && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[110] px-4 py-2 rounded-xl shadow-md border border-slate-200 bg-teal-50 text-teal-800 flex items-center gap-2 animate-fade-in pointer-events-none">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[110] px-4 py-2 rounded-md shadow-md border border-slate-200 bg-teal-50 text-teal-800 flex items-center gap-2 animate-fade-in pointer-events-none">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
@@ -184,7 +184,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
         )}
 
         {saveMessage && (
-          <div className={`absolute top-4 right-4 z-[110] px-4 py-2 rounded-xl shadow-md border flex items-center gap-2 animate-fade-in pointer-events-none ${saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          <div className={`absolute top-4 right-4 z-[110] px-4 py-2 rounded-md shadow-md border flex items-center gap-2 animate-fade-in pointer-events-none ${saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {saveMessage.type === 'success' ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -230,12 +230,12 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
               <div className="space-y-4">
                 {/* Shape Toggle */}
-                <div className="p-2 bg-slate-100 rounded-lg flex gap-2">
+                <div className="p-2 bg-slate-100 rounded-md flex gap-2">
                   {[ChannelShape.TRAPEZOID, ChannelShape.CIRCULAR].map((s) => (
                     <button
                       key={s}
                       onClick={() => handleInputChange('shape', s)}
-                      className={`flex-1 py-2.5 text-xs font-bold uppercase rounded-lg transition-all ${inputs.shape === s ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`flex-1 py-2.5 text-xs font-bold uppercase rounded-md transition-all ${inputs.shape === s ? 'bg-white text-pupr-blue shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                       {s === ChannelShape.TRAPEZOID ? 'Trapesium' : 'Lingkaran'}
                     </button>
@@ -283,7 +283,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   <InputGroup id="slope" label="" unit="m/m" step="0.0001" value={inputs.slope} onChange={e => handleInputChange('slope', parseFloat(e.target.value) || 0)} placeholder="0.002" />
                   <button
                     onClick={() => setShowSlopeCalculator(!showSlopeCalculator)}
-                    className="mt-2 w-full px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 text-xs font-bold"
+                    className="mt-2 w-full px-3 py-2.5 text-pupr-blue bg-blue-50 hover:bg-blue-100 rounded-md transition-colors border border-blue-200 text-xs font-bold"
                   >
                     Kalkulator Kemiringan
                   </button>
@@ -323,7 +323,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
             <div className="space-y-6">
 
               {/* Visualization */}
-              <Card className="glass-card shadow-lg border-white/20 p-4 sm:p-6">
+              <Card className="glass-card shadow-sm border-white/20 p-4 sm:p-6">
                 <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Tampilan Penampang Melintang</h2>
                 <CardContent className="p-0">
                   <ChannelVisualizer inputs={inputs} results={manningResults} />
@@ -335,8 +335,8 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   {/* KPI Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
                     {isHookCalculating && (
-                      <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
-                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-md">
+                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-md animate-pulse bg-slate-200 rounded-md"></div>
                       </div>
                     )}
                     <StatCard
@@ -356,8 +356,8 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   
                   {/* Evaluasi Kapasitas vs Debit Banjir Rencana */}
                   {qDesign !== null && qDesign > 0 && (
-                     <div className={`p-4 rounded-xl border ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-sm`}>
-                        <div className={`mt-0.5 p-1.5 rounded-full ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                     <div className={`p-4 rounded-md border ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-sm`}>
+                        <div className={`mt-0.5 p-1.5 rounded-md ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-100 text-pupr-blue' : 'bg-red-100 text-red-600'}`}>
                            {Number(manningResults?.Discharge || 0) >= qDesign ? (
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                            ) : (
@@ -377,7 +377,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                  Kapasitas Saluran (Q Cap): <strong className="font-mono">{Number(manningResults?.Discharge || 0).toFixed(3)} m³/s</strong>
                               </span>
                            </div>
-                           <p className={`mt-2 text-xs ${Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-600' : 'text-red-600 font-medium'}`}>
+                           <p className={`mt-2 text-xs ${Number(manningResults?.Discharge || 0) >= qDesign ? 'text-pupr-blue' : 'text-red-600 font-medium'}`}>
                               {Number(manningResults?.Discharge || 0) >= qDesign 
                                  ? 'Dimensi saluran ini cukup untuk menampung debit banjir dari hasil perhitungan hidrologi.' 
                                  : 'Kapasitas saluran lebih kecil dari debit rencana. Pertimbangkan untuk memperlebar dasar saluran (b) atau memperdalam tinggi jagaan (H).'}
@@ -387,7 +387,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   )}
 
                   {/* Detailed Results */}
-                  <Card className="glass-card shadow-lg border-white/20 p-4 sm:p-6 opacity-ransition duration-300" style={{ opacity: isHookCalculating ? 0.7 : 1 }}>
+                  <Card className="glass-card shadow-sm border-white/20 p-4 sm:p-6 opacity-ransition duration-300" style={{ opacity: isHookCalculating ? 0.7 : 1 }}>
                     <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Rincian Hasil Perhitungan</h2>
                     <CardContent className="p-0 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -397,14 +397,14 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           { label: 'Energi Spesifik', val: Number(manningResults?.SpecificEnergy || 0).toFixed(3), unit: 'm', help: 'Total energi per satuan berat air' },
                           { label: 'Tegangan Geser', val: Number(manningResults?.ShearStress || 0).toFixed(2), unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
                         ].map((item, i) => (
-                          <div key={i} className="bg-slate-50 p-3 rounded-lg">
+                          <div key={i} className="bg-slate-50 p-3 rounded-md">
                             <span className="text-xs font-bold text-slate-600 uppercase block mb-1 flex items-center gap-1">
                               {item.label}
                               <div className="group relative inline-block">
-                                <svg className="w-3 h-3 text-slate-400 hover:text-blue-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3 text-slate-400 hover:text-pupr-blue cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-48 z-50 whitespace-normal">
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-48 z-50 whitespace-normal">
                                   {item.help}
                                   <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                                 </div>

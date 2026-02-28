@@ -35,15 +35,15 @@ export const Tabs: React.FC<TabsProps> = ({
               flex items-center gap-2
               ${
                 activeTab === tab.id
-                  ? 'text-teal-600 border-b-2 border-teal-600'
-                  : 'text-slate-600 hover:text-slate-900 border-b-2 border-transparent'
+                  ? 'text-pupr-blue border-b-4 border-pupr-yellow font-bold'
+                  : 'text-slate-600 hover:text-pupr-blue border-b-4 border-transparent'
               }
             `}
           >
             {tab.icon && <span className="w-4 h-4">{tab.icon}</span>}
             {tab.label}
             {tab.badge !== undefined && (
-              <span className="ml-2 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full font-semibold">
+              <span className="ml-2 px-2 py-0.5 bg-pupr-blue text-white text-xs rounded-md font-bold tabular-nums tracking-tight">
                 {tab.badge}
               </span>
             )}

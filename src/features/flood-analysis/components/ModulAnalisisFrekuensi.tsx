@@ -185,7 +185,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         title="Analisis Frekuensi Hujan Ekstrem"
         description="Perhitungan probabilitas hujan rencana (SNI 2415:2016)"
         icon={<BarChart3 className="w-6 h-6" />}
-        iconColorClass="bg-blue-50 text-blue-600"
+        iconColorClass="bg-blue-50 text-pupr-blue"
       >
         <ActionableEmptyState 
           title="Data Belum Lengkap"
@@ -200,7 +200,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       title="Analisis Frekuensi Hujan Ekstrem"
       description="Perhitungan probabilitas hujan rencana (SNI 2415:2016)"
       icon={<BarChart3 className="w-6 h-6" />}
-      iconColorClass="bg-blue-50 text-blue-600"
+      iconColorClass="bg-blue-50 text-pupr-blue"
       actions={
         isCalculated && (
           <button
@@ -223,9 +223,9 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         {dataInput.length >= 10 && !showManualInput ? (
           <div className="space-y-3">
             {/* Data Summary Card */}
-            <div className="flex items-start justify-between p-3 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg border border-blue-200">
+            <div className="flex items-start justify-between p-3 bg-pupr-blue text-white rounded-md border border-blue-200">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-600 rounded-lg">
+                <div className="p-2 bg-pupr-blue rounded-md">
                   <CheckCircle2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -370,7 +370,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b border-slate-100 even:bg-slate-50">
-                    <td className="px-3 py-2 font-medium flex items-center gap-1">
+                    <td className="px-3 py-2 font-medium flex items-center gap-1 tabular-nums tracking-tight">
                       Mean (X̄)
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="relative inline-block">
@@ -381,28 +381,28 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.mean.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.mean.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsAsli.mean.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsLog.mean.toFixed(4)}</td>
                   </tr>
                   <tr className="border-b border-slate-100 even:bg-slate-50">
-                    <td className="px-3 py-2 font-medium">Std Dev (S)</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.stdDev.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.stdDev.toFixed(4)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Std Dev (S)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsAsli.stdDev.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsLog.stdDev.toFixed(4)}</td>
                   </tr>
                   <tr className="border-b border-slate-100 even:bg-slate-50">
-                    <td className="px-3 py-2 font-medium">CV</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.cv.toFixed(3)}</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.cv.toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">CV</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsAsli.cv.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsLog.cv.toFixed(3)}</td>
                   </tr>
                   <tr className="border-b border-slate-100 even:bg-slate-50">
-                    <td className="px-3 py-2 font-medium">Skewness (Cs)</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.cs.toFixed(3)}</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.cs.toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Skewness (Cs)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsAsli.cs.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsLog.cs.toFixed(3)}</td>
                   </tr>
                   <tr className="even:bg-slate-50">
-                    <td className="px-3 py-2 font-medium">Kurtosis (Ck)</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.ck.toFixed(3)}</td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.ck.toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Kurtosis (Ck)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsAsli.ck.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{paramsLog.ck.toFixed(3)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -439,25 +439,25 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                         onClick={() => bothPassed && setSelectedMethod(gof.method)}
                         title={bothPassed ? 'Klik untuk memilih metode ini' : 'Metode ditolak'}
                       >
-                        <td className="px-3 py-2 font-semibold flex items-center gap-1">
+                        <td className="px-3 py-2 font-semibold flex items-center gap-1 tabular-nums tracking-tight">
                           {METHOD_LABELS[gof.method]}
-                          {isRecommended && <span className="text-[9px] bg-blue-600 text-white px-1 rounded">★</span>}
+                          {isRecommended && <span className="text-[9px] bg-pupr-blue text-white px-1 rounded">★</span>}
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                           {gof.chiSquare.accepted ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mx-auto" />
                           ) : (
                             <XCircle className="w-3.5 h-3.5 text-red-600 mx-auto" />
                           )}
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                           {gof.kolmogorovSmirnov.accepted ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mx-auto" />
                           ) : (
                             <XCircle className="w-3.5 h-3.5 text-red-600 mx-auto" />
                           )}
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                           <span className={`px-2 py-0.5 text-xs font-bold rounded border ${
                             bothPassed ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
                           }`}>
@@ -516,7 +516,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           <div className="p-4">
 
           {selectedMethod !== recommendedMethod && (
-            <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+            <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
               <span className="text-xs text-amber-800">
                 Metode berbeda dari rekomendasi sistem ({METHOD_LABELS[recommendedMethod || '']})
@@ -525,10 +525,10 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           )}
 
           {/* Interactive Comparison Bar */}
-          <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg border border-blue-100">
+          <div className="mb-4 p-3 bg-pupr-blue text-white rounded-md border border-blue-100">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-600" />
+                <TrendingUp className="w-4 h-4 text-pupr-blue" />
                 <span className="text-xs font-semibold text-slate-700">Perbandingan Kala Ulang:</span>
               </div>
               <div className="flex gap-1">
@@ -564,9 +564,9 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     }`}>
                       {METHOD_LABELS[d.method]}
                     </span>
-                    <div className="flex-1 bg-slate-200 rounded-full h-4 overflow-hidden">
+                    <div className="flex-1 bg-slate-200 rounded-md h-4 overflow-hidden">
                       <div 
-                        className={`h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1.5 ${
+                        className={`h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1.5 ${
                           isSelected ? 'bg-[#0c3a66]' : 
                           isFailed ? 'bg-slate-300' : 'bg-slate-400'
                         }`}
@@ -613,7 +613,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     onClick={() => setSelectedTr(tr)}
                   >
                     <td className={`px-3 py-2 text-center font-bold tabular-nums tracking-tight transition-colors ${
-                      selectedTr === tr ? 'text-blue-600' : 'text-slate-700'
+                      selectedTr === tr ? 'text-pupr-blue' : 'text-slate-700'
                     }`}>
                       Q{tr}
                     </td>

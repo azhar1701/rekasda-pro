@@ -5,22 +5,22 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         primary:
-          "bg-primary-600 text-white shadow-card hover:bg-primary-700 active:scale-[0.98]",
+          "bg-pupr-blue text-white hover:bg-pupr-blue/90 active:bg-pupr-blue/80",
         secondary:
-          "border-2 border-neutral-200 bg-white text-neutral-700 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
+          "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100",
         ghost:
-          "bg-transparent text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200",
+          "bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200",
         danger:
-          "bg-error text-white shadow-card hover:bg-error-dark active:scale-[0.98]",
+          "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
         outline:
-          "border-2 border-neutral-200 bg-white text-neutral-700 hover:border-primary-600 hover:bg-primary-50 active:bg-primary-100",
+          "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100",
         default:
-          "bg-primary-600 text-white shadow-card hover:bg-primary-700 active:scale-[0.98]",
+          "bg-pupr-blue text-white hover:bg-pupr-blue/90 active:bg-pupr-blue/80",
       },
       size: {
         sm: "h-8 px-3 text-xs",

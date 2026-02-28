@@ -106,7 +106,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                                     type="number"
                                     value={luasIrigasi}
                                     onChange={e => setLuasIrigasi(parseFloat(e.target.value) || 0)}
-                                    className="w-full h-10 px-3 pr-10 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-full h-10 px-3 pr-10 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Ha</span>
                             </div>
@@ -119,14 +119,14 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                                     step={0.05}
                                     value={efisiensi}
                                     onChange={e => setEfisiensi(parseFloat(e.target.value) || 0)}
-                                    className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
                         </div>
                     </div>
 
                     {/* 12-month matrix — compact scrollable */}
-                    <div className="overflow-x-auto overflow-y-auto max-h-72 border border-slate-200 rounded-lg bg-white">
+                    <div className="overflow-x-auto overflow-y-auto max-h-72 border border-slate-200 rounded-md bg-white">
                         <table className="w-full text-[10px]">
                             <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
                                 <tr>
@@ -142,8 +142,8 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                             <tbody>
                                 {irrData.map((row, i) => (
                                     <tr key={i} className={`border-b border-slate-100 ${row.polaTanam === 'bero' ? 'bg-slate-50/50 opacity-60' : ''}`}>
-                                        <td className="py-1.5 px-2 font-bold text-slate-700">{row.month}</td>
-                                        <td className="py-1.5 px-1">
+                                        <td className="py-1.5 px-2 font-bold text-slate-700 tabular-nums tracking-tight">{row.month}</td>
+                                        <td className="py-1.5 px-1 tabular-nums tracking-tight">
                                             <select
                                                 value={row.polaTanam}
                                                 onChange={e => updateMonth(i, 'polaTanam', e.target.value)}
@@ -183,7 +183,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                             type="number"
                             value={populasi}
                             onChange={e => setPopulasi(parseFloat(e.target.value) || 0)}
-                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-[9px] text-slate-400 mt-0.5 block">jiwa</span>
                     </div>
@@ -193,7 +193,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                             type="number"
                             value={standarDomestik}
                             onChange={e => setStandarDomestik(parseFloat(e.target.value) || 0)}
-                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-[9px] text-slate-400 mt-0.5 block">L/org/hari</span>
                     </div>
@@ -204,7 +204,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                             step={0.001}
                             value={industri}
                             onChange={e => setIndustri(parseFloat(e.target.value) || 0)}
-                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-lg font-semibold text-right focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-[9px] text-slate-400 mt-0.5 block">m³/s</span>
                     </div>
@@ -213,7 +213,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
 
             {/* Error */}
             {error && (
-                <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-md">
                     <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                     <p className="text-xs text-rose-800 font-medium">{error}</p>
                 </div>
@@ -222,7 +222,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
             {/* Calculate Final Button */}
             <button
                 onClick={handleCalculate}
-                className="w-full min-h-[44px] py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-bold hover:from-emerald-700 hover:to-teal-700 active:from-emerald-800 active:to-teal-800 transition-all shadow-md flex items-center justify-center gap-2"
+                className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-bold hover:from-emerald-700 hover:to-teal-700 active:from-emerald-800 active:to-teal-800 transition-all shadow-md flex items-center justify-center gap-2"
             >
                 <Zap className="w-5 h-5" />
                 Hitung Neraca Air Final
@@ -230,7 +230,7 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
 
             {/* Irrigation Results Summary (compact) */}
             {irrResults && (
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <div className="bg-slate-50 rounded-md p-3 border border-slate-200">
                     <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Ringkasan DR Irigasi (m³/s)</span>
                     <div className="grid grid-cols-4 gap-1.5">
                         {irrResults.map((r, i) => (

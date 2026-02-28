@@ -119,12 +119,12 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       title="Analisis Frekuensi Hujan Ekstrem"
       description="Perhitungan probabilitas hujan rencana (SNI 2415:2016)"
       icon={<BarChart3 className="w-6 h-6" />}
-      iconColorClass="bg-purple-50 text-purple-600"
+      iconColorClass="bg-purple-50 text-pupr-blue"
       actions={
         isCalculated && (
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 text-purple-700 rounded-xl font-semibold hover:bg-purple-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 text-purple-700 rounded-md font-semibold hover:bg-purple-50 transition-colors"
           >
             <Download className="w-4 h-4" />
             Export JSON
@@ -135,7 +135,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     <div className="space-y-6 py-2">
       {/* Data Source Info */}
       {selectedStasiun && dataInput.length > 0 && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
           <p className="text-sm text-blue-900">
             <strong>📊 Data Source:</strong> {dataInput.length} tahun data maksimum tahunan dari stasiun <strong>{selectedStasiun.nama_stasiun}</strong>
           </p>
@@ -145,7 +145,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl shadow-lg">
+          <div className="p-3 bg-pupr-blue text-white rounded-md shadow-sm">
             <BarChart3 className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -154,7 +154,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           </div>
         </div>
         {isCalculated && (
-          <span className="px-3 py-1.5 bg-green-100 text-green-700 text-sm font-bold rounded-lg">
+          <span className="px-3 py-1.5 bg-green-100 text-green-700 text-sm font-bold rounded-md">
             ✓ Tersimpan
           </span>
         )}
@@ -175,7 +175,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 });
                 setDataInput(Array.from(byYear.values()));
               }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-pupr-blue hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors"
             >
               <Upload className="w-4 h-4" />
               Load dari Master Data
@@ -185,7 +185,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         <textarea
           value={dataInput.join(', ')}
           onChange={(e) => setDataInput(e.target.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v)))}
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-sm"
+          className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-sm"
           rows={3}
           placeholder="Masukkan data hujan (mm), pisahkan dengan koma"
         />
@@ -212,10 +212,10 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b border-slate-100">
-                    <td className="px-3 py-2 font-medium">Mean (X̄)</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsAsli.mean.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsLog.mean.toFixed(4)}</td>
-                    <td className="px-3 py-2 text-center" rowSpan={5}>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Mean (X̄)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.mean.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.mean.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-center tabular-nums tracking-tight" rowSpan={5}>
                       <div className="flex flex-wrap gap-1 justify-center">
                         {getTheoreticalFit(paramsAsli).map(method => (
                           <span key={method} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
@@ -226,24 +226,24 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                     </td>
                   </tr>
                   <tr className="border-b border-slate-100">
-                    <td className="px-3 py-2 font-medium">Std Dev (S)</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsAsli.stdDev.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsLog.stdDev.toFixed(4)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Std Dev (S)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.stdDev.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.stdDev.toFixed(4)}</td>
                   </tr>
                   <tr className="border-b border-slate-100">
-                    <td className="px-3 py-2 font-medium">CV</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsAsli.cv.toFixed(3)}</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsLog.cv.toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">CV</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.cv.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.cv.toFixed(3)}</td>
                   </tr>
                   <tr className="border-b border-slate-100">
-                    <td className="px-3 py-2 font-medium">Skewness (Cs)</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsAsli.cs.toFixed(3)}</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsLog.cs.toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Skewness (Cs)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.cs.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.cs.toFixed(3)}</td>
                   </tr>
                   <tr className="border-b border-slate-100">
-                    <td className="px-3 py-2 font-medium">Kurtosis (Ck)</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsAsli.ck.toFixed(3)}</td>
-                    <td className="px-3 py-2 text-right font-mono">{paramsLog.ck.toFixed(3)}</td>
+                    <td className="px-3 py-2 font-medium tabular-nums tracking-tight">Kurtosis (Ck)</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsAsli.ck.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{paramsLog.ck.toFixed(3)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -269,8 +269,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                       const bothPassed = gof.chiSquare.accepted && gof.kolmogorovSmirnov.accepted;
                       return (
                         <tr key={gof.method} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="px-3 py-2 font-semibold">{METHOD_LABELS[gof.method]}</td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2 font-semibold tabular-nums tracking-tight">{METHOD_LABELS[gof.method]}</td>
+                          <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                             <div className="flex items-center justify-center gap-2">
                               {gof.chiSquare.accepted ? (
                                 <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -282,7 +282,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                             <div className="flex items-center justify-center gap-2">
                               {gof.kolmogorovSmirnov.accepted ? (
                                 <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -294,7 +294,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2 text-center tabular-nums tracking-tight">
                             <span className={`px-2 py-1 text-xs font-bold rounded ${
                               bothPassed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                             }`}>
@@ -320,7 +320,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   <select
                     value={selectedMethod || ''}
                     onChange={(e) => setSelectedMethod(e.target.value)}
-                    className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-semibold"
+                    className="px-3 py-1.5 border border-slate-300 rounded-md text-sm font-semibold"
                   >
                     {distributions.map(d => (
                       <option key={d.method} value={d.method}>
@@ -333,7 +333,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               </div>
 
               {selectedMethod !== recommendedMethod && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
                   <span className="text-sm text-amber-800">
                     Anda memilih metode berbeda dari rekomendasi sistem. Pastikan keputusan ini berdasarkan analisis engineering.
@@ -358,7 +358,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   <tbody>
                     {[2, 5, 10, 25, 50, 100].map(tr => (
                       <tr key={tr} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2 text-center font-bold">Q{tr}</td>
+                        <td className="px-3 py-2 text-center font-bold tabular-nums tracking-tight">Q{tr}</td>
                         {distributions.map(d => {
                           const value = d.values.find(v => v.Tr === tr);
                           return (
@@ -382,12 +382,12 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             <button
               onClick={handleCalculate}
               disabled={!selectedMethod}
-              className={`flex-1 px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${
+              className={`flex-1 px-6 py-4 rounded-md font-bold text-lg transition-all flex items-center justify-center gap-3 ${
                 !selectedMethod
                   ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                   : isCalculated
-                  ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg'
-                  : 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg'
+                  ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                  : 'bg-pupr-blue hover:bg-purple-700 text-white shadow-sm'
               }`}
             >
               <Save className="w-6 h-6" />
@@ -396,7 +396,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             {isCalculated && (
               <button
                 onClick={() => window.location.hash = '#banjir'}
-                className="px-6 py-4 rounded-xl font-bold text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg transition-all"
+                className="px-6 py-4 rounded-md font-bold text-lg bg-pupr-blue hover:bg-blue-700 text-white shadow-sm transition-all"
               >
                 Lanjut ke Modul Banjir →
               </button>

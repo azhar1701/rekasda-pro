@@ -154,7 +154,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
       {morfometriDAS && distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-600" />
+            <div className="w-2 h-2 rounded-md bg-pupr-blue" />
             <p className="text-xs font-bold text-slate-700">Data dari Step Sebelumnya (Read-Only)</p>
           </div>
           <div className="grid grid-cols-3 gap-3 text-xs">
@@ -176,7 +176,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
 
       <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-green-100 rounded-lg">
+          <div className="p-2 bg-green-100 rounded-md">
             <Activity className="w-5 h-5 text-green-600" />
           </div>
           <div>
@@ -222,7 +222,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
                   tick={{ fontSize: 11 }}
                   tickFormatter={(value) => value.toFixed(2)}
                 />
-                <Tooltip 
+                <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} 
                   contentStyle={{ fontSize: 12, fontFamily: 'monospace' }}
                   formatter={(value: any) => value?.toFixed(3)}
                 />
@@ -255,7 +255,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  <div className="w-4 h-4 rounded-full mx-auto mb-2" style={{ backgroundColor: method.color }} />
+                  <div className="w-4 h-4 rounded-md mx-auto mb-2" style={{ backgroundColor: method.color }} />
                   <p className="text-sm font-semibold text-slate-900">{method.label}</p>
                 </button>
               ))}

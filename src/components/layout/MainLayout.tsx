@@ -31,14 +31,14 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 glass-strong border-r border-white/20 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-300 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-white/20">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-300">
           <div className="flex items-center gap-2">
-            <Droplets className="w-6 h-6 text-primary-600" />
-            <span className="text-lg font-bold text-neutral-900">RekaSDA Pro</span>
+            <Droplets className="w-6 h-6 text-pupr-blue" />
+            <span className="text-lg font-bold text-slate-900">RekaSDA Pro</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -54,7 +54,7 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
             <a
               key={item.name}
               href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-neutral-700 rounded-lg hover:glass hover:text-primary-600 transition-all"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 rounded-md hover:bg-slate-50 hover:text-pupr-blue transition-all"
             >
               <item.icon className="w-5 h-5" />
               {item.name}
@@ -66,22 +66,22 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 h-16 glass-card border-b border-white/20 flex items-center justify-between px-6">
+        <header className="sticky top-0 z-30 h-16 bg-pupr-blue text-white border-b-4 border-pupr-yellow flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-neutral-700 hover:text-neutral-900"
+              className="lg:hidden text-white/80 hover:text-white"
             >
               <Menu className="w-6 h-6" />
             </button>
-            {title && <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>}
+            {title && <h1 className="text-xl font-bold">{title}</h1>}
           </div>
           <div className="flex items-center gap-6">
             <div className="items-center gap-2 hidden md:flex">
-              <span className="text-sm font-medium text-neutral-500">SNI Compliant</span>
-              <div className="w-2 h-2 bg-success rounded-full shadow-lg shadow-success/50" />
+              <span className="text-sm font-bold opacity-90">SNI Compliant</span>
+              <div className="w-2 h-2 bg-success rounded-sm" />
             </div>
-            <div className="h-8 w-px bg-neutral-200 hidden md:block" />
+            <div className="h-8 w-px bg-white/20 hidden md:block" />
             <UserNav />
           </div>
         </header>

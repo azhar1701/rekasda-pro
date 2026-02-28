@@ -130,7 +130,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
       {!isDataReady && (
         <Card className="p-6 bg-yellow-50 border-2 border-yellow-200">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-yellow-100 rounded-full flex-shrink-0">
+            <div className="p-3 bg-yellow-100 rounded-md flex-shrink-0">
               <Waves className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="flex-1">
@@ -150,8 +150,8 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
       {/* Panel utama kalkulasi */}
       <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-            <Waves className="w-5 h-5 text-purple-600" />
+          <div className="p-2 bg-purple-100 rounded-md flex-shrink-0">
+            <Waves className="w-5 h-5 text-pupr-blue" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-900">Konvolusi &amp; Hidrograf Banjir</h3>
@@ -169,7 +169,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
             <p className="text-lg font-bold text-blue-900 tabular-nums tracking-tight">
               {hujanEfektif?.length ?? 0} ordinat
             </p>
-            <p className="text-xs text-blue-600 mt-1 tabular-nums tracking-tight">
+            <p className="text-xs text-pupr-blue mt-1 tabular-nums tracking-tight">
               Total: {((hujanEfektif ?? []).reduce((a, b) => a + b, 0)).toFixed(2)} mm
             </p>
           </div>
@@ -201,7 +201,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         >
           {isCalculating ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-pulse bg-slate-200 rounded-md" />
               Menghitung Konvolusi…
             </>
           ) : (
@@ -218,7 +218,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         <>
           {/* KPI cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-6 bg-gradient-to-br from-[#0c3a66] to-[#0d4578] text-white rounded-md">
+            <Card className="p-6 bg-pupr-blue text-white rounded-md">
               <p className="text-sm font-semibold opacity-90 mb-1">Debit Puncak (Qp)</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-black tabular-nums tracking-tight">
@@ -229,7 +229,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
               <p className="text-xs opacity-75 mt-2">Metode: {selectedHSS?.toUpperCase()}</p>
             </Card>
 
-            <Card className="p-6 bg-gradient-to-br from-slate-600 to-slate-700 text-white rounded-md">
+            <Card className="p-6 bg-slate-700 text-white rounded-md">
               <p className="text-sm font-semibold opacity-90 mb-1">Waktu Puncak (Tp)</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-black tabular-nums tracking-tight">
@@ -289,7 +289,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
               <button
                 onClick={handleSave}
                 disabled={isCompleted}
-                className={`px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                className={`px-6 py-3 rounded-md font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   isCompleted
                     ? 'bg-green-600 text-white cursor-default'
                     : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'

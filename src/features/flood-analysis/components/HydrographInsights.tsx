@@ -84,9 +84,9 @@ export const HydrographInsights: React.FC<HydrographInsightsProps> = ({
   }, [qPeak, tPeak, volume, data, unit]);
 
   const colorMap = {
-    teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-600' },
-    blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-600' },
-    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-600' },
+    teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-pupr-blue' },
+    blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-pupr-blue' },
+    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-pupr-blue' },
     orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-600' },
   };
 
@@ -97,10 +97,10 @@ export const HydrographInsights: React.FC<HydrographInsightsProps> = ({
         return (
           <div
             key={idx}
-            className={`${colors.bg} border ${colors.border} rounded-xl p-4 transition-all duration-300 hover:shadow-md hover:scale-105`}
+            className={`${colors.bg} border ${colors.border} rounded-md p-4 transition-all duration-300 hover:shadow-md hover:scale-105`}
           >
             <div className="flex items-start justify-between mb-3">
-              <div className={`${colors.icon} p-2 rounded-lg bg-white`}>
+              <div className={`${colors.icon} p-2 rounded-md bg-white`}>
                 {stat.icon}
               </div>
               <span className={`text-xs font-bold uppercase tracking-wide ${colors.text} opacity-60`}>

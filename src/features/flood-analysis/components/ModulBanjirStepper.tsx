@@ -82,7 +82,7 @@ export const ModulBanjirStepper: React.FC = () => {
       title="Debit Banjir Rencana"
       description="Workflow Terintegrasi: Distribusi → HSS → Konvolusi"
       icon={<CloudRain className="w-6 h-6" />}
-      iconColorClass="bg-blue-50 text-blue-600"
+      iconColorClass="bg-blue-50 text-pupr-blue"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 py-2">
         {/* Stepper Navigation */}
@@ -143,7 +143,7 @@ export const ModulBanjirStepper: React.FC = () => {
                 <span className="text-slate-600 font-semibold">Progress</span>
                 <span className="font-bold text-slate-900 tabular-nums">{completedSteps.size}/3</span>
               </div>
-              <div className="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="mt-2 h-2 bg-slate-100 rounded-md overflow-hidden">
                 <div
                   className="h-full bg-[#0c3a66] transition-all duration-500"
                   style={{ width: `${(completedSteps.size / 3) * 100}%` }}

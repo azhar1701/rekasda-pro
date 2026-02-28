@@ -62,7 +62,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
                 onClick={() => onChange('shape', option.value)}
                 disabled={disabled}
                 className={classNames(
-                  'relative p-4 border-2 rounded-lg font-medium transition-all text-left',
+                  'relative p-4 border-2 rounded-md font-medium transition-all text-left',
                   inputs.shape === option.value
                     ? 'border-primary-500 bg-primary-50 text-primary-900'
                     : 'border-slate-200 bg-white hover:border-slate-300 text-slate-900'
@@ -163,7 +163,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
               </FormField>
 
               {/* Top Width Display */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
                 <p className="text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Lebar Atas (Calculated)
                 </p>

@@ -15,7 +15,7 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
   const tc = calculateTc();
   
   return (
-    <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+    <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-md space-y-3">
       <div className="text-xs font-bold text-blue-900 mb-2">Rumus Kirpich: tc = 0.0195 × L^0.77 × S^-0.385</div>
       <div>
         <label className="text-xs font-semibold text-slate-600 block mb-1">Panjang Alur (L)</label>
@@ -25,7 +25,7 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
             step="0.1"
             value={L}
             onChange={e => setL(parseFloat(e.target.value) || 0)}
-            className="w-full bg-white border border-blue-300 text-sm font-bold rounded-lg p-3 pr-12"
+            className="w-full bg-white border border-blue-300 text-sm font-bold rounded-md p-3 pr-12"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">km</span>
         </div>
@@ -38,7 +38,7 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
             step="0.001"
             value={S}
             onChange={e => setS(parseFloat(e.target.value) || 0)}
-            className="w-full bg-white border border-blue-300 text-sm font-bold rounded-lg p-3 pr-16"
+            className="w-full bg-white border border-blue-300 text-sm font-bold rounded-md p-3 pr-16"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m/m</span>
         </div>
@@ -48,7 +48,7 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
           onApply(parseFloat(tc.toFixed(1)));
           onClose();
         }}
-        className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-bold"
+        className="w-full py-2 bg-pupr-blue text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-bold"
       >
         Gunakan tc = {tc.toFixed(1)} menit
       </button>
@@ -69,7 +69,7 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
   const I = calculateI();
   
   return (
-    <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
+    <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-md space-y-3">
       <div className="text-xs font-bold text-emerald-900 mb-2">Rumus Mononobe: I = (R₂₄/24) × (24/tc)^(2/3)</div>
       <div>
         <label className="text-xs font-semibold text-slate-600 block mb-1">Hujan Harian (R₂₄)</label>
@@ -78,7 +78,7 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
             type="number"
             value={R24}
             onChange={e => setR24(parseFloat(e.target.value) || 0)}
-            className="w-full bg-white border border-emerald-300 text-sm font-bold rounded-lg p-3 pr-12"
+            className="w-full bg-white border border-emerald-300 text-sm font-bold rounded-md p-3 pr-12"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
         </div>
@@ -89,7 +89,7 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
           onApply(parseFloat(I.toFixed(2)));
           onClose();
         }}
-        className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-xs font-bold"
+        className="w-full py-2 bg-pupr-blue text-white rounded-md hover:bg-emerald-700 transition-colors text-xs font-bold"
       >
         Gunakan I = {I.toFixed(2)} mm/jam
       </button>
@@ -162,7 +162,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
   
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-md shadow-sm max-w-5xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-slate-200">
           <h3 className="text-lg font-bold text-slate-900">Analisis Frekuensi Hujan</h3>
@@ -184,12 +184,12 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                   <label className="text-sm font-bold text-slate-700">Data Hujan Harian Maksimum</label>
                   <button
                     onClick={() => setRainfallData([...rainfallData, {year: '', rainfall: ''}])}
-                    className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                    className="text-xs font-semibold text-pupr-blue hover:text-teal-700 transition-colors"
                   >
                     + Tambah Baris
                   </button>
                 </div>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="border border-slate-200 rounded-md overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50">
                       <tr>
@@ -201,7 +201,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                     <tbody className="divide-y divide-slate-100">
                       {rainfallData.map((row, idx) => (
                         <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-2 px-3">
+                          <td className="py-2 px-3 tabular-nums tracking-tight">
                             <input
                               type="text"
                               value={row.year}
@@ -214,7 +214,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                               className="w-full bg-white border border-slate-200 text-xs rounded px-2 py-1.5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 tabular-nums"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="py-2 px-3 tabular-nums tracking-tight">
                             <input
                               type="number"
                               value={row.rainfall}
@@ -227,7 +227,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                               className="w-full bg-white border border-slate-200 text-xs rounded px-2 py-1.5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 tabular-nums"
                             />
                           </td>
-                          <td className="py-2 px-2">
+                          <td className="py-2 px-2 tabular-nums tracking-tight">
                             <button
                               onClick={() => setRainfallData(rainfallData.filter((_, i) => i !== idx))}
                               className="text-red-400 hover:text-red-600 transition-colors"
@@ -247,7 +247,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
               
               {/* Warnings */}
               {validation.warnings.length > 0 && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -273,25 +273,25 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                 <div>
                   <h4 className="text-sm font-bold text-slate-700 mb-3">Parameter Statistik</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
                       <div className="text-xs text-slate-500 mb-1">Jumlah Data</div>
                       <div className="text-lg font-bold text-slate-900 tabular-nums">{analysisResult.parameters.n}</div>
                     </div>
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
                       <div className="text-xs text-slate-500 mb-1">Rata-rata</div>
                       <div className="text-lg font-bold text-slate-900 tabular-nums">{analysisResult.parameters.mean.toFixed(2)}</div>
                     </div>
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
                       <div className="text-xs text-slate-500 mb-1">Std Deviasi</div>
                       <div className="text-lg font-bold text-slate-900 tabular-nums">{analysisResult.parameters.stdDev.toFixed(2)}</div>
                     </div>
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
                       <div className="text-xs text-slate-500 mb-1">Skewness (Cs)</div>
                       <div className="text-lg font-bold text-slate-900 tabular-nums">{analysisResult.parameters.cs.toFixed(3)}</div>
                     </div>
                   </div>
                   {recommendedMethod && recommendedMethod !== method && (
-                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
                       <div className="flex items-center gap-2 text-xs text-blue-700">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -301,14 +301,14 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                     </div>
                   )}
                   {goodnessOfFit && (
-                    <div className={`mt-3 p-3 border rounded-lg ${
+                    <div className={`mt-3 p-3 border rounded-md ${
                       goodnessOfFit.isValid 
                         ? 'bg-emerald-50 border-emerald-200' 
                         : 'bg-red-50 border-red-200'
                     }`}>
                       <div className="flex items-start gap-2">
                         <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                          goodnessOfFit.isValid ? 'text-emerald-600' : 'text-red-600'
+                          goodnessOfFit.isValid ? 'text-pupr-blue' : 'text-red-600'
                         }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           {goodnessOfFit.isValid ? (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -341,7 +341,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMethod('gumbel')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-semibold transition-all border-2 ${
+                    className={`py-2.5 px-3 rounded-md text-xs font-semibold transition-all border-2 ${
                       method === 'gumbel' 
                         ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
                         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -351,7 +351,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                   </button>
                   <button
                     onClick={() => setMethod('normal')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-semibold transition-all border-2 ${
+                    className={`py-2.5 px-3 rounded-md text-xs font-semibold transition-all border-2 ${
                       method === 'normal' 
                         ? 'bg-blue-50 border-blue-500 text-blue-700' 
                         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -361,7 +361,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                   </button>
                   <button
                     onClick={() => setMethod('logpearson3')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-semibold transition-all border-2 ${
+                    className={`py-2.5 px-3 rounded-md text-xs font-semibold transition-all border-2 ${
                       method === 'logpearson3' 
                         ? 'bg-purple-50 border-purple-500 text-purple-700' 
                         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -371,7 +371,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                   </button>
                   <button
                     onClick={() => setMethod('lognormal')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-semibold transition-all border-2 ${
+                    className={`py-2.5 px-3 rounded-md text-xs font-semibold transition-all border-2 ${
                       method === 'lognormal' 
                         ? 'bg-orange-50 border-orange-500 text-orange-700' 
                         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -385,7 +385,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
               {/* Results Table */}
               <div>
                 <h4 className="text-sm font-bold text-slate-700 mb-3">Hasil Analisis</h4>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="border border-slate-200 rounded-md overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50">
                       <tr>
@@ -397,9 +397,9 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
                     <tbody className="divide-y divide-slate-100">
                       {analysisResult?.designValues.map((dv, idx) => (
                         <tr key={idx} className="even:bg-slate-50 hover:bg-slate-100 transition-colors">
-                          <td className="py-2.5 px-3 font-semibold text-slate-900">Q{dv.returnPeriod}</td>
-                          <td className="py-2.5 px-3 text-center text-slate-600 tabular-nums">{dv.frequency.toFixed(3)}</td>
-                          <td className="py-2.5 px-3 text-right font-bold text-teal-600 tabular-nums">{dv.designValue.toFixed(1)}</td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-900 tabular-nums tracking-tight">Q{dv.returnPeriod}</td>
+                          <td className="py-2.5 px-3 text-center text-slate-600 tabular-nums tabular-nums tracking-tight">{dv.frequency.toFixed(3)}</td>
+                          <td className="py-2.5 px-3 text-right font-bold text-pupr-blue tabular-nums tabular-nums tracking-tight">{dv.designValue.toFixed(1)}</td>
                         </tr>
                       )) || (
                         <tr>
@@ -424,7 +424,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
               onClose();
             }}
             disabled={parsedData.length < 10}
-            className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 active:bg-teal-800 transition-colors text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full py-3 bg-pupr-blue text-white rounded-md hover:bg-teal-700 active:bg-teal-800 transition-colors text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             Terapkan Semua ke Tabel
           </button>
@@ -441,9 +441,9 @@ export const EffectiveRainfallCalculator: React.FC<{ C: number; onApply: (Ro: nu
   const Reff = Rplan * C;
   
   return (
-    <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
+    <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-md space-y-3">
       <div className="text-xs font-bold text-purple-900 mb-2">Hujan Efektif: Reff = C × Rplan</div>
-      <div className="p-2 bg-purple-100 rounded-lg mb-2">
+      <div className="p-2 bg-purple-100 rounded-md mb-2">
         <p className="text-xs text-purple-800">Koefisien C = <span className="font-bold">{C.toFixed(2)}</span> (dari input utama)</p>
       </div>
       <div>
@@ -453,7 +453,7 @@ export const EffectiveRainfallCalculator: React.FC<{ C: number; onApply: (Ro: nu
             type="number"
             value={Rplan}
             onChange={e => setRplan(parseFloat(e.target.value) || 0)}
-            className="w-full bg-white border border-purple-300 text-sm font-bold rounded-lg p-3 pr-12"
+            className="w-full bg-white border border-purple-300 text-sm font-bold rounded-md p-3 pr-12"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mm</span>
         </div>
@@ -463,7 +463,7 @@ export const EffectiveRainfallCalculator: React.FC<{ C: number; onApply: (Ro: nu
           onApply(parseFloat(Reff.toFixed(2)));
           onClose();
         }}
-        className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-bold"
+        className="w-full py-2 bg-pupr-blue text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-bold"
       >
         Gunakan Reff = {Reff.toFixed(2)} mm
       </button>

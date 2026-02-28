@@ -22,7 +22,7 @@ export const ParameterSpasial: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#0c3a66] rounded-lg shadow-md">
+          <div className="p-3 bg-[#0c3a66] rounded-md shadow-md">
             <MapPin className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -48,9 +48,9 @@ export const ParameterSpasial: React.FC = () => {
               {isComplete ? '✓ Lengkap' : 'Belum Lengkap'}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
-              <div className="w-20 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div className="w-20 h-1.5 bg-slate-200 rounded-md overflow-hidden">
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ${
+                  className={`h-full rounded-md transition-all duration-500 ${
                     isComplete ? 'bg-green-600' : 'bg-amber-600'
                   }`}
                   style={{ width: `${completionPercentage}%` }}

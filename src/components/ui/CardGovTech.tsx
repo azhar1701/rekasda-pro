@@ -18,9 +18,9 @@ export const CardGovTech: React.FC<CardGovTechProps> = ({
   noPadding = false
 }) => {
   return (
-    <div className={`bg-white border border-pupr-border rounded-md shadow-sm ${className}`}>
+    <div className={`bg-white border border-slate-300 rounded-md shadow-sm ${className}`}>
       {(title || subtitle || headerAction) && (
-        <div className="px-6 py-4 border-b border-pupr-border bg-pupr-surface">
+        <div className="px-6 py-4 border-b border-slate-300 bg-slate-50">
           <div className="flex items-start justify-between">
             <div>
               {title && (
@@ -56,7 +56,7 @@ interface CardGovTechHeaderProps {
 
 export const CardGovTechHeader: React.FC<CardGovTechHeaderProps> = ({ children, className = '' }) => {
   return (
-    <div className={`px-6 py-4 border-b border-pupr-border bg-pupr-surface ${className}`}>
+    <div className={`px-6 py-4 border-b border-slate-300 bg-slate-50 ${className}`}>
       {children}
     </div>
   );

@@ -120,9 +120,9 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
     return (
         <div className="flex flex-col h-full gap-6">
             {/* Header Info */}
-            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-md border border-blue-100">
                 <div className="flex gap-3">
-                    <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                    <Info className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
                     <div>
                         <h3 className="text-sm font-semibold text-blue-900">Simulasi Pola Operasi Waduk</h3>
                         <p className="text-sm text-blue-700/80 mt-1">
@@ -135,11 +135,11 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
                     <Button
                         onClick={handleCalculate}
                         disabled={isCalculating}
-                        className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm shrink-0"
+                        className="bg-pupr-blue hover:bg-teal-700 text-white shadow-sm shrink-0"
                     >
                         {isCalculating ? (
                             <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md" />
                                 <span>Menghitung...</span>
                             </div>
                         ) : (
@@ -154,7 +154,7 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
                             onClick={() => onConsultAI({ inputs, config: CONFIG }, { resultData, summary })}
                             className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group shrink-0"
                         >
-                            <Sparkles className="w-4 h-4 mr-2 text-indigo-500 group-hover:scale-110 transition-transform" />
+                            <Sparkles className="w-4 h-4 mr-2 text-pupr-blue group-hover:scale-110 transition-transform" />
                             Analisis AI
                         </Button>
                     )}
@@ -233,7 +233,7 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
                         <Card className="bg-white shadow-sm border-slate-200">
                             <CardContent className="p-4 flex flex-col justify-center">
                                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Keandalan (Reliability)</p>
-                                <h3 className={`text-2xl font-bold ${summary?.reliability === 100 ? 'text-teal-600' : 'text-amber-500'}`}>
+                                <h3 className={`text-2xl font-bold ${summary?.reliability === 100 ? 'text-pupr-blue' : 'text-amber-500'}`}>
                                     {summary ? `${summary.reliability}%` : "-"}
                                 </h3>
                             </CardContent>
@@ -264,14 +264,14 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
                     <Card className="flex-1 shadow-sm border-slate-200 flex flex-col min-h-[300px]">
                         <CardHeader className="py-3 px-5 border-b border-slate-100 bg-white">
                             <CardTitle className="text-sm text-slate-800 flex items-center gap-2">
-                                <Droplets className="w-4 h-4 text-teal-500" />
+                                <Droplets className="w-4 h-4 text-pupr-blue" />
                                 Fluktuasi Tampungan Waduk
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 p-4 relative">
                             {isCalculating && (
                                 <div className="absolute inset-0 z-20 flex bg-white/80 items-center justify-center backdrop-blur-sm rounded-b-xl">
-                                    <div className="w-8 h-8 border-4 border-slate-200 border-t-teal-500 rounded-full animate-spin" />
+                                    <div className="w-8 h-8 border-4 border-slate-200 border-t-teal-500 rounded-md animate-pulse bg-slate-200 rounded-md" />
                                 </div>
                             )}
 
@@ -320,18 +320,18 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
                     <Card className="shadow-sm border-slate-200">
                         <CardContent className="p-0">
                             {resultData ? (
-                                <div className="grid grid-cols-6 md:grid-cols-12 gap-[1px] bg-slate-200 rounded-lg overflow-hidden">
+                                <div className="grid grid-cols-6 md:grid-cols-12 gap-[1px] bg-slate-200 rounded-md overflow-hidden">
                                     {resultData.map((res, i) => (
                                         <div key={i} className="bg-white p-2 text-center flex flex-col items-center justify-center">
                                             <span className="text-[10px] font-semibold text-slate-500">{res.month}</span>
-                                            {(res.status === 'NORMAL' || res.status === 'SURPLUS') && <span title="Aman"><CheckCircle2 className="w-5 h-5 text-teal-500 mt-1" /></span>}
+                                            {(res.status === 'NORMAL' || res.status === 'SURPLUS') && <span title="Aman"><CheckCircle2 className="w-5 h-5 text-pupr-blue mt-1" /></span>}
                                             {res.status === 'DEFICIT' && <span title="Defisit!"><AlertCircle className="w-5 h-5 text-rose-500 mt-1" /></span>}
-                                            {res.status === 'SPILL' && <span title="Melimpas (Spill)"><Waves className="w-5 h-5 text-blue-500 mt-1" /></span>}
+                                            {res.status === 'SPILL' && <span title="Melimpas (Spill)"><Waves className="w-5 h-5 text-pupr-blue mt-1" /></span>}
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="h-16 flex items-center justify-center bg-slate-50 text-slate-400 text-xs rounded-lg">Status Operasi Bulanan</div>
+                                <div className="h-16 flex items-center justify-center bg-slate-50 text-slate-400 text-xs rounded-md">Status Operasi Bulanan</div>
                             )}
                         </CardContent>
                     </Card>

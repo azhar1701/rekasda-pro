@@ -86,7 +86,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
       {R24 > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-600" />
+            <div className="w-2 h-2 rounded-md bg-pupr-blue" />
             <p className="text-xs font-bold text-slate-700">Hujan Rencana dari Analisis Frekuensi (Read-Only)</p>
           </div>
           <div className="text-xs">
@@ -98,8 +98,8 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
 
       <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <CloudRain className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-blue-50 rounded-md">
+            <CloudRain className="w-5 h-5 text-pupr-blue" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">Distribusi Hujan Jam-jaman</h3>
@@ -179,12 +179,12 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
                 <tbody>
                   {abmTable.map((row, idx) => (
                     <tr key={idx} className="border-b border-slate-100 even:bg-slate-50">
-                      <td className="px-3 py-2 text-center font-bold tabular-nums tracking-tight">{row.t}</td>
-                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{row.I.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{row.X.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{row.deltaX.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight">{row.deltaXPercent.toFixed(1)}</td>
-                      <td className="px-3 py-2 text-right font-bold text-blue-700 tabular-nums tracking-tight">{row.hyetograph.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-center font-bold tabular-nums tracking-tight tabular-nums tracking-tight">{row.t}</td>
+                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{row.I.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{row.X.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{row.deltaX.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right font-mono tabular-nums tracking-tight tabular-nums tracking-tight">{row.deltaXPercent.toFixed(1)}</td>
+                      <td className="px-3 py-2 text-right font-bold text-blue-700 tabular-nums tracking-tight tabular-nums tracking-tight">{row.hyetograph.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -208,7 +208,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
                   tick={{ fontSize: 11 }}
                   tickFormatter={(value) => value.toFixed(1)}
                 />
-                <Tooltip 
+                <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} 
                   contentStyle={{ fontSize: 12, fontFamily: 'monospace' }}
                   formatter={(value: any) => value?.toFixed(2)}
                 />

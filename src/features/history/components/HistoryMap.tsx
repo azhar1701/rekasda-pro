@@ -218,21 +218,21 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
   const selInfo = selectedMarker ? getTypeInfo(selectedMarker.type) : null;
 
   return (
-    <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-sm border border-slate-200 z-0 bg-slate-50">
+    <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-md overflow-hidden shadow-sm border border-slate-200 z-0 bg-slate-50">
       <div ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 1 }} />
 
       {/* Floating Info Card — handles all 3 types */}
       {selectedMarker && selInfo && (
-        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[1000] bg-white rounded-xl shadow-2xl p-4 sm:p-5 w-[calc(100%-1rem)] sm:w-auto sm:max-w-sm animate-in slide-in-from-right duration-300">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[1000] bg-white rounded-md shadow-sm p-4 sm:p-5 w-[calc(100%-1rem)] sm:w-auto sm:max-w-sm animate-in slide-in-from-right duration-300">
           <button
             onClick={() => setSelectedMarker(null)}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 transition-colors"
           >
             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
 
           {/* Type badge — color synced with marker */}
-          <div className={`inline-block px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold mb-2 sm:mb-3 ${selInfo.badgeClass}`}>
+          <div className={`inline-block px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold mb-2 sm:mb-3 ${selInfo.badgeClass}`}>
             {selInfo.label}
           </div>
 
@@ -242,7 +242,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
             {new Date(selectedMarker.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
 
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-4 rounded-lg border border-slate-200">
+          <div className="bg-pupr-blue text-white p-3 sm:p-4 rounded-md border border-slate-200">
             <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">{selInfo.outputLabel}</span>
             <div className="flex items-baseline gap-1.5 sm:gap-2">
               <span className="text-2xl sm:text-3xl font-black text-slate-900">{selectedMarker.outputs.Discharge}</span>
@@ -258,7 +258,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
 
           <button
             onClick={() => { if (onViewDetail) onViewDetail(selectedMarker); }}
-            className="mt-4 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-md"
+            className="mt-4 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-md text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 shadow-md"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
             Tampilkan Detail Analisis

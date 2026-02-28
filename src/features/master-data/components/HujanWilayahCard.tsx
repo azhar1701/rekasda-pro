@@ -140,8 +140,8 @@ export const HujanWilayahCard: React.FC = () => {
                   <tbody>
                     {configsWithBobot.map((config) => (
                       <tr key={config.stasiunId} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2 font-medium text-slate-900">{config.namaStasiun}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 font-medium text-slate-900 tabular-nums tracking-tight">{config.namaStasiun}</td>
+                        <td className="px-3 py-2 tabular-nums tracking-tight">
                           <input
                             type="number"
                             value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
@@ -151,7 +151,7 @@ export const HujanWilayahCard: React.FC = () => {
                             step="0.01"
                           />
                         </td>
-                        <td className="px-3 py-2 text-right">
+                        <td className="px-3 py-2 text-right tabular-nums tracking-tight">
                           <span className="inline-flex items-center px-2 py-1 bg-slate-100 text-slate-700 rounded font-semibold text-xs tabular-nums">
                             {config.bobot.toFixed(2)}%
                           </span>

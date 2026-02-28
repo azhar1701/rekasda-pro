@@ -94,7 +94,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
       {R24 > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-600" />
+            <div className="w-2 h-2 rounded-md bg-pupr-blue" />
             <p className="text-xs font-bold text-slate-700">Hujan Rencana dari Analisis Frekuensi (Read-Only)</p>
           </div>
           <div className="text-xs">
@@ -106,8 +106,8 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
 
       <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-50 rounded-lg">
-            <CloudRain className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-blue-50 rounded-md">
+            <CloudRain className="w-5 h-5 text-pupr-blue" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">Distribusi Hujan Jam-jaman</h3>
@@ -170,7 +170,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="jam" label={{ value: 'Jam ke-', position: 'insideBottom', offset: -5 }} />
                 <YAxis label={{ value: 'Intensitas (mm)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
+                <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} />
                 <Legend />
                 <Bar dataKey="losses" stackId="a" fill="#94a3b8" name="Losses" />
                 <Bar dataKey="efektif" stackId="a" fill="#3b82f6" name="Hujan Efektif" />

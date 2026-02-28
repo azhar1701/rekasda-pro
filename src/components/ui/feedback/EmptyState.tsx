@@ -104,8 +104,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {renderedIcon && (
         <div className={`
           mb-6 text-slate-300
-          bg-slate-50 rounded-2xl
-          ${sizeClass.icon}
+          bg-slate-50 rounded-md border border-slate-200
           flex items-center justify-center
         `}>
           {renderedIcon}

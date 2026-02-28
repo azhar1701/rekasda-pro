@@ -27,11 +27,11 @@ export const SlopeCalculator: React.FC<Props> = ({ onSlopeCalculated, onClose })
   };
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4 space-y-4 mt-3">
+    <div className="bg-white rounded-md border border-slate-200 p-4 space-y-4 mt-3">
       <div className="flex items-center justify-between pb-3 border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-            <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 rounded-md bg-teal-50 flex items-center justify-center">
+            <svg className="w-4 h-4 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
           </div>
@@ -76,26 +76,26 @@ export const SlopeCalculator: React.FC<Props> = ({ onSlopeCalculated, onClose })
 
       <button
         onClick={calculateSlope}
-        className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-sm"
+        className="w-full px-4 py-2.5 bg-pupr-blue text-white rounded-md hover:bg-teal-700 transition-colors font-semibold text-sm"
       >
         Hitung Kemiringan
       </button>
 
       {slope !== null && (
-        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+        <div className="bg-teal-50 border border-teal-200 rounded-md p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-teal-700 uppercase tracking-wide">Hasil Perhitungan</span>
-            <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-2xl font-bold text-teal-900">{slope.toFixed(6)}</span>
-            <span className="text-sm font-bold text-teal-600">m/m</span>
+            <span className="text-sm font-bold text-pupr-blue">m/m</span>
           </div>
           <button
             onClick={useSlope}
-            className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-sm"
+            className="w-full px-4 py-2 bg-pupr-blue text-white rounded-md hover:bg-teal-700 transition-colors font-semibold text-sm"
           >
             Gunakan Nilai Ini
           </button>

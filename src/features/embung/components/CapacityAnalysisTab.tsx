@@ -77,7 +77,7 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
     return (
         <div className="flex flex-col h-full gap-6">
             {/* Header Info */}
-            <div className="flex items-start justify-between bg-primary-50 p-4 rounded-xl border border-primary-100">
+            <div className="flex items-start justify-between bg-primary-50 p-4 rounded-md border border-primary-100">
                 <div className="flex gap-3">
                     <Info className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
                     <div>
@@ -110,7 +110,7 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
                                     >
                                         {isCalculating ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <Loader2 className="w-4 h-4 animate-pulse bg-slate-200 rounded-md" />
                                                 Menghitung...
                                             </>
                                         ) : (
@@ -185,7 +185,7 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
                                         <span className="text-primary-100 font-medium">Juta m³</span>
                                     </div>
                                 </div>
-                                <div className="w-12 h-12 bg-primary-700 rounded-xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-primary-700 rounded-md flex items-center justify-center">
                                     <Waves className="w-6 h-6 text-primary-100" />
                                 </div>
                             </div>

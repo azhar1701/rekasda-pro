@@ -14,11 +14,11 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
 
     return (
         <EmbungProvider>
-            <div className="w-full h-full flex flex-col bg-neutral-50 rounded-xl border border-neutral-200 overflow-hidden min-h-[85vh]">
+            <div className="w-full h-full flex flex-col bg-neutral-50 rounded-md border border-neutral-200 overflow-hidden min-h-[85vh]">
                 {/* Dashboard Header */}
                 <div className="px-6 py-5 border-b border-neutral-200 bg-white z-10">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary-50 rounded-lg shrink-0">
+                        <div className="p-2 bg-primary-50 rounded-md shrink-0">
                             <Droplets className="w-6 h-6 text-primary-600" />
                         </div>
                         <div>
@@ -32,10 +32,10 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
                 <div className="flex-1 overflow-hidden flex flex-col p-6">
                     <Tabs defaultValue="capacity" className="w-full h-full flex flex-col">
                         {/* Navigation Pills */}
-                        <TabsList className="w-full justify-start p-1 bg-neutral-100 rounded-lg mb-6 flex-wrap h-auto gap-1">
+                        <TabsList className="w-full justify-start p-1 bg-neutral-100 rounded-md mb-6 flex-wrap h-auto gap-1">
                             <TabsTrigger
                                 value="capacity"
-                                className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
+                                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
                             >
                                 <div className="flex items-center gap-2">
                                     <Spline className="w-4 h-4" />
@@ -44,7 +44,7 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
                             </TabsTrigger>
                             <TabsTrigger
                                 value="routing"
-                                className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
+                                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
                             >
                                 <div className="flex items-center gap-2">
                                     <Activity className="w-4 h-4" />
@@ -53,7 +53,7 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
                             </TabsTrigger>
                             <TabsTrigger
                                 value="operation"
-                                className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
+                                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
                             >
                                 <div className="flex items-center gap-2">
                                     <Waves className="w-4 h-4" />
@@ -62,7 +62,7 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
                             </TabsTrigger>
                             <TabsTrigger
                                 value="sediment"
-                                className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
+                                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary-600 data-[state=active]:shadow-sm font-semibold text-neutral-600 px-4 py-2.5 transition-all"
                             >
                                 <div className="flex items-center gap-2">
                                     <Database className="w-4 h-4" />

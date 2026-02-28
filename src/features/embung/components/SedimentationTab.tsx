@@ -105,9 +105,9 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
     return (
         <div className="flex flex-col h-full gap-6">
             {/* Header Info */}
-            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-md border border-blue-100">
                 <div className="flex gap-3">
-                    <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                    <Info className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
                     <div>
                         <h3 className="text-sm font-semibold text-blue-900">Perkiraan Sedimentasi & Umur Guna</h3>
                         <p className="text-sm text-blue-700/80 mt-1">
@@ -218,7 +218,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                                     ))}
                                     <button
                                         onClick={handleAddSample}
-                                        className="w-full py-3 text-xs font-medium text-teal-600 hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
+                                        className="w-full py-3 text-xs font-medium text-pupr-blue hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
                                     >
                                         + Tambah Distribusi Debit
                                     </button>
@@ -229,11 +229,11 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                             <Button
                                 onClick={handleCalculate}
                                 disabled={isCalculating}
-                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
+                                className="flex-1 bg-pupr-blue hover:bg-teal-700 text-white shadow-sm"
                             >
                                 {isCalculating ? (
                                     <div className="flex items-center gap-2 justify-center">
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md" />
                                         <span>Menghitung Laju...</span>
                                     </div>
                                 ) : (
@@ -249,7 +249,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                                     className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group shrink-0"
                                     title="Analisis AI"
                                 >
-                                    <Sparkles className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
+                                    <Sparkles className="w-4 h-4 text-pupr-blue group-hover:scale-110 transition-transform" />
                                 </Button>
                             )}
                         </div>
@@ -265,7 +265,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                         <CardContent className="p-8 md:p-12 relative z-10 flex flex-col items-center justify-center text-center min-h-[300px]">
                             {isCalculating ? (
                                 <div className="flex flex-col items-center">
-                                    <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-4" />
+                                    <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-md animate-pulse bg-slate-200 rounded-md mb-4" />
                                     <p className="text-amber-700 font-medium animate-pulse">Memodelkan erosi DAS...</p>
                                 </div>
                             ) : result ? (
@@ -288,7 +288,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                                     <div className="w-full max-w-sm mx-auto h-px bg-amber-200 my-4" />
 
                                     <div className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto">
-                                        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-amber-100 shadow-sm flex flex-col items-center justify-center">
+                                        <div className="bg-white/60 backdrop-blur-sm rounded-md p-6 border border-amber-100 shadow-sm flex flex-col items-center justify-center">
                                             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
                                                 <CalendarClock className="w-4 h-4" /> Persamaan Rating
                                             </p>
@@ -299,7 +299,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                                             </div>
                                         </div>
 
-                                        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-amber-100 shadow-sm flex flex-col items-center justify-center">
+                                        <div className="bg-white/60 backdrop-blur-sm rounded-md p-6 border border-amber-100 shadow-sm flex flex-col items-center justify-center">
                                             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
                                                 Erosi Spesifik
                                             </p>
@@ -325,8 +325,8 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                     {/* Persamaan Rating Curve - Dihapus dari mock diganti Info List */}
                     {result && (
                         <Card className="shadow-sm border-slate-200 bg-white animate-in slide-in-from-bottom-4 duration-500">
-                            <CardContent className="p-4 flex items-center gap-4 text-sm text-slate-600 bg-blue-50/50 rounded-xl border border-blue-50">
-                                <Info className="w-5 h-5 text-blue-500 shrink-0" />
+                            <CardContent className="p-4 flex items-center gap-4 text-sm text-slate-600 bg-blue-50/50 rounded-md border border-blue-50">
+                                <Info className="w-5 h-5 text-pupr-blue shrink-0" />
                                 <p>
                                     Perhitungan didasarkan pada total durasi sampel: <strong className="text-slate-800">{samples.reduce((sum, s) => sum + s.days, 0)} hari</strong> dalam setahun. Pastikan total durasi merepresentasikan distribusi aliran tahunan untuk hasil yang akurat.
                                 </p>

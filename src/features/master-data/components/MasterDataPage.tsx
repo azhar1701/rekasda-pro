@@ -23,7 +23,7 @@ export const MasterDataPage: React.FC = () => {
       title="Master Data Hidrologi"
       description="Single Source of Truth untuk Data & Parameter Hidrologi"
       icon={<Database className="w-6 h-6" />}
-      iconColorClass="bg-teal-50 text-teal-600"
+      iconColorClass="bg-teal-50 text-pupr-blue"
     >
       <div className="space-y-6">
         {/* GovTech Grounded Tabs */}
