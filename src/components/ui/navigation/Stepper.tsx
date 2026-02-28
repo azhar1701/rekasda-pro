@@ -68,8 +68,6 @@ export const Stepper: React.FC<StepperProps> = ({
                   `}
                 />
               )}
-                />
-              )}
             </div>
           ))}
         </div>
@@ -111,8 +109,6 @@ export const Stepper: React.FC<StepperProps> = ({
                     className={`w-1 h-12 transition-colors ${
                       isCompleted(index + 1) ? 'bg-pupr-blue' : 'bg-slate-300'
                     }`}
-                  />
-                )}
                   />
                 )}
               </div>
