@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CloudRain, Edit, ChevronDown, ChevronUp } from 'lucide-react';
-import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
+import { CloudRain, Edit, ChevronDown, ChevronUp, AlertCircle, Wand2 } from 'lucide-react';
+import { useHydrologyStore, type DataHujan, generateMockDataHujan } from '@/stores/useHydrologyStore';
 import { useDebounce } from '@/hooks/useDebounce';
-
+import { infillMissingData } from '@/lib/utils/spatialMath';
 export const DataHujanInputCard: React.FC = () => {
-  const { dataHujan, updateDataHujanManual, selectedStasiun } = useHydrologyStore();
+  const { dataHujan, updateDataHujanManual, selectedStasiun, stasiunList } = useHydrologyStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [localData, setLocalData] = useState<DataHujan[]>(dataHujan);
+  const [isInfilling, setIsInfilling] = useState(false);
   const debouncedData = useDebounce(localData, 700);
 
   useEffect(() => {
@@ -37,6 +38,35 @@ export const DataHujanInputCard: React.FC = () => {
     setLocalData(prev => prev.map(d => d.id === id ? { ...d, curah_hujan: value as unknown as number } : d));
   };
 
+  const handleInfillData = async () => {
+    if (!selectedStasiun) return;
+    setIsInfilling(true);
+    
+    // Generate mock data for all stations to provide context for infilling
+    const allData = stasiunList.flatMap(stasiun => generateMockDataHujan(stasiun.id));
+    
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const filledData = localData.map(item => {
+      const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
+      if (value === 0) {
+        const infilledValue = infillMissingData(
+          selectedStasiun,
+          stasiunList,
+          allData,
+          item.tanggal,
+          'idw'
+        );
+        return { ...item, curah_hujan: infilledValue > 0 ? parseFloat(infilledValue.toFixed(1)) : 0 };
+      }
+      return item;
+    });
+
+    setLocalData(filledData);
+    setIsInfilling(false);
+  };
+
   return (
     <div className="border border-slate-300 rounded-md shadow-sm bg-white">
       {/* Header */}
@@ -53,14 +83,26 @@ export const DataHujanInputCard: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-          >
-            <Edit className="w-4 h-4 text-[#0c3a66]" />
-            <span className="text-sm font-medium text-slate-700">Edit</span>
-          </button>
-        </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleInfillData}
+              disabled={isInfilling || !selectedStasiun}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Isi data kosong (0) menggunakan metode IDW/Normal Ratio"
+            >
+              <Wand2 className={`w-4 h-4 text-[#0c3a66] ${isInfilling ? 'animate-pulse' : ''}`} />
+              <span className="text-sm font-medium text-slate-700">
+                {isInfilling ? 'Memproses...' : 'Isi Data Kosong'}
+              </span>
+            </button>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+            >
+              <Edit className="w-4 h-4 text-[#0c3a66]" />
+              <span className="text-sm font-medium text-slate-700">Edit</span>
+            </button>
+          </div>
       </div>
 
       {/* Body - Preview Mode */}
@@ -89,13 +131,22 @@ export const DataHujanInputCard: React.FC = () => {
           {localData.slice(0, 10).map((item, idx) => {
             // const year = item.tanggal ? new Date(item.tanggal).getFullYear() : idx + 1;
             const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
+            const isOutlier = value > 300;
             return (
-              <div key={item.id} className="border border-slate-200 rounded-md p-3 bg-slate-50">
-                <div className="text-xs text-slate-600 mb-1">Tahun {idx + 1}</div>
-                <div className="text-lg font-bold text-slate-900 tabular-nums">{value.toFixed(1)}</div>
+              <div key={item.id} className={`border rounded-md p-3 ${isOutlier ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-xs text-slate-600">Tahun {idx + 1}</div>
+                  {isOutlier && (
+                    <span title="Outlier (>300 mm)">
+                      <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                    </span>
+                  )}
+                </div>
+                <div className={`text-lg font-bold tabular-nums ${isOutlier ? 'text-red-700' : 'text-slate-900'}`}>{value.toFixed(1)}</div>
               </div>
             );
           })}
+        </div>
         </div>
 
         {/* Expand Button */}
@@ -130,29 +181,44 @@ export const DataHujanInputCard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {localData.map((item, idx) => (
-                  <tr key={item.id} className="border-b border-slate-200 even:bg-slate-50">
-                    <td className="px-3 py-2 text-slate-700 tabular-nums tracking-tight">Tahun {idx + 1}</td>
-                    <td className="px-3 py-2 tabular-nums tracking-tight">
-                      <input
-                        type="date"
-                        value={item.tanggal}
-                        onChange={(e) => setLocalData(prev => prev.map(d => d.id === item.id ? { ...d, tanggal: e.target.value } : d))}
-                        className="w-full px-2 py-1 border border-slate-300 rounded-md focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
-                      />
-                    </td>
-                    <td className="px-3 py-2 tabular-nums tracking-tight">
-                      <input
-                        type="number"
-                        value={item.curah_hujan === 0 ? 0 : (item.curah_hujan ?? '')}
-                        onChange={(e) => handleValueChange(item.id, e.target.value)}
-                        className="w-full px-2 py-1 text-right tabular-nums border border-slate-300 rounded-md focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
-                        placeholder="0.0"
-                        step="0.1"
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {localData.map((item, idx) => {
+                  const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
+                  const isOutlier = value > 300;
+                  return (
+                    <tr key={item.id} className={`border-b border-slate-200 ${isOutlier ? 'bg-red-50/50' : 'even:bg-slate-50'}`}>
+                      <td className="px-3 py-2 text-slate-700 tabular-nums tracking-tight">Tahun {idx + 1}</td>
+                      <td className="px-3 py-2 tabular-nums tracking-tight">
+                        <input
+                          type="date"
+                          value={item.tanggal}
+                          onChange={(e) => setLocalData(prev => prev.map(d => d.id === item.id ? { ...d, tanggal: e.target.value } : d))}
+                          className="w-full px-2 py-1 border border-slate-300 rounded-md focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
+                        />
+                      </td>
+                      <td className="px-3 py-2 tabular-nums tracking-tight relative">
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={item.curah_hujan === 0 ? 0 : (item.curah_hujan ?? '')}
+                            onChange={(e) => handleValueChange(item.id, e.target.value)}
+                            className={`w-full px-2 py-1 text-right tabular-nums border rounded-md focus:ring-1 focus:outline-none ${
+                              isOutlier 
+                                ? 'border-red-300 text-red-700 focus:border-red-500 focus:ring-red-500' 
+                                : 'border-slate-300 focus:border-[#0c3a66] focus:ring-[#0c3a66]'
+                            }`}
+                            placeholder="0.0"
+                            step="0.1"
+                          />
+                          {isOutlier && (
+                            <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                              <AlertCircle className="w-4 h-4 text-red-500" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

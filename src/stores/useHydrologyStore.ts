@@ -387,7 +387,7 @@ const MOCK_STASIUN_LIST: StasiunHidrologi[] = [
  * The data is designed to be statistically consistent and pass QC.
  * Each year generates 365 daily records with seasonal pattern.
  */
-const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026): DataHujan[] => {
+export const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026): DataHujan[] => {
   const data: DataHujan[] = [];
   const startYear = 2010;
   const endYear = 2024;
