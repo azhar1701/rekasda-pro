@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CloudRain, Edit, ChevronDown, ChevronUp, AlertCircle, Wand2 } from 'lucide-react';
+import { CloudRain, Edit, ChevronDown, ChevronUp, AlertCircle, Wand2, Satellite } from 'lucide-react';
 import { useHydrologyStore, type DataHujan, generateMockDataHujan } from '@/stores/useHydrologyStore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { infillMissingData } from '@/lib/utils/spatialMath';
+import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 export const DataHujanInputCard: React.FC = () => {
   const { dataHujan, updateDataHujanManual, selectedStasiun, stasiunList } = useHydrologyStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [localData, setLocalData] = useState<DataHujan[]>(dataHujan);
   const [isInfilling, setIsInfilling] = useState(false);
+  const [isFetchingSatellite, setIsFetchingSatellite] = useState(false);
   const debouncedData = useDebounce(localData, 700);
 
   useEffect(() => {
@@ -67,6 +69,40 @@ export const DataHujanInputCard: React.FC = () => {
     setIsInfilling(false);
   };
 
+  const handleFetchSatelliteData = async () => {
+    if (!selectedStasiun || selectedStasiun.koordinat_x === null || selectedStasiun.koordinat_y === null) {
+      alert('Stasiun tidak memiliki koordinat (X, Y). Silakan lengkapi data stasiun terlebih dahulu.');
+      return;
+    }
+
+    setIsFetchingSatellite(true);
+    try {
+      // Fetch satellite data (mock CHIRPS/GPM)
+      const satelliteData = await fetchSatelliteRainfall(
+        selectedStasiun.koordinat_y, // lat
+        selectedStasiun.koordinat_x, // lon
+        2010,
+        2024
+      );
+
+      // Update local data with satellite data
+      // We map the satellite data to the current station ID
+      const mappedData = satelliteData.map(d => ({
+        ...d,
+        stasiun_id: selectedStasiun.id
+      }));
+
+      setLocalData(mappedData);
+      updateDataHujanManual(mappedData);
+    } catch (error) {
+      console.error('Error fetching satellite data:', error);
+      alert('Gagal mengambil data satelit. Silakan coba lagi.');
+    } finally {
+      setIsFetchingSatellite(false);
+    }
+  };
+
+
   return (
     <div className="border border-slate-300 rounded-md shadow-sm bg-white">
       {/* Header */}
@@ -84,6 +120,17 @@ export const DataHujanInputCard: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleFetchSatelliteData}
+              disabled={isFetchingSatellite || !selectedStasiun || selectedStasiun.koordinat_x === null}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Tarik data curah hujan historis dari satelit (CHIRPS/GPM)"
+            >
+              <Satellite className={`w-4 h-4 text-[#0c3a66] ${isFetchingSatellite ? 'animate-spin' : ''}`} />
+              <span className="text-sm font-medium text-slate-700">
+                {isFetchingSatellite ? 'Menarik...' : 'Tarik Data Satelit'}
+              </span>
+            </button>
             <button
               onClick={handleInfillData}
               disabled={isInfilling || !selectedStasiun}
