@@ -17,7 +17,7 @@ import type { ConvolutionInput, ConvolutionResult } from '../lib/utils/convoluti
 import type {
   WorkerMessage,
   WorkerResponse,
-  WorkerResponseType,
+
   ABMInput,
   ABMResult,
   MononobeInput,
@@ -46,13 +46,13 @@ export interface UseHydrologyWorkerReturn {
 }
 
 // Peta dari tipe response ke tipe request-nya untuk validasi
-const RESPONSE_TO_REQUEST_TYPE: Record<WorkerResponseType, string> = {
-  CONVOLUTION_RESULT:       'CALCULATE_CONVOLUTION',
-  ABM_RESULT:               'CALCULATE_ABM',
-  MONONOBE_RESULT:          'CALCULATE_MONONOBE',
-  EFFECTIVE_RAINFALL_RESULT: 'CALCULATE_EFFECTIVE_RAINFALL',
-  WORKER_ERROR:             'WORKER_ERROR',
-};
+// const RESPONSE_TO_REQUEST_TYPE: Record<WorkerResponseType, string> = {
+//   CONVOLUTION_RESULT:       'CALCULATE_CONVOLUTION',
+//   ABM_RESULT:               'CALCULATE_ABM',
+//   MONONOBE_RESULT:          'CALCULATE_MONONOBE',
+//   EFFECTIVE_RAINFALL_RESULT: 'CALCULATE_EFFECTIVE_RAINFALL',
+//   WORKER_ERROR:             'WORKER_ERROR',
+// };
 
 // ─── Hook utama ──────────────────────────────────────────────────────────────
 

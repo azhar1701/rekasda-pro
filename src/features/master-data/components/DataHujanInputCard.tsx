@@ -87,7 +87,7 @@ export const DataHujanInputCard: React.FC = () => {
         {/* Grid Preview - First 10 */}
         <div className="grid grid-cols-5 gap-3 mb-3">
           {localData.slice(0, 10).map((item, idx) => {
-            const year = item.tanggal ? new Date(item.tanggal).getFullYear() : idx + 1;
+            // const year = item.tanggal ? new Date(item.tanggal).getFullYear() : idx + 1;
             const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
             return (
               <div key={item.id} className="border border-slate-200 rounded-md p-3 bg-slate-50">

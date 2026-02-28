@@ -20,7 +20,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
   onComplete,
   isCompleted
 }) => {
-  const { morfometriDAS, distribusiHujanJamJaman, hujanEfektif } = useHydrologyStore();
+  const { morfometriDAS, distribusiHujanJamJaman } = useHydrologyStore();
   const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
   const [calculated, setCalculated] = useState(false);
 

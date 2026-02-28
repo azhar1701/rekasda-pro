@@ -38,9 +38,9 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
   const [incidentId] = useState(() => generateIncidentId());
   const [timestamp] = useState(() => formatTimestamp());
 
-  const handleReload = () => {
-    window.location.reload();
-  };
+  // const handleReload = () => {
+    // window.location.reload();
+  // };
 
   const handleGoHome = () => {
     window.location.href = '/';
@@ -50,7 +50,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
     if (resetErrorBoundary) {
       resetErrorBoundary();
     } else {
-      window.location.reload();
+      // window.location.reload();
     }
   };
 

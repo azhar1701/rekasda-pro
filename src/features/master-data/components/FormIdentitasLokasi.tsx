@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Card } from '@/components/ui/Card';
 import { InputGroup } from '@/components/ui/forms/InputGroup';

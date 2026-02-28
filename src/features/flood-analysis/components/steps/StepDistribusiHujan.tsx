@@ -111,7 +111,7 @@ export const StepDistribusiHujan: React.FC = () => {
             <h4 className="text-xs font-bold text-slate-900 mb-3">Kurva IDF (Intensity-Duration-Frequency)</h4>
             <IDFChart 
               curahHujanRencana={hasilAnalisisFrekuensi?.curahHujanRencana || []} 
-              selectedKalaUlang={hasilAnalisisFrekuensi?.selectedKalaUlang}
+              selectedKalaUlang={hasilAnalisisFrekuensi?.selectedKalaUlang ?? undefined}
               maxDuration={Math.max(durasiHujan, 12)} 
             />
           </div>
