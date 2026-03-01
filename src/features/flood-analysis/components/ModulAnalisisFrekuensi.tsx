@@ -223,30 +223,30 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         {dataInput.length >= 10 && !showManualInput ? (
           <div className="space-y-3">
             {/* Data Summary Card */}
-            <div className="flex items-start justify-between p-3 bg-pupr-blue text-white rounded-md border border-blue-200">
+            <div className="flex items-start justify-between p-3 bg-[#0c3a66] text-white rounded-md border border-[#0c3a66] overflow-hidden shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-pupr-blue rounded-md">
+                <div className="p-2 bg-[#0d4578] rounded-md">
                   <CheckCircle2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900 mb-1">
+                  <p className="text-sm font-semibold text-white mb-1">
                     {dataInput.length} Tahun Data Hujan Maksimum
                   </p>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-sm text-slate-300">
                     Sumber: {selectedStasiun ? `Stasiun ${selectedStasiun.nama_stasiun}` : hasilThiessen ? 'Hujan Wilayah (Thiessen)' : 'Data Master'}
                   </p>
                   <div className="flex items-center gap-4 mt-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-medium text-slate-500">Min:</span>
-                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{Math.min(...dataInput).toFixed(1)} mm</span>
+                      <span className="text-xs font-medium text-slate-300">Min:</span>
+                      <span className="text-sm font-medium text-white font-mono tabular-nums">{Math.min(...dataInput).toFixed(1)} mm</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-medium text-slate-500">Max:</span>
-                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{Math.max(...dataInput).toFixed(1)} mm</span>
+                      <span className="text-xs font-medium text-slate-300">Max:</span>
+                      <span className="text-sm font-medium text-white font-mono tabular-nums">{Math.max(...dataInput).toFixed(1)} mm</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-medium text-slate-500">Rata-rata:</span>
-                      <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{(dataInput.reduce((a, b) => a + b, 0) / dataInput.length).toFixed(1)} mm</span>
+                      <span className="text-xs font-medium text-slate-300">Rata-rata:</span>
+                      <span className="text-sm font-medium text-white font-mono tabular-nums">{(dataInput.reduce((a, b) => a + b, 0) / dataInput.length).toFixed(1)} mm</span>
                     </div>
                   </div>
                 </div>
@@ -263,9 +263,9 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             <div>
               <div className="grid grid-cols-5 gap-2">
                 {dataInput.slice(0, showAllData ? dataInput.length : 10).map((val, idx) => (
-                  <div key={idx} className="p-2 bg-slate-50 border border-slate-200 rounded text-center">
-                    <div className="text-[9px] font-medium text-slate-500">Tahun {idx + 1}</div>
-                    <div className="text-xs font-bold text-slate-900 font-mono tabular-nums">{val.toFixed(1)}</div>
+                  <div key={idx} className="bg-white border border-slate-200 rounded-md shadow-sm text-center p-3">
+                    <div className="text-xs text-slate-500">Tahun {idx + 1}</div>
+                    <div className="text-lg font-semibold text-slate-800 tabular-nums">{val.toFixed(1)}</div>
                   </div>
                 ))}
               </div>
@@ -525,11 +525,11 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           )}
 
           {/* Interactive Comparison Bar */}
-          <div className="mb-4 p-3 bg-pupr-blue text-white rounded-md border border-blue-100">
+          <div className="mb-4 p-3 bg-[#0c3a66] text-white rounded-md border border-[#0c3a66] overflow-hidden shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-pupr-blue" />
-                <span className="text-xs font-semibold text-slate-700">Perbandingan Kala Ulang:</span>
+                <TrendingUp className="w-4 h-4 text-white" />
+                <span className="text-sm font-semibold text-white">Perbandingan Kala Ulang:</span>
               </div>
               <div className="flex gap-1">
                 {[2, 5, 10, 25, 50, 100].map(tr => (
@@ -559,20 +559,22 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 
                 return (
                   <div key={d.method} className="flex items-center gap-2">
-                    <span className={`text-[10px] font-semibold w-20 ${
-                      isSelected ? 'text-blue-700' : isFailed ? 'text-slate-400' : 'text-slate-600'
+                    <span className={`text-xs font-medium w-20 ${
+                      isSelected ? 'text-yellow-400' : isFailed ? 'text-slate-500' : 'text-white'
                     }`}>
                       {METHOD_LABELS[d.method]}
                     </span>
-                    <div className="flex-1 bg-slate-200 rounded-md h-4 overflow-hidden">
+                    <div className="flex-1 bg-slate-700/50 rounded-md h-5 overflow-hidden">
                       <div 
-                        className={`h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1.5 ${
-                          isSelected ? 'bg-[#0c3a66]' : 
-                          isFailed ? 'bg-slate-300' : 'bg-slate-400'
+                        className={`h-full rounded-md transition-all duration-500 flex items-center justify-end pr-2 ${
+                          isSelected ? 'bg-yellow-400' : 
+                          isFailed ? 'bg-slate-500' : 'bg-slate-300'
                         }`}
                         style={{ width: `${percentage}%` }}
                       >
-                        <span className="text-[9px] font-bold text-white">{value.toFixed(1)}</span>
+                        <span className={`text-xs font-bold tabular-nums ${
+                          isSelected ? 'text-slate-900' : 'text-slate-800'
+                        }`}>{value.toFixed(1)}</span>
                       </div>
                     </div>
                   </div>

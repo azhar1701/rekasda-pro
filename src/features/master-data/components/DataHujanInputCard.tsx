@@ -157,19 +157,19 @@ export const DataHujanInputCard: React.FC = () => {
         {/* Statistics */}
         <div className="flex items-center gap-6 mb-4 text-sm">
           <div>
-            <span className="text-slate-600">Min: </span>
-            <span className="font-bold text-slate-900 tabular-nums">{stats.min.toFixed(1)}</span>
-            <span className="text-slate-500 ml-1">mm</span>
+            <span className="text-slate-300">Min: </span>
+            <span className="font-medium text-white tabular-nums">{stats.min.toFixed(1)}</span>
+            <span className="text-slate-300 ml-1">mm</span>
           </div>
           <div>
-            <span className="text-slate-600">Max: </span>
-            <span className="font-bold text-slate-900 tabular-nums">{stats.max.toFixed(1)}</span>
-            <span className="text-slate-500 ml-1">mm</span>
+            <span className="text-slate-300">Max: </span>
+            <span className="font-medium text-white tabular-nums">{stats.max.toFixed(1)}</span>
+            <span className="text-slate-300 ml-1">mm</span>
           </div>
           <div>
-            <span className="text-slate-600">Rata-rata: </span>
-            <span className="font-bold text-slate-900 tabular-nums">{stats.avg.toFixed(1)}</span>
-            <span className="text-slate-500 ml-1">mm</span>
+            <span className="text-slate-300">Rata-rata: </span>
+            <span className="font-medium text-white tabular-nums">{stats.avg.toFixed(1)}</span>
+            <span className="text-slate-300 ml-1">mm</span>
           </div>
         </div>
 
