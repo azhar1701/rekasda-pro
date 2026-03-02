@@ -24,8 +24,12 @@ import { Footer } from '@/components/ui/navigation/Footer';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useDatabaseStatus } from '@/features/history/components/DatabaseTest';
 import { APP_NAME } from '@/constants';
+import { SideDrawer } from '@/components/SideDrawer';
+import { WorkflowCanvas } from '@/features/workflow/WorkflowCanvas';
+import { GitMerge } from 'lucide-react';
 
 enum Tab {
+  WORKFLOW = 'WORKFLOW',
   SALURAN = 'SALURAN',
   BANJIR = 'BANJIR',
   NERACA = 'NERACA',
@@ -103,6 +107,7 @@ const App: React.FC = () => {
     // Grup 1: Input
     {
       items: [
+        { tab: Tab.WORKFLOW, label: 'Alur Kerja', icon: <GitMerge strokeWidth={2.5} className="w-5 h-5" /> },
         { tab: Tab.MASTER, label: 'Data Master', icon: <Database strokeWidth={2.5} className="w-5 h-5" /> },
       ],
     },
@@ -131,6 +136,7 @@ const App: React.FC = () => {
 
   return (
     <>
+      <SideDrawer />
       <ToastContainer />
       <div className="min-h-screen font-sans flex flex-col bg-gradient-to-b from-slate-50 to-white">
 
@@ -149,6 +155,7 @@ const App: React.FC = () => {
         {/* --- Main Content --- */}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 pb-28 md:pb-8 md:pt-24">
           <div className="transition-opacity duration-300">
+            {activeTab === Tab.WORKFLOW && <div className="h-[800px] w-full"><WorkflowCanvas /></div>}
             {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
             {activeTab === Tab.BANJIR && <ModulBanjirStepper />}
             {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {

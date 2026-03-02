@@ -31,6 +31,14 @@ export interface ThiessenStasiunConfig {
   bobot: number;         // auto-calculated weight
 }
 
+export interface IsohyetConfig {
+  id: string;
+  label: string; // misal "Garis 100mm - 120mm"
+  curahHujanRataRata: number; // (R1 + R2) / 2
+  luasAntarGaris: number; // km²
+  bobot: number; // auto-calculated
+}
+
 export interface HasilThiessen {
   stasiunConfigs: ThiessenStasiunConfig[];
   totalLuas: number;
@@ -119,8 +127,9 @@ export interface TutupanLahan {
 
 /** Curah Hujan Wilayah Config */
 export interface CurahHujanWilayah {
-  metode: 'aljabar' | 'thiessen';
+  metode: 'aljabar' | 'thiessen' | 'isohyet';
   stasiunConfigs: ThiessenStasiunConfig[];
+  isohyetConfigs?: IsohyetConfig[];
   hujanRataRata: number; // mm
 }
 

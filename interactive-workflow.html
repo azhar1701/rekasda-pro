@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekasda-Pro Advanced Architecture Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Interactive Node States */
+        .node { cursor: pointer !important; transition: opacity 0.3s ease, filter 0.3s ease; }
+        .node:hover { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)) brightness(0.95); }
+        .node.dimmed { opacity: 0.3 !important; }
+        .node.active { filter: drop-shadow(0px 0px 12px rgba(59, 130, 246, 0.9)) !important; opacity: 1 !important; }
+        .node.active rect, .node.active polygon, .node.active circle { stroke: #2563eb !important; stroke-width: 3px !important; }
+        
+        /* Flowing Edges (Data Pipeline Animation) */
+        .edgePath path.path {
+            stroke: #94a3b8 !important;
+            stroke-width: 2px !important;
+            transition: stroke 0.3s ease, stroke-width 0.3s ease;
+        }
+        .edgePath.flow path.path {
+            stroke-dasharray: 8, 6 !important;
+            animation: dash 1.5s linear infinite !important;
+            stroke: #3b82f6 !important;
+            stroke-width: 3px !important;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -28; }
+        }
+        
+        #diagram-container svg { width: 100% !important; height: 100% !important; min-height: 600px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b px-6 py-4 flex items-center justify-between z-20">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/><polyline points="2 15.5 12 8.5 22 15.5"/><line x1="12" y1="2" x2="12" y2="8.5"/></svg>
+                Rekasda-Pro Architecture
+            </h1>
+            <div class="flex items-center gap-3 text-sm text-slate-500 mt-1">
+                <span class="px-2 py-0.5 rounded bg-green-100 text-green-700 font-mono text-xs font-bold border border-green-200">v1.1.0</span>
+                <span>Data Flow & Codebase Explorer</span>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border shadow-sm">
+            <button id="btn-zoom-in" class="p-2 hover:bg-white rounded hover:shadow-sm text-slate-600 transition" title="Zoom In">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button id="btn-zoom-out" class="p-2 hover:bg-white rounded hover:shadow-sm text-slate-600 transition" title="Zoom Out">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <div class="w-px h-6 bg-slate-300 mx-1"></div>
+            <button id="btn-reset" class="p-2 hover:bg-white rounded hover:shadow-sm text-slate-600 transition" title="Reset View">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <div class="w-px h-6 bg-slate-300 mx-1"></div>
+            <button id="btn-toggle-flow" class="p-2 hover:bg-white rounded hover:shadow-sm text-blue-600 transition font-medium flex items-center gap-2" title="Toggle Data Flow Animation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span class="text-sm">Animate Data</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left: Diagram Container -->
+        <main class="flex-1 relative bg-slate-100 overflow-hidden flex flex-col p-4">
+            <!-- Grid Background -->
+            <div class="absolute inset-0 z-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 20px 20px;"></div>
+            
+            <div id="diagram-container" class="bg-white rounded-xl shadow-sm border w-full h-full relative z-10 flex items-center justify-center overflow-hidden cursor-move">
+                <!-- Mermaid Graph -->
+                <pre class="mermaid" id="mermaid-graph" style="visibility:hidden">
+                    %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'lineColor': '#94a3b8', 'fontFamily': 'ui-sans-serif, system-ui, sans-serif' }}}%%
+                    graph TD
+                        classDef input fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1,rx:6px,ry:6px
+                        classDef pre fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309,rx:6px,ry:6px
+                        classDef engine fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#b91c1c,rx:6px,ry:6px
+                        classDef module fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#6d28d9,rx:6px,ry:6px
+                        classDef output fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#15803d,rx:6px,ry:6px
+
+                        subgraph INPUT [STATE INPUT]
+                            direction LR
+                            I1["Data Stasiun dan Hujan"]:::input
+                            I2["Morfometri DAS"]:::input
+                            I3["Tutupan Lahan"]:::input
+                        end
+
+                        subgraph PRE [PRE-PROCESSING]
+                            direction TB
+                            P1["Quality Control"]:::pre
+                            P2["Hujan Wilayah"]:::pre
+                        end
+
+                        subgraph ENGINE [CORE ENGINE]
+                            direction LR
+                            E1["Analisis Frekuensi"]:::engine
+                            E2["Areal Reduction Factor"]:::engine
+                            E3["Distribusi Jam-jaman"]:::engine
+                        end
+
+                        subgraph MODULES [MODUL APLIKASI]
+                            direction TB
+                            M1["Banjir Rencana"]:::module
+                            M2["Neraca Air"]:::module
+                            M3["Desain Embung"]:::module
+                        end
+
+                        subgraph OUTPUT [HASIL DAN REPORTING]
+                            direction LR
+                            O1["Grafik dan Tabel"]:::output
+                            O2["PDF dan Excel Export"]:::output
+                            O3["AI Consultant"]:::output
+                        end
+
+                        %% Relasi Utama
+                        I1 -->|"StasiunList"| P1
+                        P1 -->|"Data Valid"| P2
+                        I2 -->|"Luas DAS"| P2
+
+                        P2 -->|"Hujan Tahunan"| E1
+                        E1 -->|"Hujan Rencana"| E2
+                        I2 -->|"Panjang Sungai"| E2
+                        E2 -->|"Hujan Terkoreksi"| E3
+                        I3 -->|"Koef Limpasan"| E3
+
+                        E3 -->|"Hujan Efektif"| M1
+                        I2 -->|"Parameter HSS"| M1
+                        
+                        P2 -->|"Hujan Bulanan"| M2
+                        I3 -->|"Koef Infiltrasi"| M2
+                        
+                        M1 -->|"Debit Puncak"| M3
+                        M2 -->|"Debit Andalan"| M3
+
+                        M1 -->|"Hidrograf"| O1
+                        M2 -->|"Neraca Tabel"| O1
+                        M3 -->|"Kapasitas"| O1
+
+                        O1 --> O2
+                        M1 --> O2
+                        M2 --> O2
+                        M3 --> O2
+
+                        E1 -->|"Parameter Stats"| O3
+                        M1 -->|"Q Peak"| O3
+                        M2 -->|"Status Neraca"| O3
+                </pre>
+            </div>
+        </main>
+
+        <!-- Right: Detail Panel Sidebar -->
+        <aside class="w-1/3 min-w-[400px] max-w-[500px] bg-white border-l shadow-[-10px_0_20px_-5px_rgba(0,0,0,0.05)] flex flex-col relative z-20">
+            <!-- Default State -->
+            <div id="default-panel" class="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400 bg-slate-50">
+                <div class="bg-white p-6 rounded-full shadow-sm border border-slate-100 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-700 mb-2">Pilih Komponen Arsitektur</h3>
+                <p class="text-sm leading-relaxed max-w-xs">
+                    Klik node manapun di diagram sebelah kiri untuk membongkar detail parameter, aliran data, dan struktur kode <b>React</b> & <b>Services</b> yang beroperasi di baliknya.
+                </p>
+                <p class="text-xs mt-4 text-slate-400">Gunakan mouse/trackpad untuk <i>pan</i> dan <i>zoom</i> pada diagram.</p>
+            </div>
+
+            <!-- Detailed Content State -->
+            <div id="details-panel" class="hidden h-full flex-col overflow-y-auto bg-slate-50">
+                <!-- Panel Header -->
+                <div class="bg-gradient-to-r from-indigo-900 to-slate-800 text-white p-6 shrink-0 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-10 translate-x-10"></div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="panel-category" class="text-xs font-bold uppercase tracking-wider text-indigo-200 bg-indigo-900/50 px-2 py-1 rounded">Category</span>
+                        <button id="btn-close-panel" class="text-slate-300 hover:text-white transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                    <h2 id="panel-title" class="text-2xl font-bold tracking-tight text-white mb-2">Node Title</h2>
+                    <p id="panel-desc" class="text-slate-300 text-sm leading-relaxed">Description goes here.</p>
+                </div>
+                
+                <!-- Tab Headers -->
+                <div class="flex border-b bg-white shrink-0">
+                    <button class="tab-btn active flex-1 py-3 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50/50" data-target="tab-data">I/O & Parameter</button>
+                    <button class="tab-btn flex-1 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition" data-target="tab-code">Codebase Reference</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                    
+                    <!-- Tab 1: I/O (Default) -->
+                    <div id="tab-data" class="tab-content space-y-5">
+                        <!-- Input -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="bg-blue-50 border-b border-blue-100 px-4 py-3 flex items-center gap-2">
+                                <span class="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded font-bold tracking-widest">INPUT</span>
+                                <h3 class="font-bold text-slate-800 text-sm">Data Masuk (Dependency)</h3>
+                            </div>
+                            <ul id="panel-inputs" class="p-4 text-sm text-slate-600 space-y-2"></ul>
+                        </div>
+
+                        <!-- Process -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="bg-amber-50 border-b border-amber-100 px-4 py-3 flex items-center gap-2">
+                                <span class="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded font-bold tracking-widest">PROCESS</span>
+                                <h3 class="font-bold text-slate-800 text-sm">Algoritma / Metode</h3>
+                            </div>
+                            <p id="panel-process" class="p-4 text-sm text-slate-600 leading-relaxed font-mono bg-slate-50 break-words whitespace-pre-wrap"></p>
+                        </div>
+
+                        <!-- Output -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="bg-green-50 border-b border-green-100 px-4 py-3 flex items-center gap-2">
+                                <span class="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded font-bold tracking-widest">OUTPUT</span>
+                                <h3 class="font-bold text-slate-800 text-sm">Data Keluar (Payload)</h3>
+                            </div>
+                            <ul id="panel-outputs" class="p-4 text-sm text-slate-600 space-y-2"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Codebase Reference -->
+                    <div id="tab-code" class="tab-content hidden space-y-5">
+                        <!-- Files -->
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg border border-slate-700">
+                            <div class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><polyline points="10 13 8 15 10 17"/><polyline points="14 13 16 15 14 17"/></svg>
+                                    <span class="text-xs font-mono text-slate-300 font-bold tracking-wider">FILE LOKASI (REKASDA-PRO)</span>
+                                </div>
+                            </div>
+                            <ul id="panel-files" class="p-2 space-y-1"></ul>
+                        </div>
+                        
+                        <!-- State Management -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="px-4 py-3 border-b bg-slate-50 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-pink-500"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                                <h3 class="font-bold text-slate-800 text-sm">State Management (Zustand)</h3>
+                            </div>
+                            <div class="p-4">
+                                <code id="panel-state" class="text-xs font-mono text-pink-600 break-words bg-pink-50 px-2 py-1 rounded border border-pink-100 inline-block w-full"></code>
+                                <p class="text-xs text-slate-500 mt-2">Variabel di atas dideklarasikan di <code class="bg-slate-100 px-1 rounded border">src/stores/useHydrologyStore.ts</code></p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        
+        // Node Database connected to actual rekasda-pro architecture
+        const nodeDB = {
+            "I1": { title: "Data Stasiun & Curah Hujan", cat: "State Input", desc: "Data master stasiun pengamat cuaca dan curah hujan historis harian/bulanan.",
+                inputs: ["Nama & Koordinat Stasiun (stasiunList)", "Data Hujan Excel/CSV"],
+                process: "Parsing CSV via csvParser.ts -> Commit ke Zustand store",
+                outputs: ["stasiunList: StasiunHidrologi[]", "dataHujan: DataHujan[]"],
+                files: ["src/services/csvParser.ts", "src/features/master-data/index.tsx"],
+                state: "state.stasiunList\nstate.dataHujan" },
+            "I2": { title: "Morfometri DAS", cat: "State Input", desc: "Parameter fisik Daerah Aliran Sungai.",
+                inputs: ["Luas DAS (A)", "Panjang Sungai (L)"],
+                process: "Input form manual atau delineasi otomatis DEM (demDelineationService.ts)",
+                outputs: ["morfometriDAS: { luas: number, panjangSungai: number }"],
+                files: ["src/features/master-data/components/MorfometriForm.tsx", "src/services/demDelineationService.ts"],
+                state: "state.morfometriDAS" },
+            "I3": { title: "Tutupan Lahan", cat: "State Input", desc: "Parameter pengaliran/infiltrasi (Koefisien C).",
+                inputs: ["Jenis Lahan", "Luas Lahan"],
+                process: "Weighted average Calculation untuk Koefisien C",
+                outputs: ["tutupanLahan: TutupanLahan", "landCoverParams: LandCoverParameters"],
+                files: ["src/features/master-data/components/TutupanLahanForm.tsx"],
+                state: "state.tutupanLahan" },
+            "P1": { title: "Quality Control (QC)", cat: "Pre-Processing", desc: "Uji kelayakan data hujan sebelum dianalisa (Outlier, Konsistensi, Homogen).",
+                inputs: ["state.dataHujan"],
+                process: "1. Outlier (Kn) = Log(X) ± Kn * Sd\n2. Konsistensi = RAPS Method\n3. Homogenitas = T-Test / F-Test",
+                outputs: ["qcResults: Record<string, QualityControlResults>", "Status Lulus/Gagal"],
+                files: ["src/services/qualityControlService.ts", "src/features/dashboard/components/QCStatus.tsx"],
+                state: "state.qcResults\nstate.qcStatus" },
+            "P2": { title: "Curah Hujan Wilayah", cat: "Pre-Processing", desc: "Menghitung hujan perwakilan wilayah (Metode Thiessen).",
+                inputs: ["Data Hujan Terkoreksi", "Luas Area Pengaruh Stasiun"],
+                process: "CHw = Σ (CH Stasiun * Luas Pengaruh) / Luas Total DAS",
+                outputs: ["hasilThiessen: HasilThiessen"],
+                files: ["src/services/calculationService.ts (calculateThiessen)"],
+                state: "state.hasilThiessen" },
+            "E1": { title: "Analisis Frekuensi", cat: "Core Engine", desc: "Menghitung Curah Hujan Rencana kala ulang (Tr) 2, 5, 10, 25, 50, 100 tahun.",
+                inputs: ["Hujan Maksimum Tahunan (dari Thiessen)"],
+                process: "Pencocokan sebaran Normal, Log Normal, Gumbel, dan Log Pearson III berdasarkan uji Smirnov-Kolmogorov.",
+                outputs: ["hasilAnalisisFrekuensi: HasilAnalisisFrekuensi", "curahHujanRencana"],
+                files: ["src/services/calculationService.ts (calculateFrekuensi)"],
+                state: "state.hasilAnalisisFrekuensi\nstate.curahHujanRencana" },
+            "E2": { title: "Areal Reduction Factor", cat: "Core Engine", desc: "Koreksi pengurangan hujan terhadap luas DAS besar.",
+                inputs: ["curahHujanRencana", "morfometriDAS.luas"],
+                process: "ARF = 1 - (0.048 * A^0.5)",
+                outputs: ["hasilARF: HasilARF (Hujan Rencana Terkoreksi)"],
+                files: ["src/services/calculationService.ts (calculateARF)"],
+                state: "state.hasilARF" },
+            "E3": { title: "Distribusi & Hujan Efektif", cat: "Core Engine", desc: "Memecah hujan harian ke jam-jaman dan dikalikan Koefisien Pengaliran.",
+                inputs: ["Hujan Terkoreksi ARF", "landCoverParams.C", "Durasi Hujan"],
+                process: "1. Distribusi Mononobe\n   (Pt = R24/t * (t/T)^(2/3))\n2. Hujan Efektif = Pt * C",
+                outputs: ["distribusiHujanJamJaman: number[]", "hujanEfektif: number[]"],
+                files: ["src/services/effectiveRainfallService.ts", "src/services/calculationService.ts"],
+                state: "state.hujanEfektif\nstate.distribusiHujanJamJaman" },
+            "M1": { title: "Modul Banjir Rencana", cat: "Feature Module", desc: "Simulasi Hidrograf Satuan Sintetis (HSS).",
+                inputs: ["state.hujanEfektif", "morfometriDAS (L, S)"],
+                process: "Konvolusi: Q = Σ (U * Pe)\nMetode: HSS Nakayasu, Snyder, SCS",
+                outputs: ["hasilBanjir: HasilBanjir (Q Peak, Ordinat HSS)"],
+                files: ["src/features/flood-analysis/index.tsx", "src/services/hssComparisonService.ts"],
+                state: "state.hasilBanjir\nstate.hasilKonvolusi" },
+            "M2": { title: "Modul Neraca Air", cat: "Feature Module", desc: "Mensimulasikan ketersediaan air andalan metode FJ Mock.",
+                inputs: ["Hujan Bulanan (Thiessen)", "Evapotranspirasi (Klimatologi)", "Water Holding Capacity"],
+                process: "Soil Moisture Balance -> Surplus/Defisit -> Baseflow -> Runoff",
+                outputs: ["hasilMock: HasilMock", "Debit Andalan (Q80)"],
+                files: ["src/features/water-balance/index.tsx", "src/services/waterBalanceEngine.ts"],
+                state: "state.hasilMock\nstate.neracaFinal" },
+            "M3": { title: "Modul Perencanaan Embung", cat: "Feature Module", desc: "Penelusuran waduk (Routing) dan desain dimensi embung.",
+                inputs: ["Debit Banjir (Q Peak)", "Debit Andalan (Inflow)", "Kebutuhan Air (Outflow)"],
+                process: "Simulasi Storage (ΔS = Inflow - Outflow).\nDesain Spillway (Q = C*B*H^1.5)",
+                outputs: ["hasilEmbung: HasilEmbung (Dimensi, Volume Efektif)"],
+                files: ["src/features/embung/index.tsx", "src/services/embungDatabaseService.ts"],
+                state: "state.hasilEmbung" },
+            "O1": { title: "Visualisasi Data (Recharts)", cat: "Output & UI", desc: "Merender hasil array angka menjadi grafik interaktif.",
+                inputs: ["Seluruh State Hasil (Banjir, Neraca, QC)"],
+                process: "Mapping array ke struktur data Recharts <LineChart>, <BarChart>",
+                outputs: ["Grafik SVG Dinamis di DOM"],
+                files: ["src/features/flood-analysis/components/FloodChart.tsx", "src/features/water-balance/components/MockChart.tsx"],
+                state: "(Read-only consumption from Store)" },
+            "O2": { title: "Export Laporan", cat: "Reporting", desc: "Cetak dokumen PDF dan Excel secara offline.",
+                inputs: ["DOM Elements", "JSON State"],
+                process: "react-to-pdf untuk Print DOM.\nexceljs untuk menyusun Workbook",
+                outputs: ["LaporanBanjir.pdf", "DataNeraca.xlsx"],
+                files: ["src/lib/exportUtils.ts", "src/features/dashboard/components/ExportButton.tsx"],
+                state: "(Read-only consumption from Store)" },
+            "O3": { title: "AI Consultant", cat: "AI Integration", desc: "Penasihat cerdas berbasis Gemini AI untuk membaca narasi hidrologi.",
+                inputs: ["Rekapitulasi Parameter & Hasil perhitungan"],
+                process: "Prompt Engineering -> POST ke @google/generative-ai -> Streaming Response",
+                outputs: ["Rekomendasi Teknis", "Kesimpulan Analisis Markdown"],
+                files: ["src/features/ai-consultant/index.tsx", "src/services/geminiService.ts"],
+                state: "(Trigger API Call, read from Store)" }
+        };
+
+        let panZoomInstance = null;
+        let isAnimatingFlow = false;
+
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: false, theme: 'base', securityLevel: 'loose' });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const graphDef = document.getElementById('mermaid-graph').textContent;
+            try {
+                // Render SVG
+                const { svg } = await mermaid.render('mermaid-svg', graphDef);
+                const container = document.getElementById('diagram-container');
+                container.innerHTML = svg;
+                
+                const svgElement = container.querySelector('svg');
+                svgElement.style.maxWidth = 'none'; // allow pan-zoom
+                
+                // Initialize SVG-Pan-Zoom
+                panZoomInstance = svgPanZoom(svgElement, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: false,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.5,
+                    maxZoom: 5,
+                    zoomScaleSensitivity: 0.3,
+                    mouseWheelZoomEnabled: true
+                });
+
+                // Attach Events to Nodes
+                attachNodeEvents();
+
+            } catch (error) {
+                console.error('Mermaid render error:', error);
+            }
+        });
+
+        function attachNodeEvents() {
+            const nodes = document.querySelectorAll('.node');
+            
+            nodes.forEach(node => {
+                let realId = node.id.split('-').pop(); 
+                if(!nodeDB[realId]) {
+                    const match = node.id.match(/(I[1-3]|P[1-2]|E[1-3]|M[1-3]|O[1-3])/);
+                    if(match) realId = match[0];
+                }
+
+                node.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if(realId && nodeDB[realId]) {
+                        activateNode(realId, node);
+                    }
+                });
+            });
+
+            // Click outside to reset
+            document.getElementById('diagram-container').addEventListener('click', resetNodes);
+        }
+
+        function activateNode(id, nodeElement) {
+            const data = nodeDB[id];
+            
+            // 1. UI Panel Update
+            document.getElementById('default-panel').classList.add('hidden');
+            const detailsPanel = document.getElementById('details-panel');
+            detailsPanel.classList.remove('hidden');
+            detailsPanel.classList.remove('fade-in');
+            void detailsPanel.offsetWidth; // trigger reflow
+            detailsPanel.classList.add('fade-in');
+
+            document.getElementById('panel-category').innerText = data.cat;
+            document.getElementById('panel-title').innerText = data.title;
+            document.getElementById('panel-desc').innerText = data.desc;
+            document.getElementById('panel-state').innerText = data.state;
+            document.getElementById('panel-process').innerText = data.process;
+
+            const renderLi = (arr) => arr.map(i => `<li class="flex items-start"><span class="text-blue-500 mr-2 mt-0.5 text-lg leading-none">▪</span><span class="leading-tight">${i}</span></li>`).join('');
+            document.getElementById('panel-inputs').innerHTML = renderLi(data.inputs);
+            document.getElementById('panel-outputs').innerHTML = renderLi(data.outputs);
+            
+            // Render Files with cool UI
+            document.getElementById('panel-files').innerHTML = data.files.map(f => `
+                <li class="flex items-center gap-3 p-2 hover:bg-slate-800 rounded transition cursor-default group">
+                    <svg class="text-slate-500 shrink-0 group-hover:text-blue-400 transition" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                    <span class="font-mono text-xs text-slate-300 break-all group-hover:text-blue-200 transition">${f}</span>
+                </li>
+            `).join('');
+
+            // 2. Diagram Visual Update
+            document.querySelectorAll('.node').forEach(n => {
+                n.classList.remove('active');
+                n.classList.add('dimmed');
+            });
+            nodeElement.classList.remove('dimmed');
+            nodeElement.classList.add('active');
+        }
+
+        function resetNodes() {
+            document.querySelectorAll('.node').forEach(n => {
+                n.classList.remove('active', 'dimmed');
+            });
+            document.getElementById('default-panel').classList.remove('hidden');
+            document.getElementById('details-panel').classList.add('hidden');
+        }
+
+        // --- Tabs Logic ---
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Reset all
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active', 'border-indigo-600', 'text-indigo-600', 'bg-indigo-50/50');
+                    b.classList.add('border-transparent', 'text-slate-500');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                
+                // Activate clicked
+                const target = e.currentTarget.getAttribute('data-target');
+                e.currentTarget.classList.add('active', 'border-indigo-600', 'text-indigo-600', 'bg-indigo-50/50');
+                e.currentTarget.classList.remove('border-transparent', 'text-slate-500');
+                
+                document.getElementById(target).classList.remove('hidden');
+            });
+        });
+
+        // --- Toolbar Actions ---
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            if(panZoomInstance) panZoomInstance.zoomIn();
+        });
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            if(panZoomInstance) panZoomInstance.zoomOut();
+        });
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            if(panZoomInstance) {
+                panZoomInstance.resetZoom();
+                panZoomInstance.center();
+                resetNodes();
+            }
+        });
+        document.getElementById('btn-toggle-flow').addEventListener('click', (e) => {
+            isAnimatingFlow = !isAnimatingFlow;
+            const btn = e.currentTarget;
+            if(isAnimatingFlow) {
+                btn.classList.add('bg-blue-100', 'shadow-inner');
+                document.querySelectorAll('.edgePath').forEach(edge => edge.classList.add('flow'));
+            } else {
+                btn.classList.remove('bg-blue-100', 'shadow-inner');
+                document.querySelectorAll('.edgePath').forEach(edge => edge.classList.remove('flow'));
+            }
+        });
+        document.getElementById('btn-close-panel').addEventListener('click', resetNodes);
+
+    </script>
+</body>
+</html>
