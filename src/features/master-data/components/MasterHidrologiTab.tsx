@@ -1,13 +1,92 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
-import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles } from 'lucide-react';
+import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle } from 'lucide-react';
 
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
-import { Satellite, Wand2, AlertCircle } from 'lucide-react';
+import { Satellite, Wand2 } from 'lucide-react';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 import { infillMissingData } from '@/lib/utils/spatialMath';
+
+const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, year }) => {
+    const matrix: (number | null)[][] = Array.from({ length: 31 }, () => Array(12).fill(null));
+    
+    data.forEach(row => {
+        const [yyyy, mm, dd] = row.tanggal.split('-');
+        const rowYear = parseInt(yyyy, 10);
+        if (rowYear === year) {
+            const month = parseInt(mm, 10) - 1;
+            const day = parseInt(dd, 10) - 1;
+            matrix[day][month] = row.curah_hujan;
+        }
+    });
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nop', 'Des'];
+
+    let maxRainfall = 0;
+    data.forEach(row => {
+        const [yyyy] = row.tanggal.split('-');
+        const rowYear = parseInt(yyyy, 10);
+        if (rowYear === year && row.curah_hujan > maxRainfall) {
+            maxRainfall = row.curah_hujan;
+        }
+    });
+
+    const getCellClass = (val: number | null) => {
+        if (val === null) return 'text-slate-300';
+        if (val < 0) return 'text-red-500 font-bold bg-red-50';
+        if (val === 0) return 'text-slate-300';
+        if (val > 0 && val < 50) return 'text-slate-700';
+        if (val >= 50 && val < 300) return 'bg-blue-100 text-pupr-blue font-bold';
+        if (val >= 300) return 'bg-red-100 text-red-700 font-bold';
+        return '';
+    };
+
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="overflow-x-auto border border-slate-300 rounded-md shadow-sm bg-white">
+                <table className="w-full text-sm border-collapse">
+                    <thead>
+                        <tr className="bg-slate-100 border-b border-slate-300 text-slate-800">
+                            <th className="py-2 px-2 border-r border-slate-300 font-bold text-center w-12 sticky left-0 bg-slate-100 z-10">Tgl</th>
+                            {months.map((m, i) => (
+                                <th key={i} className="py-2 px-2 border-r border-slate-300 font-bold text-center min-w-[60px]">{m}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {matrix.map((row, dayIndex) => (
+                            <tr key={dayIndex} className="border-b border-slate-200 even:bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <td className="py-1.5 px-2 border-r border-slate-300 font-bold text-slate-600 text-center sticky left-0 bg-inherit z-10">
+                                    {dayIndex + 1}
+                                </td>
+                                {row.map((val, monthIndex) => {
+                                    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+                                    const isValidDay = dayIndex + 1 <= daysInMonth;
+                                    
+                                    if (!isValidDay) {
+                                        return <td key={monthIndex} className="py-1.5 px-2 border-r border-slate-200 bg-slate-100"></td>;
+                                    }
+
+                                    return (
+                                        <td key={monthIndex} className={`py-1.5 border-r border-slate-200 tabular-nums text-right pr-2 ${getCellClass(val)}`}>
+                                            {val !== null ? val.toFixed(1) : '-'}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div className="bg-white border border-slate-300 rounded-md p-4 shadow-sm flex justify-between items-center">
+                <span className="font-bold text-slate-700">Rekapitulasi Hujan Maksimum Tahunan</span>
+                <span className="text-lg font-bold text-pupr-blue tabular-nums">{maxRainfall.toFixed(1)} mm</span>
+            </div>
+        </div>
+    );
+};
 
 export const MasterHidrologiTab: React.FC = () => {
     const {
@@ -15,12 +94,12 @@ export const MasterHidrologiTab: React.FC = () => {
         selectedStasiun,
         dataHujan,
         isLoading,
+        error,
         fetchStasiun,
         addStasiun,
         addDataHujan,
         importDataHujanBatch,
         selectStasiun,
-        fetchDataHujan,
         updateDataHujanManual,
         seedInitialStations
     } = useHydrologyStore();
@@ -56,9 +135,6 @@ export const MasterHidrologiTab: React.FC = () => {
     const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const year = parseInt(e.target.value, 10);
         setSelectedYear(year);
-        if (selectedStasiun) {
-            fetchDataHujan(selectedStasiun.id, year);
-        }
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,9 +252,40 @@ export const MasterHidrologiTab: React.FC = () => {
     };
 
 
+    const annualMaximums = React.useMemo(() => {
+        if (!dataHujan || dataHujan.length === 0) return [];
+        const maxByYear: Record<number, number> = {};
+        dataHujan.forEach(row => {
+            const [yyyy] = row.tanggal.split('-');
+            const y = parseInt(yyyy, 10);
+            if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) {
+                maxByYear[y] = row.curah_hujan;
+            }
+        });
+        return Object.entries(maxByYear)
+            .map(([y, val]) => ({ tahun: parseInt(y, 10), curah_hujan: val }))
+            .sort((a, b) => b.tahun - a.tahun);
+    }, [dataHujan]);
+
+    const handleHubungkanDistribusi = () => {
+        if (annualMaximums.length < 10) {
+            alert('Minimal butuh 10 tahun data untuk Analisis Frekuensi Distribusi Statistik.');
+        } else {
+            alert(`✅ ${annualMaximums.length} data maksimum tahunan siap dihubungkan ke Mesin Distribusi Statistik.`);
+        }
+    };
 
     return (
         <div className="space-y-6">
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-bold text-sm">Terjadi Kesalahan</h4>
+                        <p className="text-sm mt-1">{error}</p>
+                    </div>
+                </div>
+            )}
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900">Master Data Hidrologi</h2>
@@ -337,82 +444,39 @@ export const MasterHidrologiTab: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
-                                    <table className="w-full text-left">
-                                        <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
-                                                <th className="py-3 px-4 w-16 text-center">No</th>
-                                                <th className="py-3 px-4">Tanggal</th>
-                                                <th className="py-3 px-4 text-right">Curah Hujan (mm)</th>
-                                                <th className="py-3 px-4 text-center">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 text-sm">
-                                            {dataHujan.length === 0 && !isLoading ? (
-                                                <tr>
-                                                    <td colSpan={4} className="py-12 text-center text-slate-500">
-                                                        Tidak ada data curah hujan untuk tahun {selectedYear}.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                dataHujan.map((row, index) => {
-                                                    let statusLabel = "Kering";
-                                                    let statusColor = "bg-slate-100 text-slate-600";
-                                                    let barWidth = 0;
-                                                    if (row.curah_hujan > 0 && row.curah_hujan <= 20) {
-                                                        statusLabel = "Ringan";
-                                                        statusColor = "bg-blue-50 text-pupr-blue";
-                                                        barWidth = (row.curah_hujan / 20) * 100;
-                                                    } else if (row.curah_hujan > 20 && row.curah_hujan <= 50) {
-                                                        statusLabel = "Sedang";
-                                                        statusColor = "bg-indigo-50 text-pupr-blue";
-                                                        barWidth = 100;
-                                                    } else if (row.curah_hujan > 50) {
-                                                        statusLabel = "Lebat";
-                                                        statusColor = "bg-rose-50 text-rose-600";
-                                                        barWidth = 100;
-                                                    }
+                                <DailyRainfallMatrix data={dataHujan} year={selectedYear} />
 
-                                                    return (
-                                                        <tr key={row.id} className="hover:bg-teal-50/30 transition-all duration-200 group cursor-pointer">
-                                                            <td className="py-2.5 px-4 text-center text-slate-400 font-mono text-xs group-hover:text-pupr-blue transition-colors tabular-nums tracking-tight">{index + 1}</td>
-                                                            <td className="py-2.5 px-4 font-medium text-slate-700 group-hover:text-slate-900 transition-colors tabular-nums tracking-tight">
-                                                                {new Date(row.tanggal).toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+                                {annualMaximums.length > 0 && (
+                                    <div className="mt-8 bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
+                                        <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                                            <h4 className="font-bold text-slate-800 text-sm uppercase tracking-wider">Rekapitulasi Hujan Maksimum Tahunan</h4>
+                                            <Button onClick={handleHubungkanDistribusi} size="sm" className="bg-teal-600 hover:bg-teal-700 text-white rounded-md text-xs h-8">
+                                                <Activity className="w-3 h-3 mr-1" />
+                                                Hubungkan ke Distribusi Statistik
+                                            </Button>
+                                        </div>
+                                        <div className="p-0 overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="bg-slate-100 border-b border-slate-200">
+                                                        {annualMaximums.map(m => (
+                                                            <th key={m.tahun} className="py-2 px-3 border-r border-slate-200 text-center text-xs font-bold text-slate-600">{m.tahun}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        {annualMaximums.map(m => (
+                                                            <td key={m.tahun} className="py-3 px-3 border-r border-slate-200 text-center font-bold text-pupr-blue tabular-nums">
+                                                                {m.curah_hujan.toFixed(1)}
                                                             </td>
-                                                            <td className="py-2.5 px-4 tabular-nums tracking-tight relative">
-                                                                {row.curah_hujan > 300 && (
-                                                                    <span title="Outlier (>300 mm)" className="absolute left-2 top-1/2 -translate-y-1/2">
-                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
-                                                                    </span>
-                                                                )}
-                                                                <div className="flex items-center justify-end gap-2">
-                                                                    <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-md overflow-hidden">
-                                                                        <div 
-                                                                            className={`h-full rounded-md transition-all duration-500 ${
-                                                                                row.curah_hujan > 50 ? 'bg-pupr-blue' :
-                                                                                row.curah_hujan > 20 ? 'bg-pupr-blue' :
-                                                                                row.curah_hujan > 0 ? 'bg-pupr-blue' : 'bg-slate-300'
-                                                                            }`}
-                                                                            style={{ width: `${barWidth}%` }}
-                                                                        />
-                                                                    </div>
-                                                                    <span className="font-mono font-bold text-slate-800 min-w-[50px] text-right">
-                                                                        {row.curah_hujan.toFixed(1)}
-                                                                    </span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-2.5 px-4 text-center tabular-nums tracking-tight">
-                                                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md transition-all duration-200 group-hover:scale-105 inline-block ${statusColor}`}>
-                                                                    {statusLabel}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                        ))}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {dataHujan.length >= 10 && (
