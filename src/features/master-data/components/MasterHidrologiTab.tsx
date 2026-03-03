@@ -33,32 +33,60 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
         }
     });
 
+    const monthlyStats = Array.from({ length: 12 }, () => ({
+        jumlah: 0,
+        maksimum: -Infinity,
+        minimum: Infinity,
+        count: 0,
+        hariHujan: 0
+    }));
+
+    for (let m = 0; m < 12; m++) {
+        const daysInMonth = new Date(year, m + 1, 0).getDate();
+        let hasData = false;
+        for (let d = 0; d < daysInMonth; d++) {
+            const val = matrix[d][m];
+            if (val !== null) {
+                hasData = true;
+                monthlyStats[m].jumlah += val;
+                if (val > monthlyStats[m].maksimum) monthlyStats[m].maksimum = val;
+                if (val < monthlyStats[m].minimum) monthlyStats[m].minimum = val;
+                monthlyStats[m].count++;
+                if (val > 0) monthlyStats[m].hariHujan++;
+            }
+        }
+        if (!hasData) {
+            monthlyStats[m].maksimum = 0;
+            monthlyStats[m].minimum = 0;
+        }
+    }
+
     const getCellClass = (val: number | null) => {
-        if (val === null) return 'text-slate-300';
-        if (val < 0) return 'text-red-500 font-bold bg-red-50';
-        if (val === 0) return 'text-slate-300';
-        if (val > 0 && val < 50) return 'text-slate-700';
-        if (val >= 50 && val < 300) return 'bg-blue-100 text-pupr-blue font-bold';
-        if (val >= 300) return 'bg-red-100 text-red-700 font-bold';
-        return '';
+        if (val === null) return 'text-slate-400 text-center';
+        if (val < 0) return 'text-red-500 font-bold bg-red-50 text-right pr-2';
+        if (val === 0) return 'text-slate-400 text-right pr-2';
+        if (val > 0 && val < 50) return 'text-slate-800 text-right pr-2';
+        if (val >= 50 && val < 300) return 'bg-blue-100 text-pupr-blue font-bold text-right pr-2';
+        if (val >= 300) return 'bg-red-100 text-red-700 font-bold text-right pr-2';
+        return 'text-right pr-2';
     };
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="overflow-x-auto border border-slate-300 rounded-md shadow-sm bg-white">
-                <table className="w-full text-sm border-collapse">
+            <div className="overflow-x-auto border-2 border-slate-500 bg-white">
+                <table className="w-full text-[11px] border-collapse">
                     <thead>
-                        <tr className="bg-slate-100 border-b border-slate-300 text-slate-800">
-                            <th className="py-2 px-2 border-r border-slate-300 font-bold text-center w-12 sticky left-0 bg-slate-100 z-10">Tgl</th>
+                        <tr className="bg-slate-200 text-slate-800">
+                            <th className="py-1.5 px-1 border border-slate-500 font-bold text-center w-12 sticky left-0 bg-slate-200 z-20">Tgl</th>
                             {months.map((m, i) => (
-                                <th key={i} className="py-2 px-2 border-r border-slate-300 font-bold text-center min-w-[60px]">{m}</th>
+                                <th key={i} className="py-1.5 px-1 border border-slate-500 font-bold text-center min-w-[50px]">{m}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {matrix.map((row, dayIndex) => (
-                            <tr key={dayIndex} className="border-b border-slate-200 even:bg-slate-50 hover:bg-slate-100 transition-colors">
-                                <td className="py-1.5 px-2 border-r border-slate-300 font-bold text-slate-600 text-center sticky left-0 bg-inherit z-10">
+                            <tr key={dayIndex} className="hover:bg-slate-50 transition-colors">
+                                <td className="py-1 px-1.5 border border-slate-500 font-bold text-slate-700 text-center sticky left-0 bg-slate-100 z-10">
                                     {dayIndex + 1}
                                 </td>
                                 {row.map((val, monthIndex) => {
@@ -66,17 +94,57 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
                                     const isValidDay = dayIndex + 1 <= daysInMonth;
                                     
                                     if (!isValidDay) {
-                                        return <td key={monthIndex} className="py-1.5 px-2 border-r border-slate-200 bg-slate-100"></td>;
+                                        return <td key={monthIndex} className="py-1 px-1.5 border border-slate-500 bg-slate-300"></td>;
                                     }
 
                                     return (
-                                        <td key={monthIndex} className={`py-1.5 border-r border-slate-200 tabular-nums text-right pr-2 ${getCellClass(val)}`}>
+                                        <td key={monthIndex} className={`py-1 border border-slate-500 tabular-nums ${getCellClass(val)}`}>
                                             {val !== null ? val.toFixed(1) : '-'}
                                         </td>
                                     );
                                 })}
                             </tr>
                         ))}
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Jumlah</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
+                                    {stat.count > 0 ? stat.jumlah.toFixed(1) : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Maksimum</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
+                                    {stat.count > 0 ? stat.maksimum.toFixed(1) : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Minimum</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
+                                    {stat.count > 0 ? stat.minimum.toFixed(1) : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Rata-rata</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
+                                    {stat.count > 0 ? (stat.jumlah / stat.count).toFixed(1) : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Hari Hujan</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-center text-slate-800">
+                                    {stat.count > 0 ? stat.hariHujan : '-'}
+                                </td>
+                            ))}
+                        </tr>
                     </tbody>
                 </table>
             </div>
