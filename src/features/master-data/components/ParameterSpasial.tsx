@@ -95,19 +95,20 @@ export const ParameterSpasial: React.FC = () => {
           Hasil Analisis Spasial & Rincian Modul
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          <div className="transition-all hover:translate-y-[-4px] duration-300">
+        <div className="flex flex-col gap-6">
+          <div className="transition-all hover:translate-y-[-2px] duration-300">
             <KarakteristikDASCard />
           </div>
           
-          <div className="transition-all hover:translate-y-[-4px] duration-300">
+          <div className="transition-all hover:translate-y-[-2px] duration-300">
             <TutupanLahanCard />
           </div>
           
-          <div className="transition-all hover:translate-y-[-4px] duration-300">
+          <div className="transition-all hover:translate-y-[-2px] duration-300">
             <HujanWilayahCard />
           </div>
         </div>
+
       </div>
     </div>
   );
