@@ -10,7 +10,6 @@ import { calculateDasParameters, calculateCompositeC, generateThiessenWeights } 
 import { MOCK_DAS_GEOJSON, MOCK_LAND_COVER_FC, MOCK_STATIONS_FC } from '@/utils/mockSpatialData';
 import * as turf from '@turf/turf';
 
-
 // Fix Leaflet icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -30,6 +29,8 @@ export const WebGISPanel: React.FC = () => {
   const { 
     stasiunList, 
     morfometriDAS, 
+    tutupanLahan,
+    curahHujanWilayah,
     setTutupanLahan, 
     setCurahHujanWilayah,
     updateMorfometriDAS
@@ -69,39 +70,51 @@ export const WebGISPanel: React.FC = () => {
 
       setSpatialResults(results);
       
-      // FASE 4: Sync to Global Store
-      updateMorfometriDAS({
-        luasDAS: params.areaKm2,
-        panjangSungai: morfometriDAS?.panjangSungai || 0,
-        kemiringanSungai: morfometriDAS?.kemiringanSungai || 0,
-        elevasi: morfometriDAS?.elevasi || 0
-      });
+      // FASE 4: Sync to Global Store (With Guard to prevent infinite loop)
+      // Only update if changes are significant
+      const currentArea = morfometriDAS?.luasDAS || 0;
+      if (Math.abs(params.areaKm2 - currentArea) > 0.001) {
+        updateMorfometriDAS({
+          luasDAS: params.areaKm2,
+          panjangSungai: morfometriDAS?.panjangSungai || 0,
+          kemiringanSungai: morfometriDAS?.kemiringanSungai || 0,
+          elevasi: morfometriDAS?.elevasi || 0
+        });
+      }
 
-      setTutupanLahan({
-        items: compositeResult.details.map(d => ({
-          id: crypto.randomUUID(),
-          jenis: d.jenis,
-          luas: d.luasKm2,
-          nilaiC: d.nilaiC,
-          nilaiCN: 0
-        })),
-        koordinatPengaliranGabungan: compositeResult.compositeC,
-        totalLuas: params.areaKm2,
-        curveNumberGabungan: 0,
-      } as any);
+      // Check if tutupan lahan needs update (simplified check)
+      const currentC = tutupanLahan?.koefisienPengaliranGabungan || 0;
+      if (!tutupanLahan || Math.abs(compositeResult.compositeC - currentC) > 0.001) {
+        setTutupanLahan({
+          items: compositeResult.details.map(d => ({
+            id: crypto.randomUUID(),
+            jenis: d.jenis,
+            luas: d.luasKm2,
+            nilaiC: d.nilaiC,
+            nilaiCN: 0
+          })),
+          koefisienPengaliranGabungan: compositeResult.compositeC,
+          totalLuas: params.areaKm2,
+          curveNumberGabungan: 0,
+        } as any);
+      }
 
-      setCurahHujanWilayah({
-        metode: 'thiessen',
-        stasiunConfigs: thiessenWeights.map(t => ({
-          stasiunId: t.stasiunId,
-          namaStasiun: t.namaStasiun,
-          luasPengaruh: t.areaKm2,
-          bobot: t.weight * 100
-        })),
-        hujanRataRata: 0
-      });
+      // Check if thiessen needs update
+      const currentThiessenCount = curahHujanWilayah?.stasiunConfigs?.length || 0;
+      if (currentThiessenCount !== thiessenWeights.length || (thiessenWeights.length > 0 && curahHujanWilayah?.metode !== 'thiessen')) {
+        setCurahHujanWilayah({
+          metode: 'thiessen',
+          stasiunConfigs: thiessenWeights.map(t => ({
+            stasiunId: t.stasiunId,
+            namaStasiun: t.namaStasiun,
+            luasPengaruh: t.areaKm2,
+            bobot: t.weight * 100
+          })),
+          hujanRataRata: 0
+        });
+      }
     }
-  }, [dasFeature, stasiunList, morfometriDAS, setTutupanLahan, setCurahHujanWilayah, updateMorfometriDAS]);
+  }, [dasFeature, stasiunList, morfometriDAS, tutupanLahan, curahHujanWilayah, setTutupanLahan, setCurahHujanWilayah, updateMorfometriDAS]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

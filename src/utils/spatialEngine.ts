@@ -1,4 +1,9 @@
-import * as turf from '@turf/turf';
+import area from '@turf/area';
+import centroid from '@turf/centroid';
+import bbox from '@turf/bbox';
+import intersect from '@turf/intersect';
+import { featureCollection } from '@turf/helpers';
+import voronoi from '@turf/voronoi';
 import { Feature, Polygon, MultiPolygon, FeatureCollection, Point } from 'geojson';
 
 export interface DasParameters {
@@ -22,19 +27,19 @@ export interface ThiessenWeight {
 }
 
 /**
- * FASE 1: Geoprocessing Engine
+ * FASE 1: Geoprocessing Engine (Optimized with Tree-shaking)
  */
 
 /**
  * 1. Menghitung Luas DAS dan Titik Berat (Centroid)
  */
 export function calculateDasParameters(dasGeoJSON: Feature<Polygon | MultiPolygon>): DasParameters {
-  const areaM2 = turf.area(dasGeoJSON);
+  const areaM2 = area(dasGeoJSON);
   const areaKm2 = areaM2 / 1_000_000;
-  const centroid = turf.centroid(dasGeoJSON).geometry.coordinates as [number, number];
-  const bbox = turf.bbox(dasGeoJSON);
+  const cent = centroid(dasGeoJSON).geometry.coordinates as [number, number];
+  const b = bbox(dasGeoJSON);
 
-  return { areaKm2, centroid, bbox };
+  return { areaKm2, centroid: cent, bbox: b };
 }
 
 /**
@@ -46,17 +51,16 @@ export function calculateCompositeC(
   landCoverFC: FeatureCollection<Polygon | MultiPolygon>
 ): { compositeC: number; details: LandCoverWeights[] } {
   const details: LandCoverWeights[] = [];
-  const totalDasAreaM2 = turf.area(dasGeoJSON);
+  const totalDasAreaM2 = area(dasGeoJSON);
   let totalWeightedC = 0;
 
   landCoverFC.features.forEach((lcFeature) => {
-    // Interseksi antara DAS dan satu poligon Tutupan Lahan
-    const intersection = turf.intersect(
-      turf.featureCollection([dasGeoJSON, lcFeature])
+    const intersection = intersect(
+      featureCollection([dasGeoJSON, lcFeature as any])
     );
 
     if (intersection) {
-      const intersectedAreaM2 = turf.area(intersection);
+      const intersectedAreaM2 = area(intersection);
       const intersectedAreaKm2 = intersectedAreaM2 / 1_000_000;
       const nilaiC = (lcFeature.properties?.nilaiC as number) || 0;
       const jenis = (lcFeature.properties?.jenis as string) || 'Tidak Diketahui';
@@ -87,21 +91,19 @@ export function generateThiessenWeights(
   dasGeoJSON: Feature<Polygon | MultiPolygon>,
   stationsFC: FeatureCollection<Point>
 ): ThiessenWeight[] {
-  const bbox = turf.bbox(dasGeoJSON);
-  
-  // Turf voronoi membutuhkan koleksi titik dan bbox sebagai batas luar
-  const voronoiPolygons = turf.voronoi(stationsFC, { bbox });
-  const totalDasAreaM2 = turf.area(dasGeoJSON);
+  const b = bbox(dasGeoJSON);
+  const voronoiPolygons = voronoi(stationsFC, { bbox: b });
+  const totalDasAreaM2 = area(dasGeoJSON);
   const results: ThiessenWeight[] = [];
 
   voronoiPolygons.features.forEach((voronoiFeature, index) => {
-    // Clip poligon Thiessen dengan batas DAS sebenarnya
-    const clipped = turf.intersect(
-      turf.featureCollection([dasGeoJSON, voronoiFeature])
+    if (!voronoiFeature) return;
+    const clipped = intersect(
+      featureCollection([dasGeoJSON, voronoiFeature as any])
     );
 
     if (clipped) {
-      const areaM2 = turf.area(clipped);
+      const areaM2 = area(clipped);
       const stasiun = stationsFC.features[index];
       
       results.push({
