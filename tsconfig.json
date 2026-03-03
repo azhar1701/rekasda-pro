@@ -59,8 +59,10 @@
     "postcss.config.js",
     "tailwind.config.js",
     "docs/examples",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "supabase/functions"
   ],
+
   "references": [
     {
       "path": "./tsconfig.node.json"

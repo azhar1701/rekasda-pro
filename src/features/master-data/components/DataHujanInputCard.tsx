@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CloudRain, Edit, ChevronDown, ChevronUp, AlertCircle, Wand2, Satellite } from 'lucide-react';
-import { useHydrologyStore, type DataHujan, generateMockDataHujan } from '@/stores/useHydrologyStore';
+import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
+
 import { useDebounce } from '@/hooks/useDebounce';
 import { infillMissingData } from '@/lib/utils/spatialMath';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
@@ -26,6 +27,7 @@ export const DataHujanInputCard: React.FC = () => {
         updateDataHujanManual(cleanedData);
       }
     }
+
   }, [debouncedData]);
 
   const stats = useMemo(() => {
@@ -44,29 +46,29 @@ export const DataHujanInputCard: React.FC = () => {
     if (!selectedStasiun) return;
     setIsInfilling(true);
     
-    // Generate mock data for all stations to provide context for infilling
-    const allData = stasiunList.flatMap(stasiun => generateMockDataHujan(stasiun.id));
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const allData = dataHujan;
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-    const filledData = localData.map(item => {
-      const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
-      if (value === 0) {
-        const infilledValue = infillMissingData(
-          selectedStasiun,
-          stasiunList,
-          allData,
-          item.tanggal,
-          'idw'
-        );
-        return { ...item, curah_hujan: infilledValue > 0 ? parseFloat(infilledValue.toFixed(1)) : 0 };
-      }
-      return item;
-    });
+      const filledData = localData.map(item => {
+        const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
+        if (value === 0) {
+          const infilledValue = infillMissingData(
+            selectedStasiun,
+            stasiunList,
+            allData,
+            item.tanggal,
+            'idw'
+          );
+          return { ...item, curah_hujan: infilledValue > 0 ? parseFloat(infilledValue.toFixed(1)) : 0 };
+        }
+        return item;
+      });
 
-    setLocalData(filledData);
-    setIsInfilling(false);
+      setLocalData(filledData);
+    } finally {
+      setIsInfilling(false);
+    }
   };
 
   const handleFetchSatelliteData = async () => {

@@ -5,9 +5,11 @@ import 'leaflet/dist/leaflet.css';
 import { Upload, Map as MapIcon, Trash2, Sparkles, Droplets, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { useHydrologyStore, generateMockDataHujan } from '@/stores/useHydrologyStore';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+
 import { calculateDasParameters, calculateCompositeC, generateThiessenWeights, validateRiverWithinDas } from '@/utils/spatialEngine';
 import { MOCK_DAS_GEOJSON, MOCK_LAND_COVER_FC, MOCK_STATIONS_FC, MOCK_STATIONS_DATA, MOCK_RIVER_GEOJSON } from '@/utils/mockSpatialData';
+
 import * as turf from '@turf/turf';
 
 // Fix Leaflet icon issue
@@ -136,9 +138,9 @@ export const WebGISPanel: React.FC = () => {
       if (!stasiunList.find(s => s.id === station.id)) {
         useHydrologyStore.getState().addStasiun(station as any);
       }
-      const rainfallData = generateMockDataHujan(station.id, station.elevasi);
-      useHydrologyStore.getState().updateDataHujanManual(rainfallData);
     });
+    alert('Demo stations added. Please sync rainfall data to see statistics.');
+
   };
 
   return (

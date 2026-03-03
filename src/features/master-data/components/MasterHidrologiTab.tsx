@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
-import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download } from 'lucide-react';
+import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, RefreshCw, Sparkles } from 'lucide-react';
+
+
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Satellite, Wand2, AlertCircle } from 'lucide-react';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 import { infillMissingData } from '@/lib/utils/spatialMath';
-import { generateMockDataHujan } from '@/stores/useHydrologyStore';
+import { syncSihkaStationData } from '@/services/scraperSihka';
+
+
 export const MasterHidrologiTab: React.FC = () => {
     const {
         stasiunList,
@@ -20,7 +24,9 @@ export const MasterHidrologiTab: React.FC = () => {
         importDataHujanBatch,
         selectStasiun,
         fetchDataHujan,
-        updateDataHujanManual
+        updateDataHujanManual,
+        seedInitialStations
+
     } = useHydrologyStore();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,6 +46,8 @@ export const MasterHidrologiTab: React.FC = () => {
     });
     const [isFetchingSatellite, setIsFetchingSatellite] = useState(false);
     const [isInfilling, setIsInfilling] = useState(false);
+    const [isFetchingSihka, setIsFetchingSihka] = useState(false);
+
     useEffect(() => {
         fetchStasiun();
     }, [fetchStasiun]);
@@ -144,8 +152,8 @@ export const MasterHidrologiTab: React.FC = () => {
         setIsInfilling(true);
         
         try {
-            const allData = stasiunList.flatMap(stasiun => generateMockDataHujan(stasiun.id, selectedYear));
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const allData = dataHujan; 
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             const filledData = dataHujan.map(item => {
                 const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
@@ -171,6 +179,49 @@ export const MasterHidrologiTab: React.FC = () => {
             setIsInfilling(false);
         }
     };
+
+    const handleFetchSihkaData = async () => {
+        if (!selectedStasiun) return;
+        
+        const stationIdMapping: Record<string, string> = {
+            'Panjalu': '63',
+            'Panawangan': '62',
+            'Sadananya': '65',
+            'Sidamulih': '66',
+            'Tanjungsukur': '85',
+            'Cikupa': '50',
+            'Kawali': '58',
+            'Rancah': '64',
+            'Kaso': '30',
+            'Janggala': '19',
+            'Ciamis': '44'
+        };
+
+        const sihkaId = stationIdMapping[selectedStasiun.nama_stasiun];
+
+        if (!sihkaId) {
+            alert(`Stasiun "${selectedStasiun.nama_stasiun}" belum terhubung ke SIHKA. Silakan hubungi admin.`);
+            return;
+        }
+
+        const currentMonth = new Date().getMonth() + 1;
+        
+        setIsFetchingSihka(true);
+        try {
+            const { count, error } = await syncSihkaStationData(sihkaId, selectedYear, currentMonth);
+            
+            if (error) throw error;
+            
+            alert(`✅ Berhasil menyinkronkan ${count} hari data curah hujan stasiun ${selectedStasiun.nama_stasiun} (SIHKA Citanduy)`);
+            fetchDataHujan(selectedStasiun.id, selectedYear);
+        } catch (error) {
+            console.error('Error syncing SIHKA data:', error);
+            alert('❌ Gagal menyinkronkan data dari SIHKA Citanduy.');
+        } finally {
+            setIsFetchingSihka(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -262,10 +313,23 @@ export const MasterHidrologiTab: React.FC = () => {
                                 <Activity className="w-10 h-10 text-pupr-blue" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Stasiun Terpilih</h3>
-                            <p className="text-sm text-slate-500 max-w-sm">
-                                Silakan pilih salah satu stasiun hujan di panel sebelah kiri untuk melihat detail data curah hujan historis.
+                            <p className="text-sm text-slate-500 max-w-sm mb-6">
+                                Silakan pilih salah satu stasiun hujan di panel sebelah kiri atau muat stasiun pilot untuk mulai mengambil data SIHKA.
                             </p>
+                            {stasiunList.length === 0 && (
+                                <Button 
+                                    onClick={async () => {
+                                        await seedInitialStations();
+                                        alert('✅ Berhasil memuat daftar stasiun pilot Citanduy.');
+                                    }} 
+                                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                                >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Muat Stasiun Pilot
+                                </Button>
+                            )}
                         </div>
+
                     ) : (
                         <>
                             <div className="p-5 border-b border-slate-200/50 bg-white/40 flex flex-wrap justify-between items-center gap-4">
@@ -296,6 +360,11 @@ export const MasterHidrologiTab: React.FC = () => {
                                             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         </div>
                                     </div>
+                                    <Button onClick={handleFetchSihkaData} disabled={isFetchingSihka || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
+                                        <RefreshCw className={`w-4 h-4 mr-1 ${isFetchingSihka ? 'animate-spin' : ''}`} />
+                                        <span className="hidden sm:inline">{isFetchingSihka ? 'Menyinkronkan...' : 'Tarik SIHKA'}</span>
+                                    </Button>
+
                                     <Button onClick={handleFetchSatelliteData} disabled={isFetchingSatellite || !selectedStasiun || selectedStasiun.koordinat_x === null} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
                                         <Satellite className={`w-4 h-4 mr-1 ${isFetchingSatellite ? 'animate-spin' : ''}`} />
                                         <span className="hidden sm:inline">{isFetchingSatellite ? 'Menarik...' : 'Tarik Satelit'}</span>

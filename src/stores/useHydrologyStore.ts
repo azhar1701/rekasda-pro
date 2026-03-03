@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
+import { supabase } from '@/lib/api/supabase';
+
 
 // --- Interfaces ---
 
@@ -251,6 +253,8 @@ export interface HydrologyState {
   setPanjangSungai: (val: string) => void;
   setCurahHujanRencana: (val: string) => void;
   fetchStasiun: () => Promise<void>;
+  seedInitialStations: () => Promise<void>;
+
   addStasiun: (stasiun: Omit<StasiunHidrologi, 'id' | 'created_at'>) => Promise<void>;
   addDataHujan: (data: Omit<DataHujan, 'id' | 'created_at'>) => Promise<void>;
   importDataHujanBatch: (dataList: Omit<DataHujan, 'id' | 'created_at'>[]) => Promise<void>;
@@ -288,21 +292,8 @@ export interface HydrologyState {
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
 }
 
-const MOCK_STASIUN_LIST: StasiunHidrologi[] = [
-  { id: 'a1b2c3d4', nama_stasiun: 'Stasiun Cikampak', koordinat_x: 106.7562, koordinat_y: -6.5872, elevasi: 250, keterangan: 'Tipe Manual.' },
-  { id: 'e5f6g7h8', nama_stasiun: 'Stasiun AWS Katulampa', koordinat_x: 106.8415, koordinat_y: -6.6358, elevasi: 260, keterangan: 'Otomatis.' },
-  { id: 'z9y8x7w6', nama_stasiun: 'Stasiun Curug Bitung', koordinat_x: 106.3321, koordinat_y: -6.4421, elevasi: 120, keterangan: 'Hilir.' }
-];
+// Mock data removed for production integration
 
-export const generateMockDataHujan = (stasiunId: string, elevation: number = 0): DataHujan[] => {
-  const data: DataHujan[] = [];
-  const baseline = 110 + (elevation / 100) * 15 + (stasiunId.length % 40); 
-  for (let year = 2010; year <= 2024; year++) {
-    const annualMax = Math.max(40, baseline + (Math.random() - 0.5) * 50); 
-    data.push({ id: crypto.randomUUID(), stasiun_id: stasiunId, tanggal: `${year}-01-15`, curah_hujan: parseFloat(annualMax.toFixed(1)) });
-  }
-  return data;
-};
 
 export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   luasDas: '', panjangSungai: '', curahHujanRencana: '', stasiunList: [], selectedStasiun: null, dataHujan: [],
@@ -319,13 +310,164 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setPanjangSungai: (val) => set({ panjangSungai: val, isBanjirDirty: true }),
   setCurahHujanRencana: (val) => set({ curahHujanRencana: val, isBanjirDirty: true, isNeracaDirty: true }),
   
-  fetchStasiun: async () => { set({ stasiunList: MOCK_STASIUN_LIST }); },
-  addStasiun: async (stasiun) => set(state => ({ stasiunList: [...state.stasiunList, { ...stasiun, id: crypto.randomUUID() }] })),
-  addDataHujan: async (data) => set(state => ({ dataHujan: [...state.dataHujan, { ...data, id: crypto.randomUUID() }] })),
-  importDataHujanBatch: async (dataList) => set(state => ({ dataHujan: [...state.dataHujan, ...dataList.map(d => ({ ...d, id: crypto.randomUUID() }))] })),
+  fetchStasiun: async () => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase
+
+        .from('master_stasiun')
+        .select('*')
+        .order('nama_stasiun');
+      
+      if (error) throw error;
+      set({ stasiunList: data || [] });
+    } catch (error: any) {
+      set({ error: error.message });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  seedInitialStations: async () => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const initialStations = [
+        { nama_stasiun: 'Panjalu', koordinat_x: 108.2711, koordinat_y: -7.1242, elevasi: 730, keterangan: 'SIHKA ID: 63' },
+        { nama_stasiun: 'Panawangan', koordinat_x: 108.3842, koordinat_y: -7.0983, elevasi: 620, keterangan: 'SIHKA ID: 62' },
+        { nama_stasiun: 'Sadananya', koordinat_x: 108.3245, koordinat_y: -7.2842, elevasi: 450, keterangan: 'SIHKA ID: 65' },
+        { nama_stasiun: 'Sidamulih', koordinat_x: 108.4562, koordinat_y: -7.6542, elevasi: 120, keterangan: 'SIHKA ID: 66' },
+        { nama_stasiun: 'Tanjungsukur', koordinat_x: 108.5242, koordinat_y: -7.3452, elevasi: 50, keterangan: 'SIHKA ID: 85' },
+        { nama_stasiun: 'Cikupa', koordinat_x: 108.2145, koordinat_y: -7.4212, elevasi: 350, keterangan: 'SIHKA ID: 50' },
+        { nama_stasiun: 'Kawali', koordinat_x: 108.3562, koordinat_y: -7.1842, elevasi: 420, keterangan: 'SIHKA ID: 58' },
+        { nama_stasiun: 'Rancah', koordinat_x: 108.5123, koordinat_y: -7.2142, elevasi: 380, keterangan: 'SIHKA ID: 64' },
+        { nama_stasiun: 'Kaso', koordinat_x: 108.4212, koordinat_y: -7.2562, elevasi: 310, keterangan: 'SIHKA ID: 30' },
+        { nama_stasiun: 'Janggala', koordinat_x: 108.4842, koordinat_y: -7.3842, elevasi: 150, keterangan: 'SIHKA ID: 19' },
+        { nama_stasiun: 'Ciamis', koordinat_x: 108.3542, koordinat_y: -7.3242, elevasi: 210, keterangan: 'SIHKA ID: 44' }
+      ];
+
+      const { error } = await supabase
+        .from('master_stasiun')
+        .insert(initialStations);
+
+      if (error) {
+        if (error && (error as any).code === '42P01') {
+          throw new Error('Relation "public.master_stasiun" does not exist. Silakan jalankan DDL SQL di dashboard Supabase untuk membuat tabel.');
+        }
+        throw error;
+      }
+      await get().fetchStasiun();
+    } catch (error: any) {
+      set({ error: error.message });
+    } finally {
+      set({ isLoading: false });
+
+    }
+  },
+
+
+
+  addStasiun: async (stasiun) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase
+
+        .from('master_stasiun')
+        .insert([stasiun])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      set(state => ({ stasiunList: [...state.stasiunList, data] }));
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  addDataHujan: async (data) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { data: inserted, error } = await supabase
+
+        .from('master_data_hujan')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      set(state => ({ dataHujan: [...state.dataHujan, inserted] }));
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  importDataHujanBatch: async (dataList) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { error } = await supabase
+
+        .from('master_data_hujan')
+        .upsert(dataList, { onConflict: 'stasiun_id, tanggal' });
+      
+      if (error) throw error;
+      // Refresh current view if needed
+      const currentStasiun = get().selectedStasiun;
+      if (currentStasiun) {
+        await get().fetchDataHujan(currentStasiun.id);
+      }
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
   
-  selectStasiun: (stasiun) => set({ selectedStasiun: stasiun, dataHujan: stasiun ? generateMockDataHujan(stasiun.id, stasiun.elevasi || 0) : [] }),
-  fetchDataHujan: async (stasiunId, _tahun) => set({ dataHujan: generateMockDataHujan(stasiunId) }),
+  selectStasiun: (stasiun) => {
+    set({ selectedStasiun: stasiun });
+    if (stasiun) {
+      get().fetchDataHujan(stasiun.id);
+    } else {
+      set({ dataHujan: [] });
+    }
+  },
+
+  fetchDataHujan: async (stasiunId, tahun) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      let query = supabase
+        .from('master_data_hujan')
+        .select('*')
+
+        .eq('stasiun_id', stasiunId)
+        .order('tanggal', { ascending: true });
+      
+      if (tahun) {
+        const start = `${tahun}-01-01`;
+        const end = `${tahun}-12-31`;
+        query = query.gte('tanggal', start).lte('tanggal', end);
+      }
+
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      set({ dataHujan: data || [] });
+    } catch (error: any) {
+      set({ error: error.message });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
   setHasilThiessen: (hasil) => set({ hasilThiessen: hasil, isBanjirDirty: true, isNeracaDirty: true }),
   setHasilARF: (hasil) => set((state) => {
