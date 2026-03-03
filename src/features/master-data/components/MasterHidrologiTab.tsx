@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
-import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, RefreshCw, Sparkles } from 'lucide-react';
+import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles } from 'lucide-react';
 
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Satellite, Wand2, AlertCircle } from 'lucide-react';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 import { infillMissingData } from '@/lib/utils/spatialMath';
-import { syncSihkaStationData } from '@/services/scraperSihka';
-
 
 export const MasterHidrologiTab: React.FC = () => {
     const {
@@ -44,7 +42,6 @@ export const MasterHidrologiTab: React.FC = () => {
     });
     const [isFetchingSatellite, setIsFetchingSatellite] = useState(false);
     const [isInfilling, setIsInfilling] = useState(false);
-    const [isFetchingSihka, setIsFetchingSihka] = useState(false);
 
     useEffect(() => {
         fetchStasiun();
@@ -178,63 +175,7 @@ export const MasterHidrologiTab: React.FC = () => {
         }
     };
 
-    const [scrapingProgress, setScrapingProgress] = useState<{ current: number; total: number; date: string; status: string } | null>(null);
-    const [scrapingLog, setScrapingLog] = useState<{ date: string; status: 'success' | 'error' | 'loading' }[]>([]);
 
-    const handleFetchSihkaData = async () => {
-        if (!selectedStasiun) return;
-        
-        const stationIdMapping: Record<string, string> = {
-            'Panjalu': '63',
-            'Panawangan': '62',
-            'Sadananya': '65',
-            'Sidamulih': '66',
-            'Tanjungsukur': '85',
-            'Cikupa': '50',
-            'Kawali': '58',
-            'Rancah': '64',
-            'Kaso': '30',
-            'Janggala': '19',
-            'Ciamis': '44'
-        };
-
-        const sihkaId = stationIdMapping[selectedStasiun.nama_stasiun];
-
-        if (!sihkaId) {
-            import('@/hooks/useToast').then(m => m.toast.error(`Stasiun "${selectedStasiun.nama_stasiun}" belum terhubung ke SIHKA.`));
-            return;
-        }
-
-        const currentMonth = new Date().getMonth() + 1;
-        
-        setIsFetchingSihka(true);
-        setScrapingLog([]);
-        setScrapingProgress(null);
-
-        try {
-            const { count, error } = await syncSihkaStationData(sihkaId, selectedYear, currentMonth, (p) => {
-                setScrapingProgress(p);
-                setScrapingLog(prev => {
-                    const exists = prev.find(l => l.date === p.date);
-                    if (exists) {
-                        return prev.map(l => l.date === p.date ? { ...l, status: p.status } : l);
-                    }
-                    return [...prev, { date: p.date, status: p.status }];
-                });
-            });
-            
-            if (error) throw new Error(error);
-            
-            import('@/hooks/useToast').then(m => m.toast.success(`✅ Berhasil menyinkronkan ${count} hari data curah hujan stasiun ${selectedStasiun.nama_stasiun}`));
-            fetchDataHujan(selectedStasiun.id, selectedYear);
-        } catch (error: any) {
-            console.error('Error syncing SIHKA data:', error);
-            import('@/hooks/useToast').then(m => m.toast.error(`❌ Gagal: ${error.message || 'Sinkronisasi SIHKA terhenti'}`));
-        } finally {
-            setIsFetchingSihka(false);
-            setTimeout(() => setScrapingProgress(null), 3000);
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -328,7 +269,7 @@ export const MasterHidrologiTab: React.FC = () => {
                             </div>
                             <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Stasiun Terpilih</h3>
                             <p className="text-sm text-slate-500 max-w-sm mb-6">
-                                Silakan pilih salah satu stasiun hujan di panel sebelah kiri atau muat stasiun pilot untuk mulai mengambil data SIHKA.
+                                Silakan pilih salah satu stasiun hujan di panel sebelah kiri atau muat stasiun pilot untuk mulai mengelola data.
                             </p>
                             {stasiunList.length === 0 && (
                                 <Button 
@@ -372,55 +313,6 @@ export const MasterHidrologiTab: React.FC = () => {
                                             </select>
                                             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         </div>
-                                    </div>
-                                    <div className="relative">
-                                        <Button onClick={handleFetchSihkaData} disabled={isFetchingSihka || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
-                                            <RefreshCw className={`w-4 h-4 mr-1 ${isFetchingSihka ? 'animate-spin' : ''}`} />
-                                            <span className="hidden sm:inline">{isFetchingSihka ? 'Menyinkronkan...' : 'Tarik SIHKA'}</span>
-                                        </Button>
-                                        
-                                        {isFetchingSihka && scrapingProgress && (
-                                            <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-lg shadow-xl border border-slate-200 p-3 z-20 animate-in fade-in slide-in-from-top-1">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Progress Scraping</span>
-                                                    <span className="text-[10px] font-mono font-bold text-pupr-blue">
-                                                        {Math.round((scrapingProgress.current / scrapingProgress.total) * 100)}%
-                                                    </span>
-                                                </div>
-                                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
-                                                    <div 
-                                                        className="h-full bg-pupr-blue transition-all duration-300"
-                                                        style={{ width: `${(scrapingProgress.current / scrapingProgress.total) * 100}%` }}
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                                                        scrapingProgress.status === 'success' ? 'bg-emerald-500' :
-                                                        scrapingProgress.status === 'error' ? 'bg-rose-500' : 'bg-amber-500'
-                                                    }`} />
-                                                    <span className="text-[10px] font-medium text-slate-600 truncate">
-                                                        {scrapingProgress.date} - {
-                                                            scrapingProgress.status === 'loading' ? 'Mengambil data...' :
-                                                            scrapingProgress.status === 'success' ? 'Berhasil' : 'Gagal/Tidak ada data'
-                                                        }
-                                                    </span>
-                                                </div>
-                                                
-                                                <div className="mt-3 max-h-32 overflow-y-auto border-t border-slate-100 pt-2 space-y-1">
-                                                    {scrapingLog.slice().reverse().slice(0, 5).map((log, i) => (
-                                                        <div key={i} className="flex justify-between items-center text-[9px]">
-                                                            <span className="text-slate-500">{log.date}</span>
-                                                            <span className={
-                                                                log.status === 'success' ? 'text-emerald-600 font-bold' :
-                                                                log.status === 'error' ? 'text-rose-600' : 'text-amber-600'
-                                                            }>
-                                                                {log.status.toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <Button onClick={handleFetchSatelliteData} disabled={isFetchingSatellite || !selectedStasiun || selectedStasiun.koordinat_x === null} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">

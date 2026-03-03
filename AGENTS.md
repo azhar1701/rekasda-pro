@@ -14,7 +14,7 @@ rekasda-pro/
 │   ├── features/        # Feature modules (Flood, Master Data, Water Balance)
 │   ├── lib/            # Core libraries (Engine, Utils, Constants)
 │   ├── stores/         # State management (Zustand)
-│   └── services/       # External integrations (SIHKA, Satellite)
+│   └── services/       # External integrations (Satellite)
 ├── database/           # SQL schemas and setup
 └── supabase/           # Migrations and Edge Functions
 ```
@@ -23,7 +23,7 @@ rekasda-pro/
 | Task | Location | Notes |
 |------|----------|-------|
 | Hydrology Logic | `src/lib/engine` | SNI-compliant calculations |
-| Rainfall Ingestion| `src/services/scraperSihka.ts` | SIHKA Citanduy scraper |
+| Rainfall Ingestion| `src/services/satelliteRainfallService.ts` | Satellite rainfall data |
 | Global State | `src/stores/useHydrologyStore.ts` | Centralized hydrology state |
 | DB Schema | `supabase/migrations` | Table: `master_data_hujan` |
 
@@ -31,13 +31,11 @@ rekasda-pro/
 | Symbol | Type | Location | Role |
 |--------|------|----------|------|
 | `useHydrologyStore` | Store | `src/stores/useHydrologyStore.ts` | Orchestrates all hydrology data |
-| `syncSihkaStationData` | Service | `src/services/scraperSihka.ts` | ETL pipeline for SIHKA data |
 | `SNI_2415` | Constant | `src/lib/constants/sni.ts` | Standard parameters for flood analysis |
 
 ## CONVENTIONS
 - **SNI First**: All calculations must reference SNI constants in `src/lib/constants/sni.ts`.
 - **SSOT**: Rainfall data flows from Supabase -> Store -> Engines. No manual overrides without QC.
-- **Production Posture**: Endpoints like SIHKA_BASE_URL must be externalized to environment variables.
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - **Mock Data in Production**: `generateMockDataHujan` is strictly for development and has been removed from core logic.
@@ -52,5 +50,5 @@ npm run test     # Run hydrology tests
 ```
 
 ## NOTES
-- SIHKA data is parsed from daily views to bypass login requirements on station-specific pages.
+- SIHKA scraping feature has been removed. Rainfall data is ingested via Excel import, satellite fetch, or manual entry.
 - Data Quality (QC) is automatically run on manual data updates in the store.

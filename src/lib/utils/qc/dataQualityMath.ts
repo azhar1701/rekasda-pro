@@ -154,6 +154,15 @@ export function validateDataLength(data: RainfallData[]): void {
 }
 
 // =============================================================
+export interface DoubleMassResult {
+  isKonsisten: boolean;
+  koreksiDiperlukan: boolean;
+  breakYear?: number;
+  faktorKoreksi?: number;
+  dataPlot: Array<{ tahun: number; akumulasiReferensi: number; akumulasiTarget: number }>;
+  pesan: string;
+}
+
 // 1. UJI KONSISTENSI — RAPS (Rescaled Adjusted Partial Sums)
 // =============================================================
 export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
@@ -344,6 +353,88 @@ export function runFullQC(data: RainfallData[]): QCResult {
     isBebasOutlier: grubbs.isBebasOutlier,
     isHomogen: homogenitas.isHomogen,
     details: { raps, grubbs, homogenitas }
+  };
+}
+
+// =============================================================
+// 4. UJI KONSISTENSI — Double Mass Curve (Kurva Massa Ganda)
+// Membandingkan akumulasi stasiun target dengan rata-rata stasiun referensi
+// =============================================================
+export function cekDoubleMassCurve(targetData: RainfallData[], referenceData: RainfallData[]): DoubleMassResult {
+  try {
+    validateDataLength(targetData);
+    validateDataLength(referenceData);
+  } catch (error) {
+    if (error instanceof QCValidationError) {
+      return { isKonsisten: false, koreksiDiperlukan: false, dataPlot: [], pesan: `✗ ${error.message}` };
+    }
+    throw error;
+  }
+
+  // Pastikan tahun sinkron
+  const refMap = new Map(referenceData.map(d => [d.tahun, d.hujan]));
+  const syncedData = targetData.filter(d => refMap.has(d.tahun)).sort((a, b) => a.tahun - b.tahun);
+  
+  if (syncedData.length < 10) {
+    return { isKonsisten: false, koreksiDiperlukan: false, dataPlot: [], pesan: '✗ Data beririsan kurang dari 10 tahun' };
+  }
+
+  const dataPlot: Array<{ tahun: number; akumulasiReferensi: number; akumulasiTarget: number }> = [];
+  let sumRef = 0;
+  let sumTarget = 0;
+
+  // Hitung akumulasi (terbalik dari tahun terbaru ke terlama, atau kronologis. SNI biasanya kronologis)
+  for (let i = 0; i < syncedData.length; i++) {
+    const year = syncedData[i].tahun;
+    sumTarget += syncedData[i].hujan;
+    sumRef += refMap.get(year)!;
+    
+    dataPlot.push({
+      tahun: year,
+      akumulasiTarget: sumTarget,
+      akumulasiReferensi: sumRef
+    });
+  }
+
+  // Deteksi patahan (Break point) via regresi linear terpisah (Segmented Regression sederhana)
+  // Jika kemiringan (slope) berubah signifikan (>10%), flag inkonstensi
+  const n = dataPlot.length;
+  const mid = Math.floor(n / 2);
+  
+  const getSlope = (pts: typeof dataPlot) => {
+    const n = pts.length;
+    const sumX = pts.reduce((a, b) => a + b.akumulasiReferensi, 0);
+    const sumY = pts.reduce((a, b) => a + b.akumulasiTarget, 0);
+    const sumXY = pts.reduce((a, b) => a + b.akumulasiReferensi * b.akumulasiTarget, 0);
+    const sumX2 = pts.reduce((a, b) => a + Math.pow(b.akumulasiReferensi, 2), 0);
+    return (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  };
+
+  // Deteksi patahan sederhana membagi 2 rentang waktu
+  const slope1 = getSlope(dataPlot.slice(0, mid));
+  const slope2 = getSlope(dataPlot.slice(mid));
+  
+  // Beda kemiringan lebih dari 15% dianggap ada stasiun pindah / anomali sensor
+  const slopeDiff = Math.abs((slope1 - slope2) / Math.max(slope1, slope2));
+  const isKonsisten = slopeDiff < 0.15;
+  
+  let faktorKoreksi = 1;
+  let breakYear = undefined;
+
+  if (!isKonsisten) {
+    faktorKoreksi = slope1 / slope2; // Slope lama / Slope baru
+    breakYear = dataPlot[mid].tahun;
+  }
+
+  return {
+    isKonsisten,
+    koreksiDiperlukan: !isKonsisten,
+    breakYear,
+    faktorKoreksi,
+    dataPlot,
+    pesan: isKonsisten 
+      ? `✓ Data konsisten secara grafis (Beda Slope: ${(slopeDiff*100).toFixed(1)}%)`
+      : `✗ Patahan terdeteksi sekitar tahun ${breakYear}. Faktor Koreksi: ${faktorKoreksi.toFixed(3)}`
   };
 }
 
