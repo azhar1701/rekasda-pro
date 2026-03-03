@@ -8,7 +8,7 @@
  * 3. F-Test & t-Test — Uji Homogenitas
  * 
  * @module dataQualityMath
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 export interface RainfallData {
@@ -155,14 +155,6 @@ export function validateDataLength(data: RainfallData[]): void {
 
 // =============================================================
 // 1. UJI KONSISTENSI — RAPS (Rescaled Adjusted Partial Sums)
-//    Referensi: Buishand (1982), SNI 2415:2016 Lampiran
-//    
-//    Prosedur:
-//    - Data diurutkan kronologis (BUKAN berdasarkan magnitude)
-//    - Hitung Sk* = ∑(Xi - X̄) / Dy  untuk k = 1..n  (cumulative deviations)
-//    - Q = max|Sk*|
-//    - R = max(Sk*) - min(Sk*)
-//    - Bandingkan Q dan R dengan nilai kritis tabel
 // =============================================================
 export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
   try {
@@ -175,20 +167,17 @@ export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
   }
   
   const n = data.length;
-  
-  // KRITIS: Urutkan data secara KRONOLOGIS (bukan berdasarkan nilai)
   const sorted = [...data].sort((a, b) => a.tahun - b.tahun);
   const Xi = sorted.map(d => d.hujan);
   
   const mean = Xi.reduce((a, b) => a + b, 0) / n;
-  const variance = Xi.reduce((sum, x) => sum + (x - mean) ** 2, 0) / n;
+  const variance = Xi.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / n;
   const Dy = Math.sqrt(variance);
   
   if (Dy === 0 || !isFinite(Dy)) {
     return { isKonsisten: false, QHitung: 0, RHitung: 0, QKritis: 0, RKritis: 0, pesan: '✗ Standar deviasi nol (data konstan)' };
   }
   
-  // Hitung Cumulative Deviations: Sk* = Σ(Xi - X̄) / Dy, k = 1..n
   const Sk: number[] = [];
   let cumSum = 0;
   for (let k = 0; k < n; k++) {
@@ -196,11 +185,9 @@ export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
     Sk.push(cumSum / Dy);
   }
   
-  // Statistik Q (max absolute) dan R (range)
   const QHitung = Math.max(...Sk.map(Math.abs));
   const RHitung = Math.max(...Sk) - Math.min(...Sk);
   
-  // Nilai kritis dari tabel (sudah dinormalisasi √n)
   const QKritis = interpolate(RAPS_Q_TABLE, n) / Math.sqrt(n);
   const RKritis = interpolate(RAPS_R_TABLE, n) / Math.sqrt(n);
   
@@ -220,9 +207,6 @@ export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
 
 // =============================================================
 // 2. UJI PENCILAN — Smirnov-Grubbs Test
-//    Referensi: WMO Guide No. 100, SNI 2415:2016
-//    Xh = X̄ + Kn × S  (batas atas)
-//    Xl = X̄ - Kn × S  (batas bawah)
 // =============================================================
 export function cekOutlierGrubbs(data: RainfallData[]): GrubbsResult {
   try {
@@ -237,7 +221,7 @@ export function cekOutlierGrubbs(data: RainfallData[]): GrubbsResult {
   const n = data.length;
   const hujan = data.map(d => d.hujan);
   const mean = hujan.reduce((a, b) => a + b, 0) / n;
-  const variance = hujan.reduce((sum, x) => sum + (x - mean) ** 2, 0) / (n - 1);
+  const variance = hujan.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
   
   if (stdDev === 0 || !isFinite(stdDev)) {
@@ -271,10 +255,6 @@ export function cekOutlierGrubbs(data: RainfallData[]): GrubbsResult {
 
 // =============================================================
 // 3. UJI HOMOGENITAS — F-Test (Varians) & t-Test (Rata-rata)
-//    Referensi: SNI 6738:2015, Soewarno (1995)
-//    Data dibagi 2 kelompok (paruh awal vs paruh akhir)
-//    F = S1² / S2² dimana S1 > S2 (F hitung < F kritis → homogen)
-//    t = |X̄1 - X̄2| / (Sp × √(1/n1 + 1/n2))
 // =============================================================
 export function cekHomogenitas(data: RainfallData[]): HomogenitasResult {
   try {
@@ -286,7 +266,6 @@ export function cekHomogenitas(data: RainfallData[]): HomogenitasResult {
     throw error;
   }
   
-  // Urutkan kronologis untuk membagi paruh awal vs akhir
   const sorted = [...data].sort((a, b) => a.tahun - b.tahun);
   const n = sorted.length;
   const mid = Math.floor(n / 2);
@@ -298,35 +277,38 @@ export function cekHomogenitas(data: RainfallData[]): HomogenitasResult {
   
   const mean1 = seri1.reduce((a, b) => a + b, 0) / n1;
   const mean2 = seri2.reduce((a, b) => a + b, 0) / n2;
-  const var1 = seri1.reduce((sum, x) => sum + (x - mean1) ** 2, 0) / (n1 - 1);
-  const var2 = seri2.reduce((sum, x) => sum + (x - mean2) ** 2, 0) / (n2 - 1);
+  const var1 = seri1.reduce((sum, x) => sum + Math.pow(x - mean1, 2), 0) / (n1 - 1);
+  const var2 = seri2.reduce((sum, x) => sum + Math.pow(x - mean2, 2), 0) / (n2 - 1);
   
   if (var1 === 0 || var2 === 0 || !isFinite(var1) || !isFinite(var2)) {
     return { isHomogen: true, fTest: { F: 1, Fkritis: 0, lulus: true }, tTest: { t: 0, tkritis: 0, lulus: true }, pesan: '⚠ Varians nol pada salah satu grup' };
   }
   
-  // F-Test: selalu letakkan varians yang lebih besar di pembilang
-  const F = Math.max(var1, var2) / Math.min(var1, var2);
-  const dfF = Math.min(n1, n2) - 1;
-  const Fkritis = interpolate(F_TABLE, dfF);
-  const fTestLulus = F <= Fkritis;
+  const varMax = Math.max(var1, var2);
+  const varMin = Math.min(var1, var2);
+  const F_val = varMax / varMin;
   
-  // t-Test: pooled variance
+  const df1 = (var1 === varMax ? n1 : n2) - 1;
+  const df2 = (var1 === varMin ? n1 : n2) - 1;
+  
+  const Fkritis_val = interpolate(F_TABLE, Math.min(df1, df2));
+  const fTestLulus_val = F_val <= Fkritis_val;
+  
   const Sp = Math.sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n - 2));
   const t = Math.abs(mean1 - mean2) / (Sp * Math.sqrt(1 / n1 + 1 / n2));
   const dfT = n - 2;
   const tkritis = interpolate(T_TABLE, dfT);
   const tTestLulus = t <= tkritis;
   
-  const isHomogen = fTestLulus && tTestLulus;
+  const isHomogen = fTestLulus_val && tTestLulus;
   
   return {
     isHomogen,
-    fTest: { F, Fkritis, lulus: fTestLulus },
+    fTest: { F: F_val, Fkritis: Fkritis_val, lulus: fTestLulus_val },
     tTest: { t, tkritis, lulus: tTestLulus },
     pesan: isHomogen 
-      ? `✓ Data homogen (F=${F.toFixed(2)} ≤ ${Fkritis.toFixed(2)}, t=${t.toFixed(2)} ≤ ${tkritis.toFixed(2)})` 
-      : `✗ Data tidak homogen: F=${F.toFixed(2)} ${fTestLulus ? '✓' : `> ${Fkritis.toFixed(2)} ✗`}, t=${t.toFixed(2)} ${tTestLulus ? '✓' : `> ${tkritis.toFixed(2)} ✗`}`
+      ? `✓ Data homogen (F=${F_val.toFixed(2)} ≤ ${Fkritis_val.toFixed(2)}, t=${t.toFixed(2)} ≤ ${tkritis.toFixed(2)})` 
+      : `✗ Data tidak homogen: F=${F_val.toFixed(2)} ${fTestLulus_val ? '✓' : `> ${Fkritis_val.toFixed(2)} ✗`}, t=${t.toFixed(2)} ${tTestLulus ? '✓' : `> ${tkritis.toFixed(2)} ✗`}`
   };
 }
 

@@ -119,7 +119,9 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
 
     const curahHujanRencana = selectedDist.values.map(v => ({
       kalaUlang: v.Tr,
-      curahHujan: v.R24
+      curahHujan: v.R24,
+      Tr: v.Tr,
+      R24: v.R24
     }));
 
     setAnalisisFrekuensi({

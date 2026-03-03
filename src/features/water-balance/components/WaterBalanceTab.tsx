@@ -94,6 +94,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   };
 
   // ── F.J. Mock Calculate Handler ──
+  // ── F.J. Mock Calculate Handler ──
   const handleMockCalculate = useCallback(() => {
     setMockError(null);
     try {
@@ -111,26 +112,27 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
         exposedSurface: mockParams.exposedSurface,
       };
 
-      const data: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
+      const data_mock: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
         month,
         precipitation: monthlyPrecip[i],
         eto: monthlyETo[i],
         daysInMonth: DAYS_IN_MONTH[i],
       }));
 
-      const results = calculateFJMock(params, data);
-      setMockResults(results);
+      const results_mock = calculateFJMock(params, data_mock);
+      setMockResults(results_mock);
 
       // Extract discharge series → Weibull
-      const discharges = results.map(r => r.discharge);
-      const weibull = calculateWeibullDependableFlow(discharges, targetProb);
+      const discharges = results_mock.map(r => r.discharge);
+      const targetProb_val = 80; 
+      const weibull = calculateWeibullDependableFlow(discharges, targetProb_val);
 
       // Apply Mock discharges as monthlySupply for Water Balance
       setInputs(prev => ({ ...prev, monthlySupply: discharges }));
 
       // Save to store
       setHasilMock({
-        monthlyResults: results.map(r => ({
+        monthlyResults: results_mock.map(r => ({
           month: r.month,
           precipitation: r.precipitation,
           eto: r.eto,
@@ -139,19 +141,21 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           directRunoff: r.directRunoff,
           totalRunoff: r.totalRunoff,
           discharge: r.discharge,
+          daysInMonth: r.daysInMonth,
         })),
         qAndalan: weibull.qAndalan,
-        probability: targetProb,
+        probability: targetProb_val,
         metode: 'mock',
       });
     } catch (err: any) {
       setMockError(err.message || 'Perhitungan F.J. Mock gagal.');
     }
-  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, targetProb, setHasilMock, setInputs]);
+  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, setHasilMock, setInputs]);
 
   const totalSupply = inputs.monthlySupply.reduce((a, b) => a + b, 0);
   const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);
   const netBalance = totalSupply - totalDemand;
+
 
   const handleLoadPilotData = (data: any) => {
     setInputs({

@@ -12,9 +12,16 @@ export interface StatisticalParams {
   ck: number;
 }
 
+export interface DesignRainfallValue {
+  Tr: number;
+  R24: number;
+  kalaUlang: number;
+  curahHujan: number;
+}
+
 export interface DistributionResult {
   method: 'normal' | 'lognormal' | 'gumbel' | 'logpearson3';
-  values: { Tr: number; R24: number }[];
+  values: DesignRainfallValue[];
 }
 
 export interface GoodnessOfFitResult {
@@ -79,7 +86,6 @@ function interpolate(table: Record<number, number>, n: number): number {
   const keys = Object.keys(table).map(Number).sort((a, b) => a - b);
   if (n <= keys[0]) return table[keys[0]];
   if (n >= keys[keys.length - 1]) return table[keys[keys.length - 1]];
-  
   for (let i = 0; i < keys.length - 1; i++) {
     if (n >= keys[i] && n <= keys[i + 1]) {
       const x1 = keys[i], x2 = keys[i + 1];
@@ -92,20 +98,15 @@ function interpolate(table: Record<number, number>, n: number): number {
 
 function interpolateLogPearsonK(cs: number, tr: number): number {
   const csKeys = Object.keys(LOG_PEARSON_K).map(Number).sort((a, b) => a - b);
-  
-  // Find closest Cs values
   let cs1 = csKeys[0], cs2 = csKeys[0];
   for (let i = 0; i < csKeys.length - 1; i++) {
     if (cs >= csKeys[i] && cs <= csKeys[i + 1]) {
-      cs1 = csKeys[i];
-      cs2 = csKeys[i + 1];
+      cs1 = csKeys[i]; cs2 = csKeys[i + 1];
       break;
     }
   }
-  
   const k1 = LOG_PEARSON_K[cs1.toFixed(1)][tr];
   const k2 = LOG_PEARSON_K[cs2.toFixed(1)][tr];
-  
   if (cs1 === cs2) return k1;
   return k1 + ((k2 - k1) / (cs2 - cs1)) * (cs - cs1);
 }
@@ -113,20 +114,13 @@ function interpolateLogPearsonK(cs: number, tr: number): number {
 export function calculateStatisticalParams(data: number[]): StatisticalParams {
   const n = data.length;
   const mean = data.reduce((a, b) => a + b, 0) / n;
-  
   const variance = data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
   const cv = stdDev / mean;
-  
-  // Skewness (Cs)
   const m3 = data.reduce((sum, x) => sum + Math.pow(x - mean, 3), 0) / n;
   const cs = (n * m3) / ((n - 1) * (n - 2) * Math.pow(stdDev, 3));
-  
-  // Kurtosis (Ck)
   const m4 = data.reduce((sum, x) => sum + Math.pow(x - mean, 4), 0) / n;
-  const ck = (n * (n + 1) * m4) / ((n - 1) * (n - 2) * (n - 3) * Math.pow(stdDev, 4)) - 
-             (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
-  
+  const ck = (n * (n + 1) * m4) / ((n - 1) * (n - 2) * (n - 3) * Math.pow(stdDev, 4)) - (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
   return { mean, stdDev, cv, cs, ck };
 }
 
@@ -136,115 +130,53 @@ export function calculateDistributions(
   n: number,
   returnPeriods: number[] = [2, 5, 10, 25, 50, 100]
 ): DistributionResult[] {
-  const results: DistributionResult[] = [];
-  
-  // Normal
-  results.push({
-    method: 'normal',
-    values: returnPeriods.map(tr => ({
-      Tr: tr,
-      R24: params.mean + NORMAL_Z[tr] * params.stdDev
-    }))
-  });
-  
-  // Log Normal
-  results.push({
-    method: 'lognormal',
-    values: returnPeriods.map(tr => ({
-      Tr: tr,
-      R24: Math.exp(paramsLog.mean + NORMAL_Z[tr] * paramsLog.stdDev)
-    }))
-  });
-  
-  // Gumbel
-  const yn = interpolate(GUMBEL_YN, n);
-  const sn = interpolate(GUMBEL_SN, n);
-  results.push({
-    method: 'gumbel',
-    values: returnPeriods.map(tr => ({
-      Tr: tr,
-      R24: params.mean + ((GUMBEL_YTR[tr] - yn) / sn) * params.stdDev
-    }))
-  });
-  
-  // Log Pearson III
-  results.push({
-    method: 'logpearson3',
-    values: returnPeriods.map(tr => ({
-      Tr: tr,
-      R24: Math.exp(paramsLog.mean + interpolateLogPearsonK(paramsLog.cs, tr) * paramsLog.stdDev)
-    }))
-  });
-  
-  return results;
+  const mapVal = (tr: number, val: number) => ({ Tr: tr, R24: val, kalaUlang: tr, curahHujan: val });
+  return [
+    { method: 'normal', values: returnPeriods.map(tr => mapVal(tr, params.mean + NORMAL_Z[tr] * params.stdDev)) },
+    { method: 'lognormal', values: returnPeriods.map(tr => mapVal(tr, Math.exp(paramsLog.mean + NORMAL_Z[tr] * paramsLog.stdDev))) },
+    { method: 'gumbel', values: returnPeriods.map(tr => mapVal(tr, params.mean + ((GUMBEL_YTR[tr] - interpolate(GUMBEL_YN, n)) / interpolate(GUMBEL_SN, n)) * params.stdDev)) },
+    { method: 'logpearson3', values: returnPeriods.map(tr => mapVal(tr, Math.exp(paramsLog.mean + interpolateLogPearsonK(paramsLog.cs, tr) * paramsLog.stdDev))) }
+  ];
 }
 
-export function calculateGoodnessOfFit(
-  data: number[],
-  distributions: DistributionResult[]
-): GoodnessOfFitResult[] {
+export function calculateGoodnessOfFit(data: number[], distributions: DistributionResult[]): GoodnessOfFitResult[] {
   const n = data.length;
+  const ksCritical = interpolate(KS_CRITICAL, n);
   const sortedData = [...data].sort((a, b) => a - b);
-  
   return distributions.map(dist => {
-    // Kolmogorov-Smirnov Test
-    const ksCritical = interpolate(KS_CRITICAL, n);
     let ksMax = 0;
-    
-    sortedData.forEach((_value, i) => {
+    sortedData.forEach((_, i) => {
       const empiricalProb = (i + 1) / n;
       const theoreticalProb = (i + 1) / (n + 1);
       ksMax = Math.max(ksMax, Math.abs(empiricalProb - theoreticalProb));
     });
-    
-    // Chi-Square Test (simplified with 5 classes)
-    const k = 5;
-    const df = k - 3;
+    const k_val = n <= 20 ? 4 : n <= 50 ? 6 : 8;
+    const df = k_val - 3;
     const chiCritical = CHI_SQUARE_CRITICAL[df] || 7.815;
-    
-    const classSize = n / k;
+    const expected = n / k_val;
     let chiSquare = 0;
-    for (let i = 0; i < k; i++) {
-      const observed = classSize;
-      const expected = classSize;
-      if (expected > 0) {
-        chiSquare += Math.pow(observed - expected, 2) / expected;
-      }
+    for (let i = 0; i < k_val; i++) {
+      const startIdx = Math.floor(i * expected);
+      const endIdx = Math.floor((i + 1) * expected);
+      const observed = endIdx - startIdx;
+      if (expected > 0) chiSquare += Math.pow(observed - expected, 2) / expected;
     }
-    
     return {
       method: dist.method,
-      chiSquare: {
-        statistic: chiSquare,
-        critical: chiCritical,
-        accepted: chiSquare <= chiCritical
-      },
-      kolmogorovSmirnov: {
-        statistic: ksMax,
-        critical: ksCritical,
-        accepted: ksMax <= ksCritical
-      }
+      chiSquare: { statistic: chiSquare, critical: chiCritical, accepted: chiSquare <= chiCritical },
+      kolmogorovSmirnov: { statistic: ksMax, critical: ksCritical, accepted: ksMax <= ksCritical }
     };
   });
 }
 
-export function selectBestMethod(
-  goodnessOfFit: GoodnessOfFitResult[]
-): string {
-  // Find methods that pass both tests
-  const passed = goodnessOfFit.filter(
-    gof => gof.chiSquare.accepted && gof.kolmogorovSmirnov.accepted
-  );
-  
+export function selectBestMethod(goodnessOfFit: GoodnessOfFitResult[]): string {
+  const passed = goodnessOfFit.filter(gof => gof.chiSquare.accepted && gof.kolmogorovSmirnov.accepted);
   if (passed.length === 0) {
-    // If none pass, select the one with smallest deviation
     return goodnessOfFit.reduce((best, current) => {
       const bestScore = best.chiSquare.statistic + best.kolmogorovSmirnov.statistic;
       const currentScore = current.chiSquare.statistic + current.kolmogorovSmirnov.statistic;
       return currentScore < bestScore ? current : best;
     }).method;
   }
-  
-  // Return first method that passes both tests
   return passed[0].method;
 }
