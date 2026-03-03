@@ -2,9 +2,10 @@ import area from '@turf/area';
 import centroid from '@turf/centroid';
 import bbox from '@turf/bbox';
 import intersect from '@turf/intersect';
+import booleanContains from '@turf/boolean-contains';
 import { featureCollection } from '@turf/helpers';
 import voronoi from '@turf/voronoi';
-import { Feature, Polygon, MultiPolygon, FeatureCollection, Point } from 'geojson';
+import { Feature, Polygon, MultiPolygon, FeatureCollection, Point, LineString, MultiLineString } from 'geojson';
 
 export interface DasParameters {
   areaKm2: number;
@@ -24,6 +25,7 @@ export interface ThiessenWeight {
   namaStasiun: string;
   areaKm2: number;
   weight: number; // Ai / Atotal
+  elevation?: number;
 }
 
 /**
@@ -43,7 +45,28 @@ export function calculateDasParameters(dasGeoJSON: Feature<Polygon | MultiPolygo
 }
 
 /**
- * 2. Interseksi Tutupan Lahan & Hitung Koefisien C Komposit
+ * 2. Validasi Alur Sungai terhadap Batas DAS
+ * Memastikan alur sungai berada di dalam (contained by) area DAS
+ */
+export function validateRiverWithinDas(
+  dasGeoJSON: Feature<Polygon | MultiPolygon>,
+  riverGeoJSON: Feature<LineString | MultiLineString>
+): { isValid: boolean; message: string } {
+  try {
+    const isWithin = booleanContains(dasGeoJSON, riverGeoJSON);
+    return {
+      isValid: isWithin,
+      message: isWithin 
+        ? 'Alur sungai terverifikasi berada di dalam batas DAS.' 
+        : 'Peringatan: Sebagian atau seluruh alur sungai berada di luar batas DAS. Harap periksa kembali delineasi Anda.'
+    };
+  } catch (error) {
+    return { isValid: false, message: 'Gagal melakukan validasi spasial alur sungai.' };
+  }
+}
+
+/**
+ * 3. Interseksi Tutupan Lahan & Hitung Koefisien C Komposit
  * Menghitung C Komposit = (Σ Ci * Ai) / Σ Ai
  */
 export function calculateCompositeC(
@@ -84,7 +107,7 @@ export function calculateCompositeC(
 }
 
 /**
- * 3. Pembuatan Poligon Thiessen & Faktor Pembobot Luas
+ * 4. Pembuatan Poligon Thiessen & Faktor Pembobot Luas
  * Ai / Atotal
  */
 export function generateThiessenWeights(

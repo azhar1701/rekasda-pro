@@ -393,15 +393,13 @@ const MOCK_STASIUN_LIST: StasiunHidrologi[] = [
 
 /**
  * Generate realistic 15-year daily rainfall time-series for a station.
- * The data is designed to be statistically consistent and pass QC.
- * Each year generates 365 daily records with seasonal pattern.
+ * Optimized with orographic correction for Ciliwung Basin.
  */
-export const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026): DataHujan[] => {
+export const generateMockDataHujan = (stasiunId: string, elevation: number = 0): DataHujan[] => {
   const data: DataHujan[] = [];
   const startYear = 2010;
   const endYear = 2024;
   
-  // Simple seeded pseudo-random based on stasiunId to get deterministic data per station
   let seed = 0;
   for (let i = 0; i < stasiunId.length; i++) seed += stasiunId.charCodeAt(i);
   const seededRandom = () => {
@@ -409,22 +407,22 @@ export const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026):
     return (seed % 10000) / 10000;
   };
   
-  // Station-specific baseline (each station has its own climate characteristics)
-  const baseline = 120 + (seed % 60); // 120-180mm annual max baseline
+  // Orographic Factor: Elevation influences baseline rainfall
+  // Typical Puncak (1000m+) has ~3500-4000mm/yr vs Katulampa (250m) ~2500mm/yr
+  const orographicBonus = (elevation / 100) * 15; // +15mm per 100m elevation
+  const baseline = 110 + orographicBonus + (seed % 40); 
   
   for (let year = startYear; year <= endYear; year++) {
-    // Generate max daily rainfall for this year — normally distributed around baseline
-    // Box-Muller transform for normal distribution
     const u1 = Math.max(0.0001, seededRandom());
     const u2 = seededRandom();
     const normalRandom = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    const annualMax = Math.max(50, baseline + normalRandom * 25);  // stdDev ~25mm
     
-    // Generate the annual maximum event (put in rainy season: Nov-Mar)
+    // Annual Max daily rainfall
+    const annualMax = Math.max(40, baseline + normalRandom * 35); 
+    
     const peakMonth = [11, 12, 1, 2, 3][Math.floor(seededRandom() * 5)];
     const peakDay = Math.min(28, Math.max(1, Math.floor(seededRandom() * 28) + 1));
-    const peakDate = peakMonth <= 3 ? `${year}-${String(peakMonth).padStart(2, '0')}-${String(peakDay).padStart(2, '0')}`
-      : `${year}-${String(peakMonth).padStart(2, '0')}-${String(peakDay).padStart(2, '0')}`;
+    const peakDate = `${year}-${String(peakMonth).padStart(2, '0')}-${String(peakDay).padStart(2, '0')}`;
     
     data.push({
       id: crypto.randomUUID(),
@@ -433,16 +431,13 @@ export const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026):
       curah_hujan: parseFloat(annualMax.toFixed(1))
     });
     
-    // Add a few more daily records per year (non-peak rainy days)
-    const nonPeakCount = 3 + Math.floor(seededRandom() * 3);
+    const nonPeakCount = 4 + Math.floor(seededRandom() * 4);
     for (let j = 0; j < nonPeakCount; j++) {
       const month = [10, 11, 12, 1, 2, 3, 4][Math.floor(seededRandom() * 7)];
       const day = Math.min(28, Math.max(1, Math.floor(seededRandom() * 28) + 1));
-      const adjYear = month >= 10 ? year : year;
-      const dateStr = `${adjYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      // Non-peak rainfall (much smaller than peak)
-      const rainfall = parseFloat((seededRandom() * annualMax * 0.6).toFixed(1));
+      const rainfall = parseFloat((seededRandom() * annualMax * 0.7).toFixed(1));
       
       data.push({
         id: crypto.randomUUID(),
@@ -453,7 +448,6 @@ export const generateMockDataHujan = (stasiunId: string, _tahun: number = 2026):
     }
   }
   
-  // Sort by date ascending
   return data.sort((a, b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime());
 };
 
@@ -891,123 +885,51 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
 
-  addStasiun: async (stasiun) => {
-    set({ isLoading: true, error: null });
-    try {
-      // TODO: Ganti dengan Supabase insert
-      // const { data, error } = await supabase.from('master_stasiun').insert([stasiun]).select().single();
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newStasiun: StasiunHidrologi = {
-        ...stasiun,
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString()
-      };
-      
-      set(state => ({ 
-        stasiunList: [...state.stasiunList, newStasiun],
-        selectedStasiun: newStasiun,
-        dataHujan: [],
-        isLoading: false 
-      }));
-    } catch (err: any) {
-      set({ error: err.message || 'Gagal menambah stasiun', isLoading: false });
-      throw err;
-    }
-  },
-
-  addDataHujan: async (data) => {
-    set({ isLoading: true, error: null });
-    try {
-      // TODO: Ganti dengan Supabase insert
-      // const { data: newData, error } = await supabase.from('data_hujan').insert([data]).select().single();
-      
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const newData: DataHujan = {
-        ...data,
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString()
-      };
-      
-      set(state => ({ 
-        dataHujan: [...state.dataHujan, newData].sort((a, b) => 
-          new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
-        ),
-        isLoading: false 
-      }));
-      
-      const state = get();
-      if (state.dataHujan.length >= 10) {
-        state.updateDataHujanManual(state.dataHujan);
-      }
-    } catch (err: any) {
-      set({ error: err.message || 'Gagal menambah data hujan', isLoading: false });
-      throw err;
-    }
-  },
-
-  importDataHujanBatch: async (dataList) => {
-    set({ isLoading: true, error: null });
-    try {
-      // TODO: Ganti dengan Supabase batch insert
-      // const { data, error } = await supabase.from('data_hujan').insert(dataList).select();
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newDataList: DataHujan[] = dataList.map(d => ({
-        ...d,
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString()
-      }));
-      
-      set(state => ({ 
-        dataHujan: [...state.dataHujan, ...newDataList].sort((a, b) => 
-          new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()
-        ),
-        isLoading: false 
-      }));
-      
-      const state = get();
-      if (state.dataHujan.length >= 10) {
-        state.updateDataHujanManual(state.dataHujan);
-      }
-    } catch (err: any) {
-      set({ error: err.message || 'Gagal import data hujan', isLoading: false });
-      throw err;
-    }
-  },
-
-  // (selectStasiun logic has been moved higher with dirty tracking)
-
-  // Fetch data runtut waktu hujan
+  // selectStasiun logic (existing)
+  
   fetchDataHujan: async (stasiunId, tahun = new Date().getFullYear()) => {
     set({ isLoading: true, error: null });
     try {
-      // TODO: Ganti dengan filter pemanggilan Supabase (WHERE stasiun_id = $1 AND extract(year from tanggal) = $2)
-      
-      // Simulasi fetch
       await new Promise(resolve => setTimeout(resolve, 800)); 
-      
-      // Placeholder for actual Supabase query
-      // const query = supabase.from('data_hujan').select('*').eq('stasiun_id', stasiunId).filter('tanggal', 'gte', `${tahun}-01-01`).filter('tanggal', 'lte', `${tahun}-12-31`);
-      // For now, we'll use mock data to keep the code syntactically correct.
       const mockedData = generateMockDataHujan(stasiunId, tahun);
-      const data = mockedData; // Simulate data from query
-      const error = null; // Simulate no error
-      
-      const mockQc = MOCK_QC_DATA[stasiunId];
-      if (error) throw error;
-      set({ 
-        dataHujan: data || [],
-        qcStatus: mockQc ? mockQc.status : null,
-        qcResults: mockQc ? mockQc.results : null,
-      });
+      set({ dataHujan: mockedData || [] });
     } catch (err: any) {
       set({ error: err.message, dataHujan: [] });
     } finally {
       set({ isLoading: false });
+    }
+  },
+  
+  addDataHujan: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const newData: DataHujan = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+      set(state => ({ dataHujan: [...state.dataHujan, newData].sort((a,b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()), isLoading: false }));
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
+  
+  importDataHujanBatch: async (dataList) => {
+    set({ isLoading: true, error: null });
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const newDataList = dataList.map(d => ({ ...d, id: crypto.randomUUID(), created_at: new Date().toISOString() }));
+      set(state => ({ dataHujan: [...state.dataHujan, ...newDataList].sort((a,b) => new Date(a.tanggal).getTime() - new Date(b.tanggal).getTime()), isLoading: false }));
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
+  
+  addStasiun: async (stasiun) => {
+    set({ isLoading: true, error: null });
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const newStasiun: StasiunHidrologi = { ...stasiun, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+      set(state => ({ stasiunList: [...state.stasiunList, newStasiun], isLoading: false }));
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
     }
   }
 }));
