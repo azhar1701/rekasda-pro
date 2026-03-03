@@ -3,7 +3,6 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, RefreshCw, Sparkles } from 'lucide-react';
 
-
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Satellite, Wand2, AlertCircle } from 'lucide-react';
@@ -26,7 +25,6 @@ export const MasterHidrologiTab: React.FC = () => {
         fetchDataHujan,
         updateDataHujanManual,
         seedInitialStations
-
     } = useHydrologyStore();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -180,6 +178,9 @@ export const MasterHidrologiTab: React.FC = () => {
         }
     };
 
+    const [scrapingProgress, setScrapingProgress] = useState<{ current: number; total: number; date: string; status: string } | null>(null);
+    const [scrapingLog, setScrapingLog] = useState<{ date: string; status: 'success' | 'error' | 'loading' }[]>([]);
+
     const handleFetchSihkaData = async () => {
         if (!selectedStasiun) return;
         
@@ -200,25 +201,38 @@ export const MasterHidrologiTab: React.FC = () => {
         const sihkaId = stationIdMapping[selectedStasiun.nama_stasiun];
 
         if (!sihkaId) {
-            alert(`Stasiun "${selectedStasiun.nama_stasiun}" belum terhubung ke SIHKA. Silakan hubungi admin.`);
+            import('@/hooks/useToast').then(m => m.toast.error(`Stasiun "${selectedStasiun.nama_stasiun}" belum terhubung ke SIHKA.`));
             return;
         }
 
         const currentMonth = new Date().getMonth() + 1;
         
         setIsFetchingSihka(true);
+        setScrapingLog([]);
+        setScrapingProgress(null);
+
         try {
-            const { count, error } = await syncSihkaStationData(sihkaId, selectedYear, currentMonth);
+            const { count, error } = await syncSihkaStationData(sihkaId, selectedYear, currentMonth, (p) => {
+                setScrapingProgress(p);
+                setScrapingLog(prev => {
+                    const exists = prev.find(l => l.date === p.date);
+                    if (exists) {
+                        return prev.map(l => l.date === p.date ? { ...l, status: p.status } : l);
+                    }
+                    return [...prev, { date: p.date, status: p.status }];
+                });
+            });
             
-            if (error) throw error;
+            if (error) throw new Error(error);
             
-            alert(`✅ Berhasil menyinkronkan ${count} hari data curah hujan stasiun ${selectedStasiun.nama_stasiun} (SIHKA Citanduy)`);
+            import('@/hooks/useToast').then(m => m.toast.success(`✅ Berhasil menyinkronkan ${count} hari data curah hujan stasiun ${selectedStasiun.nama_stasiun}`));
             fetchDataHujan(selectedStasiun.id, selectedYear);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error syncing SIHKA data:', error);
-            alert('❌ Gagal menyinkronkan data dari SIHKA Citanduy.');
+            import('@/hooks/useToast').then(m => m.toast.error(`❌ Gagal: ${error.message || 'Sinkronisasi SIHKA terhenti'}`));
         } finally {
             setIsFetchingSihka(false);
+            setTimeout(() => setScrapingProgress(null), 3000);
         }
     };
 
@@ -269,7 +283,7 @@ export const MasterHidrologiTab: React.FC = () => {
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {isLoading && stasiunList.length === 0 ? (
                             <div className="flex justify-center items-center h-40">
-                                <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-8 w-8 border-b-2 border-teal-600"></div>
+                                <div className="animate-pulse bg-slate-200 rounded-md h-8 w-8 border-b-2 border-teal-600"></div>
                             </div>
                         ) : (
                             stasiunList.map((stasiun) => {
@@ -280,7 +294,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                         onClick={() => selectStasiun(stasiun)}
                                         className={`p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                                             isActive
-                                                ? 'bg-pupr-blue text-white border-teal-600 shadow-sm text-white scale-[1.02]'
+                                                ? 'bg-pupr-blue text-white border-teal-600 shadow-sm scale-[1.02]'
                                                 : 'bg-white/80 border-slate-200 hover:border-teal-300 hover:shadow-md text-slate-700'
                                         }`}
                                     >
@@ -329,7 +343,6 @@ export const MasterHidrologiTab: React.FC = () => {
                                 </Button>
                             )}
                         </div>
-
                     ) : (
                         <>
                             <div className="p-5 border-b border-slate-200/50 bg-white/40 flex flex-wrap justify-between items-center gap-4">
@@ -360,10 +373,55 @@ export const MasterHidrologiTab: React.FC = () => {
                                             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         </div>
                                     </div>
-                                    <Button onClick={handleFetchSihkaData} disabled={isFetchingSihka || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
-                                        <RefreshCw className={`w-4 h-4 mr-1 ${isFetchingSihka ? 'animate-spin' : ''}`} />
-                                        <span className="hidden sm:inline">{isFetchingSihka ? 'Menyinkronkan...' : 'Tarik SIHKA'}</span>
-                                    </Button>
+                                    <div className="relative">
+                                        <Button onClick={handleFetchSihkaData} disabled={isFetchingSihka || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
+                                            <RefreshCw className={`w-4 h-4 mr-1 ${isFetchingSihka ? 'animate-spin' : ''}`} />
+                                            <span className="hidden sm:inline">{isFetchingSihka ? 'Menyinkronkan...' : 'Tarik SIHKA'}</span>
+                                        </Button>
+                                        
+                                        {isFetchingSihka && scrapingProgress && (
+                                            <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-lg shadow-xl border border-slate-200 p-3 z-20 animate-in fade-in slide-in-from-top-1">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Progress Scraping</span>
+                                                    <span className="text-[10px] font-mono font-bold text-pupr-blue">
+                                                        {Math.round((scrapingProgress.current / scrapingProgress.total) * 100)}%
+                                                    </span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
+                                                    <div 
+                                                        className="h-full bg-pupr-blue transition-all duration-300"
+                                                        style={{ width: `${(scrapingProgress.current / scrapingProgress.total) * 100}%` }}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                                                        scrapingProgress.status === 'success' ? 'bg-emerald-500' :
+                                                        scrapingProgress.status === 'error' ? 'bg-rose-500' : 'bg-amber-500'
+                                                    }`} />
+                                                    <span className="text-[10px] font-medium text-slate-600 truncate">
+                                                        {scrapingProgress.date} - {
+                                                            scrapingProgress.status === 'loading' ? 'Mengambil data...' :
+                                                            scrapingProgress.status === 'success' ? 'Berhasil' : 'Gagal/Tidak ada data'
+                                                        }
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="mt-3 max-h-32 overflow-y-auto border-t border-slate-100 pt-2 space-y-1">
+                                                    {scrapingLog.slice().reverse().slice(0, 5).map((log, i) => (
+                                                        <div key={i} className="flex justify-between items-center text-[9px]">
+                                                            <span className="text-slate-500">{log.date}</span>
+                                                            <span className={
+                                                                log.status === 'success' ? 'text-emerald-600 font-bold' :
+                                                                log.status === 'error' ? 'text-rose-600' : 'text-amber-600'
+                                                            }>
+                                                                {log.status.toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <Button onClick={handleFetchSatelliteData} disabled={isFetchingSatellite || !selectedStasiun || selectedStasiun.koordinat_x === null} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
                                         <Satellite className={`w-4 h-4 mr-1 ${isFetchingSatellite ? 'animate-spin' : ''}`} />
@@ -383,7 +441,7 @@ export const MasterHidrologiTab: React.FC = () => {
                             <div className="flex-1 overflow-auto bg-slate-50/30 p-4 sm:p-6">
                                 {isLoading && (
                                     <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-10">
-                                        <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-10 w-10 border-4 border-slate-200 border-t-teal-600"></div>
+                                        <div className="animate-pulse bg-slate-200 rounded-md h-10 w-10 border-4 border-slate-200 border-t-teal-600"></div>
                                     </div>
                                 )}
 
@@ -439,9 +497,9 @@ export const MasterHidrologiTab: React.FC = () => {
                                                                     <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-md overflow-hidden">
                                                                         <div 
                                                                             className={`h-full rounded-md transition-all duration-500 ${
-                                                                                row.curah_hujan > 50 ? 'bg-pupr-blue text-white' :
-                                                                                row.curah_hujan > 20 ? 'bg-pupr-blue text-white' :
-                                                                                row.curah_hujan > 0 ? 'bg-pupr-blue text-white' : 'bg-slate-300'
+                                                                                row.curah_hujan > 50 ? 'bg-pupr-blue' :
+                                                                                row.curah_hujan > 20 ? 'bg-pupr-blue' :
+                                                                                row.curah_hujan > 0 ? 'bg-pupr-blue' : 'bg-slate-300'
                                                                             }`}
                                                                             style={{ width: `${barWidth}%` }}
                                                                         />
