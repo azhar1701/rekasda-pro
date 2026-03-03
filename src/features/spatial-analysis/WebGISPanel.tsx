@@ -11,7 +11,6 @@ import { calculateDasParameters, calculateCompositeC, generateThiessenWeights, v
 import { ChirpsTimeSeriesChart } from './components/ChirpsTimeSeriesChart';
 import { DoubleMassCurveChart } from './components/DoubleMassCurveChart';
 import { cekDoubleMassCurve, DoubleMassResult } from '@/lib/utils/qc/dataQualityMath';
-import { supabase } from '@/lib/api/supabase';
 import { MOCK_DAS_GEOJSON, MOCK_LAND_COVER_FC, MOCK_STATIONS_FC, MOCK_STATIONS_DATA, MOCK_RIVER_GEOJSON } from '@/utils/mockSpatialData';
 import { Satellite, CalendarRange } from 'lucide-react';
 import { extractChirpsData } from '@/services/chirpsService';
@@ -169,33 +168,29 @@ export const WebGISPanel: React.FC = () => {
 
       toast.success(`✅ Ekstraksi selesai! Berhasil menarik ${result.count} hari data satelit.`);
       
-      // Fetch data back from database for visualization
-      if (supabase) {
-        const { data: dbChirps } = await supabase.from('master_data_hujan').select('*').eq('stasiun_id', dasId).order('tanggal');
-        
-        if (dbChirps && dbChirps.length > 0) {
-          const formattedChirps = dbChirps.map(d => ({ date: d.tanggal, rainfall: d.curah_hujan, tahun: parseInt(d.tanggal.split('-')[0]) }));
-          setChirpsData(formattedChirps);
+      // Use data directly from the edge function response instead of relying on DB fetch
+      // This allows extraction on transient drawn polygons without requiring database registration first
+      if (result.rawData && result.rawData.length > 0) {
+        const formattedChirps = result.rawData.map((d: any) => ({ date: d.tanggal, rainfall: d.curah_hujan, tahun: parseInt(d.tanggal.split('-')[0]) }));
+        setChirpsData(formattedChirps);
 
-          // Build annual sum for DMC test
-          const years = Array.from(new Set(formattedChirps.map(d => d.tahun)));
-          const targetAnnual = years.map(y => ({
-            tahun: y,
-            hujan: formattedChirps.filter(d => d.tahun === y).reduce((sum, item) => sum + item.rainfall, 0)
-          }));
+        // Build annual sum for DMC test
+        const years = Array.from(new Set(formattedChirps.map((d: any) => d.tahun))) as number[];
+        const targetAnnual = years.map((y: number) => ({
+          tahun: y,
+          hujan: formattedChirps.filter((d: any) => d.tahun === y).reduce((sum: number, item: any) => sum + item.rainfall, 0)
+        }));
 
-          // Get reference data (average of all local stations)
-          // MOCK fallback if no local station data is available yet
-          const referenceAnnual = targetAnnual.map(d => ({
-            tahun: d.tahun,
-            hujan: d.hujan * (0.85 + Math.random() * 0.3) // Pseudo-random historical reference comparison
-          }));
+        // Get reference data (average of all local stations)
+        // MOCK fallback if no local station data is available yet
+        const referenceAnnual = targetAnnual.map((d: any) => ({
+          tahun: d.tahun,
+          hujan: d.hujan * (0.85 + Math.random() * 0.3) // Pseudo-random historical reference comparison
+        }));
 
-          const dmc = cekDoubleMassCurve(targetAnnual, referenceAnnual);
-          setDmcResult(dmc);
-        }
+        const dmc = cekDoubleMassCurve(targetAnnual, referenceAnnual);
+        setDmcResult(dmc);
       }
-
     } catch (error: any) {
       toast.error(`❌ Gagal menarik data: ${error.message}`);
       console.error(error);

@@ -1,14 +1,11 @@
-version: '3.8'
-
 services:
   rekasda-pro-ui:
     build:
       context: .
       dockerfile: Dockerfile
-      # You can pass build arguments here if needed at build time
-      # args:
-      #   - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      #   - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      args:
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     image: rekasda-pro-ui:latest
     container_name: rekasda-pro-ui
     ports:

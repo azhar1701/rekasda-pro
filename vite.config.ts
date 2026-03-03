@@ -68,39 +68,14 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Vendor chunks - node_modules splitting
-          if (id.includes('node_modules')) {
-            // React ecosystem
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            // Charts & visualization
-            if (id.includes('recharts') || id.includes('d3-')) {
-              return 'vendor-charts';
-            }
-            // Excel & utilities
-            if (id.includes('exceljs') || id.includes('file-saver') || id.includes('katex') || id.includes('zustand')) {
-              return 'vendor-utils';
-            }
-            // Supabase
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase';
-            }
-            // Other vendors
-            return 'vendor';
-          }
-
-          // App code splitting
-          if (id.includes('src/services')) return 'services';
-          if (id.includes('src/lib/engine')) return 'lib-engine';
-          if (id.includes('src/lib/utils')) return 'lib-utils';
-          if (id.includes('src/lib/api')) return 'lib-api';
-          if (id.includes('src/types')) return 'types';
-          if (id.includes('src/hooks') || id.includes('src/components/ui')) return 'ui-shared';
-        },
-      },
-    },
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-utils': ['exceljs', 'file-saver', 'katex', 'zustand', '@turf/turf'],
+        }
+      }
+    }
   },
   resolve: {
     alias: {

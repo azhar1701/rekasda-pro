@@ -12,11 +12,13 @@ Professional Water Resources Engineering Platform for hydrological analysis comp
 rekasda-pro/
 ├── src/
 │   ├── features/        # Feature modules (Flood, Master Data, Water Balance)
-│   ├── lib/            # Core libraries (Engine, Utils, Constants)
-│   ├── stores/         # State management (Zustand)
-│   └── services/       # External integrations (Satellite)
-├── database/           # SQL schemas and setup
-└── supabase/           # Migrations and Edge Functions
+│   ├── components/ui/   # Shared GovTech UI components
+│   ├── hooks/           # Custom React hooks & Web Workers
+│   ├── lib/             # Core libraries (Engine, Utils, Constants)
+│   ├── stores/          # State management (Zustand)
+│   └── services/        # External integrations (Satellite, API)
+├── database/            # SQL schemas and setup
+└── supabase/            # Migrations and Edge Functions
 ```
 
 ## WHERE TO LOOK
@@ -25,28 +27,29 @@ rekasda-pro/
 | Hydrology Logic | `src/lib/engine` | SNI-compliant calculations |
 | Rainfall Ingestion| `src/services/satelliteRainfallService.ts` | Satellite rainfall data |
 | Global State | `src/stores/useHydrologyStore.ts` | Centralized hydrology state |
+| UI Components | `src/components/ui` | GovTech standard components |
 | DB Schema | `supabase/migrations` | Table: `master_data_hujan` |
-
-## CODE MAP
-| Symbol | Type | Location | Role |
-|--------|------|----------|------|
-| `useHydrologyStore` | Store | `src/stores/useHydrologyStore.ts` | Orchestrates all hydrology data |
-| `SNI_2415` | Constant | `src/lib/constants/sni.ts` | Standard parameters for flood analysis |
 
 ## CONVENTIONS
 - **SNI First**: All calculations must reference SNI constants in `src/lib/constants/sni.ts`.
 - **SSOT**: Rainfall data flows from Supabase -> Store -> Engines. No manual overrides without QC.
+- **Worker-First**: Heavy math logic should not block the main thread.
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - **Mock Data in Production**: `generateMockDataHujan` is strictly for development and has been removed from core logic.
 - **Hardcoded Parameters**: Never use magic numbers for rainfall coefficients; use `SNI` constants.
 - **Direct State Mutation**: Always use store actions to update hydrology data.
+- **Main-Thread Blocking**: Running heavy spatial/hydrology algorithms without Web Workers.
+
+## UNIQUE STYLES
+- High-density GovTech UI strictly required for all data tables (`tabular-nums`, strict zebra stripes).
 
 ## COMMANDS
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production
 npm run test     # Run hydrology tests
+npm run typecheck # Check TS strict mode
 ```
 
 ## NOTES

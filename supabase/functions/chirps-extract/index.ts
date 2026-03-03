@@ -22,30 +22,42 @@ serve(async (req) => {
     console.log(`[CHIRPS] Submitting job for DAS: ${dasId}, ${startDate} to ${endDate}`)
 
     // 1. Submit Job
-    const submitPayload = {
-      datatype: 0, // CHIRPS Daily
-      begintime: startDate, // MM/DD/YYYY
-      endtime: endDate, // MM/DD/YYYY
-      intervaltype: 0, // Daily
-      operationtype: 5, // Zonal Average
-      geometry: geoJsonPolygon
-    }
+    const submitParams = new URLSearchParams({
+      datatype: '0',
+      begintime: startDate,
+      endtime: endDate,
+      intervaltype: '0',
+      operationtype: '5',
+      geometry: typeof geoJsonPolygon === 'string' ? geoJsonPolygon : JSON.stringify(geoJsonPolygon)
+    });
 
-    const submitRes = await fetch(`${CLIMATESERV_API}/submitDataRequest/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submitPayload)
+    const submitRes = await fetch(`${CLIMATESERV_API}/submitDataRequest/?${submitParams.toString()}`, {
+      method: 'GET'
     })
 
-    const submitData = await submitRes.json()
+    if (!submitRes.ok) {
+      const errorText = await submitRes.text();
+      console.error(`[CHIRPS] ClimateSERV HTTP Error (${submitRes.status}):`, errorText.substring(0, 200));
+      throw new Error(`ClimateSERV API is unavailable or rejected the request (Status: ${submitRes.status})`);
+    }
+
+    const rawText = await submitRes.text();
+    
+    let submitData;
+    try {
+      submitData = JSON.parse(rawText);
+    } catch (e) {
+      console.error(`[CHIRPS] ClimateSERV returned non-JSON:`, rawText.substring(0, 200));
+      throw new Error("ClimateSERV returned invalid response format. The service might be under maintenance.");
+    }
+
     const jobId = submitData[0]
 
-    if (!jobId) {
-      throw new Error("Failed to get Job ID from ClimateSERV")
+    if (!jobId || typeof jobId !== 'string') {
+      throw new Error(`Failed to get a valid Job ID from ClimateSERV. Response: ${rawText.substring(0, 100)}`)
     }
 
     console.log(`[CHIRPS] Job submitted successfully. Job ID: ${jobId}`)
-
     // 2. Polling for Completion
     let progress = 0
     const maxRetries = 60 // 60 * 5s = 300s timeout max
@@ -73,7 +85,20 @@ serve(async (req) => {
     // 3. Retrieve Results
     console.log(`[CHIRPS] Retrieving results for Job: ${jobId}`)
     const dataRes = await fetch(`${CLIMATESERV_API}/getDataFromJobId/?jobid=${jobId}`)
-    const rawData = await dataRes.json()
+
+    if (!dataRes.ok) {
+      throw new Error(`Failed to retrieve results. HTTP Status: ${dataRes.status}`);
+    }
+
+    const rawDataText = await dataRes.text();
+    let rawData;
+    try {
+      rawData = JSON.parse(rawDataText);
+    } catch (e) {
+      console.error(`[CHIRPS] Result Parse Error. Raw:`, rawDataText.substring(0, 100));
+      throw new Error("Invalid result JSON format from ClimateSERV.");
+    }
+    
     // 4. Transform & Sanitize
     console.log(`[CHIRPS] Transforming records...`)
     const transformedData = rawData.data.map((item: any) => {
@@ -111,10 +136,13 @@ serve(async (req) => {
       .from('master_data_hujan')
       .upsert(transformedData, { onConflict: 'stasiun_id, tanggal' })
 
-    if (dbError) throw dbError
+    if (dbError) {
+      console.error(`[CHIRPS] DB Insert failed (likely transient DAS ID without DB record):`, dbError.message)
+      // Do not throw! The spatial analysis can still proceed with the transient data.
+    }
 
     return new Response(
-      JSON.stringify({ success: true, count: transformedData.length, dasId }),
+      JSON.stringify({ success: true, count: transformedData.length, dasId, rawData: transformedData }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   } catch (error: any) {

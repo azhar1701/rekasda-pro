@@ -132,6 +132,18 @@ export const MasterHidrologiTab: React.FC = () => {
         }
     }, [dataHujan, updateDataHujanManual]);
 
+    const availableYears = React.useMemo(() => {
+        if (!dataHujan || dataHujan.length === 0) return [new Date().getFullYear()];
+        const years = new Set(dataHujan.map(d => parseInt(d.tanggal.split('-')[0], 10)));
+        return Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
+    }, [dataHujan]);
+
+    useEffect(() => {
+        if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+            setSelectedYear(availableYears[0]);
+        }
+    }, [availableYears, selectedYear]);
+
     const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const year = parseInt(e.target.value, 10);
         setSelectedYear(year);
@@ -414,7 +426,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                                 onChange={handleYearChange}
                                                 className="appearance-none bg-transparent border-none text-sm font-bold text-slate-800 pr-6 pl-1 py-1 focus:ring-0 cursor-pointer outline-none"
                                             >
-                                                {[2026, 2025, 2024, 2023, 2022].map(year => (
+                                                {availableYears.map(year => (
                                                     <option key={year} value={year}>{year}</option>
                                                 ))}
                                             </select>
