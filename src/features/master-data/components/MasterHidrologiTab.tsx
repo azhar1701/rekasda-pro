@@ -5,8 +5,7 @@ import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Do
 
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
-import { Satellite, Wand2 } from 'lucide-react';
-import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
+import { Wand2 } from 'lucide-react';
 import { infillMissingData } from '@/lib/utils/spatialMath';
 import { extractRainfallFromPdf } from '@/services/geminiService';
 
@@ -234,11 +233,12 @@ export const MasterHidrologiTab: React.FC = () => {
         tanggal: '',
         curah_hujan: ''
     });
-    const [isFetchingSatellite, setIsFetchingSatellite] = useState(false);
     const [isInfilling, setIsInfilling] = useState(false);
     const [showModalBulk, setShowModalBulk] = useState(false);
     const [bulkRawText, setBulkRawText] = useState('');
     const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
+    const [showModalQC, setShowModalQC] = useState(false);
+    const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
     const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
     const [isProcessingOcr, setIsProcessingOcr] = useState(false);
     const ocrFileInputRef = useRef<HTMLInputElement>(null);
@@ -431,35 +431,7 @@ export const MasterHidrologiTab: React.FC = () => {
         await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
     };
 
-    const handleFetchSatelliteData = async () => {
-        if (!selectedStasiun || selectedStasiun.koordinat_x === null || selectedStasiun.koordinat_y === null) {
-            alert('Stasiun tidak memiliki koordinat (X, Y). Silakan lengkapi data stasiun terlebih dahulu.');
-            return;
-        }
 
-        setIsFetchingSatellite(true);
-        try {
-            const satelliteData = await fetchSatelliteRainfall(
-                selectedStasiun.koordinat_y,
-                selectedStasiun.koordinat_x,
-                selectedYear,
-                selectedYear
-            );
-
-            const mappedData = satelliteData.map(d => ({
-                ...d,
-                stasiun_id: selectedStasiun.id
-            }));
-
-            await importDataHujanBatch(mappedData);
-            alert(`✅ Berhasil menarik ${mappedData.length} data satelit untuk tahun ${selectedYear}`);
-        } catch (error) {
-            console.error('Error fetching satellite data:', error);
-            alert('❌ Gagal mengambil data satelit. Silakan coba lagi.');
-        } finally {
-            setIsFetchingSatellite(false);
-        }
-    };
 
     const handleInfillData = async () => {
         if (!selectedStasiun) return;
@@ -470,8 +442,8 @@ export const MasterHidrologiTab: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const filledData = dataHujan.map(item => {
-                const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
-                if (value === 0) {
+
+                if (item.curah_hujan === null || String(item.curah_hujan).trim() === '-' || String(item.curah_hujan).trim() === '') {
                     const infilledValue = infillMissingData(
                         selectedStasiun,
                         stasiunList,
@@ -479,7 +451,9 @@ export const MasterHidrologiTab: React.FC = () => {
                         item.tanggal,
                         'idw'
                     );
-                    return { ...item, curah_hujan: infilledValue > 0 ? parseFloat(infilledValue.toFixed(1)) : 0 };
+                    if (infilledValue > 0) {
+                        return { ...item, curah_hujan: parseFloat(infilledValue.toFixed(1)) };
+                    }
                 }
                 return item;
             });
@@ -546,7 +520,8 @@ Tindakan ini tidak dapat dibatalkan!`);
         if (annualMaximums.length < 10) {
             alert('Minimal butuh 10 tahun data untuk Analisis Frekuensi Distribusi Statistik.');
         } else {
-            alert(`✅ ${annualMaximums.length} data maksimum tahunan siap dihubungkan ke Mesin Distribusi Statistik.`);
+            setSelectedQCStations([selectedStasiun?.id || '']);
+            setShowModalQC(true);
         }
     };
 
@@ -744,10 +719,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         </div>
                                     </div>
 
-                                    <Button onClick={handleFetchSatelliteData} disabled={isFetchingSatellite || !selectedStasiun || selectedStasiun.koordinat_x === null} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
-                                        <Satellite className={`w-4 h-4 mr-1 ${isFetchingSatellite ? 'animate-spin' : ''}`} />
-                                        <span className="hidden sm:inline">{isFetchingSatellite ? 'Menarik...' : 'Tarik Satelit'}</span>
-                                    </Button>
+
                                     <Button onClick={handleInfillData} disabled={isInfilling || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
                                         <Wand2 className={`w-4 h-4 mr-1 ${isInfilling ? 'animate-pulse' : ''}`} />
                                         <span className="hidden sm:inline">{isInfilling ? 'Memproses...' : 'Isi Kosong'}</span>
@@ -816,7 +788,7 @@ Tindakan ini tidak dapat dibatalkan!`);
             </div>
 
             {showModalStasiun && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
                     <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">{editingStasiunId ? 'Edit Stasiun' : 'Tambah Stasiun Baru'}</h3>
@@ -922,7 +894,7 @@ Tindakan ini tidak dapat dibatalkan!`);
             )}
 
             {showModalHujan && selectedStasiun && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
                     <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">Tambah Data Curah Hujan</h3>
@@ -1140,6 +1112,82 @@ Tindakan ini tidak dapat dibatalkan!`);
                                     </Button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showModalQC && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+                    <div className="bg-white rounded-md shadow-sm max-w-2xl w-full p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800">Seleksi Stasiun untuk QC & Distribusi</h3>
+                                <p className="text-sm text-slate-500 mt-1">Pilih stasiun yang akan digunakan dalam analisis frekuensi</p>
+                            </div>
+                            <button onClick={() => setShowModalQC(false)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 mb-6">
+                            {stasiunList.map((stasiun) => {
+                                const isSelected = selectedQCStations.includes(stasiun.id);
+                                return (
+                                    <div 
+                                        key={stasiun.id} 
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setSelectedQCStations(prev => prev.filter(id => id !== stasiun.id));
+                                            } else {
+                                                setSelectedQCStations(prev => [...prev, stasiun.id]);
+                                            }
+                                        }}
+                                        className={`flex items-center justify-between p-4 rounded-md border-2 cursor-pointer transition-all ${
+                                            isSelected ? 'border-pupr-blue bg-blue-50' : 'border-slate-100 hover:border-slate-200'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                                isSelected ? 'bg-pupr-blue border-pupr-blue' : 'border-slate-300'
+                                            }`}>
+                                                {isSelected && <Activity className="w-3 h-3 text-white" />}
+                                            </div>
+                                            <div>
+                                                <span className="font-bold text-slate-800">{stasiun.nama_stasiun}</span>
+                                                <div className="text-[10px] text-slate-500 uppercase tracking-wider">
+                                                    {stasiun.koordinat_y?.toFixed(3)}, {stasiun.koordinat_x?.toFixed(3)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs font-bold text-slate-400">
+                                            {stasiun.elevasi} m
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button 
+                                onClick={() => setShowModalQC(false)} 
+                                variant="outline" 
+                                className="flex-1 rounded-md"
+                            >
+                                Batal
+                            </Button>
+                            <Button 
+                                onClick={() => {
+                                    if (selectedQCStations.length === 0) {
+                                        alert('Pilih minimal 1 stasiun untuk melanjutkan.');
+                                        return;
+                                    }
+                                    alert(`✅ ${selectedQCStations.length} stasiun terpilih siap dihubungkan ke Mesin Distribusi Statistik.`);
+                                    setShowModalQC(false);
+                                }} 
+                                className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700"
+                            >
+                                Lanjutkan ke Distribusi
+                            </Button>
                         </div>
                     </div>
                 </div>

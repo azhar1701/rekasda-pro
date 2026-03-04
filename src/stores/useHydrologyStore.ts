@@ -537,24 +537,42 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     if (!supabase) return;
     set({ isLoading: true });
     try {
-      let query = supabase
-        .from('master_data_hujan')
-        .select('*')
+      let allData: any[] = [];
+      let hasMore = true;
+      let page = 0;
+      const pageSize = 1000;
 
-        .eq('stasiun_id', stasiunId)
-        .order('tanggal', { ascending: true })
-        .limit(20000);
-      
-      if (tahun) {
-        const start = `${tahun}-01-01`;
-        const end = `${tahun}-12-31`;
-        query = query.gte('tanggal', start).lte('tanggal', end);
+      while (hasMore) {
+        let query = supabase
+          .from('master_data_hujan')
+          .select('*')
+          .eq('stasiun_id', stasiunId)
+          .order('tanggal', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        
+        if (tahun) {
+          const start = `${tahun}-01-01`;
+          const end = `${tahun}-12-31`;
+          query = query.gte('tanggal', start).lte('tanggal', end);
+        }
+
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          if (data.length < pageSize || tahun) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMore = false;
+        }
       }
 
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      set({ dataHujan: data || [] });
+      set({ dataHujan: allData });
     } catch (error: any) {
       set({ error: error.message });
     } finally {
