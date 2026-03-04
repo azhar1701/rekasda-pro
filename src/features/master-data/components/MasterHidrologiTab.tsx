@@ -235,6 +235,72 @@ export const MasterHidrologiTab: React.FC = () => {
     });
     const [isFetchingSatellite, setIsFetchingSatellite] = useState(false);
     const [isInfilling, setIsInfilling] = useState(false);
+    const [showModalBulk, setShowModalBulk] = useState(false);
+    const [bulkRawText, setBulkRawText] = useState('');
+    const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
+    const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
+
+    const parseBulkRainfall = (text: string, year: number): any[] => {
+        const lines = text.trim().split('\n');
+        const records: any[] = [];
+        
+        lines.forEach((line) => {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length < 2) return; // Skip invalid lines
+            
+            // First part is day number (1-31)
+            const day = parseInt(parts[0], 10);
+            if (isNaN(day) || day < 1 || day > 31) return;
+
+            const values = parts.slice(1);
+            values.forEach((val, monthIdx) => {
+                if (monthIdx >= 12) return;
+                
+                let rainfall: number | null = null;
+                if (val === '-' || val === 'NR' || val === '') {
+                    rainfall = null;
+                } else {
+                    const parsed = parseFloat(val.replace(',', '.'));
+                    if (!isNaN(parsed)) {
+                        rainfall = parsed;
+                    }
+                }
+
+                if (rainfall !== null) {
+                    const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    // Validate date
+                    const d = new Date(dateStr);
+                    if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day) {
+                        records.push({
+                            stasiun_id: selectedStasiun?.id,
+                            tanggal: dateStr,
+                            curah_hujan: rainfall
+                        });
+                    }
+                }
+            });
+        });
+        return records;
+    };
+
+    const handleBulkPreview = () => {
+        const result = parseBulkRainfall(bulkRawText, bulkYear);
+        setBulkPreview(result);
+    };
+
+    const handleBulkSave = async () => {
+        if (!bulkPreview || bulkPreview.length === 0 || !selectedStasiun) return;
+        try {
+            await importDataHujanBatch(bulkPreview);
+            alert(`✅ Berhasil mengimpor ${bulkPreview.length} data harian.`);
+            setShowModalBulk(false);
+            setBulkRawText('');
+            setBulkPreview(null);
+        } catch (err) {
+            console.error(err);
+            alert('❌ Gagal menyimpan data bulk.');
+        }
+    };
 
     useEffect(() => {
         fetchStasiun();
@@ -468,6 +534,10 @@ Tindakan ini tidak dapat dibatalkan!`);
                             <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
                                 <Upload className="w-4 h-4 mr-2" />
                                 Import Excel
+                            </Button>
+                            <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
+                                <Activity className="w-4 h-4 mr-2" />
+                                Bulk Paste
                             </Button>
                         </>
                     )}
@@ -861,6 +931,90 @@ Tindakan ini tidak dapat dibatalkan!`);
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {showModalBulk && selectedStasiun && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-md shadow-lg max-w-4xl w-full p-6 flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-pupr-blue" />
+                                Bulk Input Curah Hujan (OCR/Matrix)
+                            </h3>
+                            <button onClick={() => setShowModalBulk(false)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-4">
+                                    <label className="text-sm font-bold text-slate-700">Tahun Target:</label>
+                                    <input 
+                                        type="number" 
+                                        value={bulkYear} 
+                                        onChange={(e) => setBulkYear(parseInt(e.target.value))}
+                                        className="w-24 px-3 py-1.5 border rounded-md font-mono"
+                                    />
+                                </div>
+                                <label className="text-xs text-slate-500">
+                                    Paste teks dari laporan (Day 1-31 di baris, Jan-Dec di kolom). 
+                                    Format: <code className="bg-slate-100 px-1">1 0 12.5 0 ...</code>
+                                </label>
+                                <textarea
+                                    className="flex-1 w-full p-4 font-mono text-xs border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 outline-none resize-none"
+                                    placeholder="Paste data di sini..."
+                                    value={bulkRawText}
+                                    onChange={(e) => setBulkRawText(e.target.value)}
+                                />
+                                <Button onClick={handleBulkPreview} className="bg-slate-800 hover:bg-slate-900 text-white">
+                                    Pratinjau Data
+                                </Button>
+                            </div>
+
+                            <div className="flex flex-col gap-3 overflow-hidden">
+                                <h4 className="text-sm font-bold text-slate-700">Hasil Parsing ({bulkPreview?.length || 0} hari):</h4>
+                                <div className="flex-1 overflow-auto border rounded-md bg-slate-50">
+                                    {bulkPreview ? (
+                                        <table className="w-full text-[10px] tabular-nums">
+                                            <thead className="bg-slate-200 sticky top-0">
+                                                <tr>
+                                                    <th className="p-1 border text-left">Tanggal</th>
+                                                    <th className="p-1 border text-right">CH (mm)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {bulkPreview.slice(0, 100).map((row, idx) => (
+                                                    <tr key={idx} className="border-b">
+                                                        <td className="p-1 border">{row.tanggal}</td>
+                                                        <td className="p-1 border text-right font-bold text-pupr-blue">{row.curah_hujan.toFixed(1)}</td>
+                                                    </tr>
+                                                ))}
+                                                {bulkPreview.length > 100 && (
+                                                    <tr>
+                                                        <td colSpan={2} className="p-2 text-center text-slate-400 italic">... dan {bulkPreview.length - 100} baris lainnya</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                                            Belum ada data untuk ditampilkan
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button 
+                                        onClick={handleBulkSave} 
+                                        disabled={!bulkPreview || bulkPreview.length === 0 || isLoading}
+                                        className="flex-1 bg-pupr-blue hover:bg-teal-700 text-white"
+                                    >
+                                        {isLoading ? 'Menyimpan...' : 'Simpan ke Database'}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -7,6 +7,7 @@ API and business logic layer handling data ingestion, database operations, and c
 | Task | Location | Notes |
 |------|----------|-------|
 | Database Ops | `src/services/api.service.ts` | Primary Supabase interface with validation |
+| Bulk Ingestion | `src/stores/useHydrologyStore.ts` | `importDataHujanBatch` for matrix upserts |
 | Water Balance | `src/services/waterBalanceEngine.ts` | SNI 6738:2015 & UU 17/2019 logic |
 | Satellite Data | `src/services/satelliteRainfallService.ts` | CHIRPS/GPM data simulation and fetching |
 | QC Logic | `src/services/qualityControlService.ts` | Rainfall data validation and outlier detection |

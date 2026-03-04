@@ -16,6 +16,7 @@ The Master Data module serves as the Single Source of Truth (SSOT) for all hydro
 | Satellite Ingestion | `src/services/satelliteRainfallService.ts` | CHIRPS/GPM data fetching |
 | Spatial Math | `src/lib/utils/spatialMath.ts` | IDW, Normal Ratio, and Thiessen logic |
 | Quality Control | `DataQualityDashboard.tsx` | Outlier detection (>300mm) |
+| Bulk Ingestion | `MasterHidrologiTab.tsx` | Multi-month matrix paste (Excel/PDF) |
 
 ## CONVENTIONS
 - **Tabular Density**: Use `tabular-nums` and strict zebra stripes for all data matrices.
@@ -30,10 +31,12 @@ The Master Data module serves as the Single Source of Truth (SSOT) for all hydro
 - **Magic Numbers**: Rainfall coefficients and SNI constants must come from `src/lib/constants/sni.ts`.
 - **Direct State Mutation**: Always use `useHydrologyStore` actions for data updates.
 - **Batch Size**: Avoid importing more than 1 year of daily data in a single UI transaction.
+- **Bulk Input Format**: Supports 31-day x 12-month matrix pasting with auto-parsing for years and months.
 
 ## WORKFLOWS
 1. **Rainfall Ingestion**: Excel Import -> QC Check -> Satellite Fill (optional) -> Infill Missing.
 2. **Spatial Setup**: Delineate DAS -> Auto-calculate Morfometri -> Intersect Land Use -> Generate Thiessen.
+3. **Bulk Ingestion**: Copy matrix from Excel/PDF -> Paste into Bulk Modal -> Preview -> Save to Supabase.
 
 ## OVERVIEW
 Domain for rainfall data ingestion, station management, and data quality control.

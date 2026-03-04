@@ -28,7 +28,7 @@ rekasda-pro/
 |------|----------|-------|
 | Hydrology Logic | `src/lib/engine` | SNI-compliant calculations |
 | SNI Constants | `src/lib/constants/sni.ts` | SSOT for coefficients and limits |
-| Global State | `src/stores/useHydrologyStore.ts` | Centralized hydrology state |
+| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD + Bulk Matrix Ingestion |
 | UI Components | `src/components/ui` | GovTech standard components |
 | DB Schema | `supabase/migrations` | Table definitions and migrations |
 | AI Logic | `src/services/geminiService.ts` | Gemini API integration |
