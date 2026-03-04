@@ -3,6 +3,8 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 
+import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
+import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Wand2 } from 'lucide-react';
@@ -236,6 +238,7 @@ export const MasterHidrologiTab: React.FC = () => {
     const [isInfilling, setIsInfilling] = useState(false);
     const [showModalBulk, setShowModalBulk] = useState(false);
     const [bulkRawText, setBulkRawText] = useState('');
+    const [isQCLoading, setIsQCLoading] = useState(false);
     const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
     const [showModalQC, setShowModalQC] = useState(false);
     const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
@@ -1176,17 +1179,92 @@ Tindakan ini tidak dapat dibatalkan!`);
                                 Batal
                             </Button>
                             <Button 
-                                onClick={() => {
+                                disabled={isQCLoading}
+                                onClick={async () => {
                                     if (selectedQCStations.length === 0) {
                                         alert('Pilih minimal 1 stasiun untuk melanjutkan.');
                                         return;
                                     }
-                                    alert(`✅ ${selectedQCStations.length} stasiun terpilih siap dihubungkan ke Mesin Distribusi Statistik.`);
-                                    setShowModalQC(false);
+                                    
+                                    setIsQCLoading(true);
+                                    try {
+                                        useHydrologyStore.getState().setQCStatus(null);
+                                        useHydrologyStore.getState().setQCResults(null);
+
+                                        const newQcStatus: Record<string, any> = {};
+                                        const newQcResults: Record<string, any> = {};
+
+                                        for (const stasiunId of selectedQCStations) {
+                                            let allData: any[] = [];
+                                            let hasMore = true;
+                                            let page = 0;
+                                            const pageSize = 1000;
+
+                                            while (hasMore && supabase) {
+                                                const { data, error } = await supabase
+                                                    .from('master_data_hujan')
+                                                    .select('*')
+                                                    .eq('stasiun_id', stasiunId)
+                                                    .order('tanggal', { ascending: true })
+                                                    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+                                                if (error) throw error;
+
+                                                if (data && data.length > 0) {
+                                                    allData = [...allData, ...data];
+                                                    if (data.length < pageSize) hasMore = false;
+                                                    else page++;
+                                                } else {
+                                                    hasMore = false;
+                                                }
+                                            }
+
+                                            if (allData.length > 0) {
+                                                const maxByYear: Record<number, number> = {};
+                                                allData.forEach(row => {
+                                                    const y = parseInt(row.tanggal.split('-')[0], 10);
+                                                    const val = typeof row.curah_hujan === 'number' ? row.curah_hujan : parseFloat(row.curah_hujan) || 0;
+                                                    if (!maxByYear[y] || val > maxByYear[y]) {
+                                                        maxByYear[y] = val;
+                                                    }
+                                                });
+                                                
+                                                const annualMax = Object.entries(maxByYear)
+                                                    .map(([year, value]) => ({ tahun: parseInt(year, 10), hujan: value }))
+                                                    .sort((a, b) => a.tahun - b.tahun);
+
+                                                if (annualMax.length >= 10) {
+                                                    const result = runFullQC(annualMax);
+                                                    newQcStatus[stasiunId] = {
+                                                        konsisten: result.isKonsisten,
+                                                        bebasOutlier: result.isBebasOutlier,
+                                                        homogen: result.isHomogen,
+                                                    };
+                                                    newQcResults[stasiunId] = result;
+                                                } else {
+                                                    console.warn(`Stasiun ${stasiunId} memiliki kurang dari 10 tahun data.`);
+                                                }
+                                            }
+                                        }
+
+                                        if (Object.keys(newQcStatus).length > 0) {
+                                            useHydrologyStore.getState().setQCStatus(newQcStatus);
+                                            useHydrologyStore.getState().setQCResults(newQcResults);
+                                            alert(`✅ ${Object.keys(newQcStatus).length} stasiun berhasil dianalisis dan ditampilkan pada Dashboard Quality Control.`);
+                                        } else {
+                                            alert('⚠️ Tidak ada stasiun yang memenuhi syarat minimal 10 tahun data.');
+                                        }
+                                        setShowModalQC(false);
+                                    } catch (err) {
+                                        console.error('Error calculating QC:', err);
+                                        alert('❌ Terjadi kesalahan saat melakukan analisis Quality Control.');
+                                    } finally {
+                                        setIsQCLoading(false);
+                                    }
                                 }} 
                                 className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700"
                             >
-                                Lanjutkan ke Distribusi
+                                {isQCLoading ? 'Memproses...' : 'Lanjutkan ke Distribusi'}
                             </Button>
                         </div>
                     </div>
