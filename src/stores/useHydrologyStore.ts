@@ -256,8 +256,12 @@ export interface HydrologyState {
   seedInitialStations: () => Promise<void>;
 
   addStasiun: (stasiun: Omit<StasiunHidrologi, 'id' | 'created_at'>) => Promise<void>;
+  updateStasiun: (id: string, data: Partial<StasiunHidrologi>) => Promise<void>;
+  deleteStasiun: (id: string) => Promise<void>;
   addDataHujan: (data: Omit<DataHujan, 'id' | 'created_at'>) => Promise<void>;
   importDataHujanBatch: (dataList: Omit<DataHujan, 'id' | 'created_at'>[]) => Promise<void>;
+  deleteDataHujanByYear: (stasiunId: string, year: number) => Promise<void>;
+  updateDataHujanSingle: (stasiunId: string, tanggal: string, curah_hujan: number) => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
   fetchDataHujan: (stasiunId: string, tahun?: number) => Promise<void>;
   setHasilThiessen: (hasil: HasilThiessen | null) => void;
@@ -265,6 +269,8 @@ export interface HydrologyState {
   setMorfometriDAS: (data: MorfometriDAS | null) => void;
   updateMorfometriDAS: (data: MorfometriDAS | null) => void; 
   setTutupanLahan: (data: TutupanLahan | null) => void;
+  saveMorfometriDAS: (data: MorfometriDAS) => Promise<void>;
+  saveTutupanLahan: (data: TutupanLahan) => Promise<void>;
   setCurahHujanWilayah: (data: CurahHujanWilayah | null) => void;
   setAnalisisFrekuensi: (data: AnalisisFrekuensi | null) => void;
   getTimeOfConcentration: () => number;
@@ -388,6 +394,53 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
 
+  updateStasiun: async (id, data) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { data: updated, error } = await supabase
+        .from('master_stasiun')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      set(state => ({
+        stasiunList: state.stasiunList.map(s => s.id === id ? updated : s),
+        selectedStasiun: state.selectedStasiun?.id === id ? updated : state.selectedStasiun
+      }));
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  deleteStasiun: async (id) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { error } = await supabase
+        .from('master_stasiun')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      set(state => ({
+        stasiunList: state.stasiunList.filter(s => s.id !== id),
+        selectedStasiun: state.selectedStasiun?.id === id ? null : state.selectedStasiun,
+        dataHujan: state.selectedStasiun?.id === id ? [] : state.dataHujan
+      }));
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   addDataHujan: async (data) => {
     if (!supabase) return;
     set({ isLoading: true });
@@ -414,7 +467,6 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     set({ isLoading: true });
     try {
       const { error } = await supabase
-
         .from('master_data_hujan')
         .upsert(dataList, { onConflict: 'stasiun_id, tanggal' });
       
@@ -431,7 +483,47 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  
+
+  deleteDataHujanByYear: async (stasiunId, year) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const start = `${year}-01-01`;
+      const end = `${year}-12-31`;
+      const { error } = await supabase
+        .from('master_data_hujan')
+        .delete()
+        .eq('stasiun_id', stasiunId)
+        .gte('tanggal', start)
+        .lte('tanggal', end);
+      
+      if (error) throw error;
+      await get().fetchDataHujan(stasiunId);
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateDataHujanSingle: async (stasiunId, tanggal, curah_hujan) => {
+    if (!supabase) return;
+    set({ isLoading: true });
+    try {
+      const { error } = await supabase
+        .from('master_data_hujan')
+        .upsert({ stasiun_id: stasiunId, tanggal, curah_hujan }, { onConflict: 'stasiun_id, tanggal' });
+      
+      if (error) throw error;
+      await get().fetchDataHujan(stasiunId);
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
   selectStasiun: (stasiun) => {
     set({ selectedStasiun: stasiun });
     if (stasiun) {
@@ -469,7 +561,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
 
-  setHasilThiessen: (hasil) => set({ hasilThiessen: hasil, isBanjirDirty: true, isNeracaDirty: true }),
+  setHasilThiessen: (hasil: HasilThiessen | null) => set({ hasilThiessen: hasil, isBanjirDirty: true, isNeracaDirty: true }),
   setHasilARF: (hasil) => set((state) => {
     const freq = state.hasilAnalisisFrekuensi;
     let newRainfall = state.curahHujanRencana;
@@ -483,6 +575,77 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setMorfometriDAS: (data) => set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '' }),
   updateMorfometriDAS: (data) => set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '', analisisFrekuensi: null, hasilBanjir: null, isBanjirDirty: true }),
   setTutupanLahan: (data) => set({ tutupanLahan: data, isBanjirDirty: true }),
+  saveMorfometriDAS: async (data) => {
+    const stasiunId = get().selectedStasiun?.id;
+    if (!stasiunId || !supabase) {
+      set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '', analisisFrekuensi: null, hasilBanjir: null, isBanjirDirty: true });
+      return;
+    }
+    
+    set({ isLoading: true });
+    try {
+      const { error } = await supabase
+        .from('master_morfometri_das')
+        .upsert({
+          stasiun_id: stasiunId,
+          luas_das: data.luasDAS,
+          panjang_sungai: data.panjangSungai,
+          kemiringan_sungai: data.kemiringanSungai,
+          elevasi: data.elevasi
+        }, { onConflict: 'stasiun_id' });
+        
+      if (error) throw error;
+      
+      set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '', analisisFrekuensi: null, hasilBanjir: null, isBanjirDirty: true });
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  saveTutupanLahan: async (data) => {
+    const stasiunId = get().selectedStasiun?.id;
+    if (!stasiunId || !supabase) {
+      set({ tutupanLahan: data, isBanjirDirty: true });
+      return;
+    }
+
+    set({ isLoading: true });
+    try {
+      const { error: deleteError } = await supabase
+        .from('master_tutupan_lahan')
+        .delete()
+        .eq('stasiun_id', stasiunId);
+        
+      if (deleteError) throw deleteError;
+
+      if (data.items.length > 0) {
+        const insertData = data.items.map(item => ({
+          stasiun_id: stasiunId,
+          jenis: item.jenis,
+          luas: item.luas,
+          nilai_c: item.nilaiC,
+          nilai_cn: item.nilaiCN
+        }));
+        
+        const { error: insertError } = await supabase
+          .from('master_tutupan_lahan')
+          .insert(insertData);
+          
+        if (insertError) throw insertError;
+      }
+      
+      set({ tutupanLahan: data, isBanjirDirty: true });
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   setCurahHujanWilayah: (data) => set({ curahHujanWilayah: data, isBanjirDirty: true }),
   setAnalisisFrekuensi: (data) => set({ analisisFrekuensi: data, hasilBanjir: null, isBanjirDirty: true }),
   setIdentitasLokasi: (data) => set(state => ({ identitasLokasi: { ...state.identitasLokasi, ...data } })),

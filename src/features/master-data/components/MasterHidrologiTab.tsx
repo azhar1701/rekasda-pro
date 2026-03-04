@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
-import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle } from 'lucide-react';
+import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
@@ -9,7 +9,7 @@ import { Satellite, Wand2 } from 'lucide-react';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 import { infillMissingData } from '@/lib/utils/spatialMath';
 
-const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, year }) => {
+const DailyRainfallMatrix: React.FC<{ data: any[], year: number, onCellClick?: (dateStr: string, currentVal: number | null) => void }> = ({ data, year, onCellClick }) => {
     const matrix: (number | null)[][] = Array.from({ length: 31 }, () => Array(12).fill(null));
     
     data.forEach(row => {
@@ -38,7 +38,11 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
         maksimum: -Infinity,
         minimum: Infinity,
         count: 0,
-        hariHujan: 0
+        hariHujan: 0,
+        hujan1_15: 0,
+        kosong1_15: 0,
+        hujan16_31: 0,
+        kosong16_31: 0
     }));
 
     for (let m = 0; m < 12; m++) {
@@ -53,6 +57,18 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
                 if (val < monthlyStats[m].minimum) monthlyStats[m].minimum = val;
                 monthlyStats[m].count++;
                 if (val > 0) monthlyStats[m].hariHujan++;
+                
+                if (d < 15) {
+                    monthlyStats[m].hujan1_15 += val;
+                } else {
+                    monthlyStats[m].hujan16_31 += val;
+                }
+            } else {
+                if (d < 15) {
+                    monthlyStats[m].kosong1_15++;
+                } else {
+                    monthlyStats[m].kosong16_31++;
+                }
             }
         }
         if (!hasData) {
@@ -98,7 +114,16 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
                                     }
 
                                     return (
-                                        <td key={monthIndex} className={`py-1 border border-slate-500 tabular-nums ${getCellClass(val)}`}>
+                                        <td 
+                                            key={monthIndex} 
+                                            className={`py-1 border border-slate-500 tabular-nums ${getCellClass(val)} ${onCellClick ? 'cursor-pointer hover:bg-teal-100 transition-colors' : ''}`}
+                                            onClick={() => {
+                                                if (onCellClick) {
+                                                    const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`;
+                                                    onCellClick(dateStr, val);
+                                                }
+                                            }}
+                                        >
                                             {val !== null ? val.toFixed(1) : '-'}
                                         </td>
                                     );
@@ -106,15 +131,7 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
                             </tr>
                         ))}
                         <tr className="bg-slate-100 font-bold">
-                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Jumlah</td>
-                            {monthlyStats.map((stat, i) => (
-                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
-                                    {stat.count > 0 ? stat.jumlah.toFixed(1) : '-'}
-                                </td>
-                            ))}
-                        </tr>
-                        <tr className="bg-slate-100 font-bold">
-                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Maksimum</td>
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Hujan Maximum</td>
                             {monthlyStats.map((stat, i) => (
                                 <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
                                     {stat.count > 0 ? stat.maksimum.toFixed(1) : '-'}
@@ -122,26 +139,50 @@ const DailyRainfallMatrix: React.FC<{ data: any[], year: number }> = ({ data, ye
                             ))}
                         </tr>
                         <tr className="bg-slate-100 font-bold">
-                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Minimum</td>
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Jml Curah Hujan</td>
                             {monthlyStats.map((stat, i) => (
                                 <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
-                                    {stat.count > 0 ? stat.minimum.toFixed(1) : '-'}
+                                    {stat.count > 0 ? stat.jumlah.toFixed(1) : '-'}
                                 </td>
                             ))}
                         </tr>
                         <tr className="bg-slate-100 font-bold">
-                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Rata-rata</td>
-                            {monthlyStats.map((stat, i) => (
-                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
-                                    {stat.count > 0 ? (stat.jumlah / stat.count).toFixed(1) : '-'}
-                                </td>
-                            ))}
-                        </tr>
-                        <tr className="bg-slate-100 font-bold">
-                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Hari Hujan</td>
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Jml.Hari Hujan</td>
                             {monthlyStats.map((stat, i) => (
                                 <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-center text-slate-800">
                                     {stat.count > 0 ? stat.hariHujan : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Hujan (1-15)</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
+                                    {stat.count > 0 ? stat.hujan1_15.toFixed(1) : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Jml. data kosong</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-center text-slate-800">
+                                    {stat.count > 0 ? stat.kosong1_15 : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Hujan (16-31)</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-right pr-2 text-slate-800">
+                                    {stat.count > 0 ? stat.hujan16_31.toFixed(1) : '-'}
+                                </td>
+                            ))}
+                        </tr>
+                        <tr className="bg-slate-100 font-bold">
+                            <td className="py-1.5 px-1.5 border border-slate-500 text-slate-800 text-left sticky left-0 bg-slate-200 z-10">Jml. data kosong</td>
+                            {monthlyStats.map((stat, i) => (
+                                <td key={i} className="py-1.5 border border-slate-500 tabular-nums text-center text-slate-800">
+                                    {stat.count > 0 ? stat.kosong16_31 : '-'}
                                 </td>
                             ))}
                         </tr>
@@ -169,12 +210,17 @@ export const MasterHidrologiTab: React.FC = () => {
         importDataHujanBatch,
         selectStasiun,
         updateDataHujanManual,
-        seedInitialStations
+        seedInitialStations,
+        updateStasiun,
+        deleteStasiun,
+        deleteDataHujanByYear,
+        updateDataHujanSingle
     } = useHydrologyStore();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [showModalStasiun, setShowModalStasiun] = useState(false);
+    const [editingStasiunId, setEditingStasiunId] = useState<string | null>(null);
     const [showModalHujan, setShowModalHujan] = useState(false);
     const [formStasiun, setFormStasiun] = useState({
         nama_stasiun: '',
@@ -331,6 +377,40 @@ export const MasterHidrologiTab: React.FC = () => {
         }
     };
 
+    const handleDeleteYear = async () => {
+        if (!selectedStasiun) return;
+        const confirmed = window.confirm(`⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?
+
+Tindakan ini tidak dapat dibatalkan!`);
+        if (confirmed) {
+            try {
+                await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
+                alert(`✅ Data tahun ${selectedYear} berhasil dihapus.`);
+            } catch (err) {
+                console.error(err);
+                alert('❌ Gagal menghapus data.');
+            }
+        }
+    };
+
+    const handleCellClick = async (dateStr: string, currentVal: number | null) => {
+        if (!selectedStasiun) return;
+        const newValStr = window.prompt(`Masukkan Curah Hujan untuk ${dateStr}:`, currentVal !== null ? currentVal.toString() : '0');
+        if (newValStr !== null) {
+            const newVal = parseFloat(newValStr);
+            if (!isNaN(newVal) && newVal >= 0) {
+                try {
+                    await updateDataHujanSingle(selectedStasiun.id, dateStr, newVal);
+                } catch (err) {
+                    console.error(err);
+                    alert('❌ Gagal mengupdate data.');
+                }
+            } else {
+                alert('❌ Nilai tidak valid. Masukkan angka positif.');
+            }
+        }
+    };
+
 
     const annualMaximums = React.useMemo(() => {
         if (!dataHujan || dataHujan.length === 0) return [];
@@ -391,7 +471,11 @@ export const MasterHidrologiTab: React.FC = () => {
                             </Button>
                         </>
                     )}
-                    <Button onClick={() => setShowModalStasiun(true)} className="rounded-md font-bold bg-pupr-blue hover:bg-teal-700 shadow-sm shadow-teal-500/20">
+                    <Button onClick={() => {
+                        setEditingStasiunId(null);
+                        setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
+                        setShowModalStasiun(true);
+                    }} className="rounded-md font-bold bg-pupr-blue hover:bg-teal-700 shadow-sm shadow-teal-500/20">
                         <Plus className="w-4 h-4 mr-2" />
                         Tambah Stasiun
                     </Button>
@@ -420,15 +504,54 @@ export const MasterHidrologiTab: React.FC = () => {
                                     <div
                                         key={stasiun.id}
                                         onClick={() => selectStasiun(stasiun)}
-                                        className={`p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+                                        className={`group p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                                             isActive
                                                 ? 'bg-pupr-blue text-white border-teal-600 shadow-sm scale-[1.02]'
                                                 : 'bg-white/80 border-slate-200 hover:border-teal-300 hover:shadow-md text-slate-700'
                                         }`}
                                     >
-                                        <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
-                                            {stasiun.nama_stasiun}
-                                        </h4>
+                                        <div className="flex justify-between items-start">
+                                            <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                                                {stasiun.nama_stasiun}
+                                            </h4>
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isActive ? 1 : undefined }}>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingStasiunId(stasiun.id);
+                                                        setFormStasiun({
+                                                            nama_stasiun: stasiun.nama_stasiun,
+                                                            koordinat_x: stasiun.koordinat_x?.toString() || '',
+                                                            koordinat_y: stasiun.koordinat_y?.toString() || '',
+                                                            elevasi: stasiun.elevasi?.toString() || '',
+                                                            keterangan: stasiun.keterangan || ''
+                                                        });
+                                                        setShowModalStasiun(true);
+                                                    }}
+                                                    className={`p-1.5 rounded-md ${isActive ? 'hover:bg-white/20 text-white' : 'hover:bg-slate-100 text-slate-500'}`}
+                                                    title="Edit Stasiun"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        if (window.confirm(`Apakah Anda yakin ingin menghapus stasiun ${stasiun.nama_stasiun}?`)) {
+                                                            try {
+                                                                await deleteStasiun(stasiun.id);
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                alert('Gagal menghapus stasiun.');
+                                                            }
+                                                        }
+                                                    }}
+                                                    className={`p-1.5 rounded-md ${isActive ? 'hover:bg-red-500/50 text-white' : 'hover:bg-red-50 text-red-500'}`}
+                                                    title="Hapus Stasiun"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        </div>
                                         <div className="grid grid-cols-2 gap-2 mt-3">
                                             <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
                                                 <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Elevasi</span>
@@ -510,6 +633,10 @@ export const MasterHidrologiTab: React.FC = () => {
                                         <Wand2 className={`w-4 h-4 mr-1 ${isInfilling ? 'animate-pulse' : ''}`} />
                                         <span className="hidden sm:inline">{isInfilling ? 'Memproses...' : 'Isi Kosong'}</span>
                                     </Button>
+                                    <Button onClick={handleDeleteYear} disabled={!selectedStasiun || dataHujan.length === 0} size="sm" variant="outline" className="rounded-md border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
+                                        <Trash2 className="w-4 h-4 mr-1" />
+                                        <span className="hidden sm:inline">Hapus Data Tahun Ini</span>
+                                    </Button>
                                     <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-md bg-pupr-blue hover:bg-teal-700">
                                         <Plus className="w-4 h-4 mr-1" />
                                         <span className="hidden sm:inline">Tambah Data</span>
@@ -524,7 +651,7 @@ export const MasterHidrologiTab: React.FC = () => {
                                     </div>
                                 )}
 
-                                <DailyRainfallMatrix data={dataHujan} year={selectedYear} />
+                                <DailyRainfallMatrix data={dataHujan} year={selectedYear} onCellClick={handleCellClick} />
 
                                 {annualMaximums.length > 0 && (
                                     <div className="mt-8 bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
@@ -573,22 +700,31 @@ export const MasterHidrologiTab: React.FC = () => {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-800">Tambah Stasiun Baru</h3>
-                            <button onClick={() => setShowModalStasiun(false)} className="text-slate-400 hover:text-slate-600">
+                            <h3 className="text-xl font-bold text-slate-800">{editingStasiunId ? 'Edit Stasiun' : 'Tambah Stasiun Baru'}</h3>
+                            <button onClick={() => {
+                                setShowModalStasiun(false);
+                                setEditingStasiunId(null);
+                            }} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <form onSubmit={async (e) => {
                             e.preventDefault();
                             try {
-                                await addStasiun({
+                                const payload = {
                                     nama_stasiun: formStasiun.nama_stasiun,
                                     koordinat_x: formStasiun.koordinat_x ? parseFloat(formStasiun.koordinat_x) : null,
                                     koordinat_y: formStasiun.koordinat_y ? parseFloat(formStasiun.koordinat_y) : null,
                                     elevasi: formStasiun.elevasi ? parseFloat(formStasiun.elevasi) : null,
                                     keterangan: formStasiun.keterangan || null
-                                });
+                                };
+                                if (editingStasiunId) {
+                                    await updateStasiun(editingStasiunId, payload);
+                                } else {
+                                    await addStasiun(payload);
+                                }
                                 setShowModalStasiun(false);
+                                setEditingStasiunId(null);
                                 setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
                             } catch (err) {
                                 console.error(err);
@@ -651,7 +787,10 @@ export const MasterHidrologiTab: React.FC = () => {
                                 />
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <Button type="button" onClick={() => setShowModalStasiun(false)} variant="outline" className="flex-1 rounded-md">
+                                <Button type="button" onClick={() => {
+                                    setShowModalStasiun(false);
+                                    setEditingStasiunId(null);
+                                }} variant="outline" className="flex-1 rounded-md">
                                     Batal
                                 </Button>
                                 <Button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700">

@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { useHydrologyStore, type TutupanLahan, type TutupanLahanItem } from '@/stores/useHydrologyStore';
 
 export const TutupanLahanCard: React.FC = () => {
-  const { tutupanLahan, setTutupanLahan, morfometriDAS } = useHydrologyStore();
+  const { tutupanLahan, saveTutupanLahan, morfometriDAS } = useHydrologyStore();
   
   const [items, setItems] = useState<TutupanLahanItem[]>(
     tutupanLahan?.items || [
@@ -63,7 +63,7 @@ export const TutupanLahanCard: React.FC = () => {
     setIsSaved(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const safeItems = items.map(i => ({
       ...i,
       luas: typeof i.luas === 'string' ? parseFloat(i.luas) || 0 : i.luas,
@@ -76,9 +76,14 @@ export const TutupanLahanCard: React.FC = () => {
       curveNumberGabungan: cnGabungan,
       totalLuas,
     };
-    setTutupanLahan(data);
-    setItems(safeItems);
-    setIsSaved(true);
+    try {
+      await saveTutupanLahan(data);
+      setItems(safeItems);
+      setIsSaved(true);
+    } catch (error) {
+      console.error('Failed to save Tutupan Lahan:', error);
+      alert('Gagal menyimpan data Tutupan Lahan');
+    }
   };
 
   return (

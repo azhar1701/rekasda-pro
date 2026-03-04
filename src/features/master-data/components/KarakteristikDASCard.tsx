@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { useHydrologyStore, type MorfometriDAS } from '@/stores/useHydrologyStore';
 
 export const KarakteristikDASCard: React.FC = () => {
-  const { morfometriDAS, setMorfometriDAS } = useHydrologyStore();
+  const { morfometriDAS, saveMorfometriDAS } = useHydrologyStore();
   
   const [formData, setFormData] = useState<MorfometriDAS>({
     luasDAS: morfometriDAS?.luasDAS || 0,
@@ -29,7 +29,7 @@ export const KarakteristikDASCard: React.FC = () => {
   const safeA = typeof formData.luasDAS === 'string' ? parseFloat(formData.luasDAS) || 0 : formData.luasDAS;
   const safeL = typeof formData.panjangSungai === 'string' ? parseFloat(formData.panjangSungai) || 0 : formData.panjangSungai;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const safeData = {
       luasDAS: safeA,
       panjangSungai: safeL,
@@ -40,8 +40,13 @@ export const KarakteristikDASCard: React.FC = () => {
       alert('Luas DAS dan Panjang Sungai harus lebih dari 0');
       return;
     }
-    setMorfometriDAS(safeData);
-    setIsSaved(true);
+    try {
+      await saveMorfometriDAS(safeData);
+      setIsSaved(true);
+    } catch (error) {
+      console.error('Failed to save Morfometri DAS:', error);
+      alert('Gagal menyimpan data Morfometri DAS');
+    }
   };
 
   const isValid = safeA > 0 && safeL > 0;
