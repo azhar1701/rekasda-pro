@@ -5,7 +5,6 @@ import { WaterBalanceChart } from './WaterBalanceChart';
 import { DependableFlowModal } from '@/components/ui/modals/DependableFlowModal';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { saveWaterBalance } from '@/services/calculationService';
-import { WaterBalancePilotDataLoader } from './WaterBalancePilotDataLoader';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { WaterBalanceFormulaDisplay } from '@/components/ui/data-display/WaterBalanceFormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
@@ -37,7 +36,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
   const [inputs, setInputs] = useState<WaterBalanceInputs>({
     population: 5000,
@@ -157,17 +155,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const netBalance = totalSupply - totalDemand;
 
 
-  const handleLoadPilotData = (data: any) => {
-    setInputs({
-      population: data.inputs.population,
-      agricultureArea: data.inputs.agricultureArea,
-      domesticStandard: data.inputs.domesticStandard,
-      irrigationDemand: data.inputs.irrigationDemand,
-      monthlySupply: data.inputs.monthlySupply
-    });
-    setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
-    setTimeout(() => setLoadMessage(null), 3000);
-  };
 
   const handleSaveWaterBalance = async () => {
     setIsSaving(true);
@@ -214,16 +201,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
       {/* Internal Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
 
-        {/* Load Message Toast */}
-        {loadMessage && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-md shadow-sm border border-slate-200 bg-blue-50 text-blue-800 flex items-center gap-3 animate-fade-in max-w-md pointer-events-none">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            <span className="font-medium text-sm">{loadMessage}</span>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
 
           {/* LEFT SIDEBAR (Span 5) */}
@@ -232,14 +209,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
               {/* Project Banner (SSOT) */}
               <ProjectContextBanner />
-
-              {/* Data Pilot Loader */}
-              <Collapsible title="Data Pilot & Konfigurasi" defaultOpen={true}>
-                <div className="space-y-4">
-                  <WaterBalancePilotDataLoader onLoad={handleLoadPilotData} />
-                </div>
-              </Collapsible>
-
               {/* Formula Display */}
               <Collapsible title="Rumus Neraca Air" defaultOpen={false}>
                 <WaterBalanceFormulaDisplay />

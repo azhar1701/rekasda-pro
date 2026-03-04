@@ -1,5 +1,7 @@
 import React from 'react';
 import { AllCalculationsData } from '@/services/allCalculationsService';
+import { TableGovTech } from '@/components/ui/TableGovTech';
+import { Waves, Droplets, CloudRain, Calendar, Layers, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -12,115 +14,162 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
 
   const getTypeLabel = (type: string) => {
     if (type === 'manning') return 'Saluran Manning';
-    if (type === 'flood') return 'Banjir';
+    if (type === 'flood') return 'Banjir Rasional';
     if (type === 'water_balance') return 'Neraca Air';
     return type;
   };
 
-  const renderManningDetail = () => (
-    <div className="space-y-4">
-      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-        <h4 className="text-sm font-bold text-teal-800 uppercase tracking-wide mb-3">Hasil Utama</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <span className="text-xs text-teal-600 block mb-1">Debit (Q)</span>
-            <span className="text-2xl font-bold text-teal-900">{data.data.results.Discharge}</span>
-            <span className="text-xs text-teal-600 ml-1">m³/s</span>
+  const getTypeStyle = (type: string) => {
+    if (type === 'manning') return { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30', icon: <Waves className="w-5 h-5" /> };
+    if (type === 'flood') return { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: <CloudRain className="w-5 h-5" /> };
+    if (type === 'water_balance') return { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: <Droplets className="w-5 h-5" /> };
+    return { bg: 'bg-slate-500/20', text: 'text-slate-300', border: 'border-slate-500/30', icon: <Layers className="w-5 h-5" /> };
+  };
+
+  const typeStyle = getTypeStyle(data.type);
+
+  // --- RENDERS ---
+  const renderManningDetail = () => {
+    const results = data.data.results;
+    if (!results) return null;
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mb-3">
+              <Waves className="w-4 h-4 text-blue-600" />
+            </div>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Debit Rancangan (Q)</span>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.Discharge}</p>
+              <span className="text-sm font-bold text-slate-500">m³/s</span>
+            </div>
           </div>
-          <div>
-            <span className="text-xs text-teal-600 block mb-1">Kecepatan (V)</span>
-            <span className="text-2xl font-bold text-teal-900">{data.data.results.Velocity}</span>
-            <span className="text-xs text-teal-600 ml-1">m/s</span>
+
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mb-3">
+              <Layers className="w-4 h-4 text-indigo-600" />
+            </div>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Kecepatan Aliran (V)</span>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.Velocity}</p>
+              <span className="text-sm font-bold text-slate-500">m/s</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`rounded-xl p-5 shadow-sm border ${results.SafetyStatus === 'Aman' ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {results.SafetyStatus === 'Aman' ? (
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              ) : (
+                <AlertTriangle className="w-8 h-8 text-rose-600" />
+              )}
+              <div>
+                <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${results.SafetyStatus === 'Aman' ? 'text-emerald-700' : 'text-rose-700'}`}>Status Keamanan</span>
+                <p className={`text-lg font-black tracking-tight ${results.SafetyStatus === 'Aman' ? 'text-emerald-900' : 'text-rose-900'}`}>
+                  {results.SafetyStatus}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${results.SafetyStatus === 'Aman' ? 'text-emerald-700' : 'text-rose-700'}`}>Tipe Aliran</span>
+              <p className={`text-lg font-black tracking-tight ${results.SafetyStatus === 'Aman' ? 'text-emerald-900' : 'text-rose-900'}`}>
+                {results.FlowType}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+          <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-slate-400" />
+              Geometri Saluran
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+            <div className="p-4">
+              <span className="text-xs text-slate-500 block mb-1">Luas Basah (A)</span>
+              <span className="text-lg font-bold text-slate-900 tabular-nums">{results.Area} <span className="text-xs text-slate-500 font-normal">m²</span></span>
+            </div>
+            <div className="p-4">
+              <span className="text-xs text-slate-500 block mb-1">Jari-jari Hidrolis (R)</span>
+              <span className="text-lg font-bold text-slate-900 tabular-nums">{results.Radius} <span className="text-xs text-slate-500 font-normal">m</span></span>
+            </div>
+            <div className="p-4">
+              <span className="text-xs text-slate-500 block mb-1">Angka Froude (Fr)</span>
+              <span className="text-lg font-bold text-slate-900 tabular-nums">{results.Froude}</span>
+            </div>
+            <div className="p-4 bg-slate-50/50">
+              <span className="text-xs text-slate-500 block mb-1">Tinggi Jagaan</span>
+              <span className="text-lg font-bold text-slate-900 tabular-nums">{results.Freeboard} <span className="text-xs text-slate-500 font-normal">m</span></span>
+            </div>
           </div>
         </div>
       </div>
+    );
+  };
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-slate-50 p-3 rounded-lg">
-          <span className="text-xs text-slate-500 block mb-1">Luas (A)</span>
-          <span className="text-lg font-bold text-slate-900">{data.data.results.Area}</span>
-          <span className="text-xs text-slate-500"> m²</span>
-        </div>
-        <div className="bg-slate-50 p-3 rounded-lg">
-          <span className="text-xs text-slate-500 block mb-1">Jari-jari (R)</span>
-          <span className="text-lg font-bold text-slate-900">{data.data.results.Radius}</span>
-          <span className="text-xs text-slate-500"> m</span>
-        </div>
-        <div className="bg-slate-50 p-3 rounded-lg">
-          <span className="text-xs text-slate-500 block mb-1">Froude (Fr)</span>
-          <span className="text-lg font-bold text-slate-900">{data.data.results.Froude}</span>
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
+  const renderFloodDetail = () => {
+    const results = data.data.results;
+    if (!results) return null;
+    return (
+      <div className="space-y-6">
+        <div className="bg-purple-50 rounded-xl p-5 shadow-sm border border-purple-200 flex items-center justify-between">
           <div>
-            <span className="text-xs text-blue-600 block mb-1">Tipe Aliran</span>
-            <span className="text-lg font-bold text-blue-900">{data.data.results.FlowType}</span>
+            <span className="text-xs font-bold text-purple-600 uppercase tracking-wide block mb-1">Metode Analisis</span>
+            <span className="text-lg font-black text-purple-900">{data.data.method || 'Rasional'}</span>
           </div>
           <div className="text-right">
-            <span className="text-xs text-blue-600 block mb-1">Status Keamanan</span>
-            <span className={`text-lg font-bold ${data.data.results.SafetyStatus === 'Aman' ? 'text-green-600' : 'text-red-600'}`}>
-              {data.data.results.SafetyStatus}
-            </span>
+            <span className="text-xs font-bold text-purple-600 uppercase tracking-wide block mb-1">Volume Banjir</span>
+            <span className="text-xl font-black text-purple-900 tabular-nums">{(results.volume / 1000)?.toFixed(1)} <span className="text-sm font-bold text-purple-700">×10³ m³</span></span>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-50 p-3 rounded-lg">
-          <span className="text-xs text-slate-500 block mb-1">Freeboard</span>
-          <span className="text-base font-bold text-slate-900">{data.data.results.Freeboard} m</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Debit Puncak (Q)</span>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.qPeak?.toFixed(2)}</p>
+              <span className="text-sm font-bold text-slate-500">m³/s</span>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Waktu Puncak (tc)</span>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.tPeak?.toFixed(2)}</p>
+              <span className="text-sm font-bold text-slate-500">jam</span>
+            </div>
+          </div>
         </div>
-        <div className="bg-slate-50 p-3 rounded-lg">
-          <span className="text-xs text-slate-500 block mb-1">Energi Spesifik</span>
-          <span className="text-base font-bold text-slate-900">{data.data.results.SpecificEnergy} m</span>
-        </div>
-      </div>
-    </div>
-  );
 
-  const renderFloodDetail = () => (
-    <div className="space-y-4">
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-bold text-purple-800 uppercase tracking-wide">Metode</h4>
-          <span className="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full">{data.data.method}</span>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <span className="text-xs text-purple-600 block mb-1">Debit Puncak</span>
-            <span className="text-2xl font-bold text-purple-900">{data.data.results.qPeak?.toFixed(2)}</span>
-            <span className="text-xs text-purple-600 ml-1">m³/s</span>
+        {results.returnPeriods && results.returnPeriods.length > 0 && (
+          <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <CloudRain className="w-4 h-4 text-slate-400" />
+                Debit Kala Ulang
+              </h3>
+            </div>
+            <TableGovTech 
+              columns={[
+                { key: 'period', label: 'Kala Ulang', align: 'left' },
+                { key: 'qPeak', label: 'Debit Puncak (m³/s)', align: 'right', numeric: true },
+              ]}
+              data={results.returnPeriods.map((rp: any) => ({
+                period: rp.period,
+                qPeak: rp.qPeak?.toFixed(2)
+              }))}
+              stickyHeader={false}
+              zebraStripe={true}
+            />
           </div>
-          <div>
-            <span className="text-xs text-purple-600 block mb-1">Waktu Puncak</span>
-            <span className="text-2xl font-bold text-purple-900">{data.data.results.tPeak?.toFixed(2)}</span>
-            <span className="text-xs text-purple-600 ml-1">jam</span>
-          </div>
-          <div>
-            <span className="text-xs text-purple-600 block mb-1">Volume</span>
-            <span className="text-2xl font-bold text-purple-900">{(data.data.results.volume / 1000)?.toFixed(1)}</span>
-            <span className="text-xs text-purple-600 ml-1">×10³ m³</span>
-          </div>
-        </div>
+        )}
       </div>
-
-      {data.data.results.returnPeriods && (
-        <div className="bg-slate-50 rounded-lg p-4">
-          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Kala Ulang</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {data.data.results.returnPeriods.slice(0, 6).map((rp: any) => (
-              <div key={rp.period} className="bg-white p-2 rounded border border-slate-200">
-                <span className="text-xs text-slate-500 block">{rp.period}</span>
-                <span className="text-sm font-bold text-slate-900">{rp.qPeak?.toFixed(2)} m³/s</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   const renderWaterBalanceDetail = () => {
     const totalSupply = data.data.monthly_inputs?.monthlySupply?.reduce((a: number, b: number) => a + b, 0) || 0;
@@ -129,88 +178,123 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
     const netBalance = totalSupply - monthlyResults.reduce((sum: number, r: any) => sum + parseFloat(r.totalDemand || 0), 0);
     
     return (
-      <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-sm font-bold text-blue-800 uppercase tracking-wide mb-3">Ringkasan Neraca</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <span className="text-xs text-blue-600 block mb-1">Total Ketersediaan</span>
-              <span className="text-2xl font-bold text-blue-900">{totalSupply.toFixed(1)}</span>
-              <span className="text-xs text-blue-600 ml-1">m³/s</span>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Total Ketersediaan</span>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{totalSupply.toFixed(1)}</p>
+              <span className="text-sm font-bold text-slate-500">m³/s</span>
             </div>
-            <div>
-              <span className="text-xs text-blue-600 block mb-1">Status Neraca</span>
-              <span className={`text-2xl font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          </div>
+          <div className={`rounded-xl p-5 shadow-sm border ${netBalance >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+            <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>Status Neraca Tahunan</span>
+            <div className="flex items-baseline gap-2">
+              <p className={`text-3xl font-black tracking-tight tabular-nums ${netBalance >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
                 {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
-              </span>
-              <span className="text-xs text-blue-600 ml-1">m³/s</span>
+              </p>
+              <span className={`text-sm font-bold ${netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>m³/s</span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-            <span className="text-xs text-green-600 block mb-1">Bulan Surplus</span>
-            <span className="text-2xl font-bold text-green-900">{summary?.surplusMonths || 0}</span>
-            <span className="text-xs text-green-600 ml-1">bulan</span>
+          <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center">
+            <span className="text-xs text-slate-500 block mb-1 font-bold">Bulan Surplus</span>
+            <span className="text-2xl font-bold text-emerald-600 tabular-nums">{summary?.surplusMonths || 0}</span>
           </div>
-          <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
-            <span className="text-xs text-red-600 block mb-1">Bulan Defisit</span>
-            <span className="text-2xl font-bold text-red-900">{summary?.deficitMonths || 0}</span>
-            <span className="text-xs text-red-600 ml-1">bulan</span>
+          <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-center">
+            <span className="text-xs text-slate-500 block mb-1 font-bold">Bulan Defisit</span>
+            <span className="text-2xl font-bold text-rose-600 tabular-nums">{summary?.deficitMonths || 0}</span>
           </div>
-          <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-            <span className="text-xs text-orange-600 block mb-1">Bulan Kritis</span>
+          <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl shadow-sm text-center">
+            <span className="text-xs text-orange-700 block mb-1 font-bold">Bulan Kritis</span>
             <span className="text-2xl font-bold text-orange-900">{summary?.criticalMonth?.month || '-'}</span>
           </div>
         </div>
 
-        <div className="bg-slate-50 rounded-lg p-4">
-          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">Data Bulanan</h4>
-          <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
-            {monthlyResults.slice(0, 12).map((r: any, i: number) => (
-              <div key={i} className={`p-2 rounded border ${
-                r.status === 'Surplus' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-              }`}>
-                <span className="text-xs font-bold text-slate-700 block">{r.month}</span>
-                <span className={`text-sm font-bold ${
-                  r.status === 'Surplus' ? 'text-green-700' : 'text-red-700'
-                }`}>{parseFloat(r.balance).toFixed(1)}</span>
-              </div>
-            ))}
+        {monthlyResults.length > 0 && (
+          <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-slate-400" />
+                Neraca Bulanan
+              </h3>
+            </div>
+            <TableGovTech 
+              columns={[
+                { key: 'month', label: 'Bulan', align: 'left' },
+                { key: 'supply', label: 'Andalan (m³/s)', align: 'right', numeric: true },
+                { key: 'demand', label: 'Kebutuhan (m³/s)', align: 'right', numeric: true },
+                { key: 'balance', label: 'Neraca (m³/s)', align: 'right', numeric: true },
+                { key: 'status', label: 'Status', align: 'center' },
+              ]}
+              data={monthlyResults.map((r: any) => ({
+                month: r.month,
+                supply: parseFloat(r.supply || 0).toFixed(2),
+                demand: parseFloat(r.totalDemand || 0).toFixed(2),
+                balance: parseFloat(r.balance || 0).toFixed(2),
+                status: (
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                    r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                  }`}>
+                    {r.status}
+                  </span>
+                )
+              }))}
+              stickyHeader={false}
+              zebraStripe={true}
+            />
           </div>
-        </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">{getTypeLabel(data.type)}</h3>
-            <p className="text-sm text-slate-500 mt-1">{data.project_name}</p>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+        
+        <div className="relative overflow-hidden bg-slate-900 border-b border-slate-800 px-6 py-5 shrink-0">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            {typeStyle.icon}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+
+          <div className="flex items-start justify-between relative z-10">
+            <div className="pr-12">
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${typeStyle.bg} ${typeStyle.text} ${typeStyle.border}`}>
+                  {getTypeLabel(data.type)}
+                </span>
+                <span className="text-slate-400 text-xs flex items-center gap-1.5 font-medium">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {new Date(data.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">
+                {data.project_name || 'Detail Proyek Tidak Bernama'}
+              </h2>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
         </div>
 
-        <div className="mb-4">
-          <span className="text-xs text-slate-500">Tanggal: {new Date(data.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</span>
+        <div className="p-6 overflow-y-auto bg-slate-50/50">
+          {data.type === 'manning' && renderManningDetail()}
+          {data.type === 'flood' && renderFloodDetail()}
+          {data.type === 'water_balance' && renderWaterBalanceDetail()}
         </div>
 
-        {data.type === 'manning' && renderManningDetail()}
-        {data.type === 'flood' && renderFloodDetail()}
-        {data.type === 'water_balance' && renderWaterBalanceDetail()}
-
-        <div className="flex justify-end mt-6 pt-4 border-t border-slate-200">
+        <div className="bg-white border-t border-slate-200 px-6 py-4 shrink-0 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors"
+            className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-lg transition-colors focus:ring-2 focus:ring-slate-200 focus:outline-none"
           >
             Tutup
           </button>

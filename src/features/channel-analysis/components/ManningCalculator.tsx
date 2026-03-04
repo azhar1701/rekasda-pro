@@ -13,7 +13,6 @@ import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { ManningPilotDataLoader } from './ManningPilotDataLoader';
 import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
 import { ManningFormulaDisplay } from '@/components/ui/data-display/ManningFormulaDisplay';
 import { Collapsible } from '@/components/ui/Collapsible';
@@ -51,16 +50,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
   const [showSlopeCalculator, setShowSlopeCalculator] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loadMessage, setLoadMessage] = useState<string | null>(null);
 
-  const handleLoadPilotData = (data: any) => {
-    setInputs(prev => ({
-      ...prev,
-      ...data.inputs
-    }));
-    setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
-    setTimeout(() => setLoadMessage(null), 3000);
-  };
 
   const handleSaveToDatabase = async () => {
     const projectName = inputs?.site?.channelName;
@@ -174,14 +164,6 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
       {/* Internal Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         {/* Toast Messages positioning adjusted for Fixed Shell */}
-        {loadMessage && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[110] px-4 py-2 rounded-md shadow-md border border-slate-200 bg-teal-50 text-teal-800 flex items-center gap-2 animate-fade-in pointer-events-none">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            <span className="font-medium text-sm">{loadMessage}</span>
-          </div>
-        )}
 
         {saveMessage && (
           <div className={`absolute top-4 right-4 z-[110] px-4 py-2 rounded-md shadow-md border flex items-center gap-2 animate-fade-in pointer-events-none ${saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
@@ -202,14 +184,6 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* Project Banner (SSOT) */}
             <ProjectContextBanner />
-
-            {/* Data Pilot Loader */}
-            <Collapsible title="Data Pilot & Konfigurasi" defaultOpen={true}>
-              <div className="space-y-4">
-                <ManningPilotDataLoader onLoad={handleLoadPilotData} />
-              </div>
-            </Collapsible>
-
             {/* Formula Display */}
             <Collapsible title="Rumus Manning" defaultOpen={false}>
               <ManningFormulaDisplay />
