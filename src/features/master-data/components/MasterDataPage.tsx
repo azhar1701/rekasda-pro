@@ -9,13 +9,13 @@ import { FormIdentitasLokasi } from './FormIdentitasLokasi';
 type TabType = 'dashboard' | 'identitas' | 'data-hujan' | 'parameter-spasial';
 
 export const MasterDataPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('identitas');
 
   const tabs = [
-    { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'identitas' as TabType, label: 'Identitas Lokasi', icon: Building2 },
     { id: 'data-hujan' as TabType, label: 'Data Curah Hujan', icon: CloudRain },
     { id: 'parameter-spasial' as TabType, label: 'Parameter Spasial', icon: MapPin },
+    { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
   ];
 
   return (
