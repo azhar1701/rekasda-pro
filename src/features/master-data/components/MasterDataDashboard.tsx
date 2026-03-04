@@ -1,6 +1,7 @@
 import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { useMemo } from 'react';
 
 interface MasterDataDashboardProps {
@@ -87,6 +88,8 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
   return (
     <div className="space-y-4 p-6">
+      <ProjectContextBanner />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1: QC Status */}
       <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden">

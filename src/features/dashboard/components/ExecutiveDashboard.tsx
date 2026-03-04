@@ -16,7 +16,8 @@ export const ExecutiveDashboard = () => {
         hasilNeraca,
         hasilEmbung,
         isBanjirDirty,
-        isNeracaDirty
+        isNeracaDirty,
+        identitasLokasi
     } = useHydrologyStore();
 
     const targetRef = useRef<HTMLDivElement>(null);
@@ -59,11 +60,23 @@ export const ExecutiveDashboard = () => {
                         <div className="space-y-4">
                             <div className="flex items-start gap-3">
                                 <div className="w-10 h-10 rounded-md bg-pupr-surface flex items-center justify-center shrink-0">
+                                    <FileText className="w-5 h-5 text-pupr-blue" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-bold text-pupr-text/60 uppercase tracking-wider mb-1">Nama Proyek</p>
+                                    <p className="text-sm font-bold text-pupr-text">{identitasLokasi?.namaPekerjaan || 'Belum diatur'}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-md bg-pupr-surface flex items-center justify-center shrink-0">
                                     <MapPin className="w-5 h-5 text-pupr-blue" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-pupr-text/60 uppercase tracking-wider mb-1">Stasiun Hujan</p>
-                                    <p className="text-sm font-bold text-pupr-text">{selectedStasiun?.nama_stasiun || 'Belum diatur'}</p>
+                                    <p className="text-xs font-bold text-pupr-text/60 uppercase tracking-wider mb-1">DAS / Lokasi</p>
+                                    <p className="text-sm font-bold text-pupr-text">
+                                        {identitasLokasi?.namaDAS ? `DAS ${identitasLokasi.namaDAS}` : 'DAS Belum diatur'}
+                                        {identitasLokasi?.provinsi ? `, ${identitasLokasi.provinsi}` : ''}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
@@ -71,7 +84,7 @@ export const ExecutiveDashboard = () => {
                                     <Activity className="w-5 h-5 text-pupr-blue" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-pupr-text/60 uppercase tracking-wider mb-1">Luas DAS</p>
+                                    <p className="text-xs font-bold text-pupr-text/60 uppercase tracking-wider mb-1">Luas DAS Terukur</p>
                                     <p className="text-sm font-bold text-pupr-text tabular-nums tracking-tight">{luasDas ? `${luasDas} km²` : 'Belum diatur'}</p>
                                 </div>
                             </div>
