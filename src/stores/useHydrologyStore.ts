@@ -378,14 +378,15 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     set({ isLoading: true });
     try {
       const { data, error } = await supabase
-
         .from('master_stasiun')
         .insert([stasiun])
-        .select()
-        .single();
+        .select();
       
       if (error) throw error;
-      set(state => ({ stasiunList: [...state.stasiunList, data] }));
+      
+      if (data && data.length > 0) {
+        set(state => ({ stasiunList: [...state.stasiunList, data[0]] }));
+      }
     } catch (error: any) {
       set({ error: error.message });
       throw error;
@@ -398,18 +399,27 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     if (!supabase) return;
     set({ isLoading: true });
     try {
-      const { data: updated, error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from('master_stasiun')
         .update(data)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
       
       if (error) throw error;
-      set(state => ({
-        stasiunList: state.stasiunList.map(s => s.id === id ? updated : s),
-        selectedStasiun: state.selectedStasiun?.id === id ? updated : state.selectedStasiun
-      }));
+      
+      if (updatedData && updatedData.length > 0) {
+        const updated = updatedData[0];
+        set(state => ({
+          stasiunList: state.stasiunList.map(s => s.id === id ? updated : s),
+          selectedStasiun: state.selectedStasiun?.id === id ? updated : state.selectedStasiun
+        }));
+      } else {
+        // Fallback if select doesn't return the row but no error was thrown
+        set(state => ({
+          stasiunList: state.stasiunList.map(s => s.id === id ? { ...s, ...data } as any : s),
+          selectedStasiun: state.selectedStasiun?.id === id ? { ...state.selectedStasiun, ...data } as any : state.selectedStasiun
+        }));
+      }
     } catch (error: any) {
       set({ error: error.message });
       throw error;
@@ -446,14 +456,14 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     set({ isLoading: true });
     try {
       const { data: inserted, error } = await supabase
-
         .from('master_data_hujan')
         .insert([data])
-        .select()
-        .single();
+        .select();
       
       if (error) throw error;
-      set(state => ({ dataHujan: [...state.dataHujan, inserted] }));
+      if (inserted && inserted.length > 0) {
+        set(state => ({ dataHujan: [...state.dataHujan, inserted[0]] }));
+      }
     } catch (error: any) {
       set({ error: error.message });
       throw error;
