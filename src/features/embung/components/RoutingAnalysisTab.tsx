@@ -41,7 +41,7 @@ interface RoutingAnalysisTabProps {
 
 export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsultAI }) => {
     const [isCalculating, setIsCalculating] = useState(false);
-    const { hasilBanjir, isBanjirDirty } = useHydrologyStore();
+    const { hasilBanjir, isBanjirDirty, setHasilEmbung, hasilEmbung } = useHydrologyStore();
     const isAutoFilled = Boolean(hasilBanjir?.hidrograf?.length);
 
     // Form State

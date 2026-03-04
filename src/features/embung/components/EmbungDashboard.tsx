@@ -5,6 +5,7 @@ import { OperationPatternTab } from './OperationPatternTab';
 import { SedimentationTab } from './SedimentationTab';
 import { Droplets, Activity, Spline, Waves, Database } from 'lucide-react';
 import { EmbungProvider } from '../hooks/useEmbungStore';
+import { ModuleLayout } from '@/components/layout/ModuleLayout';
 
 interface EmbungDashboardProps {
     onConsultAI?: (type: string, data: any, result: any) => void;
@@ -14,22 +15,13 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
 
     return (
         <EmbungProvider>
-            <div className="w-full h-full flex flex-col bg-neutral-50 rounded-md border border-neutral-200 overflow-hidden min-h-[85vh]">
-                {/* Dashboard Header */}
-                <div className="px-6 py-5 border-b border-neutral-200 bg-white z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary-50 rounded-md shrink-0">
-                            <Droplets className="w-6 h-6 text-primary-600" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-neutral-900">Manajemen Situ & Embung</h1>
-                            <p className="text-sm text-neutral-500 font-medium">Desain & Analisis berdasarkan Standar Perencanaan Embung</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Internal Scrollable Content Area */}
-                <div className="flex-1 overflow-hidden flex flex-col p-6">
+            <ModuleLayout
+                title="Manajemen Situ & Embung"
+                description="Desain & Analisis berdasarkan Standar Perencanaan Embung"
+                icon={<Droplets className="w-6 h-6" />}
+                iconColorClass="bg-blue-50 text-pupr-blue"
+            >
+                <div className="flex-1 overflow-hidden flex flex-col h-full min-h-[80vh]">
                     <Tabs defaultValue="capacity" className="w-full h-full flex flex-col">
                         {/* Navigation Pills */}
                         <TabsList className="w-full justify-start p-1 bg-neutral-100 rounded-md mb-6 flex-wrap h-auto gap-1">
@@ -91,7 +83,7 @@ export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI })
                         </div>
                     </Tabs>
                 </div>
-            </div>
+            </ModuleLayout>
         </EmbungProvider>
     );
 };

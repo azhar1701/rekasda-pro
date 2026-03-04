@@ -6,7 +6,7 @@ import { DependableFlowModal } from '@/components/ui/modals/DependableFlowModal'
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { saveWaterBalance } from '@/services/calculationService';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
-import { WaterBalanceFormulaDisplay } from '@/components/ui/data-display/WaterBalanceFormulaDisplay';
+import { FormulaAccordion } from '@/components/ui/data-display/FormulaAccordion';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { Droplet, AlertTriangle, Zap } from 'lucide-react';
 import { useStaggerAnimation } from '@/hooks/useStaggerAnimation';
@@ -210,9 +210,27 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               {/* Project Banner (SSOT) */}
               <ProjectContextBanner />
               {/* Formula Display */}
-              <Collapsible title="Rumus Neraca Air" defaultOpen={false}>
-                <WaterBalanceFormulaDisplay />
-              </Collapsible>
+              <div className="mb-4">
+                <FormulaAccordion 
+                  title="Neraca Air"
+                  subtitle="SNI 6738:2015 & SNI 19-6728.1-2002"
+                  theme="emerald"
+                  formulas={[
+                    { label: "Persamaan Neraca Air", math: "Neraca = Q_{andalan} - (D_{irigasi} + D_{domestik} + D_{lingkungan})" },
+                    { label: "Debit Andalan (Mock)", math: "Q = \frac{A \cdot R}{C}" },
+                    { label: "Kebutuhan Irigasi", math: "NFR = ET_c + P + WL - R_e" }
+                  ]}
+                  parameters={[
+                    { symbol: "Q_{andalan}", description: "Ketersediaan air andalan (probabilitas 80%)", unit: "m³/s" },
+                    { symbol: "D_{irigasi}", description: "Kebutuhan air irigasi", unit: "m³/s" },
+                    { symbol: "D_{domestik}", description: "Kebutuhan air baku & domestik", unit: "m³/s" },
+                    { symbol: "D_{lingkungan}", description: "Kebutuhan pemeliharaan sungai", unit: "m³/s" },
+                    { symbol: "ET_c", description: "Evapotranspirasi tanaman", unit: "mm/hari" },
+                    { symbol: "R_e", description: "Curah hujan efektif", unit: "mm/hari" }
+                  ]}
+                  reference="Pedoman Perhitungan Ketersediaan Air (F.J. Mock) dan Kebutuhan Air Irigasi"
+                />
+              </div>
 
               {/* SECTION 1: PARAMETER GLOBAL */}
               <Collapsible title="Parameter Masukan" defaultOpen={true}>

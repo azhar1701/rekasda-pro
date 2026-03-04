@@ -14,7 +14,7 @@ import { SlopeCalculator } from './SlopeCalculator';
 import { SelectWithSearch } from '@/components/ui/forms/SelectWithSearch';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { SNIFooter, SNITooltipLabel } from '@/components/ui/data-display/SNICompliance';
-import { ManningFormulaDisplay } from '@/components/ui/data-display/ManningFormulaDisplay';
+import { FormulaAccordion } from '@/components/ui/data-display/FormulaAccordion';
 import { Collapsible } from '@/components/ui/Collapsible';
 // getCurrentLocation removed as it is not used directly here
 
@@ -185,9 +185,30 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
             {/* Project Banner (SSOT) */}
             <ProjectContextBanner />
             {/* Formula Display */}
-            <Collapsible title="Rumus Manning" defaultOpen={false}>
-              <ManningFormulaDisplay />
-            </Collapsible>
+            <div className="mb-4">
+              <FormulaAccordion 
+                title="Persamaan Manning"
+                subtitle="Perhitungan Kapasitas Saluran Terbuka"
+                theme="blue"
+                formulas={[
+                  { label: "Rumus Utama (Debit)", math: "Q = \frac{1}{n} \cdot A \cdot R^{2/3} \cdot S^{1/2}" },
+                  { label: "Kecepatan Aliran", math: "V = \frac{Q}{A}" },
+                  { label: "Jari-jari Hidrolis", math: "R = \frac{A}{P}" },
+                  { label: "Bilangan Froude", math: "Fr = \frac{V}{\sqrt{g \cdot D}}" }
+                ]}
+                parameters={[
+                  { symbol: "Q", description: "Debit aliran rancangan", unit: "m³/s" },
+                  { symbol: "V", description: "Kecepatan aliran", unit: "m/s" },
+                  { symbol: "n", description: "Koefisien kekasaran Manning", unit: "-" },
+                  { symbol: "A", description: "Luas penampang basah", unit: "m²" },
+                  { symbol: "R", description: "Jari-jari hidrolis", unit: "m" },
+                  { symbol: "P", description: "Keliling penampang basah", unit: "m" },
+                  { symbol: "S", description: "Kemiringan dasar saluran", unit: "m/m" },
+                  { symbol: "Fr", description: "Bilangan Froude (Fr < 1 Subkritis)", unit: "-" }
+                ]}
+                reference="SNI 03-3424-1994 (Tata Cara Perencanaan Drainase Permukaan Jalan)"
+              />
+            </div>
 
             {/* Geometry Section */}
             <Collapsible title="Geometri Saluran" defaultOpen={true}>
