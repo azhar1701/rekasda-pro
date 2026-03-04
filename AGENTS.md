@@ -11,7 +11,13 @@ Professional Water Resources Engineering Platform for hydrological analysis comp
 ```
 rekasda-pro/
 ├── src/
-│   ├── features/        # Feature modules (Flood, Channel, Water Balance, AI)
+│   ├── features/        # Feature modules (Flood, Channel, Water Balance, AI, Master Data)
+│   ├── components/ui/   # Shared GovTech UI components
+│   ├── hooks/           # Custom React hooks & Web Workers
+│   ├── lib/             # Core libraries (Engine, Constants, Utils)
+│   ├── services/        # API, Database, & Business Logic (Gemini OCR)
+│   ├── stores/          # State management (Zustand)
+│   └── types/           # TypeScript definitions
 │   ├── components/ui/   # Shared GovTech UI components
 │   ├── hooks/           # Custom React hooks & Web Workers
 │   ├── lib/             # Core libraries (Engine, Constants, Utils)
@@ -28,7 +34,10 @@ rekasda-pro/
 |------|----------|-------|
 | Hydrology Logic | `src/lib/engine` | SNI-compliant calculations |
 | SNI Constants | `src/lib/constants/sni.ts` | SSOT for coefficients and limits |
-| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD + Bulk Matrix Ingestion |
+| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD + Bulk Matrix Ingestion (Excel/PDF OCR) |
+| UI Components | `src/components/ui` | GovTech standard components |
+| DB Schema | `supabase/migrations` | Table definitions and migrations |
+| AI Logic | `src/services/geminiService.ts` | Gemini API integration (RAG + Multimodal OCR) |
 | UI Components | `src/components/ui` | GovTech standard components |
 | DB Schema | `supabase/migrations` | Table definitions and migrations |
 | AI Logic | `src/services/geminiService.ts` | Gemini API integration |

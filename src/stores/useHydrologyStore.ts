@@ -542,7 +542,8 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
         .select('*')
 
         .eq('stasiun_id', stasiunId)
-        .order('tanggal', { ascending: true });
+        .order('tanggal', { ascending: true })
+        .limit(20000);
       
       if (tahun) {
         const start = `${tahun}-01-01`;

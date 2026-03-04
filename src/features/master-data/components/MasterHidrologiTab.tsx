@@ -8,6 +8,14 @@ import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Satellite, Wand2 } from 'lucide-react';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 import { infillMissingData } from '@/lib/utils/spatialMath';
+import { extractRainfallFromPdf } from '@/services/geminiService';
+
+/**
+ * @feature Otomasi PDF OCR
+ * Menggunakan Gemini Multimodal AI untuk mengekstrak matriks curah hujan 31x12 langsung dari dokumen PDF.
+ */
+
+const DailyRainfallMatrix: React.FC<{ data: any[], year: number, onCellClick?: (dateStr: string, currentVal: number | null) => void }> = ({ data, year, onCellClick }) => {
 
 const DailyRainfallMatrix: React.FC<{ data: any[], year: number, onCellClick?: (dateStr: string, currentVal: number | null) => void }> = ({ data, year, onCellClick }) => {
     const matrix: (number | null)[][] = Array.from({ length: 31 }, () => Array(12).fill(null));
@@ -239,6 +247,8 @@ export const MasterHidrologiTab: React.FC = () => {
     const [bulkRawText, setBulkRawText] = useState('');
     const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
     const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
+    const [isProcessingOcr, setIsProcessingOcr] = useState(false);
+    const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
     const parseBulkRainfall = (text: string, year: number): any[] => {
         const lines = text.trim().split('\n');
@@ -246,9 +256,8 @@ export const MasterHidrologiTab: React.FC = () => {
         
         lines.forEach((line) => {
             const parts = line.trim().split(/\s+/);
-            if (parts.length < 2) return; // Skip invalid lines
+            if (parts.length < 2) return;
             
-            // First part is day number (1-31)
             const day = parseInt(parts[0], 10);
             if (isNaN(day) || day < 1 || day > 31) return;
 
@@ -268,7 +277,6 @@ export const MasterHidrologiTab: React.FC = () => {
 
                 if (rainfall !== null) {
                     const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    // Validate date
                     const d = new Date(dateStr);
                     if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day) {
                         records.push({
@@ -300,6 +308,56 @@ export const MasterHidrologiTab: React.FC = () => {
             console.error(err);
             alert('❌ Gagal menyimpan data bulk.');
         }
+    };
+
+    const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedStasiun) return;
+
+        setIsProcessingOcr(true);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64 = event.target?.result as string;
+                try {
+                    const matrix = await extractRainfallFromPdf(base64, bulkYear);
+                    if (matrix) {
+                        const records: any[] = [];
+                        matrix.forEach((row, dayIdx) => {
+                            row.forEach((val, monthIdx) => {
+                                if (val !== null && val !== undefined) {
+                                    const day = dayIdx + 1;
+                                    const month = monthIdx + 1;
+                                    const dateStr = `${bulkYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                    const d = new Date(dateStr);
+                                    if (d.getFullYear() === bulkYear && d.getMonth() === monthIdx && d.getDate() === day) {
+                                        records.push({
+                                            stasiun_id: selectedStasiun.id,
+                                            tanggal: dateStr,
+                                            curah_hujan: val
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                        setBulkPreview(records);
+                        alert(`✅ AI berhasil mengekstrak ${records.length} data curah hujan.`);
+                    } else {
+                        alert('❌ AI gagal mengekstrak data. Pastikan file PDF berisi tabel curah hujan.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('❌ Terjadi kesalahan saat memproses OCR.');
+                } finally {
+                    setIsProcessingOcr(false);
+                }
+            };
+            reader.readAsDataURL(file);
+        } catch (err) {
+            console.error(err);
+            setIsProcessingOcr(false);
+        }
+        if (ocrFileInputRef.current) ocrFileInputRef.current.value = '';
     };
 
     useEffect(() => {
@@ -446,7 +504,6 @@ export const MasterHidrologiTab: React.FC = () => {
     const handleDeleteYear = async () => {
         if (!selectedStasiun) return;
         const confirmed = window.confirm(`⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?
-
 Tindakan ini tidak dapat dibatalkan!`);
         if (confirmed) {
             try {
@@ -476,7 +533,6 @@ Tindakan ini tidak dapat dibatalkan!`);
             }
         }
     };
-
 
     const annualMaximums = React.useMemo(() => {
         if (!dataHujan || dataHujan.length === 0) return [];
@@ -934,13 +990,14 @@ Tindakan ini tidak dapat dibatalkan!`);
                     </div>
                 </div>
             )}
+
             {showModalBulk && selectedStasiun && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-md shadow-lg max-w-4xl w-full p-6 flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                                 <Activity className="w-5 h-5 text-pupr-blue" />
-                                Bulk Input Curah Hujan (OCR/Matrix)
+                                Bulk Input Curah Hujan (PDF/OCR)
                             </h3>
                             <button onClick={() => setShowModalBulk(false)} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-6 h-6" />
@@ -948,28 +1005,68 @@ Tindakan ini tidak dapat dibatalkan!`);
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-3 overflow-y-auto pr-2">
                                 <div className="flex items-center gap-4">
                                     <label className="text-sm font-bold text-slate-700">Tahun Target:</label>
                                     <input 
                                         type="number" 
                                         value={bulkYear} 
                                         onChange={(e) => setBulkYear(parseInt(e.target.value))}
-                                        className="w-24 px-3 py-1.5 border rounded-md font-mono"
+                                        className="w-24 px-3 py-1.5 border rounded-md font-mono focus:ring-2 focus:ring-teal-500 outline-none"
                                     />
                                 </div>
-                                <label className="text-xs text-slate-500">
-                                    Paste teks dari laporan (Day 1-31 di baris, Jan-Dec di kolom). 
-                                    Format: <code className="bg-slate-100 px-1">1 0 12.5 0 ...</code>
-                                </label>
+
+                                <div className="p-6 border-2 border-dashed border-slate-300 rounded-md bg-slate-50 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-pupr-blue/10 flex items-center justify-center text-pupr-blue">
+                                        <CloudRain className="w-8 h-8" />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-sm font-bold text-slate-800 uppercase tracking-wide">Otomasi PDF OCR</p>
+                                        <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">AI akan mengekstrak tabel curah hujan 31x12 dari laporan PDF Anda secara otomatis.</p>
+                                    </div>
+                                    <input 
+                                        ref={ocrFileInputRef}
+                                        type="file" 
+                                        accept=".pdf" 
+                                        className="hidden" 
+                                        onChange={handlePdfUpload}
+                                    />
+                                    <Button 
+                                        onClick={() => ocrFileInputRef.current?.click()} 
+                                        disabled={isProcessingOcr}
+                                        className="bg-pupr-blue hover:bg-teal-700 text-white w-full py-6 font-bold"
+                                    >
+                                        {isProcessingOcr ? (
+                                            <>
+                                                <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+                                                Memproses OCR...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-4 h-4 mr-2" />
+                                                Upload PDF & Ekstrak Data
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+
+                                <div className="relative my-2">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <span className="w-full border-t border-slate-200"></span>
+                                    </div>
+                                    <div className="relative flex justify-center text-[10px] uppercase tracking-tighter">
+                                        <span className="bg-white px-2 text-slate-400 font-bold">Fallback: Manual Paste</span>
+                                    </div>
+                                </div>
+
                                 <textarea
-                                    className="flex-1 w-full p-4 font-mono text-xs border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 outline-none resize-none"
-                                    placeholder="Paste data di sini..."
+                                    className="min-h-[120px] w-full p-4 font-mono text-[10px] border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 outline-none resize-none bg-slate-50/50"
+                                    placeholder="Paste data di sini jika OCR gagal..."
                                     value={bulkRawText}
                                     onChange={(e) => setBulkRawText(e.target.value)}
                                 />
-                                <Button onClick={handleBulkPreview} className="bg-slate-800 hover:bg-slate-900 text-white">
-                                    Pratinjau Data
+                                <Button onClick={handleBulkPreview} variant="outline" className="text-slate-700 border-slate-300 text-xs py-1 h-8">
+                                    Pratinjau Manual Paste
                                 </Button>
                             </div>
 

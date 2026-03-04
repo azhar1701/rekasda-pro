@@ -10,7 +10,13 @@ The Master Data module serves as the Single Source of Truth (SSOT) for all hydro
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |------|----------|-------|
-| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD for stations and rainfall |
+| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD for stations and rainfall (Excel/PDF OCR) |
+| Spatial Parameters | `ParameterSpasial.tsx` | Orchestrates DAS and Land Use analysis |
+| Excel Integration | `src/utils/excelService.ts` | Template generation and parsing |
+
+## FEATURES
+- **Otomasi PDF OCR**: Direct PDF upload support in `MasterHidrologiTab.tsx`. Uses Gemini Multimodal AI to parse complex tables into a structured 31x12 matrix.
+- **Bulk Matrix Ingestion**: Supports direct pasting and PDF extraction for rapid data entry.
 | Spatial Parameters | `ParameterSpasial.tsx` | Orchestrates DAS and Land Use analysis |
 | Excel Integration | `src/utils/excelService.ts` | Template generation and parsing |
 | Satellite Ingestion | `src/services/satelliteRainfallService.ts` | CHIRPS/GPM data fetching |

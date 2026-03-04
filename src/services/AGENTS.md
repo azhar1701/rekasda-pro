@@ -11,7 +11,11 @@ API and business logic layer handling data ingestion, database operations, and c
 | Water Balance | `src/services/waterBalanceEngine.ts` | SNI 6738:2015 & UU 17/2019 logic |
 | Satellite Data | `src/services/satelliteRainfallService.ts` | CHIRPS/GPM data simulation and fetching |
 | QC Logic | `src/services/qualityControlService.ts` | Rainfall data validation and outlier detection |
-| AI Integration | `src/services/geminiService.ts` | Google Gemini API wrapper for AI Consultant |
+| AI Integration | `src/services/geminiService.ts` | Gemini API wrapper (RAG + Multimodal PDF OCR) |
+| Spatial Ops | `src/services/demDelineationService.ts` | Watershed delineation and DEM processing |
+
+## FEATURES
+- **Otomasi PDF OCR**: Multimodal extraction of 31x12 rainfall matrices from PDF documents using Gemini. Returns structured JSON for bulk ingestion.
 | Spatial Ops | `src/services/demDelineationService.ts` | Watershed delineation and DEM processing |
 
 ## CONVENTIONS
