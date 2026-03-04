@@ -6,6 +6,7 @@ services:
       args:
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+        - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
     image: rekasda-pro-ui:latest
     container_name: rekasda-pro-ui
     ports:
@@ -19,3 +20,33 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    develop:
+      watch:
+        - action: rebuild
+          path: package.json
+        - action: sync+restart
+          path: .
+          ignore:
+            - node_modules/
+            - dist/
+  rekasda-pro-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: rekasda-pro-dev-watch
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/

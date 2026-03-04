@@ -10,13 +10,6 @@ import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
 import { infillMissingData } from '@/lib/utils/spatialMath';
 import { extractRainfallFromPdf } from '@/services/geminiService';
 
-/**
- * @feature Otomasi PDF OCR
- * Menggunakan Gemini Multimodal AI untuk mengekstrak matriks curah hujan 31x12 langsung dari dokumen PDF.
- */
-
-const DailyRainfallMatrix: React.FC<{ data: any[], year: number, onCellClick?: (dateStr: string, currentVal: number | null) => void }> = ({ data, year, onCellClick }) => {
-
 const DailyRainfallMatrix: React.FC<{ data: any[], year: number, onCellClick?: (dateStr: string, currentVal: number | null) => void }> = ({ data, year, onCellClick }) => {
     const matrix: (number | null)[][] = Array.from({ length: 31 }, () => Array(12).fill(null));
     
@@ -992,122 +985,158 @@ Tindakan ini tidak dapat dibatalkan!`);
             )}
 
             {showModalBulk && selectedStasiun && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-md shadow-lg max-w-4xl w-full p-6 flex flex-col max-h-[90vh]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-pupr-blue" />
-                                Bulk Input Curah Hujan (PDF/OCR)
-                            </h3>
-                            <button onClick={() => setShowModalBulk(false)} className="text-slate-400 hover:text-slate-600">
-                                <X className="w-6 h-6" />
+                <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4 sm:p-10">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-300 animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-pupr-blue/10 rounded-xl flex items-center justify-center shadow-inner">
+                                    <Activity className="w-6 h-6 text-pupr-blue" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-800 tracking-tight">Bulk Input Curah Hujan</h3>
+                                    <p className="text-xs text-slate-500 font-medium">Otomasi OCR PDF & Manual Paste Matriks 31x12</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setShowModalBulk(false)} 
+                                className="p-2.5 hover:bg-red-50 hover:text-red-500 rounded-full transition-all text-slate-400 group"
+                            >
+                                <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
                             </button>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
-                            <div className="flex flex-col gap-3 overflow-y-auto pr-2">
-                                <div className="flex items-center gap-4">
+                        <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-10 flex-1 overflow-hidden bg-white">
+                            <div className="flex flex-col gap-5 overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="flex items-center gap-4 bg-slate-100 p-3 rounded-lg border border-slate-200">
                                     <label className="text-sm font-bold text-slate-700">Tahun Target:</label>
                                     <input 
                                         type="number" 
                                         value={bulkYear} 
                                         onChange={(e) => setBulkYear(parseInt(e.target.value))}
-                                        className="w-24 px-3 py-1.5 border rounded-md font-mono focus:ring-2 focus:ring-teal-500 outline-none"
+                                        className="w-28 px-4 py-2 border-2 border-slate-300 rounded-md font-bold font-mono focus:ring-4 focus:ring-pupr-blue/10 focus:border-pupr-blue outline-none transition-all"
                                     />
                                 </div>
 
-                                <div className="p-6 border-2 border-dashed border-slate-300 rounded-md bg-slate-50 flex flex-col items-center justify-center gap-4">
-                                    <div className="w-16 h-16 rounded-full bg-pupr-blue/10 flex items-center justify-center text-pupr-blue">
-                                        <CloudRain className="w-8 h-8" />
+                                <div className="relative group">
+                                    <div className="p-8 border-2 border-dashed border-slate-300 group-hover:border-pupr-blue rounded-xl bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:bg-pupr-blue/[0.02]">
+                                        <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-pupr-blue group-hover:scale-110 transition-transform">
+                                            <CloudRain className="w-10 h-10" />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-base font-black text-slate-800 uppercase tracking-widest">Otomasi PDF OCR</p>
+                                            <p className="text-xs text-slate-500 mt-2 max-w-[280px] leading-relaxed">Unggah laporan BBWS (31x12). AI akan mengekstrak angka secara otomatis.</p>
+                                        </div>
+                                        <input 
+                                            ref={ocrFileInputRef}
+                                            type="file" 
+                                            accept=".pdf" 
+                                            className="hidden" 
+                                            onChange={handlePdfUpload}
+                                        />
+                                        <Button 
+                                            onClick={() => ocrFileInputRef.current?.click()} 
+                                            disabled={isProcessingOcr}
+                                            className="bg-pupr-blue hover:bg-slate-900 text-white w-full py-7 rounded-xl font-black text-sm shadow-lg shadow-pupr-blue/20"
+                                        >
+                                            {isProcessingOcr ? (
+                                                <>
+                                                    <Sparkles className="w-5 h-5 mr-2 animate-pulse" />
+                                                    PROSES OCR AKTIF...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload className="w-5 h-5 mr-3" />
+                                                    UNGGAH PDF SEKARANG
+                                                </>
+                                            )}
+                                        </Button>
                                     </div>
-                                    <div className="text-center">
-                                        <p className="text-sm font-bold text-slate-800 uppercase tracking-wide">Otomasi PDF OCR</p>
-                                        <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">AI akan mengekstrak tabel curah hujan 31x12 dari laporan PDF Anda secara otomatis.</p>
-                                    </div>
-                                    <input 
-                                        ref={ocrFileInputRef}
-                                        type="file" 
-                                        accept=".pdf" 
-                                        className="hidden" 
-                                        onChange={handlePdfUpload}
-                                    />
-                                    <Button 
-                                        onClick={() => ocrFileInputRef.current?.click()} 
-                                        disabled={isProcessingOcr}
-                                        className="bg-pupr-blue hover:bg-teal-700 text-white w-full py-6 font-bold"
-                                    >
-                                        {isProcessingOcr ? (
-                                            <>
-                                                <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
-                                                Memproses OCR...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Upload className="w-4 h-4 mr-2" />
-                                                Upload PDF & Ekstrak Data
-                                            </>
-                                        )}
-                                    </Button>
                                 </div>
 
-                                <div className="relative my-2">
+                                <div className="relative py-2">
                                     <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t border-slate-200"></span>
+                                        <span className="w-full border-t-2 border-slate-100"></span>
                                     </div>
-                                    <div className="relative flex justify-center text-[10px] uppercase tracking-tighter">
-                                        <span className="bg-white px-2 text-slate-400 font-bold">Fallback: Manual Paste</span>
+                                    <div className="relative flex justify-center text-[11px] uppercase tracking-widest">
+                                        <span className="bg-white px-4 text-slate-400 font-black italic">Atau Manual Paste</span>
                                     </div>
                                 </div>
 
                                 <textarea
-                                    className="min-h-[120px] w-full p-4 font-mono text-[10px] border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 outline-none resize-none bg-slate-50/50"
-                                    placeholder="Paste data di sini jika OCR gagal..."
+                                    className="min-h-[160px] w-full p-5 font-mono text-[11px] border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none resize-none bg-slate-50/30 transition-all leading-relaxed"
+                                    placeholder="Paste teks baris 1-31 di sini jika ingin input manual..."
                                     value={bulkRawText}
                                     onChange={(e) => setBulkRawText(e.target.value)}
                                 />
-                                <Button onClick={handleBulkPreview} variant="outline" className="text-slate-700 border-slate-300 text-xs py-1 h-8">
-                                    Pratinjau Manual Paste
+                                <Button 
+                                    onClick={handleBulkPreview} 
+                                    variant="outline" 
+                                    className="text-slate-600 border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-800 hover:text-white font-bold py-5 rounded-xl transition-all"
+                                >
+                                    Pratinjau Data Manual
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col gap-3 overflow-hidden">
-                                <h4 className="text-sm font-bold text-slate-700">Hasil Parsing ({bulkPreview?.length || 0} hari):</h4>
-                                <div className="flex-1 overflow-auto border rounded-md bg-slate-50">
+                            <div className="flex flex-col gap-4 overflow-hidden border-l border-slate-100 pl-4">
+                                <div className="flex justify-between items-center bg-slate-800 text-white px-4 py-3 rounded-lg shadow-inner">
+                                    <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-teal-400" />
+                                        Hasil Parsing
+                                    </h4>
+                                    <span className="text-xs font-mono bg-white/10 px-2 py-1 rounded">
+                                        {bulkPreview?.length || 0} Data Terdeteksi
+                                    </span>
+                                </div>
+
+                                <div className="flex-1 overflow-auto border-2 border-slate-100 rounded-xl bg-slate-50 shadow-inner custom-scrollbar">
                                     {bulkPreview ? (
-                                        <table className="w-full text-[10px] tabular-nums">
-                                            <thead className="bg-slate-200 sticky top-0">
+                                        <table className="w-full text-[11px] border-collapse">
+                                            <thead className="bg-slate-200 sticky top-0 z-10">
                                                 <tr>
-                                                    <th className="p-1 border text-left">Tanggal</th>
-                                                    <th className="p-1 border text-right">CH (mm)</th>
+                                                    <th className="p-3 border-b border-slate-300 text-left font-black text-slate-600">TANGGAL</th>
+                                                    <th className="p-3 border-b border-slate-300 text-right font-black text-slate-600">CH (MM)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {bulkPreview.slice(0, 100).map((row, idx) => (
-                                                    <tr key={idx} className="border-b">
-                                                        <td className="p-1 border">{row.tanggal}</td>
-                                                        <td className="p-1 border text-right font-bold text-pupr-blue">{row.curah_hujan.toFixed(1)}</td>
+                                                {bulkPreview.slice(0, 200).map((row, idx) => (
+                                                    <tr key={idx} className="border-b border-slate-100 hover:bg-pupr-blue/[0.03] transition-colors">
+                                                        <td className="p-3 border-r border-slate-100 font-mono text-slate-600">{row.tanggal}</td>
+                                                        <td className="p-3 text-right font-bold text-pupr-blue tabular-nums text-sm">
+                                                            {row.curah_hujan.toFixed(1)}
+                                                        </td>
                                                     </tr>
                                                 ))}
-                                                {bulkPreview.length > 100 && (
+                                                {bulkPreview.length > 200 && (
                                                     <tr>
-                                                        <td colSpan={2} className="p-2 text-center text-slate-400 italic">... dan {bulkPreview.length - 100} baris lainnya</td>
+                                                        <td colSpan={2} className="p-4 text-center text-slate-400 italic bg-white font-medium">
+                                                            ... Menampilkan 200 dari {bulkPreview.length} baris data
+                                                        </td>
                                                     </tr>
                                                 )}
                                             </tbody>
                                         </table>
                                     ) : (
-                                        <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-                                            Belum ada data untuk ditampilkan
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 opacity-60">
+                                            <Activity className="w-12 h-12 stroke-[1.5]" />
+                                            <p className="text-sm font-medium">Belum ada data untuk diproses</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex gap-3">
+                                
+                                <div className="pt-2">
                                     <Button 
                                         onClick={handleBulkSave} 
                                         disabled={!bulkPreview || bulkPreview.length === 0 || isLoading}
-                                        className="flex-1 bg-pupr-blue hover:bg-teal-700 text-white"
+                                        className="w-full bg-pupr-blue hover:bg-slate-900 text-white py-8 rounded-2xl font-black text-base shadow-xl shadow-pupr-blue/30 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
                                     >
-                                        {isLoading ? 'Menyimpan...' : 'Simpan ke Database'}
+                                        {isLoading ? (
+                                            <span className="flex items-center gap-2">
+                                                <Activity className="w-5 h-5 animate-spin" />
+                                                MENYIMPAN DATA...
+                                            </span>
+                                        ) : (
+                                            'KONFIRMASI & SIMPAN KE DATABASE'
+                                        )}
                                     </Button>
                                 </div>
                             </div>
