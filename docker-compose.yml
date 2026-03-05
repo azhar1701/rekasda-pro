@@ -1,5 +1,27 @@
 services:
-  rekasda-pro-ui:
+  # Development Service (Hot Reload via Volumes)
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: rekasda-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env.local
+    networks:
+      - rekasda-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Production-like Service (Built image)
+  prod:
     build:
       context: .
       dockerfile: Dockerfile
@@ -7,46 +29,19 @@ services:
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
         - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
-    image: rekasda-pro-ui:latest
-    container_name: rekasda-pro-ui
+    image: rekasda-pro:latest
+    container_name: rekasda-prod
     ports:
       - "3000:3000"
     restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    develop:
-      watch:
-        - action: rebuild
-          path: package.json
-        - action: sync+restart
-          path: .
-          ignore:
-            - node_modules/
-            - dist/
-  rekasda-pro-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: rekasda-pro-dev-watch
-    ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /app
-          ignore:
-            - node_modules/
-            - dist/
+    networks:
+      - rekasda-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  rekasda-net:
+    driver: bridge

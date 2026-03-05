@@ -85,7 +85,7 @@
   "overrides": {
     "esbuild": "^0.25.0",
     "serialize-javascript": "^7.0.3",
-    "dompurify": "github:cure53/dompurify#729097f",
+    "dompurify": "github:cure53/dompurify#302b51de22535cc90235472c52e3401bedd46f80",
     "tar": "^7.5.10",
     "jspdf": "^4.2.0"
   }

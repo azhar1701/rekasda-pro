@@ -1,7 +1,7 @@
 # UI COMPONENTS KNOWLEDGE BASE
 
 ## OVERVIEW
-Atomic and molecular UI components built with Tailwind CSS and Radix UI primitives for the RekaSDA platform.
+Standardized GovTech UI components following high-density design principles for engineering applications. Built with Tailwind CSS and Radix UI primitives.
 
 ## STRUCTURE
 - `data-display/`: Complex data visualization components (charts, dashboards).
@@ -21,6 +21,9 @@ Atomic and molecular UI components built with Tailwind CSS and Radix UI primitiv
 | GovTech Variants | `src/components/ui/govtech` | `ButtonGovTech.tsx`, `CardGovTech.tsx` |
 
 ## CONVENTIONS
+- **PUPR Brand**: Use `bg-pupr-blue`, `text-pupr-text`, and `bg-pupr-yellow` for brand consistency.
+- **Data Density**: Use `tabular-nums` for all numeric outputs.
+
 - **Composition**: Prefer component composition over large prop objects.
 - **Lucide Icons**: Use `lucide-react` for all iconography.
 - **Conditional Classes**: Use the `cn` utility for all Tailwind class merging.

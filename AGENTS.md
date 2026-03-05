@@ -1,8 +1,8 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-04
-**Commit:** e1def56
-**Branch:** v1.1-dev
+**Generated:** 2026-03-05
+**Commit:** latest
+**Branch:** main
 
 ## OVERVIEW
 Professional Water Resources Engineering Platform for hydrological analysis compliant with Indonesian National Standards (SNI). Core stack: React 18.3, TypeScript 5.9, Supabase, Tailwind CSS 3.4, and Google Gemini AI.
@@ -10,23 +10,13 @@ Professional Water Resources Engineering Platform for hydrological analysis comp
 ## STRUCTURE
 ```
 rekasda-pro/
-├── src/
-│   ├── features/        # Feature modules (Flood, Channel, Water Balance, AI, Master Data)
-│   ├── components/ui/   # Shared GovTech UI components
-│   ├── hooks/           # Custom React hooks & Web Workers
-│   ├── lib/             # Core libraries (Engine, Constants, Utils)
-│   ├── services/        # API, Database, & Business Logic (Gemini OCR)
-│   ├── stores/          # State management (Zustand)
-│   └── types/           # TypeScript definitions
-│   ├── components/ui/   # Shared GovTech UI components
-│   ├── hooks/           # Custom React hooks & Web Workers
-│   ├── lib/             # Core libraries (Engine, Constants, Utils)
-│   ├── services/        # API, Database, & Business Logic
-│   ├── stores/          # State management (Zustand)
-│   └── types/           # TypeScript definitions
-├── database/            # SQL schemas and setup
-├── supabase/            # Migrations and Edge Functions
-└── docs/                # Technical and user documentation
+├── src/             # Feature modules & core logic
+├── scripts/         # Automation & maintenance scripts (automation/)
+├── docs/            # Technical and user documentation (visuals/)
+├── supabase/        # Migrations and Edge Functions
+├── database/        # SQL schemas
+├── dist/            # Build output
+└── ...
 ```
 
 ## WHERE TO LOOK
@@ -34,42 +24,41 @@ rekasda-pro/
 |------|----------|-------|
 | Hydrology Logic | `src/lib/engine` | SNI-compliant calculations |
 | SNI Constants | `src/lib/constants/sni.ts` | SSOT for coefficients and limits |
-| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD + Bulk Matrix Ingestion (Excel/PDF OCR) |
+| Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD + Bulk Matrix Ingestion |
 | UI Components | `src/components/ui` | GovTech standard components |
-| DB Schema | `supabase/migrations` | Table definitions and migrations |
-| AI Logic | `src/services/geminiService.ts` | Gemini API integration (RAG + Multimodal OCR) |
-| UI Components | `src/components/ui` | GovTech standard components |
+| Docker Config | `./Dockerfile*`, `docker-compose.yml` | Multi-stage build + Dev Watch |
+| Nginx Config | `nginx.conf` | Port 3000, SPA routing, security headers |
+| Automation | `scripts/automation/` | Legacy fix & parse scripts |
 | DB Schema | `supabase/migrations` | Table definitions and migrations |
 | AI Logic | `src/services/geminiService.ts` | Gemini API integration |
-| Web Workers | `src/hooks/useHydrologyWorker.ts` | Heavy math offloading |
-| Entry Point | `src/index.tsx` | Main application entry |
 
 ## CONVENTIONS
+- **Docker First**: Use `docker compose up dev` for local dev with hot reload.
+- **Environment**: Never commit `.env`. Use `.env.example` as a template. Build args for prod.
 - **SNI First**: All calculations must reference SNI constants in `src/lib/constants/sni.ts`.
-- **SSOT**: Data flows from Supabase -> Store -> Engines. No manual overrides without QC.
-- **Worker-First**: Heavy math logic (HSS, Frequency Analysis) should not block the main thread.
-- **GovTech UI**: High-density UI strictly required for all data tables (`tabular-nums`, strict zebra stripes).
-- **Type Safety**: Strict TypeScript usage; avoid `any` at all costs.
-- **Feature Barrels**: Each feature in `src/features` should have an `index.ts` for clean exports.
+- **SSOT**: Data flows from Supabase -> Store -> Engines.
+- **Worker-First**: Heavy math logic should not block the main thread.
+- **GovTech UI**: High-density UI strictly required for all data tables.
+- **Type Safety**: Strict TypeScript usage; avoid `any`.
 
 ## ANTI-PATTERNS
-- **Hardcoded Parameters**: Never use magic numbers for rainfall coefficients; use `SNI` constants.
-- **Direct State Mutation**: Always use store actions to update hydrology data.
-- **Main-Thread Blocking**: Running heavy spatial/hydrology algorithms without Web Workers.
-- **Mock Data in Production**: Ensure `fjMock.ts` or similar are only used in test/dev environments.
-- **Direct Supabase Calls**: Use `apiService` or `useDatabase` hook instead of direct client calls.
+- **Hardcoded Parameters**: Never use magic numbers for rainfall coefficients.
+- **Direct State Mutation**: Always use store actions.
+- **Committed Secrets**: Never commit `.env` or sensitive API keys.
+- **Root Script Sprawl**: Keep project root clean; use `scripts/automation/` for utility scripts.
+- **Main-Thread Blocking**: Running heavy algorithms without Web Workers.
 
 ## COMMANDS
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run test     # Run hydrology tests (Vitest)
-npm run typecheck # Check TS strict mode
-npm run lint     # Run ESLint
+npm run dev       # Start dev server
+npm run build     # Build for production
+npm run test      # Run hydrology tests
+docker compose up dev  # Professional dev workflow
+docker compose up prod # Build & run production image
 ```
 
 ## NOTES
 - Rational Method is limited to DAS ≤ 300 ha per SNI 2415:2016.
 - HSS Nakayasu uses alpha = 2.0 as standard unless calibrated.
 - Water Balance follows SNI 19-6728.1-2002 methodology.
-- Project uses Vitest for testing and Vite for building.
+

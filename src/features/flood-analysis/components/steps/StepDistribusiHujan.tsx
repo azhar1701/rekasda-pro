@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { generateABMTable, calculateEffectiveRainfall } from '@/lib/utils/hydrologyMath';
+import { generateHyetograph } from '@/lib/engine/flood/mononobe';
 import { HyetographChart } from '@/components/ui/HyetographChart';
 import { IDFChart } from '@/components/ui/IDFChart';
 import { Calculator, CloudRain } from 'lucide-react';
@@ -21,8 +21,17 @@ export const StepDistribusiHujan: React.FC = () => {
   useEffect(() => {
     if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0) {
       setCalculated(true);
+    } else {
+      setCalculated(false);
     }
   }, [distribusiHujanJamJaman]);
+
+  // Reset calculated state when R24 or durasi changes to force re-calculation
+  useEffect(() => {
+    setCalculated(false);
+    setDistribusiHujanJamJaman(null);
+    setHujanEfektif(null);
+  }, [hasilAnalisisFrekuensi?.selectedKalaUlang, durasiHujan, setDistribusiHujanJamJaman, setHujanEfektif]);
 
   const R24 = hasilAnalisisFrekuensi?.curahHujanRencana.find(
     v => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
@@ -30,27 +39,30 @@ export const StepDistribusiHujan: React.FC = () => {
   
   const C = tutupanLahan?.koefisienPengaliranGabungan || 0.65;
 
-  const abmTable = React.useMemo(() => {
-    if (R24 === 0) return [];
-    return generateABMTable(R24, durasiHujan, 1);
+  const hyetographResult = React.useMemo(() => {
+    if (R24 === 0) return null;
+    return generateHyetograph(R24, durasiHujan);
   }, [R24, durasiHujan]);
 
+  const abmTable = React.useMemo(() => {
+    return hyetographResult?.rows || [];
+  }, [hyetographResult]);
+
   const hujanEfektifArray = React.useMemo(() => {
-    if (abmTable.length === 0) return [];
-    const hietograf = abmTable.map(row => row.hyetograph);
-    return calculateEffectiveRainfall(hietograf, C);
-  }, [abmTable, C]);
+    if (!hyetographResult) return [];
+    return hyetographResult.rows.map(row => row.abm * C);
+  }, [hyetographResult, C]);
 
   const chartData = React.useMemo(() => {
     return abmTable.map((row, i) => ({
-      jam: row.t,
-      losses: Number((row.hyetograph - hujanEfektifArray[i]).toFixed(2)),
+      jam: row.jam,
+      losses: Number((row.abm - hujanEfektifArray[i]).toFixed(2)),
       efektif: Number(hujanEfektifArray[i].toFixed(2))
     }));
   }, [abmTable, hujanEfektifArray]);
 
   const handleCalculate = () => {
-    const hietograf = abmTable.map(row => row.hyetograph);
+    const hietograf = abmTable.map(row => row.abm);
     setDistribusiHujanJamJaman(hietograf);
     setHujanEfektif(hujanEfektifArray);
     setCalculated(true);
@@ -133,17 +145,17 @@ export const StepDistribusiHujan: React.FC = () => {
                 <tbody>
                   {abmTable.map((row, i) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="px-2 py-1.5 text-center tabular-nums tabular-nums tracking-tight">{row.t}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.I.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.X.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.deltaX.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums tabular-nums tracking-tight">{row.deltaXPercent.toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums font-semibold tabular-nums tracking-tight">{row.hyetograph.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-center tabular-nums tracking-tight">{row.jam}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tracking-tight">{row.intensitas.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tracking-tight">{row.kumulatif.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tracking-tight">{row.inkremental.toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums tracking-tight">{((row.inkremental / (hyetographResult?.totalHujan || 1)) * 100).toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums font-semibold tracking-tight">{row.abm.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+</div>
           </div>
 
           <div className="bg-white border border-slate-300 rounded-md p-4">

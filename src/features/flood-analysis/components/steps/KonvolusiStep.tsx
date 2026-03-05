@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Waves, Save, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
@@ -15,6 +15,7 @@ import {
 
 interface KonvolusiStepProps {
   hssOrdinates: number[];
+  hssHydrograph: { time: number; discharge: number }[];
   selectedHSS: string | null;
   onComplete: () => void;
   isCompleted: boolean;
@@ -39,6 +40,7 @@ const INITIAL_STATE: KonvolusiState = {
 
 export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
   hssOrdinates,
+  hssHydrograph,
   selectedHSS,
   onComplete,
   isCompleted,
@@ -123,6 +125,16 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
   const { hydrograph, peakDischarge, timeToPeak } = result;
 
+  // Merge flood hydrograph + HSS unit hydrograph into one dataset for Recharts
+  const mergedChartData = useMemo(() => {
+    const maxLen = Math.max(hydrograph.length, hssHydrograph.length);
+    return Array.from({ length: maxLen }, (_, i) => ({
+      time: hydrograph[i]?.time ?? (hssHydrograph[i]?.time ?? Number((i * 0.5).toFixed(1))),
+      inflow: hydrograph[i]?.inflow ?? null,
+      hssUnit: hssHydrograph[i]?.discharge ?? null,
+    }));
+  }, [hydrograph, hssHydrograph]);
+
   return (
     <div className="space-y-6">
 
@@ -163,23 +175,32 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         </div>
 
         {/* Ringkasan data input */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-xs font-semibold text-blue-700">Hujan Efektif</p>
             <p className="text-lg font-bold text-blue-900 tabular-nums tracking-tight">
-              {hujanEfektif?.length ?? 0} ordinat
+              {hujanEfektif?.length ?? 0} jam
             </p>
             <p className="text-xs text-pupr-blue mt-1 tabular-nums tracking-tight">
               Total: {((hujanEfektif ?? []).reduce((a, b) => a + b, 0)).toFixed(2)} mm
             </p>
           </div>
           <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-xs font-semibold text-green-700">HSS Ordinates</p>
+            <p className="text-xs font-semibold text-green-700">HSS Unit Peak</p>
             <p className="text-lg font-bold text-green-900 tabular-nums tracking-tight">
-              {hssOrdinates.length} ordinat
+              {Math.max(...hssOrdinates, 0).toFixed(3)}
             </p>
             <p className="text-xs text-green-600 mt-1">
-              Metode: {selectedHSS?.toUpperCase() ?? '-'}
+              m³/s/mm
+            </p>
+          </div>
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
+            <p className="text-xs font-semibold text-purple-700">Metode HSS</p>
+            <p className="text-lg font-bold text-purple-900 tabular-nums tracking-tight">
+              {selectedHSS?.toUpperCase() ?? '-'}
+            </p>
+            <p className="text-xs text-purple-600 mt-1">
+              {hssOrdinates.length} ordinat
             </p>
           </div>
         </div>
@@ -243,9 +264,9 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
 
           {/* Grafik hidrograf */}
           <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-            <h4 className="text-sm font-bold text-slate-900 mb-4">Hidrograf Banjir Rencana</h4>
+            <h4 className="text-sm font-bold text-slate-900 mb-4">Hidrograf Banjir Rencana vs HSS Unit</h4>
             <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={hydrograph}>
+              <AreaChart data={mergedChartData}>
                 <defs>
                   <linearGradient id="floodGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.3} />
@@ -258,21 +279,48 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
                   label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5 }}
                 />
                 <YAxis
-                  label={{ value: 'Debit (m³/s)', angle: -90, position: 'insideLeft' }}
+                  yAxisId="left"
+                  label={{ value: 'Debit Banjir (m³/s)', angle: -90, position: 'insideLeft' }}
                   tickFormatter={(v: number) => v.toLocaleString('id-ID')}
                 />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  label={{ value: 'HSS Unit (m³/s/mm)', angle: 90, position: 'insideRight' }}
+                  tickFormatter={(v: number) => v.toFixed(2)}
+                />
                 <Tooltip
-                  formatter={(value: number) => [`${value.toFixed(2)} m³/s`, 'Debit']}
+                  formatter={(value: number, name: string) => [
+                    `${value.toFixed(2)} ${name === 'inflow' ? 'm³/s' : 'm³/s/mm'}`,
+                    name === 'inflow' ? 'Debit Banjir' : 'HSS Unit',
+                  ]}
                   labelFormatter={(label: string) => `Jam ke-${label}`}
                 />
                 <Area
+                  yAxisId="left"
                   type="monotone"
                   dataKey="inflow"
                   stroke="#3b82f6"
                   strokeWidth={3}
                   fill="url(#floodGradient)"
                   dot={false}
+                  name="inflow"
+                  connectNulls={false}
                 />
+                {hssHydrograph.length > 0 && (
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="hssUnit"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    fill="transparent"
+                    dot={false}
+                    name="hss"
+                    connectNulls={false}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </Card>

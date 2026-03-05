@@ -42,7 +42,7 @@ export const ModulBanjirStepper: React.FC = () => {
   
   const [selectedHSS, setSelectedHSS] = useState<string | null>(null);
   const [hssOrdinates, setHssOrdinates] = useState<number[]>([]);
-
+  const [hssHydrograph, setHssHydrograph] = useState<{ time: number; discharge: number }[]>([]);
   const { isComplete: freqComplete } = useFrequencyAnalysis();
 
   React.useEffect(() => {
@@ -67,9 +67,10 @@ export const ModulBanjirStepper: React.FC = () => {
     if (step < 3) setActiveStep((step + 1) as Step);
   };
 
-  const handleStep2Complete = (method: string, ordinates: number[]) => {
+  const handleStep2Complete = (method: string, ordinates: number[], hydrograph: { time: number; discharge: number }[]) => {
     setSelectedHSS(method);
     setHssOrdinates(ordinates);
+    setHssHydrograph(hydrograph);
     handleStepComplete(2);
   };
 
@@ -169,6 +170,7 @@ export const ModulBanjirStepper: React.FC = () => {
           {activeStep === 3 && completedSteps.has(2) && (
             <KonvolusiStep
               hssOrdinates={hssOrdinates}
+              hssHydrograph={hssHydrograph}
               selectedHSS={selectedHSS}
               onComplete={handleStep3Complete}
               isCompleted={completedSteps.has(3)}

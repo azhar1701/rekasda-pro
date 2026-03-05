@@ -2,11 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Activity, TrendingUp } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { calculateHSSNakayasu } from '@/lib/engine/flood/sni2415';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface HSSComparisonStepProps {
-  onComplete: (method: string, ordinates: number[]) => void;
-  isCompleted: boolean;
+  onComplete: (method: string, ordinates: number[], hydrograph: { time: number;
+  discharge: number }[]) => void;
+isCompleted: boolean;
 }
 
 const HSS_METHODS = [
@@ -36,78 +38,97 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
   const hssResults = useMemo(() => {
     if (!calculated) return {};
 
-    const results: Record<string, { time: number[]; discharge: number[] }> = {};
+    const results: Record<string, { time: number[]; discharge: number[]; hydrograph: { time: number; discharge: number }[] }> = {};
 
-    // Nakayasu
-    const Tg = L < 15 ? 0.4 + 0.058 * L : 0.21 * Math.pow(L, 0.7);
-    const Tr = 0.5 * Tg;
-    const Tp_nak = Tg + 0.8 * Tr;
-    const Qp_nak = (A * 1) / (3.6 * (0.3 * Tp_nak + 2.0 * (Tp_nak + Tg)));
+    // Nakayasu (Real Engine)
+    const Tg_nak = L < 15 ? 0.4 + 0.058 * L : 0.21 * Math.pow(L, 0.7);
+    const Tr_nak = 0.5 * Tg_nak;
+    const nakayasuOutput = calculateHSSNakayasu({
+      Ro: 1, // Unit hydrograph
+      Tg: Tg_nak,
+      Tr: Tr_nak,
+      Alpha: 2.0,
+      A: A,
+      L: L
+    });
     
-    const time_nak: number[] = [];
-    const q_nak: number[] = [];
-    for (let t = 0; t <= Tp_nak * 4; t += 0.5) {
-      time_nak.push(t);
-      if (t <= Tp_nak) {
-        q_nak.push(Qp_nak * Math.pow(t / Tp_nak, 2.4));
-      } else if (t <= Tp_nak + 1.5 * Tg) {
-        q_nak.push(Qp_nak * Math.pow(0.3, (t - Tp_nak) / Tg));
-      } else {
-        q_nak.push(Qp_nak * Math.pow(0.3, 1.5 + (t - Tp_nak - 1.5 * Tg) / (2 * Tg)));
-      }
+    // Filter to 0.5h intervals for consistency and worker compatibility
+    const filteredNakayasu: { time: number; discharge: number }[] = [];
+    for (let t = 0; t <= nakayasuOutput.Tb; t += 0.5) {
+      const closest = nakayasuOutput.hydrograph.reduce((prev, curr) => 
+        Math.abs(curr.time - t) < Math.abs(prev.time - t) ? curr : prev
+      );
+      filteredNakayasu.push({ time: t, discharge: closest.discharge });
     }
-    results.nakayasu = { time: time_nak, discharge: q_nak };
 
-    // Snyder (simplified)
+    results.nakayasu = { 
+      time: filteredNakayasu.map(p => p.time), 
+      discharge: filteredNakayasu.map(p => p.discharge),
+      hydrograph: filteredNakayasu
+    };
+
+    // Snyder (simplified but consistent)
     const Ct = 0.6;
     const Lc = L * 0.5;
     const tp_sny = Ct * Math.pow(L * Lc, 0.3);
     const Qp_sny = (2.78 * 0.6 * A) / tp_sny;
     
-    const time_sny: number[] = [];
-    const q_sny: number[] = [];
+    const hydro_sny: { time: number; discharge: number }[] = [];
     for (let t = 0; t <= tp_sny * 5; t += 0.5) {
-      time_sny.push(t);
+      let q = 0;
       if (t <= tp_sny) {
-        q_sny.push(Qp_sny * Math.pow(t / tp_sny, 2.5));
+        q = Qp_sny * Math.pow(t / tp_sny, 2.5);
       } else {
-        q_sny.push(Qp_sny * Math.exp(-0.5 * (t - tp_sny) / tp_sny));
+        q = Qp_sny * Math.exp(-0.5 * (t - tp_sny) / tp_sny);
       }
+      hydro_sny.push({ time: t, discharge: q });
     }
-    results.snyder = { time: time_sny, discharge: q_sny };
+    results.snyder = { 
+      time: hydro_sny.map(p => p.time), 
+      discharge: hydro_sny.map(p => p.discharge),
+      hydrograph: hydro_sny
+    };
 
-    // SCS (simplified)
+    // SCS (simplified but consistent)
     const tp_scs = 0.6 * Math.sqrt(A);
     const Qp_scs = (2.08 * A) / tp_scs;
     
-    const time_scs: number[] = [];
-    const q_scs: number[] = [];
+    const hydro_scs: { time: number; discharge: number }[] = [];
     for (let t = 0; t <= tp_scs * 5; t += 0.5) {
-      time_scs.push(t);
       const ratio = t / tp_scs;
+      let q = 0;
       if (ratio <= 1) {
-        q_scs.push(Qp_scs * Math.pow(ratio, 2.3));
+        q = Qp_scs * Math.pow(ratio, 2.3);
       } else {
-        q_scs.push(Qp_scs * Math.exp(-0.6 * (ratio - 1)));
+        q = Qp_scs * Math.exp(-0.6 * (ratio - 1));
       }
+      hydro_scs.push({ time: t, discharge: q });
     }
-    results.scs = { time: time_scs, discharge: q_scs };
+    results.scs = { 
+      time: hydro_scs.map(p => p.time), 
+      discharge: hydro_scs.map(p => p.discharge),
+      hydrograph: hydro_scs
+    };
 
-    // ITB-1 (simplified)
+    // ITB-1 (simplified but consistent)
     const tp_itb = 0.5 * Math.sqrt(A);
     const Qp_itb = (0.18 * A) / tp_itb;
     
-    const time_itb: number[] = [];
-    const q_itb: number[] = [];
+    const hydro_itb: { time: number; discharge: number }[] = [];
     for (let t = 0; t <= tp_itb * 6; t += 0.5) {
-      time_itb.push(t);
+      let q = 0;
       if (t <= tp_itb) {
-        q_itb.push(Qp_itb * Math.pow(t / tp_itb, 2.2));
+        q = Qp_itb * Math.pow(t / tp_itb, 2.2);
       } else {
-        q_itb.push(Qp_itb * Math.exp(-0.7 * (t - tp_itb) / tp_itb));
+        q = Qp_itb * Math.exp(-0.7 * (t - tp_itb) / tp_itb);
       }
+      hydro_itb.push({ time: t, discharge: q });
     }
-    results.itb1 = { time: time_itb, discharge: q_itb };
+    results.itb1 = { 
+      time: hydro_itb.map(p => p.time), 
+      discharge: hydro_itb.map(p => p.discharge),
+      hydrograph: hydro_itb
+    };
 
     return results;
   }, [calculated, A, L]);
@@ -136,7 +157,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
   const handleComplete = () => {
     const selected = hssResults[selectedMethod];
     if (selected) {
-      onComplete(selectedMethod, selected.discharge);
+      onComplete(selectedMethod, selected.discharge, selected.hydrograph);
     }
   };
 

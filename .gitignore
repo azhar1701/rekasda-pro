@@ -69,14 +69,20 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-# .env is committed as template (see .env file for setup instructions)
-# .env.local is for local development with actual credentials (git-ignored)
+# Environment variables
+.env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.test
+.env.secrets
+.env.*.local
+
+# Build and Logs
+dist/
+logs/
+*.log
+
+# Supabase Local
+supabase/.temp/
+supabase/.branches/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
