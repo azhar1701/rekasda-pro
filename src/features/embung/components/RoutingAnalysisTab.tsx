@@ -104,10 +104,18 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                 }));
 
                 setResultData(chartData);
-                setSummary({
+                
+                const s = { 
                     peakInflow: Number(routingResult.peakInflow.toFixed(2)),
                     peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
                     attenuation: Number((routingResult.attenuationRatio).toFixed(1))
+                };
+                
+                setSummary(s); 
+                setHasilEmbung({ 
+                    isAman: s.peakOutflow <= s.peakInflow, 
+                    reduksiPuncak: s.attenuation, 
+                    umurSedimen: hasilEmbung?.umurSedimen || 0 
                 });
 
                 toast.success('Simulasi Penelusuran Banjir berhasil.');
