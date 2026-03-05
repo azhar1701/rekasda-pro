@@ -13,7 +13,7 @@ import {
   Bot, User, Send, Paperclip, 
   Database, AlertCircle, CheckCircle2, Clock, 
   Trash2, BookOpen, BrainCircuit, X,
-  Shield, Zap, Activity, Info, Sparkles
+  Shield, Zap, Activity, Sparkles
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer

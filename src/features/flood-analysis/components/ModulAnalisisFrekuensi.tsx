@@ -23,6 +23,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
   const { analisisFrekuensi, setAnalisisFrekuensi, dataHujan, selectedStasiun, hasilThiessen } = useHydrologyStore();
   
   const [dataInput, setDataInput] = useState<number[]>([]);
+  const [inputType, setInputType] = useState<'point' | 'areal_algebraic' | 'areal_thiessen' | 'areal_isohyet'>('point');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
@@ -35,8 +36,16 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     return hasEnoughData;
   }, [dataHujan, hasilThiessen]);
 
+  // Workflow Sync: Default to saved Spatial Analysis method
+  const savedSpatialMetode = useHydrologyStore(s => s.curahHujanWilayah?.metode);
   useEffect(() => {
-    if (dataHujan.length > 0) {
+    if (savedSpatialMetode === 'thiessen') setInputType('areal_thiessen');
+    else if (savedSpatialMetode === 'aljabar') setInputType('areal_algebraic');
+    else if (savedSpatialMetode === 'isohyet') setInputType('areal_isohyet');
+  }, [savedSpatialMetode]);
+
+  useEffect(() => {
+    if (inputType === 'point' && dataHujan.length > 0) {
       const stasiunData = selectedStasiun 
         ? dataHujan.filter(d => d.stasiun_id === selectedStasiun.id)
         : dataHujan;
@@ -49,16 +58,37 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
         });
         const annualMax = Array.from(byYear.values());
-        if (annualMax.length >= 10) {
-          setDataInput(annualMax);
-        } else {
-          setDataInput([]);
-        }
+        if (annualMax.length >= 10) setDataInput(annualMax);
+        else setDataInput([]);
       } else {
         setDataInput([]);
       }
+    } else if (inputType === 'areal_thiessen' && hasilThiessen?.hujanRataRataDAS) {
+      setDataInput(hasilThiessen.hujanRataRataDAS);
+    } else if (inputType === 'areal_algebraic' && dataHujan.length > 0) {
+      // Simple Algebraic Mean logic (could be moved to engine)
+      const years = Array.from(new Set(dataHujan.map(d => new Date(d.tanggal).getFullYear())));
+      const results: number[] = [];
+      years.forEach(year => {
+        const yearData = dataHujan.filter(d => new Date(d.tanggal).getFullYear() === year);
+        const stations = Array.from(new Set(yearData.map(d => d.stasiun_id)));
+        let sum = 0;
+        stations.forEach(sId => {
+          const stationAnnualMax = yearData.filter(d => d.stasiun_id === sId).map(d => d.curah_hujan);
+          if (stationAnnualMax.length > 0) sum += Math.max(...stationAnnualMax);
+        });
+        if (stations.length > 0) results.push(sum / stations.length);
+      });
+      setDataInput(results);
+      setDataInput(results);
+    } else if (inputType === 'areal_isohyet' && useHydrologyStore.getState().curahHujanWilayah?.isohyetConfigs) {
+      // For Isohyet AMS: use the master average value calculated in spatial parameters
+      const config = useHydrologyStore.getState().curahHujanWilayah;
+      if (config?.hujanRataRata) {
+         setDataInput([config.hujanRataRata]);
+      }
     }
-  }, [dataHujan, selectedStasiun]);
+  }, [dataHujan, selectedStasiun, inputType, hasilThiessen]);
 
   useEffect(() => {
     if (analisisFrekuensi) {
@@ -191,7 +221,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       >
         <ActionableEmptyState 
           title="Data Belum Lengkap"
-          description="Lengkapi Data Master terlebih dahulu: (1) Data Curah Hujan minimal 10 tahun, (2) Morfometri DAS, (3) Tutupan Lahan."
+          description="Lengkapi Data Master terlebih dahulu: (1) Data Curah Hujan minimal 10 tahun untuk setiap stasiun, (2) Morfometri DAS, (3) Tutupan Lahan."
         />
       </ModuleLayout>
     );
@@ -222,6 +252,37 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           <h3 className="text-sm font-bold text-slate-900">Input Data Hujan</h3>
         </div>
         <div className="p-4">
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-xs font-bold text-slate-700">Sumber Data:</label>
+            <div className="flex gap-2">
+              {[
+                { id: 'point', label: 'Data Titik (Stasiun)' },
+                { id: 'areal_algebraic', label: 'Rata-rata Aljabar' },
+                { id: 'areal_thiessen', label: 'Poligon Thiessen' },
+                { id: 'areal_isohyet', label: 'Garis Isohyet' }
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setInputType(opt.id as any)}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-full border transition-all ${
+                    inputType === opt.id 
+                      ? 'bg-pupr-blue text-white border-pupr-blue' 
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {inputType.startsWith('areal') && (
+            <div className="mb-4 p-2.5 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+              <span className="text-[10px] text-amber-800 font-medium">
+                <b>Peringatan SNI:</b> Data gabungan (Areally averaged) tidak direkomendasikan untuk Analisis Frekuensi di beberapa standar. Pastikan metodologi sesuai dengan kerangka desain Anda.
+              </span>
+            </div>
+          )}
         {dataInput.length >= 10 && !showManualInput ? (
           <div className="space-y-3">
             {/* Data Summary Card */}

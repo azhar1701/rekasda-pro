@@ -139,15 +139,35 @@ export function calculateDistributions(
   ];
 }
 
+function normalCDF(z: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+
+function gumbelCDF(x: number, mean: number, stdDev: number): number {
+  const alpha = Math.sqrt(6) / Math.PI / stdDev;
+  const u = mean - 0.5772 / alpha;
+  return Math.exp(-Math.exp(-alpha * (x - u)));
+}
+
 export function calculateGoodnessOfFit(data: number[], distributions: DistributionResult[]): GoodnessOfFitResult[] {
   const n = data.length;
   const ksCritical = interpolate(KS_CRITICAL, n);
   const sortedData = [...data].sort((a, b) => a - b);
   return distributions.map(dist => {
     let ksMax = 0;
-    sortedData.forEach((_, i) => {
-      const empiricalProb = (i + 1) / n;
-      const theoreticalProb = (i + 1) / (n + 1);
+    const params = calculateStatisticalParams(data);
+    const paramsLog = calculateStatisticalParams(data.map(x => Math.log(Math.max(x, 1e-10))));
+    
+    sortedData.forEach((x, i) => {
+      const empiricalProb = (i + 1) / (n + 1);
+      let theoreticalProb = 0;
+      if (dist.method === 'normal') theoreticalProb = normalCDF((x - params.mean) / params.stdDev);
+      else if (dist.method === 'gumbel') theoreticalProb = gumbelCDF(x, params.mean, params.stdDev);
+      else if (dist.method === 'lognormal') theoreticalProb = normalCDF((Math.log(Math.max(x, 1e-10)) - paramsLog.mean) / paramsLog.stdDev);
+      else if (dist.method === 'logpearson3') theoreticalProb = normalCDF((Math.log(Math.max(x, 1e-10)) - paramsLog.mean) / paramsLog.stdDev);
       ksMax = Math.max(ksMax, Math.abs(empiricalProb - theoreticalProb));
     });
     const k_val = n <= 20 ? 4 : n <= 50 ? 6 : 8;
@@ -171,12 +191,22 @@ export function calculateGoodnessOfFit(data: number[], distributions: Distributi
 
 export function selectBestMethod(goodnessOfFit: GoodnessOfFitResult[]): string {
   const passed = goodnessOfFit.filter(gof => gof.chiSquare.accepted && gof.kolmogorovSmirnov.accepted);
-  if (passed.length === 0) {
-    return goodnessOfFit.reduce((best, current) => {
-      const bestScore = best.chiSquare.statistic + best.kolmogorovSmirnov.statistic;
-      const currentScore = current.chiSquare.statistic + current.kolmogorovSmirnov.statistic;
-      return currentScore < bestScore ? current : best;
-    }).method;
+  
+  // Priority: LP3 > Gumbel > LogNormal > Normal
+  const priority = ['logpearson3', 'gumbel', 'lognormal', 'normal'];
+  
+  if (passed.length > 0) {
+    // Return the highest priority method that passed
+    for (const method of priority) {
+      if (passed.find(p => p.method === method)) return method;
+    }
+    return passed[0].method;
   }
-  return passed[0].method;
+  
+  // If none passed, return the one with minimum deviation
+  return goodnessOfFit.reduce((best, current) => {
+    const bestScore = best.chiSquare.statistic + best.kolmogorovSmirnov.statistic;
+    const currentScore = current.chiSquare.statistic + current.kolmogorovSmirnov.statistic;
+    return currentScore < bestScore ? current : best;
+  }).method;
 }

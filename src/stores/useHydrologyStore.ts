@@ -296,6 +296,7 @@ export interface HydrologyState {
   setHasilMock: (hasil: HasilMock | null) => void;
   setNeracaFinal: (data: NeracaFinalRow[] | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
+  fetchMultipleStationsData: (stasiunIds: string[]) => Promise<void>;
 }
 
 // Mock data removed for production integration
@@ -718,6 +719,24 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),
   setDistribusiHujanJamJaman: (data) => set({ distribusiHujanJamJaman: data, isBanjirDirty: true }),
   setHujanEfektif: (data) => set({ hujanEfektif: data, isBanjirDirty: true }),
-  setDurasiHujan: (durasi) => set({ durasiHujan: durasi, isBanjirDirty: true })
-}));
+  setDurasiHujan: (durasi) => set({ durasiHujan: durasi, isBanjirDirty: true }),
 
+  fetchMultipleStationsData: async (stasiunIds) => {
+    if (!supabase || stasiunIds.length === 0) return;
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase
+        .from('master_data_hujan')
+        .select('*')
+        .in('stasiun_id', stasiunIds)
+        .order('tanggal', { ascending: true });
+      
+      if (error) throw error;
+      set({ dataHujan: data || [] });
+    } catch (error: any) {
+      set({ error: error.message });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+}));

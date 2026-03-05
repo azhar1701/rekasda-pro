@@ -16,9 +16,9 @@ import { consultHydrologist } from '@/services/geminiService';
 import { useAIContext, type ActiveModule, type SuggestionChip } from '@/hooks/useAIContext';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { 
-    Bot, User, Send, X, Sparkles, Zap, ChevronRight, 
-    AlertTriangle, Info, ArrowRight, Maximize2, Minimize2, 
-    Shield, Activity, Clock, Database, CheckCircle2, BookOpen, BrainCircuit
+    Bot, User, Send, X, Sparkles, Zap, 
+    AlertTriangle, Info, Maximize2, Minimize2, 
+    Shield, Activity, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -166,16 +166,6 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         handleSend(chip.prompt);
     };
 
-    const handleActionClick = (action: ActionableParam) => {
-        action.action();
-        const confirmMsg: ChatMessage = {
-            id: `action-${Date.now()}`,
-            role: 'assistant',
-            content: `✅ **${action.label}** berhasil diterapkan. Grafik dan perhitungan terkait akan diperbarui secara otomatis.`,
-            timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, confirmMsg]);
-    };
 
     return (
         <>

@@ -102,6 +102,44 @@ export function calculateThiessenAverage(stations: ThiessenStation[]): ThiessenR
   return { bobotStasiun, totalLuas, hujanRataRataDAS };
 }
 
+/**
+ * Calculates Algebraic (Arithmetic) Average rainfall.
+ * 
+ * Formula: P̄ = ΣPi / n
+ * 
+ * @param stations - Array of stations with annual max data
+ * @returns Weighted average series (equal weights)
+ */
+export function calculateAlgebraicAverage(stations: ThiessenStation[]): number[] {
+  if (!stations || stations.length === 0) return [];
+  const minYears = Math.min(...stations.map(s => s.annualMax.length));
+  const result: number[] = [];
+  for (let i = 0; i < minYears; i++) {
+    const sum = stations.reduce((acc, s) => acc + s.annualMax[i], 0);
+    result.push(Number((sum / stations.length).toFixed(2)));
+  }
+  return result;
+}
+
+/**
+ * Calculates Isohyet Weighted Average rainfall.
+ * 
+ * Formula: P̄ = Σ(Li × Pi) / ΣLi
+ * Dimana:
+ * - Li = Luas antar dua garis isohyet (km²)
+ * - Pi = Curah hujan rata-rata antar dua garis isohyet (mm)
+ *  pride: production grade math
+ * @param segments - Array of isohyet area segments
+ * @returns Weighted average rainfall (mm)
+ */
+export function calculateIsohyetAverage(segments: { luasAntarGaris: number; curahHujanRataRata: number }[]): number {
+  if (!segments || segments.length === 0) return 0;
+  const totalLuas = segments.reduce((sum, s) => sum + s.luasAntarGaris, 0);
+  if (totalLuas <= 0) return 0;
+  const weightedSum = segments.reduce((sum, s) => sum + (s.luasAntarGaris * s.curahHujanRataRata), 0);
+  return Number((weightedSum / totalLuas).toFixed(2));
+}
+
 // ─────────────────────────────────────────────────
 // 2. Area Reduction Factor (ARF)
 // ─────────────────────────────────────────────────

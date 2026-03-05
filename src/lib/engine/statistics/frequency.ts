@@ -15,6 +15,7 @@
  * @author RekaSDA Engineering Team
  */
 
+import { cekOutlierGrubbs } from '../../utils/qc/dataQualityMath';
 import { z } from 'zod';
 
 // ============================================================================
@@ -450,11 +451,11 @@ export function validateFrequencyInput(input: FrequencyInput): {
     warnings.push('Data kurang dari 15 tahun. Sangat disarankan menambah data.');
   }
   
-  // Check for outliers (> 3 standard deviations)
-  const stats = calculateStatistics(input.data);
-  const outliers = input.data.filter(x => Math.abs(x - stats.mean) > 3 * stats.stdDev);
-  if (outliers.length > 0) {
-    warnings.push(`Terdeteksi ${outliers.length} data outlier. Pertimbangkan untuk review data.`);
+  // Check for outliers using Smirnov-Grubbs (SNI Standard)
+  const qcData = input.data.map((h, i) => ({ tahun: i, hujan: h }));
+  const grubbsResult = cekOutlierGrubbs(qcData);
+  if (!grubbsResult.isBebasOutlier) {
+    warnings.push(`Terdeteksi ${grubbsResult.outliers.length} data outlier (Grubbs). Batas: ${grubbsResult.lowerLimit.toFixed(1)} - ${grubbsResult.upperLimit.toFixed(1)} mm.`);
   }
   
   return {

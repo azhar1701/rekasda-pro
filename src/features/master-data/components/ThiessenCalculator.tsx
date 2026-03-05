@@ -10,11 +10,7 @@ import { cn } from '@/lib/utils';
  * Sits in the Master Data layer as a pre-processor before Frequency Analysis.
  */
 export const ThiessenCalculator: React.FC = () => {
-    const stasiunList = useHydrologyStore(s => s.stasiunList);
-    const dataHujan = useHydrologyStore(s => s.dataHujan);
-    const luasDas = useHydrologyStore(s => s.luasDas);
-    const hasilThiessen = useHydrologyStore(s => s.hasilThiessen);
-    const setHasilThiessen = useHydrologyStore(s => s.setHasilThiessen);
+    const { stasiunList, dataHujan, luasDas, hasilThiessen, setHasilThiessen, fetchMultipleStationsData } = useHydrologyStore();
 
     // Local state: selected stations + their influence areas
     const [configs, setConfigs] = useState<ThiessenStasiunConfig[]>(
@@ -69,6 +65,12 @@ export const ThiessenCalculator: React.FC = () => {
     }, []);
 
     // Calculate & Save
+    const handleSyncAndCalculate = async () => {
+        const ids = configs.map(c => c.stasiunId);
+        await fetchMultipleStationsData(ids);
+        handleCalculate();
+    };
+
     const handleCalculate = useCallback(() => {
         if (configs.length < 2) {
             toast.error('Minimal 2 stasiun diperlukan untuk Thiessen Polygon.');
@@ -95,10 +97,7 @@ export const ThiessenCalculator: React.FC = () => {
                 // If no station-specific data, generate mock based on ID hash
                 let annualMax = Array.from(byYear.values());
                 if (annualMax.length === 0) {
-                    // Use global dataHujan as fallback with slight variation
-                    const hash = c.stasiunId.charCodeAt(0) % 20;
-                    annualMax = [80 + hash, 95 + hash, 110 + hash, 125 + hash, 140 + hash,
-                    120 + hash, 105 + hash, 130 + hash];
+                    throw new Error(`Data hujan untuk stasiun ${c.namaStasiun} tidak ditemukan. Silakan isi data di Master Hidrologi.`);
                 }
 
                 return {
@@ -276,7 +275,7 @@ export const ThiessenCalculator: React.FC = () => {
                 {/* Calculate button */}
                 {configs.length >= 2 && (
                     <button
-                        onClick={handleCalculate}
+                        onClick={handleSyncAndCalculate}
                         className="w-full py-3 rounded-md font-bold text-sm bg-pupr-blue hover:bg-blue-700 text-white shadow-sm shadow-blue-200/40 transition-all flex items-center justify-center gap-2"
                     >
                         <Layers className="w-4 h-4" />

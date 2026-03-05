@@ -3,6 +3,7 @@ import { CloudRain, AlertCircle, Save, CheckCircle, Sparkles, ChevronDown, Chevr
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig } from '@/stores/useHydrologyStore';
+import { calculateIsohyetAverage } from '@/lib/engine/rainfallAnalysis';
 import { determineRainfallMethod, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
 
 export const HujanWilayahCard: React.FC = () => {
@@ -107,11 +108,19 @@ export const HujanWilayahCard: React.FC = () => {
       curahHujanRataRata: typeof c.curahHujanRataRata === 'string' ? parseFloat(c.curahHujanRataRata) || 0 : c.curahHujanRataRata
     }));
 
+    let avgValue = 0;
+    if (metode === 'thiessen' && safeConfigs.length > 0) {
+      // Logic derived from ThiessenCalculator
+      avgValue = safeConfigs.reduce((sum, c) => sum + (c.bobot/100 * (configs.find(oc => oc.stasiunId === c.stasiunId)?.luasPengaruh || 0)), 0);
+    } else if (metode === 'isohyet' && safeIsohyet.length > 0) {
+      avgValue = calculateIsohyetAverage(safeIsohyet);
+    }
+
     const data: CurahHujanWilayah = {
       metode,
       stasiunConfigs: safeConfigs,
       isohyetConfigs: safeIsohyet,
-      hujanRataRata: 0,
+      hujanRataRata: avgValue,
     };
     setCurahHujanWilayah(data);
     setConfigs(safeConfigs);
