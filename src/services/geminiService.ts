@@ -124,6 +124,70 @@ Siapkan kutipan yang jelas jika menggunakan referensi teknis yang disediakan.
     return "Terjadi kesalahan saat menghubungi layanan AI. Pastikan koneksi internet tersedia.";
   }
 };
+/**
+ * Konsultasi dengan Ahli Madya SDA menggunakan Gemini API (Streaming version)
+ */
+export const consultHydrologistStream = async (
+  query: string,
+  contextData: string,
+  onChunk: (chunk: string) => void,
+  imageBase64?: string
+): Promise<void> => {
+  try {
+    const genAI = getAiClient();
+    const model = genAI.getGenerativeModel({ model: AI_MODEL });
+
+    const references = await searchTechnicalReferences(query);
+    const referenceContext = references.length > 0 
+      ? "\nREFERENSI TEKNIS SNI/REGULASI RELEVAN:\n" + references.map((r: any) => `- [${r.metadata?.title || 'SNI'}] ${r.content_chunk}`).join('\n')
+      : "";
+
+    const prompt = `
+${SYSTEM_PROMPT}
+
+═══════════════════════════════════════════════════════════════
+KONTEKS DATA PERHITUNGAN
+═══════════════════════════════════════════════════════════════
+
+${contextData}
+${referenceContext}
+
+═══════════════════════════════════════════════════════════════
+PERTANYAAN USER
+═══════════════════════════════════════════════════════════════
+
+${query}
+
+═══════════════════════════════════════════════════════════════
+INSTRUKSI
+═══════════════════════════════════════════════════════════════
+
+Analisis pertanyaan di atas dengan merujuk SNI/Permen yang relevan.
+Berikan jawaban yang praktis, akurat, dan sesuai standar Indonesia.
+Siapkan kutipan yang jelas jika menggunakan referensi teknis yang disediakan.
+    `;
+
+    let result;
+    if (imageBase64) {
+      const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
+      result = await model.generateContentStream([
+        { inlineData: { mimeType: "image/jpeg", data: cleanBase64 } },
+        prompt
+      ]);
+    } else {
+      result = await model.generateContentStream(prompt);
+    }
+
+    for await (const chunk of result.stream) {
+      const chunkText = chunk.text();
+      onChunk(chunkText);
+    }
+  } catch (error) {
+    console.error("Gemini Stream Error:", error);
+    throw error;
+  }
+};
+
 
 /**
  * @feature Otomasi PDF OCR

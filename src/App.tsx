@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, FileText, TrendingUp, History } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
-import { ModulBanjirStepper } from '@/features/flood-analysis/components/ModulBanjirStepper';
+import { FloodAnalysisTab } from '@/features/flood-analysis/components/FloodAnalysisTab';
 import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
+
 import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
 import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
@@ -158,7 +159,13 @@ const App: React.FC = () => {
           <div className="transition-opacity duration-300">
             {activeTab === Tab.WORKFLOW && <div className="h-[800px] w-full"><WorkflowCanvas /></div>}
             {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-            {activeTab === Tab.BANJIR && <ModulBanjirStepper />}
+            {activeTab === Tab.BANJIR && <FloodAnalysisTab onConsultAI={() => {
+              setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');
+              setAiInitialQuery('Audit hasil perhitungan hidrograf banjir saya. Apakah debit puncak dan Tp yang dihasilkan masuk akal untuk karakteristik DAS ini? Berikan saran optimasi parameter jika perlu.');
+              setAiTriggerCount(prev => prev + 1);
+              setIsAIDrawerOpen(true);
+            }} />}
+
             {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
               setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
               setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Calculator, Waves, CloudRain, ShieldCheck, TrendingUp, Compass, Settings2, Info, ArrowRightLeft, FileJson, CheckCircle2 } from 'lucide-react';
+import { X, Calculator, Waves, CloudRain, ShieldCheck, TrendingUp, Compass, Settings2, Info, ArrowRightLeft, FileJson, CheckCircle2, Sparkles, FileText } from 'lucide-react';
 import { useWorkflowStore } from '../stores/useWorkflowStore';
 
 // Definisi MetaData kaya untuk setiap modul
@@ -15,75 +15,175 @@ type ModuleMeta = {
 };
 
 const moduleDatabase: Record<string, ModuleMeta> = {
-  morfometri: {
-    title: 'Karakteristik Fisik DAS',
-    icon: <Compass size={24} />,
+  identitas: {
+    title: 'Identitas Proyek & Lokasi',
+    icon: <Info size={24} />,
     targetTab: 'MASTER',
-    description: 'Pemetaan luas Daerah Aliran Sungai (DAS) dan pengukuran panjang sungai utama secara spasial maupun manual.',
-    algorithm: 'Delineasi DEM, Slope Measurement',
-    inputs: ['Peta DEM (Raster)', 'Titik Outlet (Koordinat)'],
-    outputs: ['Luas DAS (km²)', 'Panjang Sungai (km)'],
+    description: 'Data identitas proyek dan administrasi wilayah DAS.',
+    algorithm: 'Form input manual → Simpan ke Zustand store & Supabase',
+    inputs: ['Nama Proyek', 'Provinsi/Kabupaten/Kecamatan/Desa', 'Koordinat GPS'],
+    outputs: ['identitasLokasi: IdentitasLokasi'],
     status: 'completed'
   },
-  presipitasi: {
-    title: 'Data Presipitasi',
+  hujan: {
+    title: 'Data Hujan Multi-Sumber',
     icon: <CloudRain size={24} />,
     targetTab: 'MASTER',
-    description: 'Manajemen data mentah curah hujan historis dari berbagai stasiun pencatat curah hujan (ARR/Manual).',
-    algorithm: 'Uji Kualitas Data (Outlier, RAPS, F-Test)',
-    inputs: ['Excel/CSV Hujan Harian', 'Nama & Koordinat Stasiun'],
-    outputs: ['Data Hujan Terkoreksi', 'Status Kelulusan Uji QC'],
+    description: 'Ingestion data curah hujan via manual entry, Excel/CSV, bulk paste matrix, dan PDF OCR (Gemini Multimodal).',
+    algorithm: 'Multi-source ingestion (csvParser.ts, geminiService.ts)',
+    inputs: ['Data Hujan Excel/CSV', 'PDF Scan (Gemini OCR)', 'Bulk Paste Matrix', 'Nama & Koordinat Stasiun'],
+    outputs: ['stasiunList: StasiunHidrologi[]', 'dataHujan: DataHujan[]'],
+    status: 'completed'
+  },
+  spasial: {
+    title: 'Karakteristik & Spasial DAS',
+    icon: <Compass size={24} />,
+    targetTab: 'MASTER',
+    description: 'Parameter fisik DAS dan analisis spasial WebGIS (delineasi otomatis, sungai GeoJSON, CHIRPS zonal).',
+    algorithm: 'WebGIS geoprocessing engine (Auto-delineation DEM)',
+    inputs: ['Luas DAS (A)', 'Panjang Sungai (L)', 'GeoJSON DAS & Sungai', 'DEM Upload'],
+    outputs: ['morfometriDAS: MorfometriDAS', 'spatialData: SpatialData'],
+    status: 'completed'
+  },
+  tutupan: {
+    title: 'Tutupan Lahan',
+    icon: <Settings2 size={24} />,
+    targetTab: 'MASTER',
+    description: 'Parameter pengaliran/infiltrasi (Koefisien C runoff).',
+    algorithm: 'Weighted average calculation untuk Koefisien C',
+    inputs: ['Jenis Lahan', 'Luas Lahan'],
+    outputs: ['tutupanLahan: TutupanLahan', 'landCoverParams: LandCoverParameters'],
+    status: 'completed'
+  },
+  qc: {
+    title: 'Quality Control (QC)',
+    icon: <ShieldCheck size={24} />,
+    targetTab: 'MASTER',
+    description: 'Uji kelayakan data hujan (Outlier, Konsistensi, Homogenitas) dengan sinkronisasi Dashboard Kualitas Data.',
+    algorithm: 'Outlier (Kn), Konsistensi (RAPS), Homogenitas (T/F-Test)',
+    inputs: ['state.dataHujan', 'Pilihan Stasiun'],
+    outputs: ['qcResults: Record<string, QualityControlResults>', 'Status Lulus/Gagal'],
     status: 'completed'
   },
   thiessen: {
-    title: 'Hujan Kawasan',
+    title: 'Curah Hujan Wilayah',
     icon: <CloudRain size={24} />,
     targetTab: 'FREKUENSI',
-    description: 'Perhitungan curah hujan rata-rata representatif untuk seluruh area DAS menggunakan pembobotan stasiun terdekat.',
-    algorithm: 'Poligon Thiessen (Spatial Weighting)',
-    inputs: ['Data Hujan Stasiun (Terkoreksi)', 'Koordinat Stasiun', 'Luas DAS'],
-    outputs: ['Curah Hujan Wilayah Tahunan/Bulanan (mm)'],
+    description: 'Menghitung hujan perwakilan wilayah metode Polygon Thiessen.',
+    algorithm: 'CHw = Σ (CH Stasiun × Luas Pengaruh) / Luas Total DAS',
+    inputs: ['Data Hujan Tervalidasi', 'Luas Area Pengaruh Stasiun'],
+    outputs: ['hasilThiessen: HasilThiessen'],
+    status: 'completed'
+  },
+  satelit: {
+    title: 'Infilling Data (CHIRPS)',
+    icon: <CloudRain size={24} />,
+    targetTab: 'MASTER',
+    description: 'Ekstraksi data hujan satelit CHIRPS dan pengisian data kosong (missing data infilling).',
+    algorithm: 'CHIRPS zonal extraction API & Infilling algorithm',
+    inputs: ['Koordinat DAS', 'Rentang Tahun', 'Data Hujan (dengan gap)'],
+    outputs: ['dataSatelit: DataCHIRPS[]', 'dataHujanInfilled: DataHujan[]'],
+    status: 'completed'
+  },
+  frekuensi: {
+    title: 'Analisis Frekuensi',
+    icon: <TrendingUp size={24} />,
+    targetTab: 'FREKUENSI',
+    description: 'Menghitung Curah Hujan Rencana kala ulang (Tr) 2–100 tahun dengan uji kecocokan distribusi.',
+    algorithm: 'Normal, Log Normal, Gumbel, Log Pearson III, Smirnov-Kolmogorov',
+    inputs: ['Hujan Maksimum Tahunan (dari Thiessen)'],
+    outputs: ['hasilAnalisisFrekuensi: HasilAnalisisFrekuensi', 'curahHujanRencana: number[]'],
+    status: 'completed'
+  },
+  arf: {
+    title: 'Areal Reduction Factor',
+    icon: <ArrowRightLeft size={24} />,
+    targetTab: 'FREKUENSI',
+    description: 'Koreksi pengurangan hujan titik ke hujan area DAS.',
+    algorithm: 'ARF = 1 - (0.048 × A^0.5)',
+    inputs: ['curahHujanRencana', 'morfometriDAS.luas'],
+    outputs: ['hasilARF: HasilARF (Hujan Rencana Terkoreksi)'],
+    status: 'completed'
+  },
+  distribusi: {
+    title: 'Distribusi & Hujan Efektif',
+    icon: <TrendingUp size={24} />,
+    targetTab: 'BANJIR',
+    description: 'Memecah hujan harian ke jam-jaman (Mononobe) dan kalkulasi hujan efektif.',
+    algorithm: 'PT = R24/t × (t/T)^(2/3), Hujan Efektif = PT × C',
+    inputs: ['Hujan Terkoreksi ARF', 'landCoverParams.C', 'Durasi Hujan'],
+    outputs: ['distribusiHujanJamJaman: number[]', 'hujanEfektif: number[]'],
+    status: 'completed'
+  },
+  banjir: {
+    title: 'Modul Banjir Rencana',
+    icon: <Waves size={24} />,
+    targetTab: 'BANJIR',
+    description: 'Simulasi Hidrograf Satuan Sintetis (HSS Nakayasu, Snyder, SCS).',
+    algorithm: 'Konvolusi: Q = Σ (U × Pe)',
+    inputs: ['state.hujanEfektif', 'morfometriDAS (L, A, S)'],
+    outputs: ['hasilBanjir: HasilBanjir (Q Peak, Ordinat HSS)'],
     status: 'completed'
   },
   neraca: {
-    title: 'Neraca Air & Kehilangan',
-    icon: <TrendingUp size={24} />,
-    targetTab: 'NERACA',
-    description: 'Simulasi ketersediaan air andalan bulanan dengan menghitung surplus dan defisit kelembaban tanah (Soil Moisture Balance).',
-    algorithm: 'Metode F.J. Mock',
-    inputs: ['Hujan Wilayah Bulanan', 'Evapotranspirasi', 'Koefisien Infiltrasi Lahan'],
-    outputs: ['Debit Andalan Q80/Q90 (m³/dt)', 'Volume Surplus/Defisit'],
-    status: 'active'
-  },
-  banjir: {
-    title: 'Transformasi Hidrograf',
+    title: 'Modul Neraca Air',
     icon: <Waves size={24} />,
-    targetTab: 'BANJIR',
-    description: 'Pemodelan debit puncak banjir rencana berdasarkan hujan lebat berdurasi pendek (Hujan Efektif).',
-    algorithm: 'HSS Nakayasu, HSS Snyder',
-    inputs: ['Hujan Rencana Terkoreksi ARF', 'Distribusi Hujan Jam-jaman', 'Parameter Morfometri DAS'],
-    outputs: ['Hidrograf Banjir (m³/s per jam)', 'Debit Puncak (Qp)'],
-    status: 'pending'
+    targetTab: 'NERACA',
+    description: 'Simulasi ketersediaan air andalan metode FJ Mock.',
+    algorithm: 'Soil Moisture Balance → Surplus/Defisit → Baseflow → Runoff',
+    inputs: ['Hujan Bulanan (Thiessen)', 'Evapotranspirasi', 'Water Holding Capacity'],
+    outputs: ['hasilMock: HasilMock', 'Debit Andalan (Q80)'],
+    status: 'completed'
   },
-  hidraulika: {
-    title: 'Pemodelan Saluran',
+  embung: {
+    title: 'Modul Perencanaan Embung',
+    icon: <TrendingUp size={24} />,
+    targetTab: 'EMBUNG',
+    description: 'Penelusuran waduk (Routing) dan desain dimensi embung dengan persistensi hasil.',
+    algorithm: 'Simulasi Storage (ΔS = Inflow - Outflow), Desain Spillway',
+    inputs: ['Debit Banjir (Q Peak)', 'Debit Andalan (Inflow)', 'Kebutuhan Air (Outflow)'],
+    outputs: ['hasilEmbung: HasilEmbung (Dimensi, Volume Efektif)'],
+    status: 'completed'
+  },
+  saluran: {
+    title: 'Kapasitas Saluran (Manning)',
     icon: <Calculator size={24} />,
     targetTab: 'SALURAN',
-    description: 'Analisis kapasitas penampang saluran terbuka untuk memastikan dimensi saluran sanggup mengalirkan debit banjir rencana tanpa meluap.',
-    algorithm: 'Persamaan Manning, Aliran Seragam',
-    inputs: ['Debit Rencana (Qp)', 'Geometri Saluran (b, m, h)', 'Koefisien Kekasaran Manning (n)'],
-    outputs: ['Tinggi Muka Air Normal (yn)', 'Tegangan Geser Izin', 'Status Kapasitas'],
-    status: 'pending'
+    description: 'Analisis kapasitas hidraulik saluran terbuka metode Manning.',
+    algorithm: 'Q = (1/n) × A × R^(2/3) × S^(1/2)',
+    inputs: ['Debit Rencana (Q)', 'Geometri Saluran (B, h, m)', 'Koefisien Manning (n)'],
+    outputs: ['hasilManning: HasilManning (V, Q, Fr, freeboard)'],
+    status: 'completed'
   },
-  validasi: {
-    title: 'Validasi Hidrometri',
-    icon: <ShieldCheck size={24} />,
-    targetTab: 'HISTORY',
-    description: 'Proses kalibrasi model teoritis terhadap data pengukuran debit lapangan aktual (AWLR / Current Meter).',
-    algorithm: 'Rating Curve Fitting',
-    inputs: ['Data Pengukuran AWLR', 'Output Model (Q)'],
-    outputs: ['Error Margin (%)', 'Parameter Terkalibrasi'],
-    status: 'active'
+  dashboard: {
+    title: 'Dashboard Eksekutif',
+    icon: <TrendingUp size={24} />,
+    targetTab: 'EXEC',
+    description: 'Ringkasan eksekutif seluruh hasil analisis hidrologi dalam satu tampilan terintegrasi.',
+    algorithm: 'Aggregation & visualization via Recharts',
+    inputs: ['Seluruh State Hasil', 'Identitas Proyek'],
+    outputs: ['Dashboard Interaktif', 'Kartu Statistik Eksekutif'],
+    status: 'completed'
+  },
+  ai: {
+    title: 'AI Consultant (Gemini)',
+    icon: <Sparkles size={24} />,
+    targetTab: 'AI',
+    description: 'Penasihat teknis cerdas berbasis Gemini AI dengan RAG kontekstual dan Multimodal OCR.',
+    algorithm: 'RAG Context Building → Prompt Engineering → Gemini Pro API',
+    inputs: ['Rekapitulasi Parameter & Hasil Perhitungan', 'Context dari Modul Aktif'],
+    outputs: ['Rekomendasi Teknis SNI', 'Kesimpulan Analisis Markdown'],
+    status: 'completed'
+  },
+  ekspor: {
+    title: 'Ekspor Laporan',
+    icon: <FileText size={24} />,
+    targetTab: 'MASTER',
+    description: 'Cetak dokumen PDF dan Excel secara offline dari seluruh modul.',
+    algorithm: 'react-to-pdf, exceljs',
+    inputs: ['DOM Elements', 'JSON State', 'Dashboard Data'],
+    outputs: ['LaporanBanjir.pdf', 'DataNeraca.xlsx'],
+    status: 'completed'
   }
 };
 

@@ -3,7 +3,7 @@ import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { MasterDataSelector } from '@/features/master-data/components/MasterDataSelector';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { CloudRain, Calculator, Activity, TrendingUp, CheckCircle, XCircle, Droplets } from 'lucide-react';
+import { CloudRain, Calculator, Activity, TrendingUp, CheckCircle, XCircle, Droplets, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Tabs } from '@/components/ui/tabs';
@@ -21,7 +21,7 @@ interface FloodAnalysisTabProps {
   onConsultAI?: () => void;
 }
 
-export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
+export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI }) => {
   const [method, setMethod] = useState<MethodType>('rasional');
   const [isCalculating, setIsCalculating] = useState(false);
   const [localChartData, setLocalChartData] = useState<{ time: number, inflow: number }[]>([]);
@@ -129,12 +129,27 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = () => {
     }, 800);
   };
 
+  const handleConsultAIFromButton = () => {
+    onConsultAI?.();
+  };
+
   return (
     <ModuleLayout
       title="Analisis Debit Banjir Rencana"
       description="Perhitungan hidrograf banjir dengan integrasi Master Data Dinamis."
       icon={<CloudRain className="w-6 h-6" />}
       iconColorClass="bg-blue-50 text-pupr-blue"
+      actions={
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 font-bold"
+          onClick={handleConsultAIFromButton}
+        >
+          <Sparkles className="w-4 h-4 mr-2" />
+          Audit dengan AI
+        </Button>
+      }
     >
       <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
         {/* KOLOM KIRI (Input - col-span-5) */}

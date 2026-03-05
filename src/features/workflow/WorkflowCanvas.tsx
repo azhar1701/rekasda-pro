@@ -24,15 +24,15 @@ const nodeTypes = {
 
 const initialNodes: GovTechNodeData[] = [
   // ── PHASE 1: INPUT (y=0) ──
-  { id: 'I1', type: 'govtech', position: { x: 0, y: 0 },   data: { label: 'Identitas Proyek & Lokasi', phase: 'input', moduleId: 'identitas' } },
-  { id: 'I2', type: 'govtech', position: { x: 280, y: 0 }, data: { label: 'Data Hujan (Manual/Excel/OCR/SIHKA)', phase: 'input', moduleId: 'hujan' } },
-  { id: 'I3', type: 'govtech', position: { x: 560, y: 0 }, data: { label: 'Morfometri & Spasial DAS', phase: 'input', moduleId: 'spasial' } },
-  { id: 'I4', type: 'govtech', position: { x: 840, y: 0 }, data: { label: 'Tutupan Lahan', phase: 'input', moduleId: 'tutupan' } },
+  { id: 'I1', type: 'govtech', position: { x: 0, y: 0 },   data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas' } },
+  { id: 'I2', type: 'govtech', position: { x: 280, y: 0 }, data: { label: 'Data Hujan (Manual/Excel/OCR)', phase: 'input', moduleId: 'hujan' } },
+  { id: 'I3', type: 'govtech', position: { x: 560, y: 0 }, data: { label: 'Karakteristik & Spasial DAS', phase: 'input', moduleId: 'spasial' } },
+  { id: 'I4', type: 'govtech', position: { x: 840, y: 0 }, data: { label: 'Tutupan Lahan (Parameter C)', phase: 'input', moduleId: 'tutupan' } },
 
   // ── PHASE 2: PRE-PROCESSING (y=200) ──
   { id: 'P1', type: 'govtech', position: { x: 140, y: 200 }, data: { label: 'Quality Control', phase: 'pre', moduleId: 'qc' } },
   { id: 'P2', type: 'govtech', position: { x: 420, y: 200 }, data: { label: 'Curah Hujan Wilayah (Thiessen)', phase: 'pre', moduleId: 'thiessen' } },
-  { id: 'P3', type: 'govtech', position: { x: 700, y: 200 }, data: { label: 'Satelit & Infilling (CHIRPS)', phase: 'pre', moduleId: 'satelit' } },
+  { id: 'P3', type: 'govtech', position: { x: 700, y: 200 }, data: { label: 'Infilling Data (CHIRPS)', phase: 'pre', moduleId: 'satelit' } },
 
   // ── PHASE 3: ANALYSIS ENGINE (y=400) ──
   { id: 'E1', type: 'govtech', position: { x: 140, y: 400 }, data: { label: 'Analisis Frekuensi', phase: 'engine', moduleId: 'frekuensi' } },
@@ -43,7 +43,7 @@ const initialNodes: GovTechNodeData[] = [
   { id: 'M1', type: 'govtech', position: { x: 0, y: 600 },   data: { label: 'Banjir Rencana (HSS)', phase: 'module', moduleId: 'banjir' } },
   { id: 'M2', type: 'govtech', position: { x: 280, y: 600 }, data: { label: 'Neraca Air (FJ Mock)', phase: 'module', moduleId: 'neraca' } },
   { id: 'M3', type: 'govtech', position: { x: 560, y: 600 }, data: { label: 'Perencanaan Embung', phase: 'module', moduleId: 'embung' } },
-  { id: 'M4', type: 'govtech', position: { x: 840, y: 600 }, data: { label: 'Hidraulika Saluran (Manning)', phase: 'module', moduleId: 'saluran' } },
+  { id: 'M4', type: 'govtech', position: { x: 840, y: 600 }, data: { label: 'Kapasitas Saluran (Manning)', phase: 'module', moduleId: 'saluran' } },
 
   // ── PHASE 5: OUTPUT (y=800) ──
   { id: 'O1', type: 'govtech', position: { x: 140, y: 800 }, data: { label: 'Dashboard Eksekutif', phase: 'output', moduleId: 'dashboard' } },

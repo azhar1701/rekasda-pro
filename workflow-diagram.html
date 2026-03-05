@@ -48,8 +48,8 @@
 
     subgraph INPUT ["Fase 1: Data Input"]
         I1["Identitas Proyek & Lokasi"]:::input
-        I2["Data Hujan (Manual/Excel/OCR/SIHKA)"]:::input
-        I3["Morfometri & Spasial DAS (WebGIS)"]:::input
+        I2["Data Hujan (Manual/Excel/OCR)"]:::input
+    I3["Karakteristik & Spasial DAS (WebGIS)"]:::input
         I4["Tutupan Lahan"]:::input
     end
 
@@ -69,7 +69,7 @@
         M1["Banjir Rencana (HSS)"]:::module
         M2["Neraca Air (FJ Mock)"]:::module
         M3["Perencanaan Embung"]:::module
-        M4["Hidraulika Saluran (Manning)"]:::module
+        M4["Kapasitas Saluran (Manning)"]:::module
     end
 
     subgraph OUTPUT ["Fase 5: Output & Reporting"]

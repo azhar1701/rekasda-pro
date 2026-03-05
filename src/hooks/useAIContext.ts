@@ -46,6 +46,9 @@ export interface AIContextResult {
   moduleSummary: string;
   /** Whether there are actionable issues */
   hasIssues: boolean;
+  /** Structured list of what data is currently available to AI */
+  dataStatus: { label: string; isLoaded: boolean }[];
+
 }
 
 // ─── Module Label Map ───────────────────────────────────────────────
@@ -331,11 +334,22 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     const moduleSummary = MODULE_LABELS[activeTab] || 'Modul Tidak Diketahui';
     const hasIssues = chips.some((c) => c.severity === 'critical' || c.severity === 'warning');
 
+    const dataStatus = [
+      { label: 'Morfometri DAS', isLoaded: areaNum > 0 && riverNum > 0 },
+      { label: 'Hujan Rencana', isLoaded: rainNum > 0 },
+      { label: 'Analisis Frekuensi', isLoaded: !!hasilAnalisisFrekuensi },
+      { label: 'Hujan Wilayah (Thiessen)', isLoaded: !!hasilThiessen },
+      { label: 'Analisis Banjir (HSS)', isLoaded: !!hasilBanjir },
+      { label: 'Neraca Air (Mock)', isLoaded: !!hasilMock },
+      { label: 'Desain Embung', isLoaded: !!hasilEmbung },
+    ];
+
     return {
       systemContext,
       suggestionChips: chips.slice(0, 4), // Max 4 chips
       moduleSummary,
       hasIssues,
+      dataStatus,
     };
   }, [
     activeTab, luasDas, panjangSungai, curahHujanRencana,
