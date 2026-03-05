@@ -39,16 +39,25 @@ export const HujanWilayahCard: React.FC = () => {
   useEffect(() => {
     if (stasiunList.length > 0) {
       setParams(prev => ({ ...prev, stationCount: stasiunList.length }));
-      if (configs.length === 0) {
-        setConfigs(
-          stasiunList.map(s => ({
+      setConfigs(prevConfigs => {
+        // Sinkronisasi configs dengan stasiunList terbaru
+        const newConfigs = stasiunList.map(s => {
+          const existing = prevConfigs.find(c => c.stasiunId === s.id);
+          if (existing) {
+            return { ...existing, namaStasiun: s.nama_stasiun };
+          }
+          return {
             stasiunId: s.id,
             namaStasiun: s.nama_stasiun,
             luasPengaruh: 0,
             bobot: 0,
-          }))
-        );
-      }
+          };
+        });
+        return newConfigs;
+      });
+    } else {
+      setParams(prev => ({ ...prev, stationCount: 0 }));
+      setConfigs([]);
     }
   }, [stasiunList]);
 

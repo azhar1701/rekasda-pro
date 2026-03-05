@@ -5,17 +5,18 @@ export type GovTechNodeData = Node<{
   label: string;
   status?: string;
   moduleId?: string;
-  isHydraulics?: boolean; // Menandai jika ini node "Pemodelan Hidraulika"
-  isValidation?: boolean; // Menandai jika ini node "Validasi"
+  phase?: 'input' | 'pre' | 'engine' | 'module' | 'output';
 }, 'govtech'>;
 
 export function GovTechNode({ data, isConnectable }: NodeProps<GovTechNodeData>) {
-  // Warna Header GovTech Logic
-  const headerBgColor = data.isHydraulics 
-    ? 'bg-slate-800' // Biru lebih gelap sesuai instruksi FASE 2
-    : data.isValidation
-    ? 'bg-success-dark' // Aksen warna hijau sesuai instruksi FASE 2
-    : 'bg-pupr-blue'; // Default Biru institusi PUPR
+  const phaseConfig: Record<string, { bg: string; label: string }> = {
+    input:  { bg: 'bg-sky-600',    label: '📥 INPUT' },
+    pre:    { bg: 'bg-amber-600',  label: '🔍 PRE-PROSES' },
+    engine: { bg: 'bg-red-600',    label: '⚙️ ENGINE' },
+    module: { bg: 'bg-purple-600', label: '📦 MODUL' },
+    output: { bg: 'bg-green-600',  label: '📊 OUTPUT' },
+  };
+  const config = phaseConfig[data.phase || ''] || { bg: 'bg-pupr-blue', label: '🟦 PROSES' };
 
   return (
     <div className="bg-white border-2 border-slate-300 rounded-md shadow-sm w-64 overflow-hidden transition-all hover:shadow-md hover:border-pupr-blue cursor-pointer">
@@ -29,8 +30,8 @@ export function GovTechNode({ data, isConnectable }: NodeProps<GovTechNodeData>)
       />
 
       {/* Header GovTech (PUPR Blue & Yellow Border) */}
-      <div className={`text-white text-xs font-bold p-2 border-b-2 border-pupr-yellow ${headerBgColor} text-center`}>
-        {data.isValidation ? '🔴 VALIDASI' : data.isHydraulics ? '🟦 PEMODELAN' : '🟦 PROSES'}
+      <div className={`text-white text-xs font-bold p-2 border-b-2 border-pupr-yellow ${config.bg} text-center`}>
+        {config.label}
       </div>
 
       {/* Body Area */}

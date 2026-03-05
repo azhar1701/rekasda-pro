@@ -46,7 +46,7 @@
             </h1>
             <div class="flex items-center gap-3 text-sm text-slate-500 mt-1">
                 <span class="px-2 py-0.5 rounded bg-green-100 text-green-700 font-mono text-xs font-bold border border-green-200">v1.1.0</span>
-                <span>Data Flow & Codebase Explorer</span>
+                <span>Data Flow & Architecture Explorer v1.1</span>
             </div>
         </div>
 
@@ -89,17 +89,19 @@
                         classDef module fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#6d28d9,rx:6px,ry:6px
                         classDef output fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#15803d,rx:6px,ry:6px
 
-                        subgraph INPUT [STATE INPUT]
+                        subgraph INPUT [DATA INPUT]
                             direction LR
-                            I1["Data Stasiun dan Hujan"]:::input
-                            I2["Morfometri DAS"]:::input
-                            I3["Tutupan Lahan"]:::input
+                            I1["Identitas Proyek & Lokasi"]:::input
+                            I2["Data Hujan (Manual/Excel/OCR/SIHKA)"]:::input
+                            I3["Morfometri & Spasial DAS (WebGIS)"]:::input
+                            I4["Tutupan Lahan"]:::input
                         end
 
                         subgraph PRE [PRE-PROCESSING]
                             direction TB
                             P1["Quality Control"]:::pre
-                            P2["Hujan Wilayah"]:::pre
+                            P2["Curah Hujan Wilayah"]:::pre
+                            P3["Satelit & Infilling (CHIRPS)"]:::pre
                         end
 
                         subgraph ENGINE [CORE ENGINE]
@@ -114,47 +116,44 @@
                             M1["Banjir Rencana"]:::module
                             M2["Neraca Air"]:::module
                             M3["Desain Embung"]:::module
+                            M4["Hidraulika Saluran"]:::module
                         end
 
                         subgraph OUTPUT [HASIL DAN REPORTING]
                             direction LR
-                            O1["Grafik dan Tabel"]:::output
-                            O2["PDF dan Excel Export"]:::output
-                            O3["AI Consultant"]:::output
+                            O1["Dashboard Eksekutif"]:::output
+                            O2["AI Consultant"]:::output
+                            O3["Ekspor Laporan"]:::output
                         end
 
-                        %% Relasi Utama
-                        I1 -->|"StasiunList"| P1
+                        I2 -->|"Data Hujan"| P1
                         P1 -->|"Data Valid"| P2
-                        I2 -->|"Luas DAS"| P2
+                        I3 -->|"Luas DAS"| P2
+                        I2 -->|"Gap Data"| P3
+                        P3 -->|"Data Lengkap"| P2
 
                         P2 -->|"Hujan Tahunan"| E1
                         E1 -->|"Hujan Rencana"| E2
-                        I2 -->|"Panjang Sungai"| E2
+                        I3 -->|"Panjang Sungai"| E2
                         E2 -->|"Hujan Terkoreksi"| E3
-                        I3 -->|"Koef Limpasan"| E3
+                        I4 -->|"Koef Limpasan"| E3
 
                         E3 -->|"Hujan Efektif"| M1
-                        I2 -->|"Parameter HSS"| M1
-                        
+                        I3 -->|"Parameter HSS"| M1
                         P2 -->|"Hujan Bulanan"| M2
-                        I3 -->|"Koef Infiltrasi"| M2
-                        
+                        I4 -->|"Koef Infiltrasi"| M2
                         M1 -->|"Debit Puncak"| M3
                         M2 -->|"Debit Andalan"| M3
+                        M1 -->|"Debit Rencana"| M4
 
+                        I1 -->|"Identitas"| O1
                         M1 -->|"Hidrograf"| O1
                         M2 -->|"Neraca Tabel"| O1
                         M3 -->|"Kapasitas"| O1
-
-                        O1 --> O2
-                        M1 --> O2
-                        M2 --> O2
-                        M3 --> O2
-
-                        E1 -->|"Parameter Stats"| O3
-                        M1 -->|"Q Peak"| O3
-                        M2 -->|"Status Neraca"| O3
+                        O1 --> O3
+                        E1 -->|"Parameter Stats"| O2
+                        M1 -->|"Q Peak"| O2
+                        M2 -->|"Status Neraca"| O2
                 </pre>
             </div>
         </main>
@@ -264,90 +263,125 @@
         
         // Node Database connected to actual rekasda-pro architecture
         const nodeDB = {
-            "I1": { title: "Data Stasiun & Curah Hujan", cat: "State Input", desc: "Data master stasiun pengamat cuaca dan curah hujan historis harian/bulanan.",
-                inputs: ["Nama & Koordinat Stasiun (stasiunList)", "Data Hujan Excel/CSV"],
-                process: "Parsing CSV via csvParser.ts -> Commit ke Zustand store",
+            "I1": { title: "Identitas Proyek & Lokasi", cat: "State Input", desc: "Data identitas proyek dan administrasi wilayah DAS.",
+                inputs: ["Nama Proyek", "Provinsi/Kabupaten/Kecamatan/Desa", "Koordinat GPS"],
+                process: "Form input manual → Simpan ke Zustand store & Supabase",
+                outputs: ["identitasLokasi: IdentitasLokasi"],
+                files: ["src/features/master-data/components/IdentitasLokasiForm.tsx", "src/stores/useHydrologyStore.ts"],
+                state: "state.identitasLokasi" },
+
+            "I2": { title: "Data Hujan Multi-Sumber", cat: "State Input", desc: "Ingestion data curah hujan via manual entry, Excel/CSV, bulk paste matrix, PDF OCR (Gemini Multimodal), atau SIHKA server scraping.",
+                inputs: ["Data Hujan Excel/CSV", "PDF Scan (Gemini OCR)", "SIHKA Matrix Scraping", "Bulk Paste Matrix", "Nama & Koordinat Stasiun"],
+                process: "Multi-source ingestion:\n- csvParser.ts → Excel/CSV\n- geminiService.ts → PDF OCR\n- SIHKA scraper → Server-side\n- Bulk paste → Matrix parser",
                 outputs: ["stasiunList: StasiunHidrologi[]", "dataHujan: DataHujan[]"],
-                files: ["src/services/csvParser.ts", "src/features/master-data/index.tsx"],
+                files: ["src/features/master-data/components/MasterHidrologiTab.tsx", "src/services/csvParser.ts", "src/services/geminiService.ts"],
                 state: "state.stasiunList\nstate.dataHujan" },
-            "I2": { title: "Morfometri DAS", cat: "State Input", desc: "Parameter fisik Daerah Aliran Sungai.",
-                inputs: ["Luas DAS (A)", "Panjang Sungai (L)"],
-                process: "Input form manual atau delineasi otomatis DEM (demDelineationService.ts)",
-                outputs: ["morfometriDAS: { luas: number, panjangSungai: number }"],
-                files: ["src/features/master-data/components/MorfometriForm.tsx", "src/services/demDelineationService.ts"],
-                state: "state.morfometriDAS" },
-            "I3": { title: "Tutupan Lahan", cat: "State Input", desc: "Parameter pengaliran/infiltrasi (Koefisien C).",
+
+            "I3": { title: "Morfometri & Spasial DAS", cat: "State Input", desc: "Parameter fisik DAS dan analisis spasial WebGIS (delineasi otomatis, sungai GeoJSON, CHIRPS zonal).",
+                inputs: ["Luas DAS (A)", "Panjang Sungai (L)", "GeoJSON DAS & Sungai", "DEM Upload"],
+                process: "WebGIS geoprocessing engine:\n- Auto-delineation DEM\n- River containment validation\n- Zonal statistics extraction",
+                outputs: ["morfometriDAS: MorfometriDAS", "spatialData: SpatialData"],
+                files: ["src/features/spatial-analysis/", "src/features/master-data/components/SpatialTab.tsx", "src/services/demDelineationService.ts"],
+                state: "state.morfometriDAS\nstate.spatialData" },
+
+            "I4": { title: "Tutupan Lahan", cat: "State Input", desc: "Parameter pengaliran/infiltrasi (Koefisien C runoff).",
                 inputs: ["Jenis Lahan", "Luas Lahan"],
-                process: "Weighted average Calculation untuk Koefisien C",
+                process: "Weighted average calculation untuk Koefisien C",
                 outputs: ["tutupanLahan: TutupanLahan", "landCoverParams: LandCoverParameters"],
                 files: ["src/features/master-data/components/TutupanLahanForm.tsx"],
                 state: "state.tutupanLahan" },
-            "P1": { title: "Quality Control (QC)", cat: "Pre-Processing", desc: "Uji kelayakan data hujan sebelum dianalisa (Outlier, Konsistensi, Homogen).",
-                inputs: ["state.dataHujan"],
-                process: "1. Outlier (Kn) = Log(X) ± Kn * Sd\n2. Konsistensi = RAPS Method\n3. Homogenitas = T-Test / F-Test",
+
+            "P1": { title: "Quality Control (QC)", cat: "Pre-Processing", desc: "Uji kelayakan data hujan (Outlier, Konsistensi, Homogenitas) dengan sinkronisasi Dashboard Kualitas Data.",
+                inputs: ["state.dataHujan", "Pilihan Stasiun"],
+                process: "1. Outlier (Kn) = Log(X) ± Kn * Sd\n2. Konsistensi = RAPS Method\n3. Homogenitas = T-Test / F-Test\n4. Sync → Data Quality Dashboard",
                 outputs: ["qcResults: Record<string, QualityControlResults>", "Status Lulus/Gagal"],
-                files: ["src/services/qualityControlService.ts", "src/features/dashboard/components/QCStatus.tsx"],
+                files: ["src/services/qualityControlService.ts", "src/features/master-data/components/DataQualityDashboard.tsx"],
                 state: "state.qcResults\nstate.qcStatus" },
-            "P2": { title: "Curah Hujan Wilayah", cat: "Pre-Processing", desc: "Menghitung hujan perwakilan wilayah (Metode Thiessen).",
-                inputs: ["Data Hujan Terkoreksi", "Luas Area Pengaruh Stasiun"],
-                process: "CHw = Σ (CH Stasiun * Luas Pengaruh) / Luas Total DAS",
+
+            "P2": { title: "Curah Hujan Wilayah", cat: "Pre-Processing", desc: "Menghitung hujan perwakilan wilayah metode Polygon Thiessen.",
+                inputs: ["Data Hujan Tervalidasi", "Luas Area Pengaruh Stasiun"],
+                process: "CHw = Σ (CH Stasiun × Luas Pengaruh) / Luas Total DAS",
                 outputs: ["hasilThiessen: HasilThiessen"],
                 files: ["src/services/calculationService.ts (calculateThiessen)"],
                 state: "state.hasilThiessen" },
-            "E1": { title: "Analisis Frekuensi", cat: "Core Engine", desc: "Menghitung Curah Hujan Rencana kala ulang (Tr) 2, 5, 10, 25, 50, 100 tahun.",
+
+            "P3": { title: "Satelit & Infilling (CHIRPS)", cat: "Pre-Processing", desc: "Ekstraksi data hujan satelit CHIRPS dan pengisian data kosong (missing data infilling).",
+                inputs: ["Koordinat DAS", "Rentang Tahun", "Data Hujan (dengan gap)"],
+                process: "1. CHIRPS zonal extraction → API\n2. Missing data detection\n3. Gap filling algorithm\n4. Outlier replacement",
+                outputs: ["dataSatelit: DataCHIRPS[]", "dataHujanInfilled: DataHujan[]"],
+                files: ["src/features/master-data/components/SatelliteRainfallButton.tsx", "src/features/master-data/components/InfillButton.tsx"],
+                state: "state.dataSatelit\nstate.dataHujanInfilled" },
+
+            "E1": { title: "Analisis Frekuensi", cat: "Core Engine", desc: "Menghitung Curah Hujan Rencana kala ulang (Tr) 2–100 tahun dengan uji kecocokan distribusi.",
                 inputs: ["Hujan Maksimum Tahunan (dari Thiessen)"],
-                process: "Pencocokan sebaran Normal, Log Normal, Gumbel, dan Log Pearson III berdasarkan uji Smirnov-Kolmogorov.",
-                outputs: ["hasilAnalisisFrekuensi: HasilAnalisisFrekuensi", "curahHujanRencana"],
-                files: ["src/services/calculationService.ts (calculateFrekuensi)"],
+                process: "Distribusi: Normal, Log Normal, Gumbel, Log Pearson III\nUji: Smirnov-Kolmogorov & Chi-Square",
+                outputs: ["hasilAnalisisFrekuensi: HasilAnalisisFrekuensi", "curahHujanRencana: number[]"],
+                files: ["src/features/flood-analysis/components/ModulAnalisisFrekuensi.tsx", "src/services/calculationService.ts"],
                 state: "state.hasilAnalisisFrekuensi\nstate.curahHujanRencana" },
-            "E2": { title: "Areal Reduction Factor", cat: "Core Engine", desc: "Koreksi pengurangan hujan terhadap luas DAS besar.",
+
+            "E2": { title: "Areal Reduction Factor", cat: "Core Engine", desc: "Koreksi pengurangan hujan titik ke hujan area DAS.",
                 inputs: ["curahHujanRencana", "morfometriDAS.luas"],
-                process: "ARF = 1 - (0.048 * A^0.5)",
+                process: "ARF = 1 - (0.048 × A^0.5)",
                 outputs: ["hasilARF: HasilARF (Hujan Rencana Terkoreksi)"],
                 files: ["src/services/calculationService.ts (calculateARF)"],
                 state: "state.hasilARF" },
-            "E3": { title: "Distribusi & Hujan Efektif", cat: "Core Engine", desc: "Memecah hujan harian ke jam-jaman dan dikalikan Koefisien Pengaliran.",
+
+            "E3": { title: "Distribusi & Hujan Efektif", cat: "Core Engine", desc: "Memecah hujan harian ke jam-jaman (Mononobe) dan kalkulasi hujan efektif.",
                 inputs: ["Hujan Terkoreksi ARF", "landCoverParams.C", "Durasi Hujan"],
-                process: "1. Distribusi Mononobe\n   (Pt = R24/t * (t/T)^(2/3))\n2. Hujan Efektif = Pt * C",
+                process: "1. Distribusi Mononobe:\n   Pt = R24/t × (t/T)^(2/3)\n2. Hujan Efektif = Pt × C",
                 outputs: ["distribusiHujanJamJaman: number[]", "hujanEfektif: number[]"],
                 files: ["src/services/effectiveRainfallService.ts", "src/services/calculationService.ts"],
                 state: "state.hujanEfektif\nstate.distribusiHujanJamJaman" },
-            "M1": { title: "Modul Banjir Rencana", cat: "Feature Module", desc: "Simulasi Hidrograf Satuan Sintetis (HSS).",
-                inputs: ["state.hujanEfektif", "morfometriDAS (L, S)"],
-                process: "Konvolusi: Q = Σ (U * Pe)\nMetode: HSS Nakayasu, Snyder, SCS",
+
+            "M1": { title: "Modul Banjir Rencana", cat: "Feature Module", desc: "Simulasi Hidrograf Satuan Sintetis (HSS Nakayasu, Snyder, SCS).",
+                inputs: ["state.hujanEfektif", "morfometriDAS (L, A, S)"],
+                process: "Konvolusi: Q = Σ (U × Pe)\nMetode: HSS Nakayasu, Snyder, SCS",
                 outputs: ["hasilBanjir: HasilBanjir (Q Peak, Ordinat HSS)"],
-                files: ["src/features/flood-analysis/index.tsx", "src/services/hssComparisonService.ts"],
+                files: ["src/features/flood-analysis/components/ModulBanjirStepper.tsx", "src/services/hssComparisonService.ts"],
                 state: "state.hasilBanjir\nstate.hasilKonvolusi" },
-            "M2": { title: "Modul Neraca Air", cat: "Feature Module", desc: "Mensimulasikan ketersediaan air andalan metode FJ Mock.",
-                inputs: ["Hujan Bulanan (Thiessen)", "Evapotranspirasi (Klimatologi)", "Water Holding Capacity"],
-                process: "Soil Moisture Balance -> Surplus/Defisit -> Baseflow -> Runoff",
+
+            "M2": { title: "Modul Neraca Air", cat: "Feature Module", desc: "Simulasi ketersediaan air andalan metode FJ Mock.",
+                inputs: ["Hujan Bulanan (Thiessen)", "Evapotranspirasi", "Water Holding Capacity"],
+                process: "Soil Moisture Balance → Surplus/Defisit → Baseflow → Runoff",
                 outputs: ["hasilMock: HasilMock", "Debit Andalan (Q80)"],
-                files: ["src/features/water-balance/index.tsx", "src/services/waterBalanceEngine.ts"],
+                files: ["src/features/water-balance/components/WaterBalanceTab.tsx", "src/services/waterBalanceEngine.ts"],
                 state: "state.hasilMock\nstate.neracaFinal" },
-            "M3": { title: "Modul Perencanaan Embung", cat: "Feature Module", desc: "Penelusuran waduk (Routing) dan desain dimensi embung.",
+
+            "M3": { title: "Modul Perencanaan Embung", cat: "Feature Module", desc: "Penelusuran waduk (Routing) dan desain dimensi embung dengan persistensi hasil.",
                 inputs: ["Debit Banjir (Q Peak)", "Debit Andalan (Inflow)", "Kebutuhan Air (Outflow)"],
-                process: "Simulasi Storage (ΔS = Inflow - Outflow).\nDesain Spillway (Q = C*B*H^1.5)",
+                process: "Simulasi Storage (ΔS = Inflow - Outflow)\nDesain Spillway (Q = C×B×H^1.5)\nRouting analysis → Supabase persistence",
                 outputs: ["hasilEmbung: HasilEmbung (Dimensi, Volume Efektif)"],
-                files: ["src/features/embung/index.tsx", "src/services/embungDatabaseService.ts"],
+                files: ["src/features/embung/components/EmbungDashboard.tsx", "src/services/embungDatabaseService.ts"],
                 state: "state.hasilEmbung" },
-            "O1": { title: "Visualisasi Data (Recharts)", cat: "Output & UI", desc: "Merender hasil array angka menjadi grafik interaktif.",
-                inputs: ["Seluruh State Hasil (Banjir, Neraca, QC)"],
-                process: "Mapping array ke struktur data Recharts <LineChart>, <BarChart>",
-                outputs: ["Grafik SVG Dinamis di DOM"],
-                files: ["src/features/flood-analysis/components/FloodChart.tsx", "src/features/water-balance/components/MockChart.tsx"],
+
+            "M4": { title: "Hidraulika Saluran (Manning)", cat: "Feature Module", desc: "Analisis kapasitas hidraulik saluran terbuka metode Manning.",
+                inputs: ["Debit Rencana (Q)", "Geometri Saluran (B, h, m)", "Koefisien Manning (n)", "Kemiringan Dasar (S)"],
+                process: "Q = (1/n) × A × R^(2/3) × S^(1/2)\nKlasifikasi rezim aliran (Fr)\nFreeboard safety check",
+                outputs: ["hasilManning: HasilManning (V, Q, Fr, freeboard)"],
+                files: ["src/features/channel-analysis/components/ManningCalculator.tsx"],
+                state: "state.hasilManning" },
+
+            "O1": { title: "Dashboard Eksekutif", cat: "Output & UI", desc: "Ringkasan eksekutif seluruh hasil analisis hidrologi dalam satu tampilan terintegrasi.",
+                inputs: ["Seluruh State Hasil (Banjir, Neraca, Embung, QC)", "Identitas Proyek"],
+                process: "Aggregation & visualization via Recharts\nProgress tracking seluruh modul\nKartu statistik ringkasan",
+                outputs: ["Dashboard Interaktif", "Kartu Statistik Eksekutif"],
+                files: ["src/features/dashboard/components/ExecutiveDashboard.tsx"],
                 state: "(Read-only consumption from Store)" },
-            "O2": { title: "Export Laporan", cat: "Reporting", desc: "Cetak dokumen PDF dan Excel secara offline.",
-                inputs: ["DOM Elements", "JSON State"],
-                process: "react-to-pdf untuk Print DOM.\nexceljs untuk menyusun Workbook",
-                outputs: ["LaporanBanjir.pdf", "DataNeraca.xlsx"],
-                files: ["src/lib/exportUtils.ts", "src/features/dashboard/components/ExportButton.tsx"],
-                state: "(Read-only consumption from Store)" },
-            "O3": { title: "AI Consultant", cat: "AI Integration", desc: "Penasihat cerdas berbasis Gemini AI untuk membaca narasi hidrologi.",
-                inputs: ["Rekapitulasi Parameter & Hasil perhitungan"],
-                process: "Prompt Engineering -> POST ke @google/generative-ai -> Streaming Response",
-                outputs: ["Rekomendasi Teknis", "Kesimpulan Analisis Markdown"],
-                files: ["src/features/ai-consultant/index.tsx", "src/services/geminiService.ts"],
-                state: "(Trigger API Call, read from Store)" }
+
+            "O2": { title: "AI Consultant (Gemini)", cat: "AI Integration", desc: "Penasihat teknis cerdas berbasis Gemini AI dengan RAG kontekstual dan Multimodal OCR.",
+                inputs: ["Rekapitulasi Parameter & Hasil Perhitungan", "Context dari Modul Aktif"],
+                process: "RAG Context Building → Prompt Engineering → POST ke @google/generative-ai → Streaming Response",
+                outputs: ["Rekomendasi Teknis SNI", "Kesimpulan Analisis Markdown"],
+                files: ["src/features/ai-consultant/AIConsultantDrawer.tsx", "src/features/ai-consultant/GeminiConsultant.tsx", "src/services/geminiService.ts"],
+                state: "(Trigger API Call, read from Store)" },
+
+            "O3": { title: "Ekspor Laporan", cat: "Reporting", desc: "Cetak dokumen PDF dan Excel secara offline dari seluruh modul.",
+                inputs: ["DOM Elements", "JSON State", "Dashboard Data"],
+                process: "react-to-pdf untuk Print DOM\nexceljs untuk menyusun Workbook",
+                outputs: ["LaporanBanjir.pdf", "DataNeraca.xlsx", "LaporanEksekutif.pdf"],
+                files: ["src/lib/exportUtils.ts"],
+                state: "(Read-only consumption from Store)" }
+        };
         };
 
         let panZoomInstance = null;
@@ -393,7 +427,7 @@
             nodes.forEach(node => {
                 let realId = node.id.split('-').pop(); 
                 if(!nodeDB[realId]) {
-                    const match = node.id.match(/(I[1-3]|P[1-2]|E[1-3]|M[1-3]|O[1-3])/);
+                    const match = node.id.match(/(I[1-4]|P[1-3]|E[1-3]|M[1-4]|O[1-3])/);
                     if(match) realId = match[0];
                 }
 
