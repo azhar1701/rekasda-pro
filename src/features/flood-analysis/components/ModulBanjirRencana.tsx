@@ -15,7 +15,7 @@ import {
     CloudRain, Calculator, Activity, ChevronDown,
     Beaker, BarChart3, Waves, FlaskConical,
     TrendingUp, Droplets, Mountain, Layers,
-    BarChart2, AlertTriangle
+    BarChart2, AlertTriangle, ShieldCheck
 } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
@@ -23,6 +23,9 @@ import {
 import { toast } from '@/hooks/useToast';
 import * as Select from '@radix-ui/react-select';
 import { cn } from '@/lib/utils';
+import { useFloodMethod } from '@/hooks/useFloodMethod';
+import { FloodMethodRecommenderBanner } from '@/features/flood-analysis/components/FloodMethodRecommenderBanner';
+import { useEffect } from 'react';
 
 // ────────────────────────────────────────────
 // Types & Constants
@@ -127,6 +130,22 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
     // ITB
     const [itbVariant, setItbVariant] = useState<'itb1' | 'itb2'>('itb1');
     const [itbCs, setItbCs] = useState('0.20');
+
+    // ── Recommender Engine ──
+    const { recommendation, isDataReady } = useFloodMethod();
+
+    // Auto-sync category & method with recommendation
+    useEffect(() => {
+        if (isDataReady) {
+            if (recommendation.isRasional) {
+                setCategory('empiris');
+                setMethod('rasional_dasar');
+            } else {
+                setCategory('hss');
+                setMethod('nakayasu');
+            }
+        }
+    }, [isDataReady, recommendation, setCategory, setMethod]);
 
     // ── Calculation state ──
     const [isCalculating, setIsCalculating] = useState(false);
@@ -393,11 +412,14 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     <div className="md:col-span-5 flex flex-col gap-5">
                         <div className="bg-white/60 backdrop-blur border border-white/60 rounded-md shadow-sm p-5 space-y-5">
 
+                            {/* Expert Recommender Banner */}
+                            <FloodMethodRecommenderBanner />
+
                             {/* Project Banner (SSOT) */}
                             <ProjectContextBanner />
 
                             <div className="mb-2">
-                                <FormulaAccordion 
+                                <FormulaAccordion
                                     title="Analisis Banjir Rancangan"
                                     subtitle="Metode Rasional & Hidrograf Satuan Sintetis (HSS)"
                                     theme="purple"
@@ -423,10 +445,10 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                             {/* Master Data Selector */}
                             <MasterDataSelector />
-                            
+
                             {/* Frequency Analysis Summary */}
                             <FrequencyAnalysisSummary onNavigate={() => setShowFreqModal(true)} />
-                            
+
                             <hr className="border-slate-100" />
 
                             {/* ─── TIER 1: Category Selector ─── */}
@@ -442,12 +464,14 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                         <button
                                             key={opt.value}
                                             type="button"
-                                            onClick={() => handleCategoryChange(opt.value)}
+                                            onClick={() => !isDataReady ? handleCategoryChange(opt.value) : null}
+                                            disabled={isDataReady}
                                             className={cn(
                                                 'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all duration-200',
                                                 category === opt.value
                                                     ? 'bg-white text-blue-700 shadow-md shadow-blue-200/40'
-                                                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/40'
+                                                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/40',
+                                                isDataReady && 'cursor-not-allowed opacity-80'
                                             )}
                                         >
                                             {opt.icon}
@@ -464,7 +488,11 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 </label>
                                 <Select.Root value={method} onValueChange={(val) => { setMethod(val as MethodType); setChartData([]); setResultSummary(null); }}>
                                     <Select.Trigger
-                                        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-md border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        disabled={isDataReady}
+                                        className={cn(
+                                            "w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-md border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-blue-200",
+                                            isDataReady && "bg-slate-50 cursor-not-allowed opacity-80"
+                                        )}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
@@ -663,12 +691,17 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 <Button
                                     className="w-full py-6 rounded-md font-bold text-base shadow-sm shadow-blue-500/20 bg-pupr-blue hover:bg-blue-700 transition-all"
                                     onClick={handleCalculate}
-                                    disabled={isCalculating}
+                                    disabled={isCalculating || !isDataReady}
                                 >
                                     {isCalculating ? (
                                         <div className="flex items-center gap-2">
                                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md" />
                                             Memproses Simulasi...
+                                        </div>
+                                    ) : !isDataReady ? (
+                                        <div className="flex items-center gap-2">
+                                            <ShieldCheck className="w-5 h-5 opacity-50" />
+                                            Lengkapi Data Spasial/Frekuensi
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">

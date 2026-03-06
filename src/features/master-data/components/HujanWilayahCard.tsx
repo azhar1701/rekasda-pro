@@ -5,10 +5,15 @@ import { Button } from '@/components/ui/Button';
 import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig } from '@/stores/useHydrologyStore';
 import { calculateIsohyetAverage } from '@/lib/engine/rainfallAnalysis';
 import { determineRainfallMethod, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
+import { calculateArealSeries } from '@/utils/rainfallSeriesUtils';
+import { toast } from '@/hooks/useToast';
 
 export const HujanWilayahCard: React.FC = () => {
-  const { curahHujanWilayah, setCurahHujanWilayah, stasiunList, morfometriDAS } = useHydrologyStore();
-  
+  const {
+    curahHujanWilayah, setCurahHujanWilayah, stasiunList, morfometriDAS,
+    fetchMultipleStationsData, setArealRainfallData
+  } = useHydrologyStore();
+
   const [metode, setMetode] = useState<'aljabar' | 'thiessen' | 'isohyet'>(curahHujanWilayah?.metode || 'aljabar');
   const [configs, setConfigs] = useState<ThiessenStasiunConfig[]>(
     curahHujanWilayah?.stasiunConfigs || []
@@ -18,7 +23,7 @@ export const HujanWilayahCard: React.FC = () => {
   );
   const [isSaved, setIsSaved] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  
+
   const [params, setParams] = useState<MethodParams>({
     hasCoordinates: true,
     topography: 'flat',
@@ -70,7 +75,7 @@ export const HujanWilayahCard: React.FC = () => {
     const total = configs.reduce((sum, c) => sum + (typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh), 0);
     const dasLuas = morfometriDAS?.luasDAS || 0;
     const error = dasLuas > 0 ? Math.abs(total - dasLuas) : 0;
-    
+
     return {
       totalLuasPengaruh: total,
       bobotError: error,
@@ -90,13 +95,13 @@ export const HujanWilayahCard: React.FC = () => {
   const hasError = metode === 'thiessen' && bobotError > 0.01 && morfometriDAS !== null;
 
   const handleLuasChange = (stasiunId: string, value: string) => {
-    setConfigs(configs.map(c => 
+    setConfigs(configs.map(c =>
       c.stasiunId === stasiunId ? { ...c, luasPengaruh: value as unknown as number } : c
     ));
     setIsSaved(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const safeConfigs = configsWithBobot.map(c => ({
       ...c,
       luasPengaruh: typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh
@@ -108,24 +113,56 @@ export const HujanWilayahCard: React.FC = () => {
       curahHujanRataRata: typeof c.curahHujanRataRata === 'string' ? parseFloat(c.curahHujanRataRata) || 0 : c.curahHujanRataRata
     }));
 
-    let avgValue = 0;
-    if (metode === 'thiessen' && safeConfigs.length > 0) {
-      // Logic derived from ThiessenCalculator
-      avgValue = safeConfigs.reduce((sum, c) => sum + (c.bobot/100 * (configs.find(oc => oc.stasiunId === c.stasiunId)?.luasPengaruh || 0)), 0);
-    } else if (metode === 'isohyet' && safeIsohyet.length > 0) {
-      avgValue = calculateIsohyetAverage(safeIsohyet);
-    }
+    try {
+      let avgValue = 0;
+      if (metode === 'thiessen' && safeConfigs.length > 0) {
+        avgValue = safeConfigs.reduce((sum, c) => sum + (c.bobot / 100 * (configs.find(oc => oc.stasiunId === c.stasiunId)?.luasPengaruh || 0)), 0);
 
-    const data: CurahHujanWilayah = {
-      metode,
-      stasiunConfigs: safeConfigs,
-      isohyetConfigs: safeIsohyet,
-      hujanRataRata: avgValue,
-    };
-    setCurahHujanWilayah(data);
-    setConfigs(safeConfigs);
-    setIsohyetalConfigs(safeIsohyet);
-    setIsSaved(true);
+        // --- Calculate Time Series for Frequency Analysis ---
+        const stasiunIds = safeConfigs.map(c => c.stasiunId);
+        await fetchMultipleStationsData(stasiunIds);
+
+        // Re-fetch dataHujan from state after await
+        const currentData = useHydrologyStore.getState().dataHujan;
+        const weights: Record<string, number> = {};
+        safeConfigs.forEach(c => weights[c.stasiunId] = c.bobot / 100);
+
+        const series = calculateArealSeries(currentData, weights);
+        setArealRainfallData('thiessen', series);
+        toast.success(`Series harian Thiessen (${series.length} data) berhasil dihitung.`);
+
+      } else if (metode === 'isohyet' && safeIsohyet.length > 0) {
+        avgValue = calculateIsohyetAverage(safeIsohyet);
+        // Note: Isohyet series calculation is typically manual or needs spatial snapshots.
+        // For now, we only support point-based series for Aljabar and Thiessen.
+        setArealRainfallData('isohyet', null);
+      } else if (metode === 'aljabar') {
+        const stasiunIds = stasiunList.map(s => s.id);
+        if (stasiunIds.length > 0) {
+          await fetchMultipleStationsData(stasiunIds);
+          const currentData = useHydrologyStore.getState().dataHujan;
+          const weights: Record<string, number> = {};
+          stasiunIds.forEach(id => weights[id] = 1 / stasiunIds.length);
+
+          const series = calculateArealSeries(currentData, weights);
+          setArealRainfallData('aljabar', series);
+          toast.success(`Series harian Aljabar (${series.length} data) berhasil dihitung.`);
+        }
+      }
+
+      const data: CurahHujanWilayah = {
+        metode,
+        stasiunConfigs: safeConfigs,
+        isohyetConfigs: safeIsohyet,
+        hujanRataRata: avgValue,
+      };
+      setCurahHujanWilayah(data);
+      setConfigs(safeConfigs);
+      setIsohyetalConfigs(safeIsohyet);
+      setIsSaved(true);
+    } catch (err: any) {
+      toast.error('Gagal menyimpan konfigurasi: ' + err.message);
+    }
   };
 
   const handleApplyRecommendation = () => {
@@ -133,7 +170,7 @@ export const HujanWilayahCard: React.FC = () => {
       let methodValue: 'aljabar' | 'thiessen' | 'isohyet' = 'aljabar';
       if (recommendation.method === 'Metode Poligon Thiessen') methodValue = 'thiessen';
       if (recommendation.method === 'Metode Isohyet') methodValue = 'isohyet';
-      
+
       setMetode(methodValue);
       setIsAssistantOpen(false);
     }
@@ -156,7 +193,7 @@ export const HujanWilayahCard: React.FC = () => {
 
         <div className="p-4">
           <div className="mb-6">
-            <button 
+            <button
               onClick={() => setIsAssistantOpen(!isAssistantOpen)}
               className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-800 hover:bg-amber-100 transition-colors w-full justify-between"
             >
@@ -260,7 +297,7 @@ export const HujanWilayahCard: React.FC = () => {
                   <h4 className="text-xs font-bold text-amber-900 uppercase mb-1">Rekomendasi Terdeteksi</h4>
                   <p className="text-sm font-bold text-[#0c3a66]">{recommendation?.method}</p>
                   <p className="text-xs text-slate-600 mt-1 leading-relaxed">{recommendation?.reason}</p>
-                  <button 
+                  <button
                     onClick={handleApplyRecommendation}
                     className="mt-3 px-3 py-1.5 bg-[#0c3a66] text-white text-xs font-bold rounded hover:bg-[#092b4d] transition-all flex items-center gap-2"
                   >
@@ -277,31 +314,28 @@ export const HujanWilayahCard: React.FC = () => {
             <div className="inline-flex border border-slate-300 rounded-md overflow-hidden">
               <button
                 onClick={() => setMetode('aljabar')}
-                className={`px-4 py-2 text-sm font-semibold transition-all ${
-                  metode === 'aljabar'
-                    ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r border-[#0c3a66]'
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
-                }`}
+                className={`px-4 py-2 text-sm font-semibold transition-all ${metode === 'aljabar'
+                  ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r border-[#0c3a66]'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
+                  }`}
               >
                 Rata-rata Aljabar
               </button>
               <button
                 onClick={() => setMetode('thiessen')}
-                className={`px-4 py-2 text-sm font-semibold transition-all ${
-                  metode === 'thiessen'
-                    ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r border-[#0c3a66]'
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
-                }`}
+                className={`px-4 py-2 text-sm font-semibold transition-all ${metode === 'thiessen'
+                  ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r border-[#0c3a66]'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
+                  }`}
               >
                 Poligon Thiessen
               </button>
               <button
                 onClick={() => setMetode('isohyet')}
-                className={`px-4 py-2 text-sm font-semibold transition-all ${
-                  metode === 'isohyet'
-                    ? 'bg-[#0c3a66]/10 text-[#0c3a66]'
-                    : 'bg-white text-slate-600 hover:bg-slate-50'
-                }`}
+                className={`px-4 py-2 text-sm font-semibold transition-all ${metode === 'isohyet'
+                  ? 'bg-[#0c3a66]/10 text-[#0c3a66]'
+                  : 'bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
               >
                 Garis Isohyet
               </button>
@@ -385,7 +419,7 @@ export const HujanWilayahCard: React.FC = () => {
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-slate-700 font-formal">Data Luas Antar Garis Isohyet</h4>
-                <Button 
+                <Button
                   onClick={() => setIsohyetalConfigs([...isohyetalConfigs, { id: crypto.randomUUID(), label: `Area ${isohyetalConfigs.length + 1}`, curahHujanRataRata: 0, luasAntarGaris: 0, bobot: 0 }])}
                   variant="outline"
                   className="px-3 py-1 text-xs border-[#0c3a66] text-[#0c3a66]"
@@ -408,8 +442,8 @@ export const HujanWilayahCard: React.FC = () => {
                     {isohyetalConfigs.map((config, idx) => (
                       <tr key={config.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                         <td className="px-2 py-2">
-                          <input 
-                            value={config.label} 
+                          <input
+                            value={config.label}
                             onChange={(e) => {
                               const newConfigs = [...isohyetalConfigs];
                               newConfigs[idx].label = e.target.value;
@@ -420,7 +454,7 @@ export const HujanWilayahCard: React.FC = () => {
                           />
                         </td>
                         <td className="px-2 py-2">
-                          <input 
+                          <input
                             type="number"
                             value={config.curahHujanRataRata === 0 ? '' : config.curahHujanRataRata}
                             onChange={(e) => {
@@ -434,7 +468,7 @@ export const HujanWilayahCard: React.FC = () => {
                           />
                         </td>
                         <td className="px-2 py-2">
-                          <input 
+                          <input
                             type="number"
                             value={config.luasAntarGaris === 0 ? '' : config.luasAntarGaris}
                             onChange={(e) => {
@@ -448,7 +482,7 @@ export const HujanWilayahCard: React.FC = () => {
                           />
                         </td>
                         <td className="px-2 py-2 text-center">
-                          <button 
+                          <button
                             onClick={() => {
                               setIsohyetalConfigs(isohyetalConfigs.filter((_, i) => i !== idx));
                               setIsSaved(false);
@@ -476,7 +510,7 @@ export const HujanWilayahCard: React.FC = () => {
           {metode === 'aljabar' && (
             <div className="mb-4 p-3 bg-blue-50 border-l-4 border-[#0c3a66] rounded-md">
               <p className="text-sm text-slate-700 leading-relaxed">
-                <strong className="text-[#0c3a66]">Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama. 
+                <strong className="text-[#0c3a66]">Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama.
                 Hujan wilayah dihitung dengan rata-rata aritmatik dari semua stasiun pengamatan yang tersedia.
               </p>
             </div>
@@ -485,13 +519,12 @@ export const HujanWilayahCard: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={hasError}
-            className={`w-full px-4 py-2.5 font-semibold rounded-md transition-all flex items-center justify-center gap-2 ${
-              hasError
-                ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
-                : isSaved
+            className={`w-full px-4 py-2.5 font-semibold rounded-md transition-all flex items-center justify-center gap-2 ${hasError
+              ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
+              : isSaved
                 ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                 : 'bg-[#0c3a66] hover:bg-[#0d4578] text-white shadow-sm'
-            }`}
+              }`}
           >
             {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi'}

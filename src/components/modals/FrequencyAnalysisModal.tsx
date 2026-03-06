@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { cn } from '@/lib/utils';
 import { X, CheckCircle, Download, Save, AlertTriangle, Activity } from 'lucide-react';
 import { DataInputTable } from './FrequencyAnalysisModal/DataInputTable';
 import { StatCard } from './FrequencyAnalysisModal/StatCard';
+import { AnnualMaxGrid } from './FrequencyAnalysisModal/AnnualMaxGrid';
 import { calculateStatistics, performFrequencyAnalysis, type DistributionMethod } from '@/lib/engine/statistics/frequency';
 import { validateDistributionFit } from '@/lib/engine/statistics/goodnessOfFit';
 import { useHydrologyStore, type HasilAnalisisFrekuensi } from '@/stores/useHydrologyStore';
@@ -10,6 +12,7 @@ import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { QCDetailsPanel } from '@/components/ui/QCDetailsPanel';
 import { useDataQualityControl } from '@/hooks/useDataQualityControl';
 import type { QCResult } from '@/lib/utils/qc/dataQualityMath';
+import { extractAnnualMaximums } from '@/utils/rainfallSeriesUtils';
 
 export interface RainfallDataPoint {
   year: number;
@@ -48,35 +51,48 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
   const [editedRows, setEditedRows] = useState<Set<number>>(new Set());
   const [isAutofilled, setIsAutofilled] = useState(false);
 
-  const dataHujan = useHydrologyStore(s => s.dataHujan);
-  const selectedStasiun = useHydrologyStore(s => s.selectedStasiun);
-  const setHasilAnalisisFrekuensi = useHydrologyStore(s => s.setHasilAnalisisFrekuensi);
-  const qcStatus = useHydrologyStore(s => s.qcStatus);
-  const isQCOverridden = useHydrologyStore(s => s.isQCOverridden);
-  
+  const {
+    dataHujan, selectedStasiun, setHasilAnalisisFrekuensi, qcStatus, isQCOverridden,
+    activeRainfallSource, setActiveRainfallSource,
+    arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet
+  } = useHydrologyStore();
+
   const { runQC } = useDataQualityControl();
 
-  const annualMaxData = useMemo(() => {
-    if (!dataHujan || dataHujan.length === 0) return [];
-    const byYear = new Map<number, number>();
-    dataHujan.forEach(d => {
-      const year = new Date(d.tanggal).getFullYear();
-      const current = byYear.get(year) || 0;
-      if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
-    });
-    return Array.from(byYear.entries())
-      .map(([year, value]) => ({ year, value }))
-      .sort((a, b) => a.year - b.year);
-  }, [dataHujan]);
+  // ── Dynamic Data Routing ──
+  const activeSeries = useMemo(() => {
+    switch (activeRainfallSource) {
+      case 'aljabar': return arealRainfallAlgebraic;
+      case 'thiessen': return arealRainfallThiessen;
+      case 'isohyet': return arealRainfallIsohyet;
+      default: return dataHujan;
+    }
+  }, [activeRainfallSource, dataHujan, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet]);
 
-  const canAutofill = annualMaxData.length > 0 && selectedStasiun !== null;
+  const annualMaxData = useMemo(() => {
+    if (!activeSeries || activeSeries.length === 0) return [];
+    return extractAnnualMaximums(activeSeries).sort((a, b) => a.year - b.year);
+  }, [activeSeries]);
+
+  const isSourceMissing = activeRainfallSource !== 'titik' && (!activeSeries || activeSeries.length === 0);
+
+  const sourceName = useMemo(() => {
+    switch (activeRainfallSource) {
+      case 'aljabar': return 'Rata-rata Aljabar';
+      case 'thiessen': return 'Poligon Thiessen';
+      case 'isohyet': return 'Garis Isohyet';
+      default: return selectedStasiun ? `Stasiun: ${selectedStasiun.nama_stasiun}` : 'Data Titik';
+    }
+  }, [activeRainfallSource, selectedStasiun]);
+
+  const canAutofill = annualMaxData.length > 0 && (selectedStasiun !== null || activeRainfallSource !== 'titik');
 
   const handleAutofill = useCallback(() => {
     if (annualMaxData.length === 0) return;
     setData(annualMaxData);
     setEditedRows(new Set());
     setIsAutofilled(true);
-    
+
     if (annualMaxData.length >= 10) {
       try {
         const result = runQC(annualMaxData.map(d => ({ tahun: d.year, hujan: d.value })));
@@ -154,12 +170,11 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Analisis Frekuensi Hujan</h2>
-            {selectedStasiun && (
-              <p className="text-xs text-slate-500 mt-0.5">
-                Stasiun: <span className="font-semibold text-blue-600">{selectedStasiun.nama_stasiun}</span>
-              </p>
-            )}
+            <h2 className="text-lg font-bold text-gray-900 leading-none">Analisis Frekuensi Hujan</h2>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#0c3a66] mt-1 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Sumber: {sourceName}
+            </p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
@@ -167,21 +182,63 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
+          {/* Source Selection Pills (GovTech style) */}
+          <div className="mb-6 p-1 bg-slate-100 rounded-lg flex items-center gap-1 border border-slate-200">
+            {[
+              { id: 'titik', label: 'Data Titik' },
+              { id: 'aljabar', label: 'Rata-rata Aljabar' },
+              { id: 'thiessen', label: 'Poligon Thiessen' },
+              { id: 'isohyet', label: 'Garis Isohyet' },
+            ].map((source) => (
+              <button
+                key={source.id}
+                onClick={() => {
+                  setActiveRainfallSource(source.id as any);
+                  setIsAutofilled(false); // Reset autofill if source changes
+                }}
+                className={cn(
+                  "flex-1 py-2 text-xs font-bold uppercase tracking-tight rounded-md transition-all",
+                  activeRainfallSource === source.id
+                    ? "bg-[#0c3a66] text-white shadow-md shadow-blue-900/10"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+                )}
+              >
+                {source.label}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
-            <div className="col-span-12 md:col-span-5 space-y-3">
-              {canAutofill && (
+            <div className="col-span-12 md:col-span-5 space-y-4">
+              {isSourceMissing && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-md flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <h4 className="text-xs font-black text-red-900 uppercase">Data belum tersedia</h4>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-red-800 font-medium italic">
+                    Hasil {sourceName} belum dihitung. Silakan jalankan perhitungan Hujan Wilayah di modul sebelumnya untuk mengaktifkan data series ini.
+                  </p>
+                </div>
+              )}
+
+              {canAutofill && !isSourceMissing && (
                 <button onClick={handleAutofill} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300">
                   <Download className="w-4 h-4" />
                   Tarik Data Maksimum Tahunan dari Master Data
                 </button>
               )}
-              {isAutofilled && editedRows.size > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  {editedRows.size} baris diedit manual
-                </div>
-              )}
-              <DataInputTable data={data} onChange={handleDataChange} editedRows={editedRows} />
+              <div className="animate-in fade-in duration-500 space-y-4">
+                {isAutofilled && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                      Summary Puncak Tahunan (Terdeteksi)
+                    </h4>
+                    <AnnualMaxGrid data={annualMaxData} />
+                  </div>
+                )}
+                <DataInputTable data={data} onChange={handleDataChange} editedRows={editedRows} />
+              </div>
             </div>
 
             <div className="col-span-12 md:col-span-7 flex flex-col gap-4">

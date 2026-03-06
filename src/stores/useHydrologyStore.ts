@@ -247,6 +247,12 @@ export interface HydrologyState {
   isLoading: boolean;
   error: string | null;
 
+  // --- Rainfall Data Routing ---
+  activeRainfallSource: 'titik' | 'aljabar' | 'thiessen' | 'isohyet';
+  arealRainfallAlgebraic: DataHujan[] | null;
+  arealRainfallThiessen: DataHujan[] | null;
+  arealRainfallIsohyet: DataHujan[] | null;
+
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setLuasDas: (luas: string) => void;
@@ -297,6 +303,10 @@ export interface HydrologyState {
   setNeracaFinal: (data: NeracaFinalRow[] | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
   fetchMultipleStationsData: (stasiunIds: string[]) => Promise<void>;
+
+  // --- Rainfall Routing Setters ---
+  setActiveRainfallSource: (source: 'titik' | 'aljabar' | 'thiessen' | 'isohyet') => void;
+  setArealRainfallData: (type: 'aljabar' | 'thiessen' | 'isohyet', data: DataHujan[] | null) => void;
 }
 
 // Mock data removed for production integration
@@ -310,6 +320,12 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
   hasilKonvolusi: null, neracaFinal: null, distribusiHujanJamJaman: null, hujanEfektif: null, durasiHujan: 6,
   qcResults: null, qcStatus: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
   hssComparisonResults: null, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
+
+  // --- Initial Rainfall Routing States ---
+  activeRainfallSource: 'titik',
+  arealRainfallAlgebraic: null,
+  arealRainfallThiessen: null,
+  arealRainfallIsohyet: null,
 
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
@@ -738,5 +754,12 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  setActiveRainfallSource: (source) => set({ activeRainfallSource: source }),
+  setArealRainfallData: (type, data) => {
+    if (type === 'aljabar') set({ arealRainfallAlgebraic: data });
+    else if (type === 'thiessen') set({ arealRainfallThiessen: data });
+    else if (type === 'isohyet') set({ arealRainfallIsohyet: data });
   },
 }));
