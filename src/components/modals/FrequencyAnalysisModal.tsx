@@ -87,6 +87,31 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
   const canAutofill = annualMaxData.length > 0 && (selectedStasiun !== null || activeRainfallSource !== 'titik');
 
+  // ── Auto-Sync Logic (SUPER PROMPT Implementation) ──
+  useEffect(() => {
+    if (annualMaxData.length > 0) {
+      setData(annualMaxData);
+      setEditedRows(new Set());
+      setIsAutofilled(true);
+
+      // Auto-run QC if enough data
+      if (annualMaxData.length >= 10) {
+        try {
+          const result = runQC(annualMaxData.map(d => ({ tahun: d.year, hujan: d.value })));
+          setQcResult(result);
+        } catch (error) {
+          console.error('QC auto-run failed:', error);
+        }
+      }
+    } else {
+      if (activeRainfallSource !== 'titik') {
+        setData([]);
+        setIsAutofilled(false);
+        setQcResult(null);
+      }
+    }
+  }, [annualMaxData, activeRainfallSource, runQC]);
+
   const handleAutofill = useCallback(() => {
     if (annualMaxData.length === 0) return;
     setData(annualMaxData);
@@ -210,35 +235,42 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
             <div className="col-span-12 md:col-span-5 space-y-4">
-              {isSourceMissing && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-md flex flex-col gap-2">
+              {isSourceMissing ? (
+                <div className="p-5 bg-red-50 border-2 border-red-200 rounded-xl flex flex-col gap-3 shadow-sm animate-in zoom-in-95 duration-300">
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                    <h4 className="text-xs font-black text-red-900 uppercase">Data belum tersedia</h4>
+                    <div className="bg-red-100 p-2 rounded-lg">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                    </div>
+                    <h4 className="text-sm font-black text-red-900 uppercase tracking-tight">Data Belum Tersedia</h4>
                   </div>
-                  <p className="text-[11px] leading-relaxed text-red-800 font-medium italic">
-                    Hasil {sourceName} belum dihitung. Silakan jalankan perhitungan Hujan Wilayah di modul sebelumnya untuk mengaktifkan data series ini.
+                  <p className="text-xs leading-relaxed text-red-800 font-bold italic">
+                    Data Hujan Wilayah <span className="underline decoration-red-400 decoration-2 underline-offset-2">{sourceName}</span> belum dihitung. Silakan kembali ke Modul Maestro/Master Data (Hujan Wilayah).
                   </p>
                 </div>
-              )}
+              ) : (
+                <div className="space-y-4 animate-in fade-in duration-500">
+                  {isAutofilled && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-inner">
+                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <CheckCircle className="w-3 h-3 text-emerald-500" />
+                        Summary Puncak Tahunan ({sourceName})
+                      </h4>
+                      <AnnualMaxGrid data={data} />
+                    </div>
+                  )}
 
-              {canAutofill && !isSourceMissing && (
-                <button onClick={handleAutofill} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300">
-                  <Download className="w-4 h-4" />
-                  Tarik Data Maksimum Tahunan dari Master Data
-                </button>
-              )}
-              <div className="animate-in fade-in duration-500 space-y-4">
-                {isAutofilled && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
-                      Summary Puncak Tahunan (Terdeteksi)
-                    </h4>
-                    <AnnualMaxGrid data={annualMaxData} />
+                  <div className="bg-white border border-slate-200 rounded-xl p-1 shadow-sm overflow-hidden">
+                    <DataInputTable data={data} onChange={handleDataChange} editedRows={editedRows} />
                   </div>
-                )}
-                <DataInputTable data={data} onChange={handleDataChange} editedRows={editedRows} />
-              </div>
+
+                  {canAutofill && !isAutofilled && (
+                    <button onClick={handleAutofill} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold transition-all bg-[#0c3a66] text-white hover:bg-blue-800 shadow-md">
+                      <Download className="w-4 h-4" />
+                      Tarik Data Maksimum Tahunan
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="col-span-12 md:col-span-7 flex flex-col gap-4">

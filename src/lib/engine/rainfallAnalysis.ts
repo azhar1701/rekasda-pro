@@ -122,22 +122,33 @@ export function calculateAlgebraicAverage(stations: ThiessenStation[]): number[]
 }
 
 /**
- * Calculates Isohyet Weighted Average rainfall.
+ * Calculates Isohyet Weighted Average rainfall series (AMS).
  * 
- * Formula: P̄ = Σ(Li × Pi) / ΣLi
+ * Formula: P̄_t = Σ(Li × Pi_t) / ΣLi
  * Dimana:
  * - Li = Luas antar dua garis isohyet (km²)
- * - Pi = Curah hujan rata-rata antar dua garis isohyet (mm)
- *  pride: production grade math
- * @param segments - Array of isohyet area segments
- * @returns Weighted average rainfall (mm)
+ * - Pi_t = Curah hujan rata-rata antar dua garis isohyet pada tahun t (mm)
+ * 
+ * @param segments - Array of isohyet area segments with annual max series
+ * @returns Weighted average rainfall annual maximum series (number[])
  */
-export function calculateIsohyetAverage(segments: { luasAntarGaris: number; curahHujanRataRata: number }[]): number {
-  if (!segments || segments.length === 0) return 0;
+export function calculateIsohyetAverage(segments: { luasAntarGaris: number; annualMax: number[] }[]): number[] {
+  if (!segments || segments.length === 0) return [];
+  
   const totalLuas = segments.reduce((sum, s) => sum + s.luasAntarGaris, 0);
-  if (totalLuas <= 0) return 0;
-  const weightedSum = segments.reduce((sum, s) => sum + (s.luasAntarGaris * s.curahHujanRataRata), 0);
-  return Number((weightedSum / totalLuas).toFixed(2));
+  if (totalLuas <= 0) return [];
+
+  // Find the minimum number of data years across all segments
+  const minYears = Math.min(...segments.map(s => s.annualMax.length));
+  if (minYears === 0) return [];
+
+  const result: number[] = [];
+  for (let i = 0; i < minYears; i++) {
+    const weightedSum = segments.reduce((sum, s) => sum + (s.luasAntarGaris * s.annualMax[i]), 0);
+    result.push(Number((weightedSum / totalLuas).toFixed(2)));
+  }
+
+  return result;
 }
 
 // ─────────────────────────────────────────────────

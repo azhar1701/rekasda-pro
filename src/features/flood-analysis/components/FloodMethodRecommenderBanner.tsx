@@ -43,7 +43,7 @@ export const FloodMethodRecommenderBanner: React.FC = () => {
                         <span className="text-[10px] font-bold bg-[#0c3a66] text-white px-2 py-0.5 rounded uppercase">Verified by SNI</span>
                     </div>
                     <p className="text-xs font-medium text-slate-600 leading-relaxed mb-3">
-                        Sistem mendeteksi Luas DAS sebesar <span className="font-bold text-blue-800">{luasDasNumeric.toFixed(2)} km²</span> dan Hujan Rencana (Q50) sebesar <span className="font-bold text-blue-800">{hujanRencanaValue.toFixed(2)} mm</span>.
+                        Sistem mendeteksi Luas DAS sebesar <span className="font-bold text-blue-800">{(luasDasNumeric || 0).toFixed(2)} km²</span> dan Hujan Rencana (Q50) sebesar <span className="font-bold text-blue-800">{(hujanRencanaValue || 0).toFixed(2)} mm</span>.
                     </p>
                 </div>
             </div>

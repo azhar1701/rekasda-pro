@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/api/supabase';
-import { User, Session } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 import { toast } from './useToast';
+import { logger } from '@/lib/utils/logger';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -9,17 +10,23 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      logger.warn('Supabase not configured — auth features disabled.');
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
-    supabase?.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setUser(s?.user ?? null);
       setLoading(false);
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase!.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      setUser(s?.user ?? null);
       setLoading(false);
     });
 
@@ -27,12 +34,17 @@ export const useAuth = () => {
   }, []);
 
   const signOut = async () => {
+    if (!supabase) {
+      toast.error('Supabase tidak dikonfigurasi.');
+      return;
+    }
     try {
-      const { error } = await supabase!.auth.signOut();
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Berhasil keluar');
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Gagal keluar';
+      toast.error(message);
     }
   };
 

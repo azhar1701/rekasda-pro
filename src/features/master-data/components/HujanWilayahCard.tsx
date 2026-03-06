@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig } from '@/stores/useHydrologyStore';
 import { calculateIsohyetAverage } from '@/lib/engine/rainfallAnalysis';
 import { determineRainfallMethod, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
-import { calculateArealSeries } from '@/utils/rainfallSeriesUtils';
+import { calculateArealSeries, extractAnnualMaximums } from '@/utils/rainfallSeriesUtils';
 import { toast } from '@/hooks/useToast';
 
 export const HujanWilayahCard: React.FC = () => {
@@ -115,38 +115,58 @@ export const HujanWilayahCard: React.FC = () => {
 
     try {
       let avgValue = 0;
-      if (metode === 'thiessen' && safeConfigs.length > 0) {
-        avgValue = safeConfigs.reduce((sum, c) => sum + (c.bobot / 100 * (configs.find(oc => oc.stasiunId === c.stasiunId)?.luasPengaruh || 0)), 0);
+      let amsArray: number[] = [];
 
-        // --- Calculate Time Series for Frequency Analysis ---
+      if (metode === 'thiessen' && safeConfigs.length > 0) {
+        // --- Calculate Weights ---
+        const total = safeConfigs.reduce((sum, c) => sum + c.luasPengaruh, 0);
+        const weights: Record<string, number> = {};
+        safeConfigs.forEach(c => weights[c.stasiunId] = c.luasPengaruh / total);
+
+        // --- Fetch Data & Calculate Series ---
         const stasiunIds = safeConfigs.map(c => c.stasiunId);
         await fetchMultipleStationsData(stasiunIds);
-
-        // Re-fetch dataHujan from state after await
         const currentData = useHydrologyStore.getState().dataHujan;
-        const weights: Record<string, number> = {};
-        safeConfigs.forEach(c => weights[c.stasiunId] = c.bobot / 100);
 
-        const series = calculateArealSeries(currentData, weights);
-        setArealRainfallData('thiessen', series);
-        toast.success(`Series harian Thiessen (${series.length} data) berhasil dihitung.`);
+        const dailySeries = calculateArealSeries(currentData, weights);
+        const amsSeries = extractAnnualMaximums(dailySeries);
+        
+        amsArray = amsSeries.map(d => d.value);
+        avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+
+        setArealRainfallData('thiessen', dailySeries);
+        toast.success(`Series AMS Thiessen (${amsArray.length} tahun) berhasil dihitung.`);
 
       } else if (metode === 'isohyet' && safeIsohyet.length > 0) {
-        avgValue = calculateIsohyetAverage(safeIsohyet);
-        // Note: Isohyet series calculation is typically manual or needs spatial snapshots.
-        // For now, we only support point-based series for Aljabar and Thiessen.
+        // For Isohyet, we use the updated calculateIsohyetAverage that supports arrays
+        const segments = safeIsohyet.map(s => ({
+          luasAntarGaris: s.luasAntarGaris,
+          annualMax: s.annualMax || [s.curahHujanRataRata] // Fallback to single value if series not provided
+        }));
+        
+        amsArray = calculateIsohyetAverage(segments as any);
+        avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+        
         setArealRainfallData('isohyet', null);
+        toast.success(`Series AMS Isohyet (${amsArray.length} tahun) berhasil dihitung.`);
+
       } else if (metode === 'aljabar') {
         const stasiunIds = stasiunList.map(s => s.id);
         if (stasiunIds.length > 0) {
-          await fetchMultipleStationsData(stasiunIds);
-          const currentData = useHydrologyStore.getState().dataHujan;
           const weights: Record<string, number> = {};
           stasiunIds.forEach(id => weights[id] = 1 / stasiunIds.length);
 
-          const series = calculateArealSeries(currentData, weights);
-          setArealRainfallData('aljabar', series);
-          toast.success(`Series harian Aljabar (${series.length} data) berhasil dihitung.`);
+          await fetchMultipleStationsData(stasiunIds);
+          const currentData = useHydrologyStore.getState().dataHujan;
+
+          const dailySeries = calculateArealSeries(currentData, weights);
+          const amsSeries = extractAnnualMaximums(dailySeries);
+          
+          amsArray = amsSeries.map(d => d.value);
+          avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+
+          setArealRainfallData('aljabar', dailySeries);
+          toast.success(`Series AMS Aljabar (${amsArray.length} tahun) berhasil dihitung.`);
         }
       }
 
@@ -155,6 +175,7 @@ export const HujanWilayahCard: React.FC = () => {
         stasiunConfigs: safeConfigs,
         isohyetConfigs: safeIsohyet,
         hujanRataRata: avgValue,
+        hujanRataRataAMS: amsArray
       };
       setCurahHujanWilayah(data);
       setConfigs(safeConfigs);
@@ -433,7 +454,7 @@ export const HujanWilayahCard: React.FC = () => {
                   <thead className="bg-slate-100 border-b border-slate-300">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold text-slate-700">Label Area</th>
-                      <th className="px-3 py-2 text-right font-semibold text-slate-700">Rerata Hujan (mm)</th>
+                      <th className="px-3 py-2 text-right font-semibold text-slate-700">AMS Hujan (mm)</th>
                       <th className="px-3 py-2 text-right font-semibold text-slate-700">Luas (km²)</th>
                       <th className="px-3 py-2 text-center text-slate-700">Aksi</th>
                     </tr>
@@ -454,17 +475,20 @@ export const HujanWilayahCard: React.FC = () => {
                           />
                         </td>
                         <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            value={config.curahHujanRataRata === 0 ? '' : config.curahHujanRataRata}
+                          <textarea
+                            value={config.annualMax ? config.annualMax.join(', ') : config.curahHujanRataRata}
                             onChange={(e) => {
+                              const val = e.target.value;
+                              const nums = val.split(/[, \n]+/).map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
                               const newConfigs = [...isohyetalConfigs];
-                              newConfigs[idx].curahHujanRataRata = e.target.value as any;
+                              newConfigs[idx].annualMax = nums;
+                              if (nums.length > 0) newConfigs[idx].curahHujanRataRata = nums[0];
                               setIsohyetalConfigs(newConfigs);
                               setIsSaved(false);
                             }}
-                            className="w-full px-2 py-1 text-xs text-right border border-slate-200 rounded focus:ring-1 focus:ring-[#0c3a66]"
-                            placeholder="0.00"
+                            rows={1}
+                            className="w-full px-2 py-1 text-xs text-right border border-slate-200 rounded focus:ring-1 focus:ring-[#0c3a66] font-mono"
+                            placeholder="60, 70, 80..."
                           />
                         </td>
                         <td className="px-2 py-2">

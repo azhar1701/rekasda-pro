@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:docker": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
@@ -13,6 +14,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "audit:prod": "npm audit --omit=dev",
+    "audit:check": "npm audit --audit-level=high",
+    "audit:fix": "npm audit fix --audit-level=high",
     "docker:dev": "docker compose up --watch rekasda-pro-dev",
     "docker:prod": "docker compose up --watch rekasda-pro-ui"
   },
@@ -85,7 +88,7 @@
   "overrides": {
     "esbuild": "^0.25.0",
     "serialize-javascript": "^7.0.3",
-    "dompurify": "github:cure53/dompurify#302b51de22535cc90235472c52e3401bedd46f80",
+    "dompurify": "^3.3.2",
     "tar": "^7.5.10",
     "jspdf": "^4.2.0"
   }

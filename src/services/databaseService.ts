@@ -1,19 +1,24 @@
 import { supabase, isSupabaseEnabled } from '../lib/api/supabase'
+import { logger } from '../lib/utils/logger'
 
+/**
+ * @deprecated Use apiService from '@/services/api.service' instead for production-grade API interactions.
+ * databaseService is maintained for backward compatibility during the refactoring phase.
+ */
 export interface CalculationRecord {
   id?: string
   site_name: string
   calculation_type: 'manning' | 'rational'
-  input_data: any
-  result_data: any
-  location?: any
+  input_data: Record<string, unknown>
+  result_data: Record<string, unknown>
+  location?: Record<string, unknown>
   photo_url?: string
   notes?: string
   created_at?: string
   updated_at?: string
 }
 
-const sanitizeForLog = (data: any): string => {
+const sanitizeForLog = (data: unknown): string => {
   if (typeof data === 'string') {
     return data.replace(/[\r\n\t]/g, ' ').substring(0, 100);
   }
@@ -23,7 +28,7 @@ const sanitizeForLog = (data: any): string => {
 export const databaseService = {
   async saveCalculation(data: Omit<CalculationRecord, 'id' | 'created_at'>) {
     if (!isSupabaseEnabled()) {
-      console.warn('Supabase not configured. Calculation not saved.')
+      logger.warn('Supabase not configured. Calculation not saved.')
       return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
     }
 
@@ -39,7 +44,7 @@ export const databaseService = {
         notes: data.notes || null
       }
 
-      console.log('Attempting to save calculation:', sanitizeForLog(cleanData))
+      logger.info('Attempting to save calculation:', sanitizeForLog(cleanData))
 
       const { data: result, error } = await supabase!
         .from('calculations')
@@ -47,7 +52,7 @@ export const databaseService = {
         .select()
       
       if (error) {
-        console.error('Supabase save error details:', {
+        logger.error('Supabase save error details:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -60,17 +65,17 @@ export const databaseService = {
         throw new Error('No data returned from insert operation')
       }
       
-      console.log('Successfully saved to Supabase:', sanitizeForLog(result[0]))
+      logger.info('Successfully saved to Supabase:', sanitizeForLog(result[0]))
       return result[0]
     } catch (error) {
-      console.error('Save calculation error:', error)
+      logger.error('Save calculation error:', error)
       throw error
     }
   },
 
   async getCalculations() {
     if (!isSupabaseEnabled()) {
-      console.warn('Supabase not configured. Returning empty array.')
+      logger.warn('Supabase not configured. Returning empty array.')
       return []
     }
 
@@ -85,7 +90,7 @@ export const databaseService = {
 
   async deleteCalculation(id: string) {
     if (!isSupabaseEnabled()) {
-      console.warn('Supabase not configured. Cannot delete calculation.')
+      logger.warn('Supabase not configured. Cannot delete calculation.')
       return
     }
 
@@ -110,7 +115,7 @@ export const databaseService = {
         .limit(1)
       
       if (error) {
-        console.error('Supabase connection test failed:', {
+        logger.error('Supabase connection test failed:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -119,10 +124,10 @@ export const databaseService = {
         return { connected: false, error: `Connection failed: ${error.message}` }
       }
       
-      console.log('Connection test successful, found records:', data?.length || 0)
+      logger.info('Connection test successful, found records:', data?.length || 0)
       return { connected: true, error: null }
     } catch (error) {
-      console.error('Supabase connection error:', error)
+      logger.error('Supabase connection error:', error)
       return { connected: false, error: (error as Error).message }
     }
   }

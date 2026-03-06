@@ -45,6 +45,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
   }, [savedSpatialMetode]);
 
   useEffect(() => {
+    const spatialConfig = useHydrologyStore.getState().curahHujanWilayah;
+    
     if (inputType === 'point' && dataHujan.length > 0) {
       const stasiunData = selectedStasiun 
         ? dataHujan.filter(d => d.stasiun_id === selectedStasiun.id)
@@ -58,34 +60,37 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
           if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
         });
         const annualMax = Array.from(byYear.values());
-        if (annualMax.length >= 10) setDataInput(annualMax);
+        if (annualMax.length >= 1) setDataInput(annualMax);
         else setDataInput([]);
       } else {
         setDataInput([]);
       }
     } else if (inputType === 'areal_thiessen' && hasilThiessen?.hujanRataRataDAS) {
       setDataInput(hasilThiessen.hujanRataRataDAS);
-    } else if (inputType === 'areal_algebraic' && dataHujan.length > 0) {
-      // Simple Algebraic Mean logic (could be moved to engine)
-      const years = Array.from(new Set(dataHujan.map(d => new Date(d.tanggal).getFullYear())));
-      const results: number[] = [];
-      years.forEach(year => {
-        const yearData = dataHujan.filter(d => new Date(d.tanggal).getFullYear() === year);
-        const stations = Array.from(new Set(yearData.map(d => d.stasiun_id)));
-        let sum = 0;
-        stations.forEach(sId => {
-          const stationAnnualMax = yearData.filter(d => d.stasiun_id === sId).map(d => d.curah_hujan);
-          if (stationAnnualMax.length > 0) sum += Math.max(...stationAnnualMax);
+    } else if (inputType === 'areal_algebraic') {
+      if (spatialConfig?.metode === 'aljabar' && spatialConfig.hujanRataRataAMS) {
+        setDataInput(spatialConfig.hujanRataRataAMS);
+      } else {
+        // Fallback to local calculation if store not ready
+        const years = Array.from(new Set(dataHujan.map(d => new Date(d.tanggal).getFullYear())));
+        const results: number[] = [];
+        years.forEach(year => {
+          const yearData = dataHujan.filter(d => new Date(d.tanggal).getFullYear() === year);
+          const stations = Array.from(new Set(yearData.map(d => d.stasiun_id)));
+          let sum = 0;
+          stations.forEach(sId => {
+            const stationAnnualMax = yearData.filter(d => d.stasiun_id === sId).map(d => d.curah_hujan);
+            if (stationAnnualMax.length > 0) sum += Math.max(...stationAnnualMax);
+          });
+          if (stations.length > 0) results.push(sum / stations.length);
         });
-        if (stations.length > 0) results.push(sum / stations.length);
-      });
-      setDataInput(results);
-      setDataInput(results);
-    } else if (inputType === 'areal_isohyet' && useHydrologyStore.getState().curahHujanWilayah?.isohyetConfigs) {
-      // For Isohyet AMS: use the master average value calculated in spatial parameters
-      const config = useHydrologyStore.getState().curahHujanWilayah;
-      if (config?.hujanRataRata) {
-         setDataInput([config.hujanRataRata]);
+        setDataInput(results);
+      }
+    } else if (inputType === 'areal_isohyet') {
+      if (spatialConfig?.metode === 'isohyet' && spatialConfig.hujanRataRataAMS) {
+        setDataInput(spatialConfig.hujanRataRataAMS);
+      } else if (spatialConfig?.hujanRataRata) {
+         setDataInput([spatialConfig.hujanRataRata]);
       }
     }
   }, [dataHujan, selectedStasiun, inputType, hasilThiessen]);
@@ -378,11 +383,11 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             </div>
             <div className="relative">
               <textarea
-                value={dataInput.join(', ')}
-                onChange={(e) => setDataInput(e.target.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v)))}
+                value={dataInput.map(v => v.toFixed(2)).join('\n')}
+                onChange={(e) => setDataInput(e.target.value.split('\n').map(v => parseFloat(v.trim())).filter(v => !isNaN(v)))}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-xs focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
-                rows={3}
-                placeholder="Contoh: 120.5, 135.2, 98.7, 145.3, ... (pisahkan dengan koma)"
+                rows={10}
+                placeholder="Masukkan deret data hujan maksimum tahunan (satu nilai per baris)"
               />
               <div className="absolute bottom-2 right-2 px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold">
                 <span className={dataInput.length >= 10 ? 'text-green-600' : 'text-amber-600'}>

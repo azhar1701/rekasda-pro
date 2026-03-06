@@ -21,7 +21,7 @@ export const AnnualMaxGrid: React.FC<AnnualMaxGridProps> = ({ data }) => {
                     </span>
                     <div className="flex items-baseline gap-0.5">
                         <span className="text-sm font-black text-[#0c3a66] tabular-nums tracking-tight group-hover:scale-110 transition-transform">
-                            {point.value || 0}
+                            {(point.value || 0).toFixed(2)}
                         </span>
                         <span className="text-[10px] font-bold text-slate-400">mm</span>
                     </div>

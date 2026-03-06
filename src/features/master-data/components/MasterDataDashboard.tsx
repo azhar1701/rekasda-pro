@@ -33,13 +33,25 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
   }, [dataHujan]);
 
   const rainfallChartData = useMemo(() => {
+    // Priority 1: Use actual historical annual average rainfall from Thiessen result
+    const thiessenResults = useHydrologyStore.getState().hasilThiessen;
+    if (thiessenResults?.hujanRataRataDAS && thiessenResults.hujanRataRataDAS.length > 0) {
+      return thiessenResults.hujanRataRataDAS.map((val, idx) => ({
+        tahun: `Data ${idx + 1}`,
+        hujan: Number(val.toFixed(2)),
+      }));
+    }
+
+    // Priority 2: Fallback to weights if no historical data processed yet
     if (!curahHujanWilayah?.stasiunConfigs) return [];
     return curahHujanWilayah.stasiunConfigs
       .map((item, idx) => ({
         tahun: item.namaStasiun || `Stasiun ${idx + 1}`,
         hujan: Number(item.bobot.toFixed(2)),
+        isWeight: true
       }));
   }, [curahHujanWilayah]);
+
 
   const landCoverStats = useMemo(() => {
     if (!tutupanLahan?.items || tutupanLahan.items.length === 0) return null;
@@ -295,9 +307,17 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
         </div>
 
         <div className="p-4">
-        <p className="text-sm text-slate-700 mb-4">
-          Metode Terpilih: <span className="font-semibold text-[#0c3a66]">{metodeName}</span>
-        </p>
+          <div className="flex flex-wrap gap-4 mb-4">
+            <p className="text-sm text-slate-700">
+              Metode Terpilih: <span className="font-semibold text-[#0c3a66]">{metodeName}</span>
+            </p>
+            {curahHujanWilayah?.hujanRataRata && (
+              <p className="text-sm text-slate-700">
+                Rerata DAS: <span className="font-bold text-teal-600">{curahHujanWilayah.hujanRataRata.toFixed(2)} mm</span>
+              </p>
+            )}
+          </div>
+
 
         {rainfallChartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={250}>
@@ -328,8 +348,12 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                   borderRadius: '4px' 
                 }}
                 labelStyle={{ color: '#1e293b', fontWeight: 600 }}
-                formatter={(value: number) => [`${value.toFixed(2)} mm`, 'Hujan Wilayah']}
+                formatter={(value: number, _name: any, props: any) => [
+                  `${value.toFixed(2)} ${props.payload.isWeight ? '(% Bobot)' : 'mm'}`, 
+                  props.payload.isWeight ? 'Bobot Kontribusi' : 'Hujan Wilayah'
+                ]}
               />
+
               <Bar dataKey="hujan" fill="#0c3a66" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

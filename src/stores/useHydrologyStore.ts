@@ -37,6 +37,7 @@ export interface IsohyetConfig {
   curahHujanRataRata: number; 
   luasAntarGaris: number; 
   bobot: number; 
+  annualMax?: number[]; // Added to store time-series data
 }
 
 export interface HasilThiessen {
@@ -109,6 +110,7 @@ export interface CurahHujanWilayah {
   stasiunConfigs: ThiessenStasiunConfig[];
   isohyetConfigs?: IsohyetConfig[];
   hujanRataRata: number; 
+  hujanRataRataAMS?: number[]; // Added to store the Annual Maximum Series array
 }
 
 export interface AnalisisFrekuensi {
