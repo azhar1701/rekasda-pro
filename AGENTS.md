@@ -26,14 +26,12 @@ rekasda-pro/
 | SNI Constants | `src/lib/constants/sni.ts` | SSOT for coefficients and limits |
 | Rainfall Management | `MasterHidrologiTab.tsx` | Main CRUD + Bulk Matrix Ingestion |
 | UI Components | `src/components/ui` | GovTech standard components |
-| Docker Config | `./Dockerfile*`, `docker-compose.yml` | Multi-stage build + Dev Watch |
 | Nginx Config | `nginx.conf` | Port 3000, SPA routing, security headers |
 | Automation | `scripts/automation/` | Legacy fix & parse scripts |
 | DB Schema | `supabase/migrations` | Table definitions and migrations |
 | AI Logic | `src/services/geminiService.ts` | Gemini API integration |
 
 ## CONVENTIONS
-- **Docker First**: Use `docker compose up dev` for local dev with hot reload.
 - **Environment**: Never commit `.env`. Use `.env.example` as a template. Build args for prod.
 - **SNI First**: All calculations must reference SNI constants in `src/lib/constants/sni.ts`.
 - **SSOT**: Data flows from Supabase -> Store -> Engines.
@@ -53,8 +51,6 @@ rekasda-pro/
 npm run dev       # Start dev server
 npm run build     # Build for production
 npm run test      # Run hydrology tests
-docker compose up dev  # Professional dev workflow
-docker compose up prod # Build & run production image
 ```
 
 ## NOTES
