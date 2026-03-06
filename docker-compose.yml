@@ -14,6 +14,7 @@ services:
       - /app/node_modules
     env_file:
       - .env.local
+    # Force polling for HMR (Critical for Windows/Mac host to Linux container)
     environment:
       - CHOKIDAR_USEPOLLING=true
       - VITE_USE_POLLING=true
@@ -42,6 +43,14 @@ services:
     ports:
       - "3000:80"
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
     networks:
       - rekasda-net
     logging:
