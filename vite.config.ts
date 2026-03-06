@@ -55,12 +55,27 @@ export default defineConfig({
       }
     })
   ],
+  // ==========================================================================
+  // Docker Development Server Configuration
+  // ==========================================================================
+  // host: true        → Listen on 0.0.0.0 (wajib agar Docker bisa memetakan port)
+  // port: 5173        → Sesuai dengan docker-compose.yml mapping 5173:5173
+  // strictPort: true  → Vite GAGAL jika port 5173 sudah terpakai (tidak diam-diam pindah)
+  // usePolling: true  → HMR berfungsi di Docker/WSL (filesystem events tidak bridge ke host)
   server: {
-    port: 3000,
     host: true,
+    port: 5173,
+    strictPort: true,
     headers: {
       'Cache-Control': 'no-store',
     },
+    watch: {
+      usePolling: true,
+    },
+  },
+  preview: {
+    port: 5173,
+    strictPort: true,
   },
   publicDir: 'public',
   build: {

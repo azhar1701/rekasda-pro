@@ -1,0 +1,25 @@
+# =============================================================================
+# RekaSDA Pro — Production Docker Compose (VPS)
+# =============================================================================
+# File ini digunakan oleh CI/CD pipeline di VPS produksi.
+# Image ditarik dari Docker Hub, BUKAN di-build lokal.
+# =============================================================================
+
+services:
+  prod:
+    image: ${DOCKER_IMAGE:-rekasda-pro:latest}
+    container_name: rekasda-prod
+    ports:
+      - "3000:80"
+    restart: always
+    networks:
+      - rekasda-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  rekasda-net:
+    driver: bridge
