@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calculator, Activity, Info, Copy, Download } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { calculateHSSNakayasu, calculateHSSGamma1, calculateHSSSnyder } from '@/lib/engine/flood';
+import { calculateHSSGamma1, calculateHSSSnyder } from '@/lib/engine/flood';
 import type { HSSNakayasuInput, HSSGamma1Input, HSSSnyderInput } from '@/types/hydrology';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
@@ -71,10 +71,20 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
     { id: 'snyder', name: 'HSS Snyder', description: 'DAS besar (Snyder, 1938)', recommended: false }
   ];
 
-  const handleCalculate = () => {
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  const handleCalculate = async () => {
+    setIsCalculating(true);
     try {
       if (method === 'nakayasu') {
-        const res = calculateHSSNakayasu(nakayasuInputs);
+        const response = await fetch('http://localhost:8000/api/v1/banjir/nakayasu', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(nakayasuInputs)
+        });
+
+        if (!response.ok) throw new Error('Gagal menghitung Nakayasu di Python Engine');
+        const res = await response.json();
         setResult({ Qp: res.Qp, Tp: res.Tp, Tb: res.Tb, Tg: nakayasuInputs.Tg, Tr: nakayasuInputs.Tr, Alpha: nakayasuInputs.Alpha, hydrograph: res.hydrograph });
       } else if (method === 'gamma1') {
         const res = calculateHSSGamma1(gamma1Inputs);
@@ -85,6 +95,8 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
       }
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Calculation error');
+    } finally {
+      setIsCalculating(false);
     }
   };
 
@@ -302,10 +314,11 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
           {/* Calculate Button */}
           <button
             onClick={handleCalculate}
-            className="w-full bg-pupr-blue hover:bg-blue-700 text-white font-medium rounded-md px-4 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-sm"
+            disabled={isCalculating}
+            className="w-full bg-pupr-blue hover:bg-blue-700 disabled:bg-slate-400 text-white font-medium rounded-md px-4 py-2.5 transition-colors flex items-center justify-center gap-2 shadow-sm"
           >
             <Calculator className="w-4 h-4" />
-            Hitung Hidrograf
+            {isCalculating ? 'Menghitung via Engine...' : 'Hitung Hidrograf'}
           </button>
         </div>
       </div>

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { generateHyetograph } from '@/lib/engine/flood/mononobe';
+// import { generateHyetograph } from '@/lib/engine/flood/mononobe';
 import { HyetographChart } from '@/components/ui/HyetographChart';
 import { IDFChart } from '@/components/ui/IDFChart';
 import { Calculator, CloudRain } from 'lucide-react';
 
 export const StepDistribusiHujan: React.FC = () => {
-  const { 
-    hasilAnalisisFrekuensi, 
+  const {
+    hasilAnalisisFrekuensi,
     tutupanLahan,
     durasiHujan,
     distribusiHujanJamJaman,
@@ -36,12 +36,39 @@ export const StepDistribusiHujan: React.FC = () => {
   const R24 = hasilAnalisisFrekuensi?.curahHujanRencana.find(
     v => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
   )?.curahHujan || 0;
-  
+
   const C = tutupanLahan?.koefisienPengaliranGabungan || 0.65;
 
-  const hyetographResult = React.useMemo(() => {
-    if (R24 === 0) return null;
-    return generateHyetograph(R24, durasiHujan);
+  const [hyetographResult, setHyetographResult] = useState<any>(null);
+  const [isCalculatingABM, setIsCalculatingABM] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const fetchABM = async () => {
+      if (R24 === 0) {
+        setHyetographResult(null);
+        return;
+      }
+      setIsCalculatingABM(true);
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/hujan/abm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ r24: R24, duration: durasiHujan })
+        });
+        if (response.ok && active) {
+          const data = await response.json();
+          setHyetographResult(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch ABM", e);
+        if (active) setHyetographResult(null);
+      } finally {
+        if (active) setIsCalculatingABM(false);
+      }
+    };
+    fetchABM();
+    return () => { active = false; };
   }, [R24, durasiHujan]);
 
   const abmTable = React.useMemo(() => {
@@ -50,11 +77,11 @@ export const StepDistribusiHujan: React.FC = () => {
 
   const hujanEfektifArray = React.useMemo(() => {
     if (!hyetographResult) return [];
-    return hyetographResult.rows.map(row => row.abm * C);
+    return hyetographResult.rows.map((row: any) => row.abm * C);
   }, [hyetographResult, C]);
 
   const chartData = React.useMemo(() => {
-    return abmTable.map((row, i) => ({
+    return abmTable.map((row: any, i: number) => ({
       jam: row.jam,
       losses: Number((row.abm - hujanEfektifArray[i]).toFixed(2)),
       efektif: Number(hujanEfektifArray[i].toFixed(2))
@@ -62,7 +89,7 @@ export const StepDistribusiHujan: React.FC = () => {
   }, [abmTable, hujanEfektifArray]);
 
   const handleCalculate = () => {
-    const hietograf = abmTable.map(row => row.abm);
+    const hietograf = abmTable.map((row: any) => row.abm);
     setDistribusiHujanJamJaman(hietograf);
     setHujanEfektif(hujanEfektifArray);
     setCalculated(true);
@@ -79,18 +106,18 @@ export const StepDistribusiHujan: React.FC = () => {
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">R24 (mm)</label>
-            <input 
-              type="text" 
-              value={R24.toFixed(2)} 
-              disabled 
+            <input
+              type="text"
+              value={R24.toFixed(2)}
+              disabled
               className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded text-sm tabular-nums text-right"
             />
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Durasi (jam)</label>
-            <input 
-              type="number" 
-              value={durasiHujan} 
+            <input
+              type="number"
+              value={durasiHujan}
               onChange={(e) => setDurasiHujan(Number(e.target.value))}
               min="2"
               max="24"
@@ -99,10 +126,10 @@ export const StepDistribusiHujan: React.FC = () => {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Koef. C</label>
-            <input 
-              type="text" 
-              value={C.toFixed(3)} 
-              disabled 
+            <input
+              type="text"
+              value={C.toFixed(3)}
+              disabled
               className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded text-sm tabular-nums text-right"
             />
           </div>
@@ -110,10 +137,11 @@ export const StepDistribusiHujan: React.FC = () => {
 
         <button
           onClick={handleCalculate}
-          className="w-full px-4 py-2 bg-[#0c3a66] hover:bg-[#0d4578] text-white text-sm font-semibold rounded flex items-center justify-center gap-2"
+          disabled={isCalculatingABM}
+          className="w-full px-4 py-2 bg-[#0c3a66] hover:bg-[#0d4578] disabled:bg-slate-400 text-white text-sm font-semibold rounded flex items-center justify-center gap-2 transition-colors"
         >
           <Calculator className="w-4 h-4" />
-          Hitung Distribusi ABM
+          {isCalculatingABM ? 'Menghitung ABM via API...' : 'Simpan & Lanjutkan Distribusi ABM'}
         </button>
       </div>
 
@@ -121,10 +149,10 @@ export const StepDistribusiHujan: React.FC = () => {
         <>
           <div className="bg-white border border-slate-300 rounded-md p-4">
             <h4 className="text-xs font-bold text-slate-900 mb-3">Kurva IDF (Intensity-Duration-Frequency)</h4>
-            <IDFChart 
-              curahHujanRencana={hasilAnalisisFrekuensi?.curahHujanRencana || []} 
+            <IDFChart
+              curahHujanRencana={hasilAnalisisFrekuensi?.curahHujanRencana || []}
               selectedKalaUlang={hasilAnalisisFrekuensi?.selectedKalaUlang ?? undefined}
-              maxDuration={Math.max(durasiHujan, 12)} 
+              maxDuration={Math.max(durasiHujan, 12)}
             />
           </div>
 
@@ -143,7 +171,7 @@ export const StepDistribusiHujan: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {abmTable.map((row, i) => (
+                  {abmTable.map((row: any, i: number) => (
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                       <td className="px-2 py-1.5 text-center tabular-nums tracking-tight">{row.jam}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums tracking-tight">{row.intensitas.toFixed(2)}</td>
@@ -155,7 +183,7 @@ export const StepDistribusiHujan: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-</div>
+            </div>
           </div>
 
           <div className="bg-white border border-slate-300 rounded-md p-4">
@@ -171,7 +199,7 @@ export const StepDistribusiHujan: React.FC = () => {
             <div>
               <p className="text-sm font-semibold text-green-900">✓ Distribusi Hujan Selesai</p>
               <p className="text-xs text-green-700 mt-1">
-                Total Hujan Efektif: {hujanEfektifArray.reduce((a, b) => a + b, 0).toFixed(2)} mm
+                Total Hujan Efektif: {hujanEfektifArray.reduce((a: number, b: number) => a + b, 0).toFixed(2)} mm
               </p>
             </div>
             <button

@@ -6,7 +6,7 @@ import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
-import { calculateRationalMethod, convertKm2ToHa, calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine';
+import { calculateRationalMethod, convertKm2ToHa } from '@/lib/engine';
 import { computeDesignFloodHydrograph } from '@/lib/engine/flood/convolution';
 import { useHydrologyStore, HasilKonvolusi } from '@/stores/useHydrologyStore';
 import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
@@ -123,44 +123,50 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     return useSNI2415Workflow(area);
   }, [method, rationalInputs.A, nakayasuInputs.A]);
 
-  // FIX BUG-1: useMemo MUST be pure — no setState calls inside.
-  // Warnings are now tracked separately via useEffect below.
-  const calculateRationalDischarge = useMemo(() => {
-    try {
-      if (method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
-        const inputs = {
-          luasDasKm2: rationalInputs.A,
-          panjangSungaiUtamaKm: rationalInputs.L || 1.5,
-          kemiringanSungai: rationalInputs.S || 0.01,
-          curahHujanHarianMaksimum: rationalInputs.R24 || 100,
-          koefisienPengaliran: rationalInputs.C
-        };
+  const [calculateRationalDischarge, setCalculateRationalDischarge] = useState({ qPeak: 0, warnings: [] as string[] });
 
-        if (method === 'HASPERS') {
-          return calculateHaspersOsugi(inputs.luasDasKm2, inputs.panjangSungaiUtamaKm, inputs.kemiringanSungai, inputs.curahHujanHarianMaksimum);
-        } else if (method === 'DER_WEDUWEN') {
-          return calculateDerWeduwen(inputs.luasDasKm2, inputs.panjangSungaiUtamaKm, inputs.kemiringanSungai, inputs.curahHujanHarianMaksimum);
+  useEffect(() => {
+    let active = true;
+    const fetchRational = async () => {
+      try {
+        if (method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
+          const response = await fetch('http://localhost:8000/api/v1/banjir/rasional-modifikasi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              method: method === 'DER_WEDUWEN' ? 'der_weduwen' : method.toLowerCase(),
+              A: rationalInputs.A,
+              L: rationalInputs.L || 1.5,
+              S: rationalInputs.S || 0.01,
+              I: rationalInputs.I,
+              // Melchior needs C
+              C: method === 'MELCHIOR' ? rationalInputs.C : undefined
+            })
+          });
+          if (!response.ok) throw new Error('API Error');
+          const res = await response.json();
+          if (active) setCalculateRationalDischarge({ qPeak: res.qPeak, warnings: res.warnings || [] });
         } else {
-          return calculateMelchior(inputs.luasDasKm2, inputs.panjangSungaiUtamaKm, inputs.kemiringanSungai, inputs.curahHujanHarianMaksimum, inputs.koefisienPengaliran);
+          const areaHa = convertKm2ToHa(rationalInputs.A);
+          const result = calculateRationalMethod({
+            C: rationalInputs.C,
+            I: rationalInputs.I,
+            A: areaHa
+          });
+          if (active) setCalculateRationalDischarge({ qPeak: result.Q, warnings: result.warnings || [] });
         }
+      } catch (err) {
+        if (active) setCalculateRationalDischarge({ qPeak: 0, warnings: ['Error: API gagal dihubungi'] });
       }
-
-      const areaHa = convertKm2ToHa(rationalInputs.A);
-      const result = calculateRationalMethod({
-        C: rationalInputs.C,
-        I: rationalInputs.I,
-        A: areaHa
-      });
-      return { qPeak: result.Q, warnings: result.warnings };
-    } catch (_error) {
-      return { qPeak: 0, warnings: ['Error: Input tidak valid'] };
-    }
+    };
+    fetchRational();
+    return () => { active = false; };
   }, [method, rationalInputs.C, rationalInputs.I, rationalInputs.A, rationalInputs.L, rationalInputs.S, rationalInputs.R24]);
 
   // FIX BUG-1 (continued): Sync warnings from pure useMemo result via useEffect
   React.useEffect(() => {
     setEngineWarnings(calculateRationalDischarge.warnings);
-  }, [calculateRationalDischarge]);
+  }, [calculateRationalDischarge.warnings]);
 
   useEffect(() => {
     const saved = localStorage.getItem('flood-sidebar-width');

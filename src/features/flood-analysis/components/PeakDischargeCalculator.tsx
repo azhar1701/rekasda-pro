@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Calculator, TrendingUp, Info, AlertTriangle } from 'lucide-react';
-import { calculateRationalDischarge as calculateRationalMethod } from '@/lib/engine/rationalMethod';
-import { calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine/flood/modifiedRationalIndo';
+// import { calculateRationalDischarge as calculateRationalMethod } from '@/lib/engine/rationalMethod';
+// import { calculateHaspersOsugi, calculateDerWeduwen, calculateMelchior } from '@/lib/engine/flood/modifiedRationalIndo';
 import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
@@ -52,7 +52,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
     L: 0,
     S: 0
   });
-  const [result, setResult] = useState<{ Qp: number; params?: any } | null>(null);
+  const [result, setResult] = useState<{ Qp: number; params?: any; t?: number; alpha?: number; beta?: number; method?: string } | null>(null);
   const [useManualC, setUseManualC] = useState(false);
   const [showSlopeCalculator, setShowSlopeCalculator] = useState(false);
 
@@ -95,24 +95,32 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
     { id: 'melchior', name: 'Melchior', description: 'A > 100 km²', recommended: inputs.area > 100 }
   ];
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     try {
       if (method === 'rational') {
-        const res = calculateRationalMethod({
-          C: inputs.C,
-          I: inputs.I,
-          A: inputs.area * 100
+        const A_ha = inputs.area * 100;
+        const Q = 0.002777777777777778 * inputs.C * inputs.I * A_ha;
+        setResult({ Qp: Q });
+      } else {
+        const response = await fetch('http://localhost:8000/api/v1/banjir/rasional-modifikasi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: method === 'weduwen' ? 'der_weduwen' : method,
+            A: inputs.area,
+            L: inputs.L,
+            S: inputs.S / 100, // percentage to decimal
+            I: inputs.I,
+            C: method === 'melchior' ? inputs.C : undefined
+          })
         });
-        setResult({ Qp: res.Q });
-      } else if (method === 'haspers') {
-        const res = calculateHaspersOsugi(inputs.area, inputs.L, inputs.S / 100, inputs.I);
-        setResult({ Qp: res.qPeak, params: res });
-      } else if (method === 'weduwen') {
-        const res = calculateDerWeduwen(inputs.area, inputs.L, inputs.S / 100, inputs.I);
-        setResult({ Qp: res.qPeak, params: res });
-      } else if (method === 'melchior') {
-        const res = calculateMelchior(inputs.area, inputs.L, inputs.S / 100, inputs.I, inputs.C);
-        setResult({ Qp: res.qPeak, params: res });
+
+        if (!response.ok) {
+          throw new Error('Gagal menghitung di Python Engine');
+        }
+
+        const res = await response.json();
+        setResult({ Qp: res.qPeak, ...res });
       }
     } catch (error) {
       setResult(null);
@@ -153,7 +161,6 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
       const saveOutputs = {
         ...result,
         method,
-        ...result.params
       };
 
       onSave(CalculationType.RATIONAL, saveInputs, saveOutputs);
@@ -403,22 +410,22 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                       </div>
                     </>
                   )}
-                  {method !== 'rational' && result.params?.t && (
+                  {method !== 'rational' && result.t !== undefined && (
                     <>
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-600">Waktu Konsentrasi (Tc)</span>
-                        <span className="font-bold text-slate-900">{result.params.t.toFixed(2)} jam</span>
+                        <span className="font-bold text-slate-900">{result.t.toFixed(2)} jam</span>
                       </div>
-                      {result.params?.alpha !== undefined && (
+                      {result.alpha !== undefined && (
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-600">Koefisien α</span>
-                          <span className="font-bold text-slate-900">{result.params.alpha.toFixed(3)}</span>
+                          <span className="font-bold text-slate-900">{result.alpha.toFixed(3)}</span>
                         </div>
                       )}
-                      {result.params?.beta !== undefined && (
+                      {result.beta !== undefined && (
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-600">Koefisien β</span>
-                          <span className="font-bold text-slate-900">{result.params.beta.toFixed(3)}</span>
+                          <span className="font-bold text-slate-900">{result.beta.toFixed(3)}</span>
                         </div>
                       )}
                     </>
@@ -434,10 +441,10 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                     <span className="text-slate-600">Intensitas (I)</span>
                     <span className="font-bold text-slate-900">{inputs.I.toFixed(1)} mm/jam</span>
                   </div>
-                  {result.params?.t && (
+                  {result.t !== undefined && (
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-600">Waktu Konsentrasi (Tc)</span>
-                      <span className="font-bold text-slate-900">{result.params.t.toFixed(2)} jam</span>
+                      <span className="font-bold text-slate-900">{result.t.toFixed(2)} jam</span>
                     </div>
                   )}
                   <p className="text-xs text-slate-400 mt-2">Dari analisis frekuensi hujan</p>

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Zap, AlertTriangle, CloudRain } from 'lucide-react';
-import { generateHyetograph, type HyetographResult } from '@/lib/engine/flood/mononobe';
+import { type HyetographResult } from '@/lib/engine/flood/mononobe';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 
 interface Props {
@@ -21,17 +21,36 @@ export const HyetographGenerator: React.FC<Props> = ({ r24: r24Prop }) => {
     const [result, setResult] = useState<HyetographResult | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const handleGenerate = useCallback(() => {
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleGenerate = useCallback(async () => {
         setError(null);
+        setIsGenerating(true);
         try {
             if (r24Effective <= 0) {
                 throw new Error('Hujan harian rencana (R₂₄) harus > 0 mm.');
             }
-            const res = generateHyetograph(r24Effective, durasi);
+            const response = await fetch('http://localhost:8000/api/v1/hujan/abm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    r24: r24Effective,
+                    duration: durasi
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal generate hyetograph di Python Engine');
+            }
+
+            const res: HyetographResult = await response.json();
             setResult(res);
         } catch (err: any) {
             setError(err.message || 'Gagal generate hyetograph.');
             setResult(null);
+        } finally {
+            setIsGenerating(false);
         }
     }, [r24Effective, durasi]);
 
@@ -104,10 +123,11 @@ export const HyetographGenerator: React.FC<Props> = ({ r24: r24Prop }) => {
                     <div className="flex items-end">
                         <button
                             onClick={handleGenerate}
-                            className="w-full h-10 bg-pupr-blue text-white text-white rounded-md font-bold text-xs hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-1.5"
+                            disabled={isGenerating}
+                            className="w-full h-10 bg-pupr-blue text-white text-white rounded-md font-bold text-xs hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Zap className="w-3.5 h-3.5" />
-                            Generate
+                            {isGenerating ? 'Generating...' : 'Generate'}
                         </button>
                     </div>
                 </div>

@@ -3,10 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Calculator, Info, Mountain, CalendarClock, ArrowRightSquare, Trash2, Sparkles } from 'lucide-react';
-import { calculateSedimentYield } from '@/lib/engine/embung';
+// import { calculateSedimentYield } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
-import { HydroValidationError } from '@/features/embung/types/embung.types';
-
 // Mock Data Defaults
 const DEFAULT_PARAMS = {
     catchmentArea: 45.5,      // km2
@@ -56,23 +54,24 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
         setResult(null);
     };
 
-    const handleCalculate = () => {
+    const handleCalculate = async () => {
         setIsCalculating(true);
         setResult(null);
 
-        setTimeout(() => {
-            try {
-                // Formatting data arrays for Rating Curve
-                // qs in (Ton/hari) = q(m3/s) * cs(mg/L) * 0.0864 (conversion factor)
-                const qData = samples.map(s => s.q);
-                // Menghitung Qs (Ton/hari) dari data sampel lapangan Q dan Cs
-                const qsData = samples.map(s => s.q * s.cs * 0.0864);
+        try {
+            // Formatting data arrays for Rating Curve
+            // qs in (Ton/hari) = q(m3/s) * cs(mg/L) * 0.0864 (conversion factor)
+            const qData = samples.map(s => s.q);
+            const qsData = samples.map(s => s.q * s.cs * 0.0864);
 
-                // Flow duration arrays for annual accumulation
-                const flowDurationDays = samples.map(s => s.days);
-                const flowDurationQ = samples.map(s => s.q);
+            // Flow duration arrays for annual accumulation
+            const flowDurationDays = samples.map(s => s.days);
+            const flowDurationQ = samples.map(s => s.q);
 
-                const sedResult = calculateSedimentYield({
+            const response = await fetch('http://localhost:8000/api/v1/embung/sedimen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     qData,
                     qsData,
                     luasDas: params.catchmentArea,
@@ -80,26 +79,29 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
                     bedLoadPercentage: params.bedLoadPercentage,
                     flowDurationDays,
                     flowDurationQ
-                });
+                })
+            });
 
-                setResult({
-                    totalVolume: Number(sedResult.totalVolumeM3.toFixed(0)),
-                    erosionRate: Number(sedResult.erosionRateMm.toFixed(2)),
-                    totalLoad: Number(sedResult.totalLoadTonnes.toFixed(1)),
-                    koefisienRating: `Qs = ${sedResult.a.toFixed(4)} Q^${sedResult.b.toFixed(4)}`
-                });
-
-                toast.success('Kalkulasi Laju Sedimen berhasil.');
-            } catch (error: any) {
-                if (error instanceof HydroValidationError) {
-                    toast.error(`Validasi Gagal: ${error.message}`);
-                } else {
-                    toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
-                }
-            } finally {
-                setIsCalculating(false);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal menghitung Sedimentasi di Python Engine');
             }
-        }, 800);
+
+            const sedResult = await response.json();
+
+            setResult({
+                totalVolume: Number(sedResult.totalVolumeM3.toFixed(0)),
+                erosionRate: Number(sedResult.erosionRateMm.toFixed(2)),
+                totalLoad: Number(sedResult.totalLoadTonnes.toFixed(1)),
+                koefisienRating: `Qs = ${sedResult.a.toFixed(4)} Q^${sedResult.b.toFixed(4)}`
+            });
+
+            toast.success('Kalkulasi Laju Sedimen REST API Engine berhasil.');
+        } catch (error: any) {
+            toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsCalculating(false);
+        }
     };
 
     return (

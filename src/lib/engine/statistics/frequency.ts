@@ -250,13 +250,13 @@ export function analyzeLogNormal(input: FrequencyInput): FrequencyResult {
   
   // Transform to log space
   // Guard: prevent log(0) → -Infinity if any data point is zero
-  const logData = validated.data.map(x => Math.log(Math.max(x, 1e-10)));
+  const logData = validated.data.map(x => Math.log10(Math.max(x, 1e-10)));
   const stats = calculateStatistics(logData);
   
   const designValues = validated.returnPeriods.map(T => {
     const K = getKNormal(T);
     const logXT = stats.mean + K * stats.stdDev;
-    const XT = Math.exp(logXT);
+    const XT = Math.pow(10, logXT);
     
     return {
       returnPeriod: T,
@@ -326,13 +326,13 @@ export function analyzeLogPearson3(input: FrequencyInput): FrequencyResult {
   
   // Transform to log space
   // Guard: prevent log(0) → -Infinity if any data point is zero
-  const logData = validated.data.map(x => Math.log(Math.max(x, 1e-10)));
+  const logData = validated.data.map(x => Math.log10(Math.max(x, 1e-10)));
   const logStats = calculateStatistics(logData);
   
   const designValues = validated.returnPeriods.map(T => {
     const K = getKLogPearson3(T, logStats.cs);
     const logXT = logStats.mean + K * logStats.stdDev;
-    const XT = Math.exp(logXT);
+    const XT = Math.pow(10, logXT);
     
     return {
       returnPeriod: T,

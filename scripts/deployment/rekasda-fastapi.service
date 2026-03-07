@@ -1,0 +1,30 @@
+[Unit]
+Description=Gunicorn/Uvicorn daemon for RekaSDA FastAPI Python Engine
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+# Direktori backend FastAPI di mana main.py berada
+WorkingDirectory=/var/www/rekasda-pro/backend
+
+# Virtual Environment Path
+Environment="PATH=/var/www/rekasda-pro/backend/venv/bin:$PATH"
+
+# Optimisasi ukuran workers sesuai RAM server.
+# Rumus standard Gunicorn (2 x (NUM_CORES)) + 1. 
+# Jika RAM server 4GB dan CPU 2 Core -> 5 Workers.
+# Worker class uvicorn.workers.UvicornWorker memastikan kapabilitas asynchronous ASGI FastAPI berkinerja maksimal.
+ExecStart=/var/www/rekasda-pro/backend/venv/bin/gunicorn main:app \
+          --workers 5 \
+          --worker-class uvicorn.workers.UvicornWorker \
+          --bind 127.0.0.1:8000 \
+          --access-logfile /var/log/rekasda_fastapi/access.log \
+          --error-logfile /var/log/rekasda_fastapi/error.log \
+          --timeout 120
+
+# Restart behavior
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

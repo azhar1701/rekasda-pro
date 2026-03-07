@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
 import { Download, Calculator, Info, Activity, ArrowDownRight, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
-import { calculateFloodRouting } from '@/lib/engine/embung';
+// import { calculateFloodRouting } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
-import { HydroValidationError } from '@/features/embung/types/embung.types';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
@@ -73,62 +72,66 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
         setHydrograph([...hydrograph, { time: lastTime + 1, inflow: 0 }]);
     };
 
-    const handleCalculate = () => {
+    const handleCalculate = async () => {
         setIsCalculating(true);
         setResultData(null);
         setSummary(null);
 
-        // Simulate network delay for UX
-        setTimeout(() => {
-            try {
-                // Map to engine input format
-                const inflowInput = hydrograph.map(h => ({
-                    time: h.time * 3600, // Convert hours to seconds
-                    discharge: h.inflow
-                }));
+        try {
+            // Map to engine input format
+            const inflowInput = hydrograph.map(h => ({
+                time: h.time * 3600, // Convert hours to seconds
+                discharge: h.inflow
+            }));
 
-                const routingResult = calculateFloodRouting(
-                    inflowInput,
-                    MOCK_STAGE_STORAGE,
-                    MOCK_STAGE_DISCHARGE,
-                    3600, // 1 hour steps
-                    100 // Starting at MAN
-                );
+            const response = await fetch('http://localhost:8000/api/v1/embung/routing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    inflowHydrograph: inflowInput,
+                    stageStorageCurve: MOCK_STAGE_STORAGE,
+                    stageDischargeCurve: MOCK_STAGE_DISCHARGE,
+                    deltaT: 3600, // 1 hour steps
+                    initialElevation: 100 // Starting at MAN
+                })
+            });
 
-                // Format for Recharts
-                const chartData = routingResult.steps.map(step => ({
-                    time: step.time / 3600, // Convert back to hours
-                    inflow: Number(step.inflowAvg.toFixed(2)),
-                    outflow: Number(step.outflow.toFixed(2)),
-                    elevation: Number(step.elevation.toFixed(2))
-                }));
-
-                setResultData(chartData);
-                
-                const s = { 
-                    peakInflow: Number(routingResult.peakInflow.toFixed(2)),
-                    peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
-                    attenuation: Number((routingResult.attenuationRatio).toFixed(1))
-                };
-                
-                setSummary(s); 
-                setHasilEmbung({ 
-                    isAman: s.peakOutflow <= s.peakInflow, 
-                    reduksiPuncak: s.attenuation, 
-                    umurSedimen: hasilEmbung?.umurSedimen || 0 
-                });
-
-                toast.success('Simulasi Penelusuran Banjir berhasil.');
-            } catch (error: any) {
-                if (error instanceof HydroValidationError) {
-                    toast.error(`Validasi Gagal: ${error.message}`);
-                } else {
-                    toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
-                }
-            } finally {
-                setIsCalculating(false);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal mensimulasikan Routing di Python Engine');
             }
-        }, 800);
+
+            const routingResult = await response.json();
+
+            // Format for Recharts
+            const chartData = routingResult.steps.map((step: any) => ({
+                time: step.time / 3600, // Convert back to hours
+                inflow: Number(step.inflowAvg.toFixed(2)),
+                outflow: Number(step.outflow.toFixed(2)),
+                elevation: Number(step.elevation.toFixed(2))
+            }));
+
+            setResultData(chartData);
+
+            const s = {
+                peakInflow: Number(routingResult.peakInflow.toFixed(2)),
+                peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
+                attenuation: Number((routingResult.attenuationRatio).toFixed(1))
+            };
+
+            setSummary(s);
+            setHasilEmbung({
+                isAman: s.peakOutflow <= s.peakInflow,
+                reduksiPuncak: s.attenuation,
+                umurSedimen: hasilEmbung?.umurSedimen || 0
+            });
+
+            toast.success('Simulasi Penelusuran Banjir REST API Engine berhasil.');
+        } catch (error: any) {
+            toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsCalculating(false);
+        }
     };
 
     return (

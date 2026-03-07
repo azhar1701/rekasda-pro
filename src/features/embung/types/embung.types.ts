@@ -258,6 +258,10 @@ export interface SedimentationInput {
    * Untuk kemudahan tes sesuai rumus dasar, kita asumsikan hasil fungsi ini langsung dihitung per tahun. */
   flowDurationDays?: number[];
   flowDurationQ?: number[];
+  /** Kapasitas waduk (m³) untuk perhitungan Trap Efficiency Brune */
+  reservoirCapacity?: number;
+  /** Inflow tahunan (m³) untuk perhitungan Trap Efficiency Brune */
+  annualInflow?: number;
 }
 
 /** Result for Sediment Yield Rating Curve calculation */
@@ -265,7 +269,10 @@ export interface SedimentYieldResult {
   /** Koefisien a dari log Qs = log a + b log Q */
   a: number;
   /** Koefisien b dari log Qs = log a + b log Q */
+  /** Koefisien b dari log Qs = log a + b log Q */
   b: number;
+  /** Bias Correction Factor (Duan's Smearing Estimator) */
+  bcf: number;
   /** Total Sedimen Suspensi (Ton/Tahun) */
   suspendedLoadTonnes: number;
   /** Total Bed Load (Ton/Tahun) */
@@ -273,7 +280,12 @@ export interface SedimentYieldResult {
   /** Total Sedimen = Suspended + Bed Load (Ton/Tahun) */
   totalLoadTonnes: number;
   /** Volume Sedimen Total (m³/Tahun) */
+  /** Volume Sedimen Total (m³/Tahun) */
   totalVolumeM3: number;
+  /** Efisiensi Tangkapan Waduk (Trap Efficiency) dalam persen (%) */
+  trapEfficiency: number;
+  /** Volume Sedimen yang Terperangkap di Waduk (m³/Tahun) */
+  trappedVolumeM3: number;
   /** Laju Erosi Spesifik (mm/Tahun) */
   erosionRateMm: number;
   /** Laju Erosi (Ton/km²/Tahun) */

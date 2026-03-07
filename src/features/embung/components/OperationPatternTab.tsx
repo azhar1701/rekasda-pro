@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Calculator, Info, Waves, CheckCircle2, AlertCircle, Droplets, Sparkles } from 'lucide-react';
-import { simulateReservoirOperation } from '@/lib/engine/embung';
+// import { simulateReservoirOperation } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
-import { HydroValidationError } from '@/features/embung/types/embung.types';
 
 // Mock Data Defaults
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Des'];
@@ -50,71 +49,67 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
         setSummary(null);
     };
 
-    const handleCalculate = () => {
+    const handleCalculate = async () => {
         setIsCalculating(true);
         setResultData(null);
         setSummary(null);
 
-        setTimeout(() => {
-            try {
-                // Format inputs for simulateReservoirOperation:
-                // inflows, demands, evaporation, infiltration are arrays of volumes in m3.
-                // rain is currently not in the simplified mathematical formula strictly, 
-                // but we can map "rain" as a negative evaporation, or ignore it if not specified.
-                // Assuming "evaporation" parameter in the math module is net evaporation (E_o - E_a)*A * dt.
-                // So net evaporation = (evap(mm) - rain(mm)) / 1000 * surfaceArea
+        try {
+            const inflows = inputs.map(i => i.inflow * 1000); // 10^3 m^3 to m^3
+            const demands = inputs.map(i => i.demand * 1000); // 10^3 m^3 to m^3
+            const evaporationVols = inputs.map(i => ((i.evap - i.rain) / 1000) * CONFIG.surfaceArea);
+            const infiltrationVols = inputs.map(() => CONFIG.seepageLoss);
 
-                const inflows = inputs.map(i => i.inflow * 1000); // 10^3 m^3 to m^3
-                const demands = inputs.map(i => i.demand * 1000); // 10^3 m^3 to m^3
-                const evaporationVols = inputs.map(i => ((i.evap - i.rain) / 1000) * CONFIG.surfaceArea);
-                const infiltrationVols = inputs.map(() => CONFIG.seepageLoss);
-
-                const wbResult = simulateReservoirOperation(
-                    CONFIG.initialStorage,
+            const response = await fetch('http://localhost:8000/api/v1/embung/neraca-air', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    initialStorage: CONFIG.initialStorage,
                     inflows,
                     demands,
-                    evaporationVols,
-                    infiltrationVols,
-                    CONFIG.maxStorage,
-                    CONFIG.deadStorage
-                );
+                    evaporation: evaporationVols,
+                    infiltration: infiltrationVols,
+                    sMax: CONFIG.maxStorage,
+                    sMin: CONFIG.deadStorage
+                })
+            });
 
-                // Format results for chart visualization
-                const chartData = wbResult.steps.map((step: any, idx: number) => {
-                    // Convert back to 10^3 m^3 for readability on chart
-                    const storage = step.finalStorage / 1000;
-                    return {
-                        month: MONTHS[idx],
-                        storage: Number(storage.toFixed(1)),
-                        status: step.status.toUpperCase(),
-                        deficit: step.deficitVolume > 0 ? Number((step.deficitVolume / 1000).toFixed(1)) : 0,
-                        spill: step.spillVolume > 0 ? Number((step.spillVolume / 1000).toFixed(1)) : 0
-                    };
-                });
-
-                setResultData(chartData);
-
-                // Count metrics
-                const deficitMonths = wbResult.steps.filter((s: any) => s.deficitVolume > 0).length;
-                const finalStorage = wbResult.steps[wbResult.steps.length - 1].finalStorage / 1000;
-
-                setSummary({
-                    reliability: Number(wbResult.reliability.toFixed(1)),
-                    deficitMonths: deficitMonths,
-                    finalStorage: Number(finalStorage.toFixed(1))
-                });
-
-                toast.success('Simulasi Pola Operasi Waduk sukses.');
-            } catch (error: any) {
-                if (error instanceof HydroValidationError) {
-                    toast.error(`Validasi Gagal: ${error.message}`);
-                } else {
-                    toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
-                }
-            } finally {
-                setIsCalculating(false);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal mensimulasikan Neraca Air di Python Engine');
             }
-        }, 800);
+
+            const wbResult = await response.json();
+
+            // Format results for chart visualization
+            const chartData = wbResult.steps.map((step: any, idx: number) => {
+                const storage = step.finalStorage / 1000;
+                return {
+                    month: MONTHS[idx],
+                    storage: Number(storage.toFixed(1)),
+                    status: step.status.toUpperCase(),
+                    deficit: step.deficitVolume > 0 ? Number((step.deficitVolume / 1000).toFixed(1)) : 0,
+                    spill: step.spillVolume > 0 ? Number((step.spillVolume / 1000).toFixed(1)) : 0
+                };
+            });
+
+            setResultData(chartData);
+
+            const deficitMonths = wbResult.steps.filter((s: any) => s.deficitVolume > 0).length;
+            const finalStorage = wbResult.steps[wbResult.steps.length - 1].finalStorage / 1000;
+
+            setSummary({
+                reliability: Number(wbResult.reliability.toFixed(1)),
+                deficitMonths: deficitMonths,
+                finalStorage: Number(finalStorage.toFixed(1))
+            });
+
+            toast.success('Simulasi Pola Operasi Waduk sukses menggunakan FastAPI Engine.');
+        } catch (error: any) {
+            toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsCalculating(false);
+        }
     };
 
     return (

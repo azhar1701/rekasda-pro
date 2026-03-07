@@ -3,9 +3,6 @@ import { Collapsible } from '@/components/ui/Collapsible';
 import { AlertTriangle, Zap } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import {
-    calculateIrrigationDemand,
-    calculateRawWaterDemand,
-    calculateNeracaAirFinal,
     generateDefaultIrrigationInput,
     DEFAULT_KC,
     DEFAULT_PERKOLASI,
@@ -13,7 +10,7 @@ import {
     type IrrigationMonthlyResult,
     type PolaTanam,
     type NeracaAirFinalRow,
-} from '@/lib/engine/irrigationDemand';
+} from '@/lib/engine/irrigationDemand'; // Keeping types and defaults
 
 const POLA_OPTIONS: { value: PolaTanam; label: string }[] = [
     { value: 'padi', label: 'Padi' },
@@ -63,32 +60,59 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
         });
     };
 
-    const handleCalculate = useCallback(() => {
-        setError(null);
-        try {
-            // 1. Calculate irrigation demand
-            const irr = calculateIrrigationDemand(
-                { luasIrigasi, efisiensi },
-                irrData
-            );
-            setIrrResults(irr);
+    const [isCalculating, setIsCalculating] = useState(false);
 
-            // 2. Calculate raw water demand
-            const rawDemand = calculateRawWaterDemand({
-                populasi,
-                standarDomestik,
-                industriM3s: industri,
+    const handleCalculate = useCallback(async () => {
+        setError(null);
+        setIsCalculating(true);
+        try {
+            // 1. Calculate irrigation demand via API
+            const irrResponse = await fetch('http://localhost:8000/api/v1/neraca-air/kebutuhan-irigasi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    luas_irigasi: luasIrigasi,
+                    efisiensi,
+                    data: irrData
+                })
             });
 
-            // 3. Calculate final water balance
+            if (!irrResponse.ok) {
+                const errorData = await irrResponse.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal menghitung Kebutuhan Irigasi');
+            }
+            const irr: IrrigationMonthlyResult[] = await irrResponse.json();
+            setIrrResults(irr);
+
             const irrigationDR = irr.map(r => r.dr);
-            const neraca = calculateNeracaAirFinal(monthlySupply, irrigationDR, rawDemand);
+
+            // 2. Calculate Final Water Balance via API (combines raw water & final comparison)
+            const neracaResponse = await fetch('http://localhost:8000/api/v1/neraca-air/neraca-air', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    supply: monthlySupply,
+                    irrigation_dr: irrigationDR,
+                    populasi: populasi,
+                    standar_domestik: standarDomestik,
+                    industri_m3s: industri
+                })
+            });
+
+            if (!neracaResponse.ok) {
+                const errorData = await neracaResponse.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal menghitung Neraca Air Final');
+            }
+
+            const neraca: NeracaAirFinalRow[] = await neracaResponse.json();
 
             // 4. Save to store
             setNeracaFinal(neraca);
             onNeracaCalculated?.(neraca);
         } catch (err: any) {
-            setError(err.message || 'Perhitungan gagal.');
+            setError(err.message || 'Perhitungan API gagal.');
+        } finally {
+            setIsCalculating(false);
         }
     }, [luasIrigasi, efisiensi, irrData, populasi, standarDomestik, industri, monthlySupply, setNeracaFinal, onNeracaCalculated]);
 
@@ -219,13 +243,13 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                 </div>
             )}
 
-            {/* Calculate Final Button */}
             <button
                 onClick={handleCalculate}
-                className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-bold hover:from-emerald-700 hover:to-teal-700 active:from-emerald-800 active:to-teal-800 transition-all shadow-md flex items-center justify-center gap-2"
+                disabled={isCalculating}
+                className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-bold hover:from-emerald-700 hover:to-teal-700 active:from-emerald-800 active:to-teal-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <Zap className="w-5 h-5" />
-                Hitung Neraca Air Final
+                {isCalculating ? 'Menghitung via Engine...' : 'Hitung Neraca Air Final'}
             </button>
 
             {/* Irrigation Results Summary (compact) */}

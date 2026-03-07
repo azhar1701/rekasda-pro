@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
 import { Download, Calculator, Info, Waves, Spline, Loader2, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
-import { calculateSequentPeak } from '@/lib/engine/embung';
-import { HydroValidationError } from '../types/embung.types';
+// import { calculateSequentPeak } from '@/lib/engine/embung';
 import type { MonthlyData, SequentPeakResult } from '../types/embung.types';
 
 // Mock Initial Data
@@ -39,32 +38,34 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
         setData(prev => prev.map(row => row.id === id ? { ...row, [field]: numValue } : row));
     };
 
-    const handleCalculate = () => {
+    const handleCalculate = async () => {
         setIsCalculating(true);
         setResult(null);
 
-        // Use setTimeout to allow UI to show loading state before heavy computation
-        setTimeout(() => {
-            try {
-                const inflow = data.map(r => r.inflow);
-                const outflow = data.map(r => r.outflow);
+        try {
+            const inflow = data.map(r => r.inflow);
+            const outflow = data.map(r => r.outflow);
 
-                const spResult = calculateSequentPeak({ inflow, outflow });
+            const response = await fetch('http://localhost:8000/api/v1/embung/kapasitas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inflow, outflow })
+            });
 
-                setResult(spResult);
-                toast.success(`Kalkulasi selesai. Kebutuhan tampungan: ${spResult.maxStorageRequired.toFixed(2)} Juta m³`);
-            } catch (error: unknown) {
-                if (error instanceof HydroValidationError) {
-                    toast.error(`Validasi gagal: ${error.message}`);
-                } else if (error instanceof Error) {
-                    toast.error(`Terjadi kesalahan: ${error.message}`);
-                } else {
-                    toast.error('Terjadi kesalahan yang tidak diketahui.');
-                }
-            } finally {
-                setIsCalculating(false);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Gagal terhubung ke Python Engine REST API RekaSDA');
             }
-        }, 50);
+
+            const spResult = await response.json();
+
+            setResult(spResult);
+            toast.success(`Kalkulasi selesai. Kebutuhan tampungan: ${spResult.maxStorageRequired.toFixed(2)} Juta m³`);
+        } catch (error: any) {
+            toast.error(`Terjadi kesalahan: ${error.message}`);
+        } finally {
+            setIsCalculating(false);
+        }
     };
 
     // Map SequentPeakResult to chart data format

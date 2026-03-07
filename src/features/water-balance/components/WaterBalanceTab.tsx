@@ -12,15 +12,13 @@ import { Droplet, AlertTriangle, Zap } from 'lucide-react';
 import { useStaggerAnimation } from '@/hooks/useStaggerAnimation';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import {
-  calculateFJMock,
-  calculateWeibullDependableFlow,
   DEFAULT_ETO_INDONESIA,
   DAYS_IN_MONTH,
   MONTH_LABELS,
   type MockParams,
   type MockMonthlyInput,
   type MockMonthlyResult,
-} from '@/lib/engine/fjMock';
+} from '@/lib/engine/fjMock'; // Keeping types and defaults
 import { KalkulatorIrigasi } from './KalkulatorIrigasi';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -93,11 +91,15 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
   // ── F.J. Mock Calculate Handler ──
   // ── F.J. Mock Calculate Handler ──
-  const handleMockCalculate = useCallback(() => {
+  const [isMockCalculating, setIsMockCalculating] = useState(false);
+
+  const handleMockCalculate = useCallback(async () => {
     setMockError(null);
+    setIsMockCalculating(true);
     try {
       if (luasDasNum <= 0) {
         setMockError('Luas DAS belum diisi. Atur di Master Data terlebih dahulu.');
+        setIsMockCalculating(false);
         return;
       }
 
@@ -117,20 +119,36 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
         daysInMonth: DAYS_IN_MONTH[i],
       }));
 
-      const results_mock = calculateFJMock(params, data_mock);
+      const response = await fetch('http://localhost:8000/api/v1/neraca-air/fj-mock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          params,
+          data: data_mock
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Gagal menghitung FJ Mock di Python Engine');
+      }
+
+      const mockResponse = await response.json();
+      const results_mock = mockResponse.monthlyResults;
+      const qAndalan = mockResponse.qAndalan;
+      const targetProb_val = mockResponse.probability;
+
       setMockResults(results_mock);
 
-      // Extract discharge series → Weibull
-      const discharges = results_mock.map(r => r.discharge);
-      const targetProb_val = 80; 
-      const weibull = calculateWeibullDependableFlow(discharges, targetProb_val);
+      // Extract discharge series
+      const discharges = results_mock.map((r: any) => r.discharge);
 
       // Apply Mock discharges as monthlySupply for Water Balance
       setInputs(prev => ({ ...prev, monthlySupply: discharges }));
 
       // Save to store
       setHasilMock({
-        monthlyResults: results_mock.map(r => ({
+        monthlyResults: results_mock.map((r: any) => ({
           month: r.month,
           precipitation: r.precipitation,
           eto: r.eto,
@@ -141,12 +159,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           discharge: r.discharge,
           daysInMonth: r.daysInMonth,
         })),
-        qAndalan: weibull.qAndalan,
+        qAndalan: qAndalan,
         probability: targetProb_val,
         metode: 'mock',
       });
     } catch (err: any) {
-      setMockError(err.message || 'Perhitungan F.J. Mock gagal.');
+      setMockError(err.message || 'Perhitungan F.J. Mock API gagal.');
+    } finally {
+      setIsMockCalculating(false);
     }
   }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, setHasilMock, setInputs]);
 
@@ -211,7 +231,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               <ProjectContextBanner />
               {/* Formula Display */}
               <div className="mb-4">
-                <FormulaAccordion 
+                <FormulaAccordion
                   title="Neraca Air"
                   subtitle="SNI 6738:2015 & SNI 19-6728.1-2002"
                   theme="emerald"
@@ -465,14 +485,13 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       </div>
                     )}
 
-                    {/* Calculate button */}
                     <button
                       onClick={handleMockCalculate}
-                      disabled={luasDasNum <= 0}
+                      disabled={luasDasNum <= 0 || isMockCalculating}
                       className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-bold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Zap className="w-5 h-5" />
-                      Hitung Ketersediaan Air (F.J. Mock)
+                      {isMockCalculating ? 'Menghitung via Engine...' : 'Hitung Ketersediaan Air (F.J. Mock)'}
                     </button>
                   </div>
                 ) : (
