@@ -69,7 +69,6 @@
 # Staging environment variables
 VITE_SUPABASE_URL=<staging-url>
 VITE_SUPABASE_ANON_KEY=<staging-key>
-VITE_GEMINI_API_KEY=<staging-key>
 ```
 
 ### Deploy to Staging
@@ -107,7 +106,6 @@ netlify deploy --prod --dir=dist
 # Production environment variables
 VITE_SUPABASE_URL=<production-url>
 VITE_SUPABASE_ANON_KEY=<production-key>
-VITE_GEMINI_API_KEY=<production-key>
 ```
 
 ### Deploy to Production

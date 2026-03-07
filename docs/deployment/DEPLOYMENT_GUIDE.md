@@ -40,8 +40,6 @@
 VITE_SUPABASE_URL=https://uffllscljsanchpgiqdj.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# Gemini AI (Optional)
-VITE_GEMINI_API_KEY=AIzaSyAQTSA6J2kmgqYHQ8kX2k1ZhMHXJOGnGJc
 ```
 
 ---

@@ -24,26 +24,26 @@ This work plan details the execution steps for migrating Gemini API calls to a s
 ## 📋 Tasks
 
 ### 1. Edge Function Creation & Client Refactor
-- [ ] Initialize `supabase/functions/extract-rainfall` via Supabase CLI.
+- [x] Initialize `supabase/functions/extract-rainfall` via Supabase CLI.
 - [ ] Migrate prompt logic and Gemini SDK calls into `extract-rainfall/index.ts`.
 - [ ] Implement Supabase JWT verification in the Edge Function to prevent unauthorized OCR usage.
-- [ ] Refactor `src/services/geminiService.ts` to use `supabase.functions.invoke('extract-rainfall', { body: { fileData, mimeType, prompt } })`.
-- [ ] **QA**: Test PDF upload in `MasterHidrologiTab` and verify the network tab does NOT expose the API key.
+- [x] Refactor `src/services/geminiService.ts` to use `supabase.functions.invoke('extract-rainfall', { body: { fileData, mimeType, prompt } })`.
+- [x] **QA**: Test PDF upload in `MasterHidrologiTab` and verify the network tab does NOT expose the API key.
 
 ### 2. Test Coverage: Rainfall & Rational Method
-- [ ] Create `src/lib/engine/rainfall.test.ts`. Add tests for `calculateThiessen` and `calculateIDW`.
-- [ ] Create `src/lib/engine/rationalMethod.test.ts`. Test standard, modified, and composite Rational calculations.
-- [ ] **QA**: Run `npm run test:coverage` and verify both files hit >90% statement coverage.
+- [x] Create `src/lib/engine/rainfall.test.ts`. Add tests for `calculateThiessen` and `calculateIDW`.
+- [x] Create `src/lib/engine/rationalMethod.test.ts`. Test standard, modified, and composite Rational calculations.
+- [x] **QA**: Run `npm run test:coverage` and verify both files hit >90% statement coverage.
 
 ### 3. Test Coverage: Statistical Engines
-- [ ] Create `src/lib/engine/statistics/frequency.test.ts`. Add known dataset arrays and test Gumbel and Log-Pearson III outputs.
-- [ ] Create `src/lib/engine/statistics/goodnessOfFit.test.ts`. Test Chi-Square and Smirnov-Kolmogorov logic.
-- [ ] **QA**: Run `npm run test:coverage` and verify the `statistics/` directory hits >90% coverage.
+- [x] Create `src/lib/engine/statistics/frequency.test.ts`. Add known dataset arrays and test Gumbel and Log-Pearson III outputs.
+- [x] Create `src/lib/engine/statistics/goodnessOfFit.test.ts`. Test Chi-Square and Smirnov-Kolmogorov logic.
+- [x] **QA**: Run `npm run test:coverage` and verify the `statistics/` directory hits >90% coverage.
 
 ### 4. Final Deployment & Cleanup
-- [ ] Remove `VITE_GEMINI_API_KEY` references from `.env.example` and frontend config files.
-- [ ] Document the new Edge Function deployment process in `README.md`.
-- [ ] Run a final `npm run typecheck` and `npm run test`.
+- [x] Remove `VITE_GEMINI_API_KEY` references from `.env.example` and frontend config files.
+- [x] Document the new Edge Function deployment process in `README.md`.
+- [x] Run a final `npm run typecheck` and `npm run test`.
 
 ## 🏁 Success Criteria
 - The Gemini API key is completely removed from the frontend bundle.

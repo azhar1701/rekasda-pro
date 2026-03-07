@@ -1,26 +1,17 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { SYSTEM_PROMPT, AI_MODEL } from '@/lib/ai/config';
+import { supabase } from '@/lib/api/supabase';
 import { apiService } from './api.service';
 
-const getAiClient = () => {
-  // TODO: SECURITY RISK - VITE_ prefix exposes the API key to the client bundle.
-  // RECOMMENDATION: Move Gemini API calls to a Supabase Edge Function to secure the key.
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_GEMINI_API_KEY tidak ditemukan di environment variables");
-  }
-  return new GoogleGenerativeAI(apiKey);
-};
+// getAiClient removed as logic moved to Supabase Edge Functions
 
 /**
  * Mendapatkan embeddings untuk teks menggunakan Gemini
  */
 export const getEmbeddings = async (text: string): Promise<number[]> => {
   try {
-    const genAI = getAiClient();
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
+    if (!supabase) throw new Error("Supabase client not initialized");
+    const { data, error } = await supabase.functions.invoke('get-embeddings', { body: { text } });
+    if (error) throw error;
+    return data.embedding;
   } catch (error) {
     console.error("Embedding Error:", error);
     return [];
@@ -57,133 +48,28 @@ export const consultHydrologist = async (
   imageBase64?: string
 ): Promise<string> => {
   try {
-    const genAI = getAiClient();
-    const model = genAI.getGenerativeModel({ model: AI_MODEL });
-
-    // RAG: Search for technical references
-    const references = await searchTechnicalReferences(query);
-    const referenceContext = references.length > 0 
-      ? "\nREFERENSI TEKNIS SNI/REGULASI RELEVAN:\n" + references.map((r: any) => `- [${r.metadata?.title || 'SNI'}] ${r.content_chunk}`).join('\n')
-      : "";
-
-    const prompt = `
-${SYSTEM_PROMPT}
-
-═══════════════════════════════════════════════════════════════
-KONTEKS DATA PERHITUNGAN
-═══════════════════════════════════════════════════════════════
-
-${contextData}
-${referenceContext}
-
-═══════════════════════════════════════════════════════════════
-PERTANYAAN USER
-═══════════════════════════════════════════════════════════════
-
-${query}
-
-═══════════════════════════════════════════════════════════════
-INSTRUKSI
-═══════════════════════════════════════════════════════════════
-
-Analisis pertanyaan di atas dengan merujuk SNI/Permen yang relevan.
-Berikan jawaban yang praktis, akurat, dan sesuai standar Indonesia.
-Siapkan kutipan yang jelas jika menggunakan referensi teknis yang disediakan.
-    `;
-
-    if (imageBase64) {
-      const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
-      
-      const result = await model.generateContent([
-        {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: cleanBase64
-          }
-        },
-        prompt
-      ]);
-      
-      const response = await result.response;
-      return response.text() || "Maaf, saya tidak dapat menganalisis gambar saat ini.";
-    } else {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text() || "Maaf, tidak ada respon.";
-    }
-
+    if (!supabase) throw new Error("Supabase client not initialized");
+    const { data, error } = await supabase.functions.invoke('consult-hydrologist', {
+      body: { query, contextData, imageBase64 }
+    });
+    if (error) throw error;
+    return data.answer;
   } catch (error) {
     console.error("Gemini Error:", error);
-    if (error instanceof Error) {
-      if (error.message.includes('API_KEY')) {
-        return "Error: API Key tidak valid atau tidak ditemukan. Periksa konfigurasi VITE_API_KEY di file .env";
-      }
-      if (error.message.includes('503') || error.message.includes('high demand')) {
-        return "⚠️ Layanan AI sedang mengalami lonjakan permintaan. Silakan coba lagi dalam beberapa saat.";
-      }
-      return `Error: ${error.message}`;
-    }
-    return "Terjadi kesalahan saat menghubungi layanan AI. Pastikan koneksi internet tersedia.";
+    return "Terjadi kesalahan saat menghubungi layanan AI.";
   }
 };
-/**
- * Konsultasi dengan Ahli Madya SDA menggunakan Gemini API (Streaming version)
- */
 export const consultHydrologistStream = async (
   query: string,
   contextData: string,
   onChunk: (chunk: string) => void,
   imageBase64?: string
 ): Promise<void> => {
+  // Note: Supabase Edge Functions support streaming but require specific handling.
+  // For now, we'll implement a non-streaming fallback or use the standard invoke if streaming is not yet configured.
   try {
-    const genAI = getAiClient();
-    const model = genAI.getGenerativeModel({ model: AI_MODEL });
-
-    const references = await searchTechnicalReferences(query);
-    const referenceContext = references.length > 0 
-      ? "\nREFERENSI TEKNIS SNI/REGULASI RELEVAN:\n" + references.map((r: any) => `- [${r.metadata?.title || 'SNI'}] ${r.content_chunk}`).join('\n')
-      : "";
-
-    const prompt = `
-${SYSTEM_PROMPT}
-
-═══════════════════════════════════════════════════════════════
-KONTEKS DATA PERHITUNGAN
-═══════════════════════════════════════════════════════════════
-
-${contextData}
-${referenceContext}
-
-═══════════════════════════════════════════════════════════════
-PERTANYAAN USER
-═══════════════════════════════════════════════════════════════
-
-${query}
-
-═══════════════════════════════════════════════════════════════
-INSTRUKSI
-═══════════════════════════════════════════════════════════════
-
-Analisis pertanyaan di atas dengan merujuk SNI/Permen yang relevan.
-Berikan jawaban yang praktis, akurat, dan sesuai standar Indonesia.
-Siapkan kutipan yang jelas jika menggunakan referensi teknis yang disediakan.
-    `;
-
-    let result;
-    if (imageBase64) {
-      const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
-      result = await model.generateContentStream([
-        { inlineData: { mimeType: "image/jpeg", data: cleanBase64 } },
-        prompt
-      ]);
-    } else {
-      result = await model.generateContentStream(prompt);
-    }
-
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      onChunk(chunkText);
-    }
+    const answer = await consultHydrologist(query, contextData, imageBase64);
+    onChunk(answer);
   } catch (error) {
     console.error("Gemini Stream Error:", error);
     throw error;
@@ -193,16 +79,14 @@ Siapkan kutipan yang jelas jika menggunakan referensi teknis yang disediakan.
 
 /**
  * @feature Otomasi PDF OCR
- * Mengekstrak matriks curah hujan dari PDF menggunakan Gemini Multimodal OCR.
+ * Mengekstrak matriks curah hujan dari PDF menggunakan Supabase Edge Function (Gemini Multimodal OCR).
  * Menghasilkan struktur JSON { data: number[][] } dengan dimensi 31x12.
  */
 export const extractRainfallFromPdf = async (pdfBase64: string, year: number): Promise<number[][] | null> => {
   try {
-    const genAI = getAiClient();
-    const model = genAI.getGenerativeModel({ 
-      model: AI_MODEL,
-      generationConfig: { responseMimeType: "application/json" }
-    });
+    if (!supabase) {
+      throw new Error("Supabase client not initialized");
+    }
 
     const cleanBase64 = pdfBase64.split(',')[1] || pdfBase64;
 
@@ -220,22 +104,20 @@ export const extractRainfallFromPdf = async (pdfBase64: string, year: number): P
       Kembalikan hanya objek JSON dengan key "data".
     `;
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType: "application/pdf",
-          data: cleanBase64
-        }
-      },
-      prompt
-    ]);
+    const { data, error } = await supabase.functions.invoke('extract-rainfall', {
+      body: { 
+        fileData: cleanBase64, 
+        mimeType: 'application/pdf', 
+        prompt 
+      }
+    });
 
-    const response = await result.response;
-    const text = response.text();
-    const json = JSON.parse(text);
-    
-    if (json.data && Array.isArray(json.data)) {
-      return json.data;
+    if (error) {
+      throw error;
+    }
+
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data;
     }
     
     return null;

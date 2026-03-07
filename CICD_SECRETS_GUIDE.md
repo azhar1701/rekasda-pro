@@ -57,7 +57,6 @@ Digunakan sebagai **Docker build arguments** saat merakit image. Vite meng-embed
 |---|---|---|
 | `VITE_SUPABASE_URL` | URL project Supabase | `https://abcdef.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | Anon/public key Supabase | `eyJhbGciOiJI...` |
-| `VITE_GEMINI_API_KEY` | API key Google Gemini AI | `AIzaSy...` |
 
 > [!WARNING]
 > Pastikan nilai-nilai ini adalah kredensial **produksi**, bukan development/staging. Image yang di-build akan langsung di-deploy ke server produksi.
@@ -76,7 +75,6 @@ Sebelum melakukan push pertama ke branch `main`, pastikan semua 8 secrets sudah 
 - [ ] `SSH_PRIVATE_KEY`
 - [ ] `VITE_SUPABASE_URL`
 - [ ] `VITE_SUPABASE_ANON_KEY`
-- [ ] `VITE_GEMINI_API_KEY`
 
 ---
 

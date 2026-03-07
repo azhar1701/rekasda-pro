@@ -103,6 +103,24 @@ VITE_API_KEY=your-gemini-api-key
 # Start development server
 npm run dev
 ```
+### Edge Functions (Optional)
+
+If you're using the AI-powered rainfall extraction feature, deploy the Supabase Edge Function:
+
+```bash
+# Login to Supabase CLI
+supabase login
+
+# Link your project (if not already linked)
+supabase link --project-ref your-project-ref
+
+# Set the Gemini API Key secret
+supabase secrets set GEMINI_API_KEY=your_api_key
+
+# Deploy the function
+supabase functions deploy extract-rainfall
+```
+
 
 Open [http://localhost:3000](http://localhost:3000)
 

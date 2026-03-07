@@ -1,11 +1,11 @@
 {
-  "active_plan": "C:\\Users\\ariaz\\OneDrive\\Documents\\GitHub\\rekasda-pro\\.sisyphus\\plans\\platform-evaluation.md",
-  "started_at": "2026-03-06T22:25:19.277Z",
+  "active_plan": "C:\\Users\\ariaz\\OneDrive\\Documents\\GitHub\\rekasda-pro\\.sisyphus\\plans\\security-coverage.md",
+  "started_at": "2026-03-07T00:35:11.624Z",
   "session_ids": [
     "ses_33afcad1cffeoAWRdJJMLKwh93"
   ],
-  "plan_name": "platform-evaluation",
+  "plan_name": "security-coverage",
   "agent": "atlas",
-  "worktree_path": "C:/Users/ariaz/.local/share/opencode/worktree/rekasda-pro-eval"
+  "worktree_path": "C:/Users/ariaz/.local/share/opencode/worktree/rekasda-pro-sec-cov"
   "agent": "atlas"
 }
