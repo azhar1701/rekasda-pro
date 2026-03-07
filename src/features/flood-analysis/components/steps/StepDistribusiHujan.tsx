@@ -4,6 +4,7 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { HyetographChart } from '@/components/ui/HyetographChart';
 import { IDFChart } from '@/components/ui/IDFChart';
 import { Calculator, CloudRain } from 'lucide-react';
+import { useAbmMutation } from '@/hooks/api/useHujanApi';
 
 export const StepDistribusiHujan: React.FC = () => {
   const {
@@ -40,35 +41,19 @@ export const StepDistribusiHujan: React.FC = () => {
   const C = tutupanLahan?.koefisienPengaliranGabungan || 0.65;
 
   const [hyetographResult, setHyetographResult] = useState<any>(null);
-  const [isCalculatingABM, setIsCalculatingABM] = useState(false);
+  const abmMutation = useAbmMutation();
+  const isCalculatingABM = abmMutation.isPending;
 
   useEffect(() => {
-    let active = true;
-    const fetchABM = async () => {
-      if (R24 === 0) {
-        setHyetographResult(null);
-        return;
-      }
-      setIsCalculatingABM(true);
-      try {
-        const response = await fetch('http://localhost:8000/api/v1/hujan/abm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ r24: R24, duration: durasiHujan })
-        });
-        if (response.ok && active) {
-          const data = await response.json();
-          setHyetographResult(data);
-        }
-      } catch (e) {
-        console.error("Failed to fetch ABM", e);
-        if (active) setHyetographResult(null);
-      } finally {
-        if (active) setIsCalculatingABM(false);
-      }
-    };
-    fetchABM();
-    return () => { active = false; };
+    if (R24 === 0) {
+      setHyetographResult(null);
+      return;
+    }
+    abmMutation
+      .mutateAsync({ R24, n: durasiHujan })
+      .then((data) => setHyetographResult(data))
+      .catch(() => setHyetographResult(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [R24, durasiHujan]);
 
   const abmTable = React.useMemo(() => {

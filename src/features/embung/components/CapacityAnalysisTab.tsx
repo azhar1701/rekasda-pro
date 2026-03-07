@@ -7,6 +7,7 @@ import { Download, Calculator, Info, Waves, Spline, Loader2, Sparkles } from 'lu
 import { toast } from '@/hooks/useToast';
 // import { calculateSequentPeak } from '@/lib/engine/embung';
 import type { MonthlyData, SequentPeakResult } from '../types/embung.types';
+import { useKapasitasMutation } from '@/hooks/api/useEmbungApi';
 
 // Mock Initial Data
 const INITIAL_DATA: MonthlyData[] = [
@@ -31,40 +32,25 @@ interface CapacityAnalysisTabProps {
 export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onConsultAI }) => {
     const [data, setData] = useState<MonthlyData[]>(INITIAL_DATA);
     const [result, setResult] = useState<SequentPeakResult | null>(null);
-    const [isCalculating, setIsCalculating] = useState(false);
 
     const handleInputChange = (id: string, field: keyof MonthlyData, value: string) => {
         const numValue = parseFloat(value) || 0;
         setData(prev => prev.map(row => row.id === id ? { ...row, [field]: numValue } : row));
     };
 
-    const handleCalculate = async () => {
-        setIsCalculating(true);
-        setResult(null);
+    const kapasitasMutation = useKapasitasMutation();
+    const isCalculating = kapasitasMutation.isPending;
 
+    const handleCalculate = async () => {
+        setResult(null);
         try {
             const inflow = data.map(r => r.inflow);
             const outflow = data.map(r => r.outflow);
-
-            const response = await fetch('http://localhost:8000/api/v1/embung/kapasitas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ inflow, outflow })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal terhubung ke Python Engine REST API RekaSDA');
-            }
-
-            const spResult = await response.json();
-
-            setResult(spResult);
+            const spResult = await kapasitasMutation.mutateAsync({ inflow, outflow });
+            setResult(spResult as unknown as SequentPeakResult);
             toast.success(`Kalkulasi selesai. Kebutuhan tampungan: ${spResult.maxStorageRequired.toFixed(2)} Juta m³`);
         } catch (error: any) {
-            toast.error(`Terjadi kesalahan: ${error.message}`);
-        } finally {
-            setIsCalculating(false);
+            toast.error(`Terjadi kesalahan: ${error.detail ?? error.message}`);
         }
     };
 

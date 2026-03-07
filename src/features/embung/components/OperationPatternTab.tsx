@@ -6,6 +6,7 @@ import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContai
 import { Calculator, Info, Waves, CheckCircle2, AlertCircle, Droplets, Sparkles } from 'lucide-react';
 // import { simulateReservoirOperation } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
+import { useNeracaAirEmbungMutation } from '@/hooks/api/useEmbungApi';
 
 // Mock Data Defaults
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Des'];
@@ -34,7 +35,6 @@ interface OperationPatternTabProps {
 }
 
 export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onConsultAI }) => {
-    const [isCalculating, setIsCalculating] = useState(false);
 
     // States
     const [inputs, setInputs] = useState(DEFAULT_INPUTS);
@@ -49,49 +49,36 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
         setSummary(null);
     };
 
+    const neracaAirMutation = useNeracaAirEmbungMutation();
+    const isCalculating = neracaAirMutation.isPending;
+
     const handleCalculate = async () => {
-        setIsCalculating(true);
         setResultData(null);
         setSummary(null);
 
         try {
-            const inflows = inputs.map(i => i.inflow * 1000); // 10^3 m^3 to m^3
-            const demands = inputs.map(i => i.demand * 1000); // 10^3 m^3 to m^3
+            const inflows = inputs.map(i => i.inflow * 1000);
+            const demands = inputs.map(i => i.demand * 1000);
             const evaporationVols = inputs.map(i => ((i.evap - i.rain) / 1000) * CONFIG.surfaceArea);
             const infiltrationVols = inputs.map(() => CONFIG.seepageLoss);
 
-            const response = await fetch('http://localhost:8000/api/v1/embung/neraca-air', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    initialStorage: CONFIG.initialStorage,
-                    inflows,
-                    demands,
-                    evaporation: evaporationVols,
-                    infiltration: infiltrationVols,
-                    sMax: CONFIG.maxStorage,
-                    sMin: CONFIG.deadStorage
-                })
+            const wbResult = await neracaAirMutation.mutateAsync({
+                initialStorage: CONFIG.initialStorage,
+                inflows,
+                demands,
+                evaporation: evaporationVols,
+                infiltration: infiltrationVols,
+                sMax: CONFIG.maxStorage,
+                sMin: CONFIG.deadStorage
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal mensimulasikan Neraca Air di Python Engine');
-            }
-
-            const wbResult = await response.json();
-
-            // Format results for chart visualization
-            const chartData = wbResult.steps.map((step: any, idx: number) => {
-                const storage = step.finalStorage / 1000;
-                return {
-                    month: MONTHS[idx],
-                    storage: Number(storage.toFixed(1)),
-                    status: step.status.toUpperCase(),
-                    deficit: step.deficitVolume > 0 ? Number((step.deficitVolume / 1000).toFixed(1)) : 0,
-                    spill: step.spillVolume > 0 ? Number((step.spillVolume / 1000).toFixed(1)) : 0
-                };
-            });
+            const chartData = wbResult.steps.map((step: any, idx: number) => ({
+                month: MONTHS[idx],
+                storage: Number((step.finalStorage / 1000).toFixed(1)),
+                status: step.status.toUpperCase(),
+                deficit: step.deficitVolume > 0 ? Number((step.deficitVolume / 1000).toFixed(1)) : 0,
+                spill: step.spillVolume > 0 ? Number((step.spillVolume / 1000).toFixed(1)) : 0
+            }));
 
             setResultData(chartData);
 
@@ -100,15 +87,13 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
 
             setSummary({
                 reliability: Number(wbResult.reliability.toFixed(1)),
-                deficitMonths: deficitMonths,
+                deficitMonths,
                 finalStorage: Number(finalStorage.toFixed(1))
             });
 
             toast.success('Simulasi Pola Operasi Waduk sukses menggunakan FastAPI Engine.');
         } catch (error: any) {
-            toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
-        } finally {
-            setIsCalculating(false);
+            toast.error(`Terjadi kesalahan: ${error.detail ?? error.message ?? 'Unknown error'}`);
         }
     };
 

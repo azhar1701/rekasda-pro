@@ -16,6 +16,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { SlopeCalculator } from '@/features/channel-analysis/components/SlopeCalculator';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { CalculationType } from '@/types/types';
+import { useRasionalModifikasiMutation } from '@/hooks/api/useBanjirApi';
 
 interface LocationData {
   channelName: string;
@@ -95,6 +96,8 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
     { id: 'melchior', name: 'Melchior', description: 'A > 100 km²', recommended: inputs.area > 100 }
   ];
 
+  const rasionalMutation = useRasionalModifikasiMutation();
+
   const handleCalculate = async () => {
     try {
       if (method === 'rational') {
@@ -102,27 +105,17 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
         const Q = 0.002777777777777778 * inputs.C * inputs.I * A_ha;
         setResult({ Qp: Q });
       } else {
-        const response = await fetch('http://localhost:8000/api/v1/banjir/rasional-modifikasi', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: method === 'weduwen' ? 'der_weduwen' : method,
-            A: inputs.area,
-            L: inputs.L,
-            S: inputs.S / 100, // percentage to decimal
-            I: inputs.I,
-            C: method === 'melchior' ? inputs.C : undefined
-          })
+        const res = await rasionalMutation.mutateAsync({
+          method: method === 'weduwen' ? 'der_weduwen' : method as any,
+          A: inputs.area,
+          L: inputs.L,
+          S: inputs.S / 100,
+          I: inputs.I,
+          C: method === 'melchior' ? inputs.C : undefined
         });
-
-        if (!response.ok) {
-          throw new Error('Gagal menghitung di Python Engine');
-        }
-
-        const res = await response.json();
         setResult({ Qp: res.qPeak, ...res });
       }
-    } catch (error) {
+    } catch (error: any) {
       setResult(null);
     }
   };

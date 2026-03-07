@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Zap, AlertTriangle, CloudRain } from 'lucide-react';
 import { type HyetographResult } from '@/lib/engine/flood/mononobe';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { useAbmMutation } from '@/hooks/api/useHujanApi';
 
 interface Props {
     /** R24 design rainfall (mm) — from frequency analysis or manual input */
@@ -21,38 +22,26 @@ export const HyetographGenerator: React.FC<Props> = ({ r24: r24Prop }) => {
     const [result, setResult] = useState<HyetographResult | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const [isGenerating, setIsGenerating] = useState(false);
+    const abmMutation = useAbmMutation();
+    const isGenerating = abmMutation.isPending;
 
     const handleGenerate = useCallback(async () => {
         setError(null);
-        setIsGenerating(true);
-        try {
-            if (r24Effective <= 0) {
-                throw new Error('Hujan harian rencana (R₂₄) harus > 0 mm.');
-            }
-            const response = await fetch('http://localhost:8000/api/v1/hujan/abm', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    r24: r24Effective,
-                    duration: durasi
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal generate hyetograph di Python Engine');
-            }
-
-            const res: HyetographResult = await response.json();
-            setResult(res);
-        } catch (err: any) {
-            setError(err.message || 'Gagal generate hyetograph.');
-            setResult(null);
-        } finally {
-            setIsGenerating(false);
+        if (r24Effective <= 0) {
+            setError('Hujan harian rencana (R₂₄) harus > 0 mm.');
+            return;
         }
-    }, [r24Effective, durasi]);
+        try {
+            const res = await abmMutation.mutateAsync({
+                R24: r24Effective,
+                n: durasi,
+            });
+            setResult(res as unknown as HyetographResult);
+        } catch (err: any) {
+            setError(err.detail ?? err.message ?? 'Gagal generate hyetograph.');
+            setResult(null);
+        }
+    }, [r24Effective, durasi, abmMutation]);
 
     // Chart data
     const chartData = useMemo(() => {

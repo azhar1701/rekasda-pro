@@ -9,6 +9,7 @@ import { toast } from '@/hooks/useToast';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
+import { useRoutingMutation } from '@/hooks/api/useEmbungApi';
 
 // Default Data for Initialization
 const DEFAULT_HYDROGRAPH = [
@@ -31,15 +32,16 @@ const MOCK_STAGE_STORAGE = {
 };
 const MOCK_STAGE_DISCHARGE = {
     elevation: [100, 101, 102, 103, 104, 105],
+    storage: [0, 50000, 120000, 210000, 320000, 450000],  // required by StageCurve
     discharge: [0, 5, 15, 35, 65, 110]
 };
+
 
 interface RoutingAnalysisTabProps {
     onConsultAI?: (data: any, result: any) => void;
 }
 
 export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsultAI }) => {
-    const [isCalculating, setIsCalculating] = useState(false);
     const { hasilBanjir, isBanjirDirty, setHasilEmbung, hasilEmbung } = useHydrologyStore();
     const isAutoFilled = Boolean(hasilBanjir?.hidrograf?.length);
 
@@ -72,40 +74,29 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
         setHydrograph([...hydrograph, { time: lastTime + 1, inflow: 0 }]);
     };
 
+    const routingMutation = useRoutingMutation();
+    const isCalculating = routingMutation.isPending;
+
     const handleCalculate = async () => {
-        setIsCalculating(true);
         setResultData(null);
         setSummary(null);
 
         try {
-            // Map to engine input format
             const inflowInput = hydrograph.map(h => ({
-                time: h.time * 3600, // Convert hours to seconds
+                time: h.time * 3600,
                 discharge: h.inflow
             }));
 
-            const response = await fetch('http://localhost:8000/api/v1/embung/routing', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    inflowHydrograph: inflowInput,
-                    stageStorageCurve: MOCK_STAGE_STORAGE,
-                    stageDischargeCurve: MOCK_STAGE_DISCHARGE,
-                    deltaT: 3600, // 1 hour steps
-                    initialElevation: 100 // Starting at MAN
-                })
+            const routingResult = await routingMutation.mutateAsync({
+                inflowHydrograph: inflowInput,
+                stageStorageCurve: MOCK_STAGE_STORAGE,
+                stageDischargeCurve: MOCK_STAGE_DISCHARGE,
+                deltaT: 3600,
+                initialElevation: 100
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal mensimulasikan Routing di Python Engine');
-            }
-
-            const routingResult = await response.json();
-
-            // Format for Recharts
             const chartData = routingResult.steps.map((step: any) => ({
-                time: step.time / 3600, // Convert back to hours
+                time: step.time / 3600,
                 inflow: Number(step.inflowAvg.toFixed(2)),
                 outflow: Number(step.outflow.toFixed(2)),
                 elevation: Number(step.elevation.toFixed(2))
@@ -128,9 +119,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
 
             toast.success('Simulasi Penelusuran Banjir REST API Engine berhasil.');
         } catch (error: any) {
-            toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
-        } finally {
-            setIsCalculating(false);
+            toast.error(`Terjadi kesalahan: ${error.detail ?? error.message ?? 'Unknown error'}`);
         }
     };
 

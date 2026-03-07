@@ -14,6 +14,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Tabs } from '@/components/ui/tabs';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { CalculationType } from '@/types/types';
+import { useNakayasuMutation } from '@/hooks/api/useBanjirApi';
 
 interface LocationData {
   channelName: string;
@@ -71,21 +72,15 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
     { id: 'snyder', name: 'HSS Snyder', description: 'DAS besar (Snyder, 1938)', recommended: false }
   ];
 
-  const [isCalculating, setIsCalculating] = useState(false);
+  const nakayasuMutation = useNakayasuMutation();
+  const isCalculating = nakayasuMutation.isPending;
 
   const handleCalculate = async () => {
-    setIsCalculating(true);
     try {
       if (method === 'nakayasu') {
-        const response = await fetch('http://localhost:8000/api/v1/banjir/nakayasu', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(nakayasuInputs)
-        });
-
-        if (!response.ok) throw new Error('Gagal menghitung Nakayasu di Python Engine');
-        const res = await response.json();
-        setResult({ Qp: res.Qp, Tp: res.Tp, Tb: res.Tb, Tg: nakayasuInputs.Tg, Tr: nakayasuInputs.Tr, Alpha: nakayasuInputs.Alpha, hydrograph: res.hydrograph });
+        const res = await nakayasuMutation.mutateAsync(nakayasuInputs);
+        const hydrograph = res.hydrograph.map((p: { time: number; inflow: number }) => ({ time: p.time, discharge: p.inflow }));
+        setResult({ Qp: res.Qp, Tp: res.Tp, Tb: undefined, Tg: nakayasuInputs.Tg, Tr: nakayasuInputs.Tr, Alpha: nakayasuInputs.Alpha, hydrograph });
       } else if (method === 'gamma1') {
         const res = calculateHSSGamma1(gamma1Inputs);
         setResult({ Qp: res.Qp, Tp: res.Tp, Tb: res.Tb, hydrograph: res.hydrograph });
@@ -95,8 +90,6 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
       }
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Calculation error');
-    } finally {
-      setIsCalculating(false);
     }
   };
 

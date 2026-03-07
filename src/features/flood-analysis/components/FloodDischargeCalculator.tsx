@@ -16,6 +16,7 @@ import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { RETURN_PERIOD_GUIDANCE } from '@/constants/returnPeriodGuidance';
+import { useRasionalModifikasiMutation } from '@/hooks/api/useBanjirApi';
 
 type MethodType = 'RATIONAL' | 'NAKAYASU' | 'HASPERS' | 'DER_WEDUWEN' | 'MELCHIOR';
 
@@ -123,6 +124,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     return useSNI2415Workflow(area);
   }, [method, rationalInputs.A, nakayasuInputs.A]);
 
+  const rasionalMutation = useRasionalModifikasiMutation();
   const [calculateRationalDischarge, setCalculateRationalDischarge] = useState({ qPeak: 0, warnings: [] as string[] });
 
   useEffect(() => {
@@ -130,21 +132,14 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     const fetchRational = async () => {
       try {
         if (method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
-          const response = await fetch('http://localhost:8000/api/v1/banjir/rasional-modifikasi', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              method: method === 'DER_WEDUWEN' ? 'der_weduwen' : method.toLowerCase(),
-              A: rationalInputs.A,
-              L: rationalInputs.L || 1.5,
-              S: rationalInputs.S || 0.01,
-              I: rationalInputs.I,
-              // Melchior needs C
-              C: method === 'MELCHIOR' ? rationalInputs.C : undefined
-            })
+          const res = await rasionalMutation.mutateAsync({
+            method: method === 'DER_WEDUWEN' ? 'der_weduwen' : method.toLowerCase() as any,
+            A: rationalInputs.A,
+            L: rationalInputs.L || 1.5,
+            S: rationalInputs.S || 0.01,
+            I: rationalInputs.I,
+            C: method === 'MELCHIOR' ? rationalInputs.C : undefined
           });
-          if (!response.ok) throw new Error('API Error');
-          const res = await response.json();
           if (active) setCalculateRationalDischarge({ qPeak: res.qPeak, warnings: res.warnings || [] });
         } else {
           const areaHa = convertKm2ToHa(rationalInputs.A);
@@ -155,12 +150,13 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
           });
           if (active) setCalculateRationalDischarge({ qPeak: result.Q, warnings: result.warnings || [] });
         }
-      } catch (err) {
+      } catch {
         if (active) setCalculateRationalDischarge({ qPeak: 0, warnings: ['Error: API gagal dihubungi'] });
       }
     };
     fetchRational();
     return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [method, rationalInputs.C, rationalInputs.I, rationalInputs.A, rationalInputs.L, rationalInputs.S, rationalInputs.R24]);
 
   // FIX BUG-1 (continued): Sync warnings from pure useMemo result via useEffect

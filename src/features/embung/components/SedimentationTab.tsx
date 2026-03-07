@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Calculator, Info, Mountain, CalendarClock, ArrowRightSquare, Trash2, Sparkles } from 'lucide-react';
 // import { calculateSedimentYield } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
+import { useSedimenMutation } from '@/hooks/api/useEmbungApi';
 // Mock Data Defaults
 const DEFAULT_PARAMS = {
     catchmentArea: 45.5,      // km2
@@ -25,7 +26,6 @@ interface SedimentationTabProps {
 }
 
 export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI }) => {
-    const [isCalculating, setIsCalculating] = useState(false);
 
     // States
     const [params, setParams] = useState(DEFAULT_PARAMS);
@@ -54,40 +54,27 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
         setResult(null);
     };
 
+    const sedimenMutation = useSedimenMutation();
+    const isCalculating = sedimenMutation.isPending;
+
     const handleCalculate = async () => {
-        setIsCalculating(true);
         setResult(null);
 
         try {
-            // Formatting data arrays for Rating Curve
-            // qs in (Ton/hari) = q(m3/s) * cs(mg/L) * 0.0864 (conversion factor)
             const qData = samples.map(s => s.q);
             const qsData = samples.map(s => s.q * s.cs * 0.0864);
-
-            // Flow duration arrays for annual accumulation
             const flowDurationDays = samples.map(s => s.days);
             const flowDurationQ = samples.map(s => s.q);
 
-            const response = await fetch('http://localhost:8000/api/v1/embung/sedimen', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    qData,
-                    qsData,
-                    luasDas: params.catchmentArea,
-                    beratJenis: params.bulkDensity,
-                    bedLoadPercentage: params.bedLoadPercentage,
-                    flowDurationDays,
-                    flowDurationQ
-                })
+            const sedResult = await sedimenMutation.mutateAsync({
+                qData,
+                qsData,
+                luasDas: params.catchmentArea,
+                beratJenis: params.bulkDensity,
+                bedLoadPercentage: params.bedLoadPercentage,
+                flowDurationDays,
+                flowDurationQ
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal menghitung Sedimentasi di Python Engine');
-            }
-
-            const sedResult = await response.json();
 
             setResult({
                 totalVolume: Number(sedResult.totalVolumeM3.toFixed(0)),
@@ -98,9 +85,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
 
             toast.success('Kalkulasi Laju Sedimen REST API Engine berhasil.');
         } catch (error: any) {
-            toast.error(`Terjadi kesalahan: ${error.message || 'Unknown error'}`);
-        } finally {
-            setIsCalculating(false);
+            toast.error(`Terjadi kesalahan: ${error.detail ?? error.message ?? 'Unknown error'}`);
         }
     };
 
