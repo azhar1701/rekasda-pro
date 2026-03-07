@@ -251,3 +251,30 @@ export const saveWaterBalance = async (data: WaterBalanceData) => {
 
   return { data: result, error };
 };
+
+
+/**
+ * Mock calculation for hydrograph based on Luas DAS & Method
+ * Used for demonstration in FloodAnalysisTab
+ */
+export const calculateMockHydrograph = (area: number, method: string) => {
+  const peak = method === 'rasional' ? area * 2.5 : method === 'haspers' ? area * 3.1 : area * 1.8;
+
+  // Generate mock hydrograph curve
+  const hydrograph = [];
+  for (let i = 0; i <= 10; i++) {
+    let val = 0;
+    if (i <= 3) val = (peak / 3) * i; // Rising limb
+    else val = peak * Math.exp(-0.4 * (i - 3)); // Falling limb
+
+    hydrograph.push({
+      time: i,
+      inflow: Number(val.toFixed(2))
+    });
+  }
+
+  return {
+    debitPuncak: Number(peak.toFixed(2)),
+    hidrograf: hydrograph
+  };
+};

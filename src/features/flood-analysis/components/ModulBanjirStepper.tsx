@@ -78,6 +78,10 @@ export const ModulBanjirStepper: React.FC = () => {
     handleStepComplete(3);
   };
 
+  const handleStep1Complete = (_hujanEfektif: number[], _durasi: number) => {
+    handleStepComplete(1);
+  };
+
   return (
     <ModuleLayout
       title="Debit Banjir Rencana"
@@ -157,7 +161,10 @@ export const ModulBanjirStepper: React.FC = () => {
         {/* Step Content */}
         <div className="lg:col-span-9">
           {activeStep === 1 && (
-            <StepDistribusiHujan />
+            <StepDistribusiHujan 
+              onComplete={handleStep1Complete}
+              isCompleted={completedSteps.has(1)}
+            />
           )}
           
           {activeStep === 2 && completedSteps.has(1) && (

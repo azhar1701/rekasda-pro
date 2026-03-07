@@ -10,11 +10,7 @@ import {
   ReferenceDot,
   ReferenceLine,
 } from 'recharts';
-
-interface HydrographDataPoint {
-  time: number;
-  discharge: number;
-}
+import { HydrographDataPoint } from '../types/flood.types';
 
 interface FloodHydrographChartProps {
   data: HydrographDataPoint[];

@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Activity, TrendingUp } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { calculateHSSNakayasu } from '@/lib/engine/flood/sni2415';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Tooltip as UITooltip } from '@/components/ui/data-display/Tooltip';
 
 interface HSSComparisonStepProps {
   onComplete: (method: string, ordinates: number[], hydrograph: { time: number;
@@ -196,14 +198,22 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
       )}
 
       <Card className="p-6 bg-white border border-slate-300 shadow-sm rounded-md">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-green-100 rounded-md">
-            <Activity className="w-5 h-5 text-green-600" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-md">
+              <Activity className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Perbandingan Hidrograf Satuan Sintetis</h3>
+              <p className="text-xs text-slate-500">Multi-HSS untuk 1 mm hujan efektif</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Perbandingan Hidrograf Satuan Sintetis</h3>
-            <p className="text-xs text-slate-500">Multi-HSS untuk 1 mm hujan efektif</p>
-          </div>
+          <UITooltip content="Alpha = 2.0 sebagai standar SNI kecuali ada data kalibrasi.">
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded border border-slate-200 cursor-help">
+              <Info className="w-3.5 h-3.5 text-slate-500" />
+              <span className="text-[10px] font-bold text-slate-600">Alpha = 2.0</span>
+            </div>
+          </UITooltip>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
