@@ -9,7 +9,7 @@ import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { FrequencyAnalysisModal } from '@/components/modals/FrequencyAnalysisModal';
 import { FrequencyAnalysisSummary } from '@/components/ui/FrequencyAnalysisSummary';
 import { AreaReductionCard } from '@/features/flood-analysis/components/AreaReductionCard';
-import { HyetographGenerator } from '@/features/flood/components/HyetographGenerator';
+import { HyetographGenerator } from '@/features/flood-analysis/components/HyetographGenerator';
 import { Button } from '@/components/ui/Button';
 import {
     CloudRain, Calculator, Activity, ChevronDown,
