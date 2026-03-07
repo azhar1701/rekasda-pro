@@ -22,43 +22,43 @@ concurrency:
 # FASE 1: Continuous Integration — Build & Push Docker Image
 # ---------------------------------------------------------------------------
 jobs:
-  build-and-push:
-    name: 🏗️ Build & Push Docker Image
+  # ---------------------------------------------------------------------------
+  # FASE 1: Testing — Backend (Pytest) & Frontend (TSC)
+  # ---------------------------------------------------------------------------
+  test:
+    name: 🧪 Automated Testing
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout the repository
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Docker Buildx for advanced build features & layer caching
-      - name: 🔧 Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 3. Login to Docker Hub
-      - name: 🔑 Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          python-version: '3.11'
+          cache: 'pip'
 
-      # 4. Build and Push the production image
-      #    Build args inject Supabase/Gemini credentials at build time
-      #    (required because Vite bakes VITE_* vars into static assets)
-      - name: 🐳 Build & Push Image
-        uses: docker/build-push-action@v6
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          pip install .[dev,api]
+
+      - name: 🧪 Run Backend Tests
+        run: |
+          cd backend
+          pytest tests/
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/rekasda-pro:latest
-            ${{ secrets.DOCKER_USERNAME }}/rekasda-pro:${{ github.sha }}
-          build-args: |
-            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install Frontend Dependencies
+        run: npm install
+
+      - name: 🛡️ Run Frontend Type Check
+        run: npx tsc --noEmit
 
   # ---------------------------------------------------------------------------
   # FASE 2: Continuous Deployment — SSH to VPS & Restart Service
@@ -66,7 +66,7 @@ jobs:
   deploy:
     name: 🚀 Deploy to Production VPS
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: test
 
     steps:
       - name: 📡 SSH & Deploy to VPS
@@ -84,18 +84,28 @@ jobs:
             # Navigate to application directory
             cd /opt/rekasda
 
-            # Pull the latest image from Docker Hub
-            echo "📥 Pulling latest Docker image..."
-            docker pull ${{ secrets.DOCKER_USERNAME }}/rekasda-pro:latest
+            # Pull the latest code
+            echo "📥 Fetching latest code from Git..."
+            git pull origin main
 
-            # Restart only the prod service (no downtime for other services)
-            echo "♻️  Restarting production service..."
-            export DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/rekasda-pro:latest
-            docker compose -f docker-compose.prod.yml up -d --no-deps prod
+            # Update Backend
+            echo "🐍 Updating Python dependencies..."
+            cd backend
+            ./venv/bin/pip install .[api]
+            
+            # Restart Backend Service
+            echo "♻️  Restarting RekaSDA FastAPI service..."
+            sudo systemctl restart rekasda-fastapi
 
-            # Clean up dangling/unused images to save SSD space
-            echo "🧹 Pruning unused Docker images..."
-            docker image prune -f
+            # Update Frontend
+            echo "⚛️  Building Frontend assets..."
+            cd ..
+            npm install
+            npm run build
+
+            # Deployment sync to web directory (assuming Nginx serves from /var/www/rekasda/dist)
+            # echo "📂 Syncing assets to web root..."
+            # sudo cp -r dist/* /var/www/rekasda/dist/
 
             echo "=========================================="
             echo "✅ Deployment complete!"
