@@ -4,7 +4,10 @@
   "session_ids": [
     "ses_33afcad1cffeoAWRdJJMLKwh93"
   ],
-  "plan_name": "security-coverage",
+  "plan_name": "flood-feature-consolidation",
+  "agent": "atlas",
+  "worktree_path": "C:\\Users\\ariaz\\.local\\share\\opencode\\worktree\\rekasda-pro-flood-feature",
+  "status": "completed"
   "agent": "atlas",
   "worktree_path": "C:/Users/ariaz/.local/share/opencode/worktree/rekasda-pro-sec-cov"
   "agent": "atlas"
