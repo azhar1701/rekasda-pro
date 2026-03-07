@@ -3,6 +3,8 @@ import { SYSTEM_PROMPT, AI_MODEL } from '@/lib/ai/config';
 import { apiService } from './api.service';
 
 const getAiClient = () => {
+  // TODO: SECURITY RISK - VITE_ prefix exposes the API key to the client bundle.
+  // RECOMMENDATION: Move Gemini API calls to a Supabase Edge Function to secure the key.
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("VITE_GEMINI_API_KEY tidak ditemukan di environment variables");

@@ -4,14 +4,21 @@ import { CalculationRecord, isValidCalculationRecord } from '@/types/database.ty
 
 class ApiService {
   private async handleResponse<T>(
-    promise: Promise<any>,
-    validator?: (data: any) => boolean
+    promiseFactory: (signal: AbortSignal) => Promise<any>,
+    validator?: (data: any) => boolean,
+    timeoutMs: number = 15000
   ): Promise<ApiResponse<T>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-      const result = await promise;
-      const { data, error } = result;
+      const response = await promiseFactory(controller.signal);
+      clearTimeout(timeoutId);
+
+      const { data, error } = response;
 
       if (error) {
+        console.error('[ApiService] Database error:', error);
         return {
           data: null,
           error: {
@@ -25,6 +32,7 @@ class ApiService {
       }
 
       if (validator && data && !validator(data)) {
+        console.warn('[ApiService] Validation failed for data:', data);
         return {
           data: null,
           error: {
@@ -43,10 +51,14 @@ class ApiService {
         timestamp: new Date().toISOString()
       };
     } catch (err) {
+      clearTimeout(timeoutId);
+      const isTimeout = err instanceof Error && (err.name === 'AbortError' || err.message === 'Request timeout');
+      console.error(`[ApiService] ${isTimeout ? 'Timeout' : 'Network'} error:`, err);
+
       return {
         data: null,
         error: {
-          code: 'NETWORK_ERROR',
+          code: isTimeout ? 'TIMEOUT_ERROR' : 'NETWORK_ERROR',
           message: err instanceof Error ? err.message : 'Unknown error occurred'
         },
         status: 'error',
@@ -65,25 +77,12 @@ class ApiService {
       };
     }
 
-    const { data, error } = await supabase!.functions.invoke(functionName, {
-      body: payload
-    });
-
-    if (error) {
-      return {
-        data: null,
-        error: { code: 'FUNCTION_ERROR', message: error.message },
-        status: 'error',
-        timestamp: new Date().toISOString()
-      };
-    }
-
-    return {
-      data,
-      error: null,
-      status: 'success',
-      timestamp: new Date().toISOString()
-    };
+    return this.handleResponse<T>(
+      (signal) => supabase!.functions.invoke(functionName, {
+        body: payload,
+        signal
+      })
+    );
   }
 
   async saveCalculation(
@@ -124,7 +123,7 @@ class ApiService {
     };
 
     return this.handleResponse<CalculationRecord>(
-      supabase!.from('calculations').insert([cleanData]).select().single() as any,
+      (signal) => (supabase!.from('calculations').insert([cleanData]).select().single() as any).abortSignal(signal),
       isValidCalculationRecord
     );
   }
@@ -137,11 +136,11 @@ class ApiService {
     if (!isSupabaseEnabled()) return { data: [], error: null, status: 'success', timestamp: new Date().toISOString() };
 
     return this.handleResponse<CalculationRecord[]>(
-      supabase!.rpc('find_nearby_calculations', {
+      (signal) => (supabase!.rpc('find_nearby_calculations', {
         lat,
         lng,
         radius_meters: radiusMeters
-      }) as any
+      }) as any).abortSignal(signal)
     );
   }
 
@@ -153,11 +152,11 @@ class ApiService {
     if (!isSupabaseEnabled()) return { data: [], error: null, status: 'success', timestamp: new Date().toISOString() };
 
     return this.handleResponse<any[]>(
-      supabase!.rpc('match_documents', {
+      (signal) => (supabase!.rpc('match_documents', {
         query_embedding: queryEmbedding,
         match_threshold: matchThreshold,
         match_count: matchCount
-      }) as any
+      }) as any).abortSignal(signal)
     );
   }
 
@@ -175,7 +174,7 @@ class ApiService {
     }
 
     return this.handleResponse<CalculationRecord[]>(
-      supabase!.from('calculations').select('*').order('created_at', { ascending: false }) as any
+      (signal) => (supabase!.from('calculations').select('*').order('created_at', { ascending: false }) as any).abortSignal(signal)
     );
   }
 
@@ -193,7 +192,7 @@ class ApiService {
     }
 
     return this.handleResponse<void>(
-      supabase!.from('calculations').delete().eq('id', id) as any
+      (signal) => (supabase!.from('calculations').delete().eq('id', id) as any).abortSignal(signal)
     );
   }
 
@@ -211,9 +210,8 @@ class ApiService {
     }
 
     const response = await this.handleResponse<any>(
-      supabase!.from('calculations').select('id').limit(1) as any
+      (signal) => (supabase!.from('calculations').select('id').limit(1) as any).abortSignal(signal)
     );
-
     return {
       data: { connected: response.status === 'success' },
       error: response.error,

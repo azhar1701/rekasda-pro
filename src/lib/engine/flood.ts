@@ -7,6 +7,8 @@ import { z } from 'zod';
 import {
   RATIONAL_CONVERSION_FACTOR,
   SNI_VALIDATION_LIMITS,
+  SNI_RATIONAL_AREA_LIMIT_KM2,
+  SNI_RATIONAL_AREA_LIMIT_HA
 } from '../constants/sni';
 import type {
   RationalMethodInput,
@@ -35,7 +37,7 @@ const RationalInputSchema = z.object({
   A: z
     .number()
     .min(SNI_VALIDATION_LIMITS.catchmentArea.min, 'Luas DAS tidak boleh negatif')
-    .max(SNI_VALIDATION_LIMITS.catchmentArea.max, 'Luas DAS terlalu besar'),
+    .max(SNI_RATIONAL_AREA_LIMIT_KM2, `Luas DAS untuk Metode Rasional maksimal ${SNI_RATIONAL_AREA_LIMIT_KM2} km² (${SNI_RATIONAL_AREA_LIMIT_HA} ha)`),
 });
 
 /**
@@ -93,7 +95,7 @@ export const calculateRationalDischarge = (input: RationalMethodInput): Rational
   // Q = 0.278 * C * I * A
   const Q = RATIONAL_CONVERSION_FACTOR * validated.C * validated.I * validated.A;
 
-  return { Q };
+  return { Q: parseFloat(Q.toFixed(3)) };
 };
 
 /**
