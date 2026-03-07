@@ -115,8 +115,10 @@ export function useKapasitasMutation() {
 export function useRoutingMutation() {
   return useMutation({
     mutationKey: ['embung', 'routing'],
-    mutationFn: (payload: RoutingRequest) =>
-      apiClient.post<RoutingResult>('/api/v1/embung/routing', payload),
+    mutationFn: async (payload: RoutingRequest) => {
+      const { task_id } = await apiClient.post<{ task_id: string }>('/api/v1/embung/routing', payload);
+      return apiClient.pollTask<RoutingResult>(task_id);
+    },
   });
 }
 
@@ -133,7 +135,9 @@ export function useNeracaAirEmbungMutation() {
 export function useSedimenMutation() {
   return useMutation({
     mutationKey: ['embung', 'sedimen'],
-    mutationFn: (payload: SedimentationRequest) =>
-      apiClient.post<SedimentationResult>('/api/v1/embung/sedimen', payload),
+    mutationFn: async (payload: SedimentationRequest) => {
+      const { task_id } = await apiClient.post<{ task_id: string }>('/api/v1/embung/sedimen', payload);
+      return apiClient.pollTask<SedimentationResult>(task_id);
+    },
   });
 }

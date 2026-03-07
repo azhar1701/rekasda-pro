@@ -26,33 +26,53 @@ def generate_incremental_rainfall(R24: float, duration: int) -> List[float]:
 
 def arrange_abm(incrementals: List[float]) -> List[float]:
     """
-    Alternating Block Method (ABM) reordering
-    Sort descending, place center-out alternating (center gets largest, then right, left, right, left...)
+    Alternating Block Method (ABM) reordering.
+    Sort descending, place center-out alternating: largest in the middle, 
+    second to the right, third to the left, and so on.
     """
     n = len(incrementals)
-    if n == 0:
-        return []
-    if n == 1:
+    if n <= 1:
         return list(incrementals)
         
     sorted_vals = sorted(incrementals, reverse=True)
     result = [0.0] * n
-    center = n // 2
     
-    left = center
-    right = center
+    # Use middle index as starting point
+    # For n=4, mid=2. Places: [_, _, peak, _]
+    mid = n // 2
     
-    for i in range(len(sorted_vals)):
+    # We place values at indices: mid, mid+1, mid-1, mid+2, mid-2...
+    for i, val in enumerate(sorted_vals):
+        offset = (i + 1) // 2
+        sign = 1 if i % 2 == 1 else -1
+        
+        # Position logic: 0->0, 1->1, 2->-1, 3->2, 4->-2 ... which we add to mid
+        # Adjusting slightly to fit: i=0 -> offset=0, pos=mid
+        # i=1 -> offset=1, sign=1, pos=mid+1
+        # i=2 -> offset=1, sign=-1, pos=mid-1
+        # i=3 -> offset=2, sign=1, pos=mid+2
+        
         if i == 0:
-            result[center] = sorted_vals[i]
-        elif i % 2 == 1:
-            right += 1
-            if right < n:
-                result[right] = sorted_vals[i]
+            pos = mid
         else:
-            left -= 1
-            if left >= 0:
-                result[left] = sorted_vals[i]
+            pos = mid + (sign * offset)
+            
+        # Bounds check - if we hit bounds, fill the other direction
+        if pos < 0:
+            # Shift everything or just find next empty? 
+            # Simplified: find first None/Zero from right
+            for j in range(n-1, -1, -1):
+                if result[j] == 0.0:
+                    pos = j
+                    break
+        elif pos >= n:
+            # Find first None/Zero from left
+            for j in range(n):
+                if result[j] == 0.0:
+                    pos = j
+                    break
+                    
+        result[pos] = val
                 
     return result
 

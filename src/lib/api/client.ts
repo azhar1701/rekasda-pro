@@ -60,4 +60,28 @@ export const apiClient = {
   get<TResponse>(path: string): Promise<TResponse> {
     return request<TResponse>(path, { method: 'GET' });
   },
+
+  /** Poll for background task completion */
+  async pollTask<TResult>(taskId: string, intervalMs = 1000, timeoutMs = 60000): Promise<TResult> {
+    const startTime = Date.now();
+    
+    while (true) {
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error('Task timed out');
+      }
+
+      const status: any = await this.get(`/api/v1/tasks/${taskId}`);
+      
+      if (status.status === 'completed') {
+        return status.result as TResult;
+      }
+      
+      if (status.status === 'failed') {
+        throw new Error(status.error || 'Task failed');
+      }
+
+      // Wait before next poll
+      await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+  }
 };

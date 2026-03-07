@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from api.utils.tasks import task_manager
 from api.schemas.embung import (
     SequentPeakRequest, SequentPeakResponse, 
     SedimentationRequest, SedimentYieldResponse,
@@ -39,13 +40,13 @@ async def calculate_capacity(request: SequentPeakRequest):
 
 @router.post(
     "/sedimen",
-    response_model=SedimentYieldResponse,
-    summary="Laju Erosi dan Sedimen",
-    description="Menghitung Total Sedimen menggunakan Kurva Lengkung Sedimen (Rating Curve)."
+    summary="Laju Erosi dan Sedimen (Async)",
+    description="Menghitung Total Sedimen menggunakan Kurva Lengkung Sedimen (Rating Curve) secara asinkron."
 )
 async def calculate_sediment(request: SedimentationRequest):
     try:
-        result = calculate_sediment_yield(
+        task_id = await task_manager.create_task(
+            calculate_sediment_yield,
             qData=request.qData,
             qsData=request.qsData,
             luasDas=request.luasDas,
@@ -54,16 +55,11 @@ async def calculate_sediment(request: SedimentationRequest):
             flowDurationDays=request.flowDurationDays,
             flowDurationQ=request.flowDurationQ
         )
-        return dict(result)
-    except ValueError as val_err:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(val_err)
-        )
+        return {"task_id": task_id, "status": "pending"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal Engine Error: {str(e)}"
+            detail=f"Task Submission Failed: {str(e)}"
         )
 
 @router.post(
@@ -93,4 +89,26 @@ async def simulate_reservoir(request: ReservoirOperationRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal Engine Error: {str(e)}"
+        )
+
+@router.post(
+    "/routing",
+    summary="Penelusuran Banjir Lewat Waduk (Async)",
+    description="Menghitung Flood Routing melewati pelimpah (spillway) secara asinkron."
+)
+async def calculate_routing(request: FloodRoutingRequest):
+    try:
+        task_id = await task_manager.create_task(
+            calculate_flood_routing,
+            inflowHydrograph=request.inflowHydrograph,
+            stageStorageCurve=request.stageStorageCurve,
+            stageDischargeCurve=request.stageDischargeCurve,
+            deltaT=request.deltaT,
+            initialElevation=request.initialElevation
+        )
+        return {"task_id": task_id, "status": "pending"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Task Submission Failed: {str(e)}"
         )

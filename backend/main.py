@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
-from api.routers import hydrology, rainfall, flood, embung, water_balance
+from api.routers import hydrology, rainfall, flood, embung, water_balance, tasks
 
 # Initialize Sentry
 SENTRY_DSN = os.getenv("SENTRY_DSN")
@@ -56,6 +56,7 @@ app.include_router(rainfall.router, prefix="/api/v1/hujan", tags=["Hujan"])
 app.include_router(flood.router, prefix="/api/v1/banjir", tags=["Banjir"])
 app.include_router(embung.router, prefix="/api/v1/embung", tags=["Embung"])
 app.include_router(water_balance.router, prefix="/api/v1/neraca-air", tags=["Neraca Air"])
+app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["Background Tasks"])
 
 @app.get("/health")
 async def health_check():
