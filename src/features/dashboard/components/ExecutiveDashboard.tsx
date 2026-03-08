@@ -59,7 +59,7 @@ export const ExecutiveDashboard = () => {
                     <CardGovTech title="Identitas Proyek">
                         <div className="space-y-4">
                             <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-md bg-pupr-surface flex items-center justify-center shrink-0">
+                                <div className="w-10 h-10 rounded-md bg-pupr-blue/10 flex items-center justify-center shrink-0">
                                     <FileText className="w-5 h-5 text-pupr-blue" />
                                 </div>
                                 <div className="flex-1">
@@ -68,7 +68,7 @@ export const ExecutiveDashboard = () => {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-md bg-pupr-surface flex items-center justify-center shrink-0">
+                                <div className="w-10 h-10 rounded-md bg-pupr-yellow/20 flex items-center justify-center shrink-0">
                                     <MapPin className="w-5 h-5 text-pupr-blue" />
                                 </div>
                                 <div className="flex-1">
@@ -80,8 +80,8 @@ export const ExecutiveDashboard = () => {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-md bg-pupr-surface flex items-center justify-center shrink-0">
-                                    <Activity className="w-5 h-5 text-pupr-blue" />
+                                <div className="w-10 h-10 rounded-md bg-teal-500/10 flex items-center justify-center shrink-0">
+                                    <Activity className="w-5 h-5 text-teal-600" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-xs font-bold text-pupr-text/60 uppercase tracking-wider mb-1">Luas DAS Terukur</p>
@@ -146,9 +146,9 @@ export const ExecutiveDashboard = () => {
                                 </BarChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-pupr-surface rounded-md border border-dashed border-pupr-border">
-                                <AlertTriangle className="w-8 h-8 text-pupr-text/40 mb-2" />
-                                <p className="text-sm font-bold text-pupr-text/60 text-center px-4">
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-pupr-blue/[0.03] rounded-md border border-dashed border-pupr-blue/20">
+                                <AlertTriangle className="w-8 h-8 text-pupr-blue/30 mb-2" />
+                                <p className="text-sm font-bold text-slate-500 text-center px-4">
                                     Data belum lengkap atau belum diproses. Silakan selesaikan input di modul Master Data dan Analisis Banjir.
                                 </p>
                             </div>

@@ -283,10 +283,10 @@ export const HujanWilayahCard: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+      <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden border-l-4 border-l-pupr-blue">
+        <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-pupr-blue/10 rounded">
+            <div className="p-2 bg-pupr-blue/10 rounded-md">
               <CloudRain className="w-5 h-5 text-pupr-blue" />
             </div>
             <div>
@@ -456,9 +456,9 @@ export const HujanWilayahCard: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto mb-4">
+                  <div className="overflow-x-auto mb-4 border border-slate-200 rounded-md">
                     <table className="w-full text-sm">
-                      <thead className="bg-slate-100 border-b border-slate-300">
+                      <thead className="bg-pupr-blue/[0.02] border-b border-slate-200">
                         <tr>
                           <th className="px-3 py-2 text-left font-semibold text-slate-700">Stasiun</th>
                           <th className="px-3 py-2 text-right font-semibold text-slate-700">Luas Pengaruh (km²)</th>
@@ -533,9 +533,9 @@ export const HujanWilayahCard: React.FC = () => {
                 </Button>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto border border-slate-200 rounded-md">
                 <table className="w-full text-sm border-collapse">
-                  <thead className="bg-slate-100 border-b border-slate-300">
+                  <thead className="bg-pupr-blue/[0.02] border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold text-slate-700">Label Area</th>
                       <th className="px-3 py-2 text-right font-semibold text-slate-700">AMS Hujan (mm)</th>

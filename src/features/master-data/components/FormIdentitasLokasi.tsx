@@ -86,7 +86,7 @@ export const FormIdentitasLokasi: React.FC = () => {
     // Membatasi desimal maksimal 6 digit (standard presisi GPS sub-meter)
     const lat = Number(latlng.lat.toFixed(6));
     const lng = Number(latlng.lng.toFixed(6));
-    
+
     setIdentitasLokasi({
       koordinat: {
         lat,
@@ -96,18 +96,18 @@ export const FormIdentitasLokasi: React.FC = () => {
   };
 
   // State koordinat untuk map
-  const mapCenter: [number, number] = 
+  const mapCenter: [number, number] =
     identitasLokasi.koordinat.lat != null && identitasLokasi.koordinat.lng != null
       ? [identitasLokasi.koordinat.lat, identitasLokasi.koordinat.lng]
       : DEFAULT_CENTER;
 
-  const markerPosition = 
+  const markerPosition =
     identitasLokasi.koordinat.lat != null && identitasLokasi.koordinat.lng != null
       ? new L.LatLng(identitasLokasi.koordinat.lat, identitasLokasi.koordinat.lng)
       : null;
 
   return (
-    <Card className="p-6 bg-white shadow-md border border-slate-200 rounded-md">
+    <Card className="p-6 bg-white shadow-md border border-slate-200 rounded-md border-l-4 border-l-pupr-blue overflow-hidden relative">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-pupr-blue/10 rounded-md">
           <Briefcase className="w-5 h-5 text-pupr-blue" />
@@ -145,7 +145,7 @@ export const FormIdentitasLokasi: React.FC = () => {
             onChange={handleChange}
             placeholder="Contoh: Sungai Ciliwung"
           />
-          
+
           <div className="grid grid-cols-2 gap-4 pt-2">
             <InputGroup
               id="provinsi"
@@ -165,8 +165,8 @@ export const FormIdentitasLokasi: React.FC = () => {
             />
           </div>
 
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-md mt-4">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2 mb-3">
+          <div className="p-4 bg-pupr-blue/[0.03] border border-pupr-blue/10 rounded-md mt-4">
+            <h4 className="text-xs font-bold text-pupr-blue uppercase tracking-widest flex items-center gap-2 mb-3">
               <Navigation className="w-3.5 h-3.5" /> Koordinat Geografis (WGS84)
             </h4>
             <div className="grid grid-cols-2 gap-4">
@@ -203,15 +203,15 @@ export const FormIdentitasLokasi: React.FC = () => {
         {/* Kolom Kanan: WebGIS Leaflet */}
         <div className="flex flex-col h-full min-h-[400px]">
           <h4 className="text-sm font-bold text-pupr-blue flex items-center gap-2 mb-3">
-            <MapIcon className="w-4 h-4" /> 
+            <MapIcon className="w-4 h-4" />
             Peta Lokasi Interaktif
           </h4>
-          
+
           {/* Kontainer Kaku Institusional */}
-          <div className="flex-1 border-2 border-[#cbd5e1] rounded-md overflow-hidden relative shadow-sm z-0">
-            <MapContainer 
-              center={mapCenter} 
-              zoom={markerPosition ? 12 : DEFAULT_ZOOM} 
+          <div className="flex-1 border-2 border-pupr-blue/20 rounded-md overflow-hidden relative shadow-sm z-0">
+            <MapContainer
+              center={mapCenter}
+              zoom={markerPosition ? 12 : DEFAULT_ZOOM}
               scrollWheelZoom={true}
               className="h-full w-full"
             >
@@ -219,12 +219,12 @@ export const FormIdentitasLokasi: React.FC = () => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <LocationMarker 
-                position={markerPosition} 
-                setPosition={handleMapPositionChange} 
+              <LocationMarker
+                position={markerPosition}
+                setPosition={handleMapPositionChange}
               />
             </MapContainer>
-            
+
             {/* Instruksi overlay di peta */}
             <div className="absolute top-2 right-2 z-[1000] bg-white/90 backdrop-blur-sm px-3 py-1.5 border border-slate-200 rounded-md shadow-sm pointer-events-none">
               <p className="text-[10px] font-semibold text-slate-700">

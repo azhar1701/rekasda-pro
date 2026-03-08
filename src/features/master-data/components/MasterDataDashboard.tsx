@@ -104,11 +104,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: QC Status */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-blue">
+          <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-pupr-blue" />
-              <h3 className="font-semibold text-slate-800 text-sm">Audit Kualitas Data</h3>
+              <div className="w-8 h-8 rounded-full bg-pupr-blue/10 flex items-center justify-center shrink-0">
+                <Droplets className="w-4 h-4 text-pupr-blue" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-sm">Audit Kualitas Data</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('qc')}
@@ -168,20 +170,22 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-                <AlertTriangle className="w-8 h-8 mb-2 text-pupr-blue/50" />
-                <p className="text-sm">Belum ada hasil QC</p>
+              <div className="flex flex-col items-center justify-center py-8 bg-pupr-blue/[0.02] rounded-md border border-dashed border-slate-200">
+                <AlertTriangle className="w-8 h-8 mb-2 text-pupr-blue/30" />
+                <p className="text-sm font-medium text-slate-500">Belum ada hasil QC</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Card 2: Morfometri DAS */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-yellow">
+          <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-pupr-blue" />
-              <h3 className="font-semibold text-slate-800 text-sm">Karakteristik Fisik DAS</h3>
+              <div className="w-8 h-8 rounded-full bg-pupr-yellow/10 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-pupr-blue" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-sm">Karakteristik Fisik DAS</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('morfometri')}
@@ -229,11 +233,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
         </div>
 
         {/* Card 3: Koefisien Limpasan */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-teal-500">
+          <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-pupr-blue" />
-              <h3 className="font-semibold text-slate-800 text-sm">Koefisien Limpasan</h3>
+              <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-4 h-4 text-teal-600" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-sm">Koefisien Limpasan</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('tutupan')}
@@ -272,7 +278,12 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                         </div>
                         <div className="w-full bg-slate-100 rounded h-2">
                           <div
-                            className="bg-pupr-blue h-2 rounded transition-all"
+                            className={`h-2 rounded transition-all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
+                                ? 'bg-green-600'
+                                : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan')
+                                  ? 'bg-orange-500'
+                                  : 'bg-pupr-blue'
+                              }`}
                             style={{ width: `${Math.min(item.percentage, 100)}%` }}
                           />
                         </div>
