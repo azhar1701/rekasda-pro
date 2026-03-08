@@ -38,10 +38,6 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
   const [incidentId] = useState(() => generateIncidentId());
   const [timestamp] = useState(() => formatTimestamp());
 
-  // const handleReload = () => {
-  // window.location.reload();
-  // };
-
   const handleGoHome = () => {
     window.location.href = '/';
   };
@@ -49,8 +45,6 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
   const handleReset = () => {
     if (resetErrorBoundary) {
       resetErrorBoundary();
-    } else {
-      // window.location.reload();
     }
   };
 
@@ -89,7 +83,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
           </div>
 
           {/* Judul formal institusional */}
-          <h1 className="text-xl font-bold text-[#0c3a66] text-center mt-4 tracking-tight">
+          <h1 className="text-xl font-bold text-pupr-blue text-center mt-4 tracking-tight">
             Terjadi Gangguan Sistem
           </h1>
           <p className="text-xs text-slate-500 text-center mt-1 font-mono tabular-nums">
@@ -99,7 +93,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
 
           {/* Pesan formal */}
           <p className="text-sm text-slate-600 text-center mt-4 leading-relaxed">
-            Sistem <strong className="text-[#0c3a66]">RekaSDA</strong> mengalami kendala teknis
+            Sistem <strong className="text-pupr-blue">RekaSDA</strong> mengalami kendala teknis
             yang tidak terduga saat memproses permintaan. Silakan coba muat ulang halaman.
             Jika masalah berlanjut, catat kode insiden di atas dan hubungi administrator sistem.
           </p>
@@ -111,7 +105,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
           <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0c3a66] hover:bg-[#0d4578] active:bg-[#0b3060] text-white text-sm font-semibold rounded-md transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0c3a66] focus:ring-offset-2"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-pupr-blue hover:bg-pupr-blue/90 active:bg-[#0b3060] text-white text-sm font-semibold rounded-md transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-pupr-blue focus:ring-offset-2"
             >
               <RefreshCw className="w-4 h-4" aria-hidden="true" />
               Muat Ulang

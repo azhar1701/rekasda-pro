@@ -723,7 +723,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 <div className="bg-white/80 backdrop-blur border border-white/60 rounded-md shadow-sm p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Debit Puncak (Qp)</p>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.debitPuncak}</span>
+                                        <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{resultSummary.debitPuncak}</span>
                                         <span className="text-sm font-bold text-slate-400">m³/s</span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2 font-medium">Metode: {currentMethodInfo?.label}</p>
@@ -731,7 +731,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 <div className="bg-white/80 backdrop-blur border border-white/60 rounded-md shadow-sm p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</p>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-black text-slate-900 tracking-tight">{resultSummary.waktuPuncak}</span>
+                                        <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{resultSummary.waktuPuncak}</span>
                                         <span className="text-sm font-bold text-slate-400">jam</span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2 font-medium">Kategori: {category === 'empiris' ? 'Empiris' : 'HSS'}</p>

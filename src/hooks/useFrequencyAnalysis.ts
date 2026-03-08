@@ -50,10 +50,24 @@ export const useFrequencyAnalysis = () => {
     const method = analisisFrekuensi?.metodeTerpilih || hasilAnalisisFrekuensi?.metodeTerpilih;
     if (!method) return null;
     
+    // Calculate pass counts from current session or saved results
+    let passedCount = 0;
+    if (analisisFrekuensi?.ujiKecocokan) {
+      const activeGof = analisisFrekuensi.ujiKecocokan.find(g => normalizeMethod(g.method) === normalizeMethod(method));
+      if (activeGof) {
+        if (activeGof.chiSquare.accepted) passedCount++;
+        if (activeGof.kolmogorovSmirnov.accepted) passedCount++;
+      }
+    } else if (hasilAnalisisFrekuensi?.lulusUjiKecocokan) {
+      passedCount = 2; // Assumption for older preserved results
+    }
+
     return {
       method,
       dataCount: analisisFrekuensi?.dataHujanInput?.length || 0,
-      isLulusUji: hasilAnalisisFrekuensi?.lulusUjiKecocokan || false
+      isLulusUji: hasilAnalisisFrekuensi?.lulusUjiKecocokan || false,
+      passedTests: passedCount,
+      totalTests: 2
     };
   }, [analisisFrekuensi, hasilAnalisisFrekuensi]);
 

@@ -90,7 +90,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
         {/* Header */}
         <div className="bg-slate-900 text-white p-5 flex justify-between items-center shrink-0">
             <div>
-                <h3 className="text-xl font-black italic uppercase tracking-tighter">Input Data Baru</h3>
+                <h3 className="text-xl font-extrabold italic uppercase tracking-tighter">Input Data Baru</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Manual Entry ke Database</p>
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">&times;</button>
@@ -100,7 +100,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
             
             {/* Type Selector */}
-            <div className="bg-slate-100 p-1.5 rounded-2xl flex">
+            <div className="bg-slate-100 p-1.5 rounded-xl flex">
                 <button 
                     onClick={() => setActiveType(CalculationType.MANNING)}
                     className={`flex-1 py-3 text-xs font-bold uppercase rounded-xl transition-all ${activeType === CalculationType.MANNING ? 'bg-white text-safety-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
@@ -124,7 +124,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                     />
                     
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4">
-                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Parameter Teknis</h4>
+                        <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-2">Parameter Teknis</h4>
                         
                         <div className="flex gap-2 mb-4">
                              {[ChannelShape.TRAPEZOID, ChannelShape.CIRCULAR].map((s) => (
@@ -157,7 +157,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                                 <select
                                     id="select-manual-roughness"
                                     name="roughness"
-                                    className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-2xl p-3 outline-none"
+                                    className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-xl p-3 outline-none"
                                     value={manningInputs.roughness} 
                                     onChange={e => setManningInputs({...manningInputs, roughness: parseFloat(e.target.value)})}
                                 >
@@ -175,7 +175,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                     />
 
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4">
-                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Parameter Hidrologi</h4>
+                        <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-2">Parameter Hidrologi</h4>
                         <div className="grid grid-cols-2 gap-4">
                              <InputGroup id="input-manual-area" name="area" label="Luas DAS (A)" unit="km²" value={rationalInputs.area} onChange={e => setRationalInputs({...rationalInputs, area: parseFloat(e.target.value)||0})} />
                              <InputGroup id="input-manual-rainfall" name="rainfallDesign" label="Hujan (R24)" unit="mm" value={rationalInputs.rainfallDesign} onChange={e => setRationalInputs({...rationalInputs, rainfallDesign: parseFloat(e.target.value)||0})} />
@@ -187,7 +187,7 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
                             <select
                                 id="select-manual-runoff"
                                 name="runoffCoefficient"
-                                className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-2xl p-3 outline-none"
+                                className="w-full bg-white border border-slate-200 text-slate-900 text-sm font-bold rounded-xl p-3 outline-none"
                                 value={rationalInputs.runoffCoefficient} 
                                 onChange={e => setRationalInputs({...rationalInputs, runoffCoefficient: parseFloat(e.target.value)})}
                             >

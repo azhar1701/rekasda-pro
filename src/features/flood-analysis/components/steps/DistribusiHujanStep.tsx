@@ -84,7 +84,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
       hourlyDistribution: effectiveRainfall
     });
     
-    console.log('✅ Menyimpan Hujan Efektif ke Store:', effectiveRainfall);
+    
     onComplete(effectiveRainfall, durasi);
   };
 
@@ -121,7 +121,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
             <select
               value={returnPeriod}
               onChange={(e) => setReturnPeriod(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue focus:outline-none"
             >
               {[2, 5, 10, 25, 50, 100].map(tr => (
                 <option key={tr} value={tr}>Q{tr} - {getR24(tr)?.toFixed(2) || 0} mm</option>
@@ -134,7 +134,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
               type="number"
               value={durasi}
               onChange={(e) => setDurasi(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md tabular-nums tracking-tight focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md tabular-nums tracking-tight focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue focus:outline-none"
               min="2"
               max="24"
             />
@@ -144,7 +144,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
             <select
               value={lossMethod}
               onChange={(e) => setLossMethod(e.target.value as 'C' | 'CN')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue focus:outline-none"
             >
               <option value="C">Koef. C = {C.toFixed(3)}</option>
               <option value="CN">Curve Number = {CN.toFixed(0)}</option>
@@ -154,7 +154,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
 
         <button
           onClick={handleCalculate}
-          className="w-full px-4 py-3 bg-[#0c3a66] hover:bg-[#0d4578] text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-pupr-blue hover:bg-pupr-blue/90 text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
         >
           <Calculator className="w-5 h-5" />
           Hitung Distribusi & Losses

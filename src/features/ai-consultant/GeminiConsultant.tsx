@@ -159,11 +159,11 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
       <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-220px)] relative z-10">
         
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-4 animate-in slide-in-from-left duration-500">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full ring-1 ring-black/5">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full ring-1 ring-black/5">
             <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-sky-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Integritas Data</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest">Integritas Data</span>
               </div>
               <div className="px-2 py-0.5 bg-sky-500/20 border border-sky-400/30 rounded text-[10px] font-bold">
                 {integrityPercentage}%
@@ -192,7 +192,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-x-0 bottom-2 flex flex-col items-center">
-                  <span className="text-2xl font-black text-slate-800">{loadedCount}/{totalCount}</span>
+                  <span className="text-2xl font-extrabold text-slate-800">{loadedCount}/{totalCount}</span>
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Modul Terdeteksi</span>
                 </div>
               </div>
@@ -219,13 +219,13 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
               </div>
 
               <div className="pt-5 border-t border-slate-100">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
                   <BookOpen className="w-3.5 h-3.5" />
                   Knowledge Base
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {['SNI 2415:2016', 'Permen PUPR', 'SNI 6738'].map(sni => (
-                    <div key={sni} className="px-2.5 py-1 text-[9px] font-black text-pupr-blue bg-indigo-50/50 rounded-md border border-indigo-100 transition-colors hover:bg-indigo-100">
+                    <div key={sni} className="px-2.5 py-1 text-[9px] font-extrabold text-pupr-blue bg-indigo-50/50 rounded-md border border-indigo-100 transition-colors hover:bg-indigo-100">
                       {sni}
                     </div>
                   ))}
@@ -237,7 +237,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="w-full justify-center text-[10px] font-black text-slate-400 hover:text-rose-600 hover:bg-rose-50 tracking-widest uppercase"
+                className="w-full justify-center text-[10px] font-extrabold text-slate-400 hover:text-rose-600 hover:bg-rose-50 tracking-widest uppercase"
                 onClick={clearHistory}
               >
                 <Trash2 className="w-3.5 h-3.5 mr-2" />
@@ -247,7 +247,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative ring-1 ring-black/5">
+        <div className="flex-1 flex flex-col bg-slate-50 rounded-xl border border-slate-200 shadow-sm overflow-hidden relative ring-1 ring-black/5">
           <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,#fff,rgba(255,255,255,0.6))] -z-10" />
           
           {messages.length > 0 && (
@@ -257,7 +257,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                   <Bot className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block leading-none mb-1">Status Sesi</span>
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none mb-1">Status Sesi</span>
                   <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Terhubung ke Brain-Engine
@@ -272,7 +272,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                     </div>
                   ))}
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 hidden sm:inline">Context Active</span>
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1 hidden sm:inline">Context Active</span>
               </div>
             </div>
           )}
@@ -285,12 +285,12 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                   <div className="w-24 h-24 bg-white rounded-[2rem] shadow-2xl flex items-center justify-center relative z-10 ring-1 ring-black/5 rotate-3 hover:rotate-0 transition-transform duration-500">
                     <Sparkles className="w-12 h-12 text-pupr-blue" />
                   </div>
-                  <div className="absolute -right-4 -top-4 w-12 h-12 bg-pupr-yellow rounded-2xl shadow-lg flex items-center justify-center z-20 -rotate-12">
+                  <div className="absolute -right-4 -top-4 w-12 h-12 bg-pupr-yellow rounded-xl shadow-lg flex items-center justify-center z-20 -rotate-12">
                     <Zap className="w-6 h-6 text-pupr-blue" />
                   </div>
                 </div>
                 
-                <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">E-Consultant <span className="text-pupr-blue italic">Rekasda</span></h3>
+                <h3 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">E-Consultant <span className="text-pupr-blue italic">Rekasda</span></h3>
                 <p className="text-base text-slate-500 max-w-md leading-relaxed font-medium mb-12">
                   Asisten hidrologi berbasis AI yang terlatih dengan dataset <span className="text-slate-900 font-bold underline decoration-pupr-yellow decoration-4 underline-offset-4">SNI & Permen PUPR</span> untuk audit teknis real-time.
                 </p>
@@ -300,14 +300,14 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                     <button
                       key={chip.id}
                       onClick={() => handleAsk(chip.prompt)}
-                      className="text-left p-5 rounded-2xl bg-white border border-slate-200 hover:border-pupr-blue hover:shadow-xl transition-all group relative overflow-hidden"
+                      className="text-left p-5 rounded-xl bg-white border border-slate-200 hover:border-pupr-blue hover:shadow-xl transition-all group relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 rotate-45 translate-x-8 -translate-y-8 group-hover:bg-pupr-blue/5 transition-colors" />
                       <div className="flex items-center gap-3 mb-2 relative z-10">
                         <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-pupr-blue/10 transition-colors">
                           <Activity className="w-4 h-4 text-pupr-blue" />
                         </div>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black">Audit Cepat</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-extrabold">Audit Cepat</span>
                       </div>
                       <span className="text-sm block font-bold text-slate-700 group-hover:text-pupr-blue transition-colors relative z-10 leading-snug">{chip.label}</span>
                     </button>
@@ -319,7 +319,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
             {messages.map((msg) => (
               <div key={msg.id} className={cn("flex gap-4 group animate-in fade-in slide-in-from-bottom-4 duration-300", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                 <div className={cn(
-                  "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border-2 border-white transition-transform group-hover:scale-110",
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg border-2 border-white transition-transform group-hover:scale-110",
                   msg.role === 'user' ? "bg-pupr-blue text-white" : "bg-white text-pupr-blue"
                 )}>
                   {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
@@ -330,7 +330,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                   msg.role === 'user' ? "flex flex-col items-end" : "items-start"
                 )}>
                   {msg.imageBase64 && (
-                    <div className="relative group/img overflow-hidden rounded-2xl border-4 border-white shadow-xl mb-3">
+                    <div className="relative group/img overflow-hidden rounded-xl border-4 border-white shadow-xl mb-3">
                       <img src={msg.imageBase64} alt="Query context" className="w-64 aspect-video object-cover transition-transform group-hover/img:scale-105 duration-500" />
                     </div>
                   )}
@@ -349,7 +349,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                         remarkPlugins={[remarkGfm, remarkMath]} 
                         rehypePlugins={[rehypeKatex]}
                         components={{
-                          h3: ({node, ...props}: any) => <h3 className="flex items-center gap-2 mb-4 text-pupr-blue font-black" {...props} />,
+                          h3: ({node, ...props}: any) => <h3 className="flex items-center gap-2 mb-4 text-pupr-blue font-extrabold" {...props} />,
                           blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-pupr-yellow bg-slate-50 py-1 px-4 italic" {...props} />,
                           code: ({node, inline, ...props}: any) => 
                             inline 
@@ -361,7 +361,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                       </ReactMarkdown>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-black px-2 uppercase tracking-[0.15em]">
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-extrabold px-2 uppercase tracking-[0.15em]">
                     <Clock className="w-3 h-3" />
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
@@ -371,7 +371,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
 
             {streamingResponse && (
               <div className="flex gap-4 flex-row animate-in fade-in duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-white text-pupr-blue border-2 border-white shadow-lg flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-white text-pupr-blue border-2 border-white shadow-lg flex items-center justify-center shrink-0">
                   <Bot className="w-5 h-5" />
                 </div>
                 <div className="max-w-[85%] space-y-2">
@@ -388,7 +388,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
 
             {loading && !streamingResponse && (
               <div className="flex gap-4 items-center">
-                <div className="w-10 h-10 rounded-2xl bg-white border-2 border-white shadow-md flex items-center justify-center text-pupr-blue">
+                <div className="w-10 h-10 rounded-xl bg-white border-2 border-white shadow-md flex items-center justify-center text-pupr-blue">
                   <Bot className="w-5 h-5 animate-pulse" />
                 </div>
                 <div className="flex gap-1.5 px-4 py-3 bg-white rounded-full border border-slate-200 shadow-sm">
@@ -405,7 +405,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
           <div className="p-4 sm:p-6 bg-slate-100/50 border-t border-slate-200 z-30 shrink-0">
             {selectedImage && (
               <div className="mb-4 relative inline-block animate-in zoom-in duration-300">
-                <img src={selectedImage} alt="Preview" className="h-24 w-24 object-cover rounded-2xl border-4 border-white shadow-2xl" />
+                <img src={selectedImage} alt="Preview" className="h-24 w-24 object-cover rounded-xl border-4 border-white shadow-2xl" />
                 <button 
                   onClick={() => setSelectedImage(null)}
                   className="absolute -top-3 -right-3 bg-rose-500 text-white rounded-full p-2 shadow-xl hover:bg-rose-600 ring-4 ring-white"
@@ -444,7 +444,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
               <Button
                 onClick={() => handleAsk()}
                 disabled={loading || !query.trim()}
-                className="h-12 px-6 rounded-full bg-slate-900 hover:bg-pupr-blue text-white font-black text-xs uppercase tracking-[0.15em] shrink-0 shadow-lg transition-all active:scale-95 disabled:bg-slate-200 disabled:shadow-none"
+                className="h-12 px-6 rounded-full bg-slate-900 hover:bg-pupr-blue text-white font-extrabold text-xs uppercase tracking-[0.15em] shrink-0 shadow-lg transition-all active:scale-95 disabled:bg-slate-200 disabled:shadow-none"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

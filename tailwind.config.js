@@ -164,7 +164,7 @@ export default {
 				}
 			},
 			fontFeatureSettings: {
-				numeric: 'tnum" on, "lnum" on'
+				numeric: '"tnum" on, "lnum" on'
 			}
 		}
 	},

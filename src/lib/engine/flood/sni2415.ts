@@ -127,7 +127,7 @@ export const calculateRationalDischarge = (input: RationalMethodInput): Rational
   // Perhitungan debit puncak: Q = 0.278 × C × I × A
   const Q = RATIONAL_CONVERSION_FACTOR * validated.C * validated.I * validated.A;
 
-  return { Q: parseFloat(Q.toFixed(3)) };
+  return { Qp: parseFloat(Q.toFixed(3)), tc: input.tc || 0, I: input.I ?? 0 };
 };
 
 /**

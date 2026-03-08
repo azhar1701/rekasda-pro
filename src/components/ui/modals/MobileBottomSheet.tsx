@@ -42,7 +42,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         onClick={onClose}
       >
         <div 
-          className="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full md:max-w-2xl md:mx-4 animate-slide-up md:animate-fade-in"
+          className="bg-white rounded-t-3xl md:rounded-xl shadow-2xl w-full md:max-w-2xl md:mx-4 animate-slide-up md:animate-fade-in"
           style={{ maxHeight }}
           onClick={e => e.stopPropagation()}
         >

@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
 import { supabase } from '@/lib/api/supabase';
+import { toast } from '@/hooks/useToast';
 
 interface WaterBalanceData {
   site: { channelName: string; regency: string; district: string; village: string };
@@ -89,14 +90,14 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
   const saveToDatabase = async () => {
     if (!projectName.trim()) {
-      alert('Masukkan nama proyek');
+      toast.warning('Masukkan nama proyek.');
       return;
     }
 
     setSaving(true);
     try {
       if (!supabase) {
-        alert('Database tidak tersedia');
+        toast.error('Database tidak tersedia.');
         return;
       }
 
@@ -109,11 +110,11 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
       if (error) throw error;
 
-      alert(`Analisis "${projectName}" berhasil disimpan!`);
+      toast.success(`Analisis "${projectName}" berhasil disimpan!`);
       setProjectName('');
       onSave?.(data, results);
     } catch (error) {
-      alert(`Error: ${error}`);
+      toast.error(`Gagal menyimpan: ${error}`);
     } finally {
       setSaving(false);
     }
@@ -265,7 +266,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata</span>
                           <HelpTooltip content="Rata-rata keseimbangan bulanan" />
                         </div>
-                        <span className="text-3xl font-black text-slate-900 tabular-nums tracking-tight">{results.avgBalance}</span>
+                        <span className="text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">{results.avgBalance}</span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                       </div>
 
@@ -274,7 +275,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
                           <HelpTooltip content="Keseimbangan terendah" />
                         </div>
-                        <span className={`text-3xl font-black tabular-nums tracking-tight ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-pupr-blue'}`}>
+                        <span className={`text-3xl font-extrabold tabular-nums tracking-tight ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-pupr-blue'}`}>
                           {results.minBalance}
                         </span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
@@ -285,7 +286,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
                           <HelpTooltip content="Keseimbangan tertinggi" />
                         </div>
-                        <span className="text-3xl font-black text-pupr-blue tabular-nums tracking-tight">{results.maxBalance}</span>
+                        <span className="text-3xl font-extrabold text-pupr-blue tabular-nums tracking-tight">{results.maxBalance}</span>
                         <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                       </div>
                     </div>

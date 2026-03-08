@@ -11,6 +11,7 @@ import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { Database, MapPin, Eye, Bot, Trash2 } from 'lucide-react';
 import { TableGovTech } from '@/components/ui/TableGovTech';
+import { toast } from '@/hooks/useToast';
 
 type ViewMode = 'LIST' | 'MAP';
 
@@ -59,14 +60,14 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
         }));
 
         if (nearbyItems.length === 0) {
-          alert('Tidak ditemukan perhitungan lain dalam radius 10km.');
+          toast.info('Tidak ditemukan perhitungan lain dalam radius 10km.');
         } else {
           setData(nearbyItems);
         }
       }
     } catch (error) {
       console.error('Search nearby failed', error);
-      alert('Gagal mencari lokasi. Pastikan izin lokasi aktif.');
+      toast.error('Gagal mencari lokasi. Pastikan izin lokasi aktif.');
     } finally {
       setIsSearchingNearby(false);
     }
@@ -77,7 +78,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
 
     const { error } = await deleteCalculationById(type, id);
     if (error) {
-      alert('Gagal menghapus: ' + error.message);
+      toast.error('Gagal menghapus: ' + error.message);
     } else {
       loadData();
     }

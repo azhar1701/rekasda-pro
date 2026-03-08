@@ -14,13 +14,13 @@ export const AnnualMaxGrid: React.FC<AnnualMaxGridProps> = ({ data }) => {
             {displayData.map((point, i) => (
                 <div
                     key={point.year || i}
-                    className="bg-white border-2 border-slate-200 rounded-md p-2 flex flex-col items-center justify-center shadow-sm hover:border-[#0c3a66] transition-colors group"
+                    className="bg-white border-2 border-slate-200 rounded-md p-2 flex flex-col items-center justify-center shadow-sm hover:border-pupr-blue transition-colors group"
                 >
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 select-none">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-tighter mb-1 select-none">
                         Tahun {i + 1} ({point.year})
                     </span>
                     <div className="flex items-baseline gap-0.5">
-                        <span className="text-sm font-black text-[#0c3a66] tabular-nums tracking-tight group-hover:scale-110 transition-transform">
+                        <span className="text-sm font-extrabold text-pupr-blue tabular-nums tracking-tight group-hover:scale-110 transition-transform">
                             {(point.value || 0).toFixed(2)}
                         </span>
                         <span className="text-[10px] font-bold text-slate-400">mm</span>

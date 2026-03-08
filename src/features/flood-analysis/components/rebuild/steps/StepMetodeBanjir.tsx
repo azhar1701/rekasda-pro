@@ -182,7 +182,7 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
                                 }`}>
                                 {m.type === 'hss' ? <Waves className={`w-4 h-4 ${selectedMethod === m.id ? 'text-pupr-blue' : 'text-slate-400'}`} /> : <Calculator className={`w-4 h-4 ${selectedMethod === m.id ? 'text-pupr-blue' : 'text-slate-400'}`} />}
                             </div>
-                            <p className={`text-[9px] font-black text-center uppercase leading-tight ${selectedMethod === m.id ? 'text-pupr-blue' : 'text-slate-500'}`}>
+                            <p className={`text-[9px] font-extrabold text-center uppercase leading-tight ${selectedMethod === m.id ? 'text-pupr-blue' : 'text-slate-500'}`}>
                                 {m.label.replace('Unit Hydrograph', 'UH')}
                             </p>
                         </button>
@@ -206,7 +206,7 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
                                     <div className="p-4 bg-slate-50 rounded-md border-l-4 border-l-slate-400">
                                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Koefisien Limpasan (C)</label>
                                         <input type="range" min="0" max="1" step="0.01" value={cCoefficient} onChange={(e) => setCCoefficient(parseFloat(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pupr-blue" />
-                                        <div className="flex justify-between mt-1"><span className="text-[10px] font-bold text-slate-400">0.0</span><span className="text-xs font-black text-pupr-blue">{cCoefficient}</span><span className="text-[10px] font-bold text-slate-400">1.0</span></div>
+                                        <div className="flex justify-between mt-1"><span className="text-[10px] font-bold text-slate-400">0.0</span><span className="text-xs font-extrabold text-pupr-blue">{cCoefficient}</span><span className="text-[10px] font-bold text-slate-400">1.0</span></div>
                                         <p className="text-[9px] text-slate-400 mt-2">Standar SNI untuk wilayah urban ~0.7-0.9, perhutanan ~0.1-0.3.</p>
                                     </div>
                                 )}
@@ -216,7 +216,7 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
                                         <div className="p-4 bg-blue-50/50 rounded-md border-l-4 border-l-blue-400">
                                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Parameter Alpha</label>
                                             <input type="range" min="1" max="4" step="0.1" value={alpha} onChange={(e) => setAlpha(parseFloat(e.target.value))} className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600" />
-                                            <div className="flex justify-between mt-1"><span className="text-[10px] font-bold text-slate-400">1.0</span><span className="text-xs font-black text-blue-600">{alpha}</span><span className="text-[10px] font-bold text-slate-400">4.0</span></div>
+                                            <div className="flex justify-between mt-1"><span className="text-[10px] font-bold text-slate-400">1.0</span><span className="text-xs font-extrabold text-blue-600">{alpha}</span><span className="text-[10px] font-bold text-slate-400">4.0</span></div>
                                             <p className="text-[9px] text-slate-400 mt-2">Alpha 2.0 (Standard), 1.5 (Tajam), 3.0 (Tumpul).</p>
                                         </div>
                                     </div>
@@ -289,12 +289,12 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
                             <div className="flex items-end justify-between">
                                 <div>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase">Peak Discharge (m³/s)</p>
-                                    <p className="text-3xl font-black text-white tabular-nums tracking-tighter">
+                                    <p className="text-3xl font-extrabold text-white tabular-nums tracking-tighter">
                                         {(results[activeMethodInfo?.type === 'hss' ? 'hss' : 'emp']?.[selectedMethod]?.Qp || 0).toFixed(3)}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="flex items-center gap-1 text-pupr-blue text-[10px] font-black uppercase mb-1">
+                                    <div className="flex items-center gap-1 text-pupr-blue text-[10px] font-extrabold uppercase mb-1">
                                         <TrendingUp className="w-3 h-3" /> Q{selectedKalaUlang}
                                     </div>
                                     <p className="text-[9px] text-slate-500 font-bold">R24: {R24} mm</p>
@@ -305,7 +305,7 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
 
                     <button
                         onClick={handleCalculate}
-                        className="w-full py-3 bg-[#0c3a66] hover:bg-[#0d4578] text-white font-bold rounded-md shadow-sm transition-all flex items-center justify-center gap-2 mt-6 uppercase text-xs tracking-tighter"
+                        className="w-full py-3 bg-pupr-blue hover:bg-pupr-blue/90 text-white font-bold rounded-md shadow-sm transition-all flex items-center justify-center gap-2 mt-6 uppercase text-xs tracking-tighter"
                     >
                         <Calculator className="w-4 h-4" /> Simpan Konfigurasi Tuning
                     </button>
@@ -359,19 +359,19 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                             <div className={`p-3 rounded-md border-l-4 transition-all ${selectedMethod === 'scs' ? 'bg-indigo-50 border-l-[#6366f1]' : 'bg-slate-50 border-l-slate-200 opacity-60'}`}>
                                 <p className="text-[8px] font-bold text-slate-500 uppercase">SCS Unit Hydrograph</p>
-                                <p className="text-sm font-black text-slate-900 tabular-nums">{(results.hss?.scs?.Qp || 0).toFixed(2)}</p>
+                                <p className="text-sm font-extrabold text-slate-900 tabular-nums">{(results.hss?.scs?.Qp || 0).toFixed(2)}</p>
                             </div>
                             <div className={`p-3 rounded-md border-l-4 transition-all ${selectedMethod === 'gama1' ? 'bg-emerald-50 border-l-[#10b981]' : 'bg-slate-50 border-l-slate-200 opacity-60'}`}>
                                 <p className="text-[8px] font-bold text-slate-500 uppercase">HSS Gama-I</p>
-                                <p className="text-sm font-black text-slate-900 tabular-nums">{(results.hss?.gama1?.Qp || 0).toFixed(2)}</p>
+                                <p className="text-sm font-extrabold text-slate-900 tabular-nums">{(results.hss?.gama1?.Qp || 0).toFixed(2)}</p>
                             </div>
                             <div className={`p-3 rounded-md border-l-4 transition-all ${selectedMethod === 'nakayasu' ? 'bg-blue-50 border-l-[#3b82f6]' : 'bg-slate-50 border-l-slate-200 opacity-60'}`}>
                                 <p className="text-[8px] font-bold text-slate-500 uppercase">HSS Nakayasu</p>
-                                <p className="text-sm font-black text-slate-900 tabular-nums">{(results.hss?.nakayasu?.Qp || 0).toFixed(2)}</p>
+                                <p className="text-sm font-extrabold text-slate-900 tabular-nums">{(results.hss?.nakayasu?.Qp || 0).toFixed(2)}</p>
                             </div>
                             <div className={`p-3 rounded-md border-l-4 transition-all ${selectedMethod === 'rational' ? 'bg-slate-100 border-l-[#64748b]' : 'bg-slate-50 border-l-slate-200 opacity-60'}`}>
                                 <p className="text-[8px] font-bold text-slate-500 uppercase">Metode Rasional</p>
-                                <p className="text-sm font-black text-slate-900 tabular-nums">{(results.emp?.rational?.Qp || 0).toFixed(2)}</p>
+                                <p className="text-sm font-extrabold text-slate-900 tabular-nums">{(results.emp?.rational?.Qp || 0).toFixed(2)}</p>
                             </div>
                         </div>
                     </div>

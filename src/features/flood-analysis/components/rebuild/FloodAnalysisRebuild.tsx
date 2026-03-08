@@ -52,7 +52,11 @@ const STEPS: StepConfig[] = [
     }
 ];
 
-export const FloodAnalysisRebuild: React.FC = () => {
+interface FloodAnalysisRebuildProps {
+    onConsultAI?: () => void;
+}
+
+export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onConsultAI }) => {
     const [activeStep, setActiveStep] = useState<Step>(1);
     const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
 
@@ -77,13 +81,13 @@ export const FloodAnalysisRebuild: React.FC = () => {
             title="Analisis Debit Banjir Rencana"
             description="Penghitungan debit puncak dan hidrograf banjir dengan standar SNI 2415:2016"
             icon={<Activity className="w-6 h-6" />}
-            iconColorClass="bg-[#0c3a66]/10 text-[#0c3a66]"
+            iconColorClass="bg-pupr-blue/10 text-pupr-blue"
         >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 py-2">
                 {/* Navigation Sidebar */}
                 <div className="lg:col-span-3 space-y-4">
                     <Card className="p-4 border border-slate-200 shadow-sm rounded-md bg-white">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Workflow Progress</h3>
+                        <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">Workflow Progress</h3>
                         <div className="space-y-1">
                             {STEPS.map((step) => {
                                 const isActive = activeStep === step.id;
@@ -96,7 +100,7 @@ export const FloodAnalysisRebuild: React.FC = () => {
                                         onClick={() => !isLocked && setActiveStep(step.id)}
                                         disabled={isLocked}
                                         className={`w-full text-left p-3 rounded-md transition-all flex items-center justify-between group ${isActive
-                                            ? 'bg-[#0c3a66] text-white shadow-md'
+                                            ? 'bg-pupr-blue text-white shadow-md'
                                             : isCompleted
                                                 ? 'bg-green-50 text-green-700 hover:bg-green-100'
                                                 : isLocked
@@ -142,6 +146,22 @@ export const FloodAnalysisRebuild: React.FC = () => {
                             </div>
                             <p className="text-[10px] text-amber-600">Selesaikan <b>Analisis Frekuensi</b> untuk mendapatkan Hujan Rencana (R24) sebagai input utama distribusi hujan.</p>
                         </div>
+                    )}
+
+                    {onConsultAI && (
+                        <button
+                            onClick={onConsultAI}
+                            className="w-full p-4 bg-white border border-pupr-blue/20 rounded-md shadow-sm hover:shadow-md transition-all flex items-center gap-3 group overflow-hidden relative"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-pupr-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="p-2 bg-pupr-blue/10 rounded-lg text-pupr-blue group-hover:scale-110 transition-transform">
+                                <Activity className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-xs font-extrabold text-slate-900 leading-none mb-1">Konsultan AI</p>
+                                <p className="text-[9px] font-bold text-pupr-blue uppercase tracking-widest">Audit Analisis</p>
+                            </div>
+                        </button>
                     )}
                 </div>
 

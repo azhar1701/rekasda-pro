@@ -217,7 +217,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
         <button
           onClick={handleCalculate}
           disabled={!isDataReady || isCalculating}
-          className="w-full px-4 py-3 bg-[#0c3a66] hover:bg-[#0d4578] active:bg-[#0b3060] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#0c3a66] focus:ring-offset-2"
+          className="w-full px-4 py-3 bg-pupr-blue hover:bg-pupr-blue/90 active:bg-[#0b3060] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-pupr-blue focus:ring-offset-2"
           title={!isDataReady ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
         >
           {isCalculating ? (
@@ -242,7 +242,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
             <Card className="p-6 bg-pupr-blue text-white rounded-md">
               <p className="text-sm font-semibold opacity-90 mb-1">Debit Puncak (Qp)</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black tabular-nums tracking-tight">
+                <span className="text-4xl font-extrabold tabular-nums tracking-tight">
                   {peakDischarge.toFixed(2)}
                 </span>
                 <span className="text-lg font-bold opacity-80">m³/s</span>
@@ -253,7 +253,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
             <Card className="p-6 bg-slate-700 text-white rounded-md">
               <p className="text-sm font-semibold opacity-90 mb-1">Waktu Puncak (Tp)</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black tabular-nums tracking-tight">
+                <span className="text-4xl font-extrabold tabular-nums tracking-tight">
                   {timeToPeak.toFixed(1)}
                 </span>
                 <span className="text-lg font-bold opacity-80">jam</span>

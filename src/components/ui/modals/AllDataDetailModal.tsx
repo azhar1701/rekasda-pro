@@ -41,7 +41,7 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
             </div>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Debit Rancangan (Q)</span>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.Discharge}</p>
+              <p className="text-3xl font-extrabold text-slate-900 tracking-tight tabular-nums">{results.Discharge}</p>
               <span className="text-sm font-bold text-slate-500">m³/s</span>
             </div>
           </div>
@@ -52,7 +52,7 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
             </div>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Kecepatan Aliran (V)</span>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.Velocity}</p>
+              <p className="text-3xl font-extrabold text-slate-900 tracking-tight tabular-nums">{results.Velocity}</p>
               <span className="text-sm font-bold text-slate-500">m/s</span>
             </div>
           </div>
@@ -68,14 +68,14 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
               )}
               <div>
                 <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${results.SafetyStatus === 'Aman' ? 'text-emerald-700' : 'text-rose-700'}`}>Status Keamanan</span>
-                <p className={`text-lg font-black tracking-tight ${results.SafetyStatus === 'Aman' ? 'text-emerald-900' : 'text-rose-900'}`}>
+                <p className={`text-lg font-extrabold tracking-tight ${results.SafetyStatus === 'Aman' ? 'text-emerald-900' : 'text-rose-900'}`}>
                   {results.SafetyStatus}
                 </p>
               </div>
             </div>
             <div className="text-right">
               <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${results.SafetyStatus === 'Aman' ? 'text-emerald-700' : 'text-rose-700'}`}>Tipe Aliran</span>
-              <p className={`text-lg font-black tracking-tight ${results.SafetyStatus === 'Aman' ? 'text-emerald-900' : 'text-rose-900'}`}>
+              <p className={`text-lg font-extrabold tracking-tight ${results.SafetyStatus === 'Aman' ? 'text-emerald-900' : 'text-rose-900'}`}>
                 {results.FlowType}
               </p>
             </div>
@@ -120,11 +120,11 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
         <div className="bg-purple-50 rounded-xl p-5 shadow-sm border border-purple-200 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-purple-600 uppercase tracking-wide block mb-1">Metode Analisis</span>
-            <span className="text-lg font-black text-purple-900">{data.data.method || 'Rasional'}</span>
+            <span className="text-lg font-extrabold text-purple-900">{data.data.method || 'Rasional'}</span>
           </div>
           <div className="text-right">
             <span className="text-xs font-bold text-purple-600 uppercase tracking-wide block mb-1">Volume Banjir</span>
-            <span className="text-xl font-black text-purple-900 tabular-nums">{(results.volume / 1000)?.toFixed(1)} <span className="text-sm font-bold text-purple-700">×10³ m³</span></span>
+            <span className="text-xl font-extrabold text-purple-900 tabular-nums">{(results.volume / 1000)?.toFixed(1)} <span className="text-sm font-bold text-purple-700">×10³ m³</span></span>
           </div>
         </div>
 
@@ -132,14 +132,14 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Debit Puncak (Q)</span>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.qPeak?.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold text-slate-900 tracking-tight tabular-nums">{results.qPeak?.toFixed(2)}</p>
               <span className="text-sm font-bold text-slate-500">m³/s</span>
             </div>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Waktu Puncak (tc)</span>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{results.tPeak?.toFixed(2)}</p>
+              <p className="text-3xl font-extrabold text-slate-900 tracking-tight tabular-nums">{results.tPeak?.toFixed(2)}</p>
               <span className="text-sm font-bold text-slate-500">jam</span>
             </div>
           </div>
@@ -183,14 +183,14 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Total Ketersediaan</span>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-black text-slate-900 tracking-tight tabular-nums">{totalSupply.toFixed(1)}</p>
+              <p className="text-3xl font-extrabold text-slate-900 tracking-tight tabular-nums">{totalSupply.toFixed(1)}</p>
               <span className="text-sm font-bold text-slate-500">m³/s</span>
             </div>
           </div>
           <div className={`rounded-xl p-5 shadow-sm border ${netBalance >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
             <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>Status Neraca Tahunan</span>
             <div className="flex items-baseline gap-2">
-              <p className={`text-3xl font-black tracking-tight tabular-nums ${netBalance >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
+              <p className={`text-3xl font-extrabold tracking-tight tabular-nums ${netBalance >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
                 {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
               </p>
               <span className={`text-sm font-bold ${netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>m³/s</span>
@@ -253,7 +253,7 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
         
         <div className="relative overflow-hidden bg-slate-900 border-b border-slate-800 px-6 py-5 shrink-0">
           <div className="absolute top-0 right-0 p-8 opacity-10">

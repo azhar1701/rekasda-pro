@@ -102,14 +102,14 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
               <div className="text-center md:text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Debit Puncak</p>
                 <div className="flex items-baseline md:justify-end gap-1">
-                  <span className="text-3xl font-black text-pupr-blue leading-none tracking-tight">{qPeak.toFixed(2)}</span>
+                  <span className="text-3xl font-extrabold text-pupr-blue leading-none tracking-tight">{qPeak.toFixed(2)}</span>
                   <span className="text-[10px] text-slate-500 font-bold uppercase">m³/s</span>
                 </div>
               </div>
               <div className="text-center md:text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Waktu Puncak</p>
                 <div className="flex items-baseline md:justify-end gap-1">
-                  <span className="text-3xl font-black text-slate-800 leading-none tracking-tight">{tPeak.toFixed(1)}</span>
+                  <span className="text-3xl font-extrabold text-slate-800 leading-none tracking-tight">{tPeak.toFixed(1)}</span>
                   <span className="text-[10px] text-slate-500 font-bold uppercase">Jam</span>
                 </div>
               </div>
@@ -249,13 +249,13 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
         <div className="flex gap-6">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Durasi Total</p>
-            <p className="text-sm font-black text-slate-800 mt-1">
+            <p className="text-sm font-extrabold text-slate-800 mt-1">
               {data.length > 0 ? data[data.length - 1].time.toFixed(1) : 0} <span className="text-[10px] font-bold text-slate-500">jam</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resolusi</p>
-            <p className="text-sm font-black text-slate-800 mt-1">
+            <p className="text-sm font-extrabold text-slate-800 mt-1">
               {data.length} <span className="text-[10px] font-bold text-slate-500">titik</span>
             </p>
           </div>

@@ -109,8 +109,8 @@ export const FormIdentitasLokasi: React.FC = () => {
   return (
     <Card className="p-6 bg-white shadow-md border border-slate-200 rounded-md">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-[#0c3a66]/10 rounded-md">
-          <Briefcase className="w-5 h-5 text-[#0c3a66]" />
+        <div className="p-2 bg-pupr-blue/10 rounded-md">
+          <Briefcase className="w-5 h-5 text-pupr-blue" />
         </div>
         <div>
           <h3 className="text-lg font-bold text-slate-900">Identitas Lokasi & Koordinat</h3>
@@ -202,7 +202,7 @@ export const FormIdentitasLokasi: React.FC = () => {
 
         {/* Kolom Kanan: WebGIS Leaflet */}
         <div className="flex flex-col h-full min-h-[400px]">
-          <h4 className="text-sm font-bold text-[#0c3a66] flex items-center gap-2 mb-3">
+          <h4 className="text-sm font-bold text-pupr-blue flex items-center gap-2 mb-3">
             <MapIcon className="w-4 h-4" /> 
             Peta Lokasi Interaktif
           </h4>

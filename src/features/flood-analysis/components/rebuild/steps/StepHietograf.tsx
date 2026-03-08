@@ -146,7 +146,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
 
                         <button
                             onClick={handleCalculate}
-                            className="w-full py-3 bg-[#0c3a66] hover:bg-[#0d4578] text-white font-bold rounded-md shadow-sm transition-all flex items-center justify-center gap-2 mt-4"
+                            className="w-full py-3 bg-pupr-blue hover:bg-pupr-blue/90 text-white font-bold rounded-md shadow-sm transition-all flex items-center justify-center gap-2 mt-4"
                         >
                             <TrendingUp className="w-4 h-4" />
                             Hitung Hietograf
@@ -188,7 +188,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
                 <Card className="p-4 bg-green-50 border border-green-200 flex justify-between items-center rounded-md">
                     <div>
                         <p className="text-xs font-bold text-green-700 uppercase">Hujan Efektif Kumulatif</p>
-                        <p className="text-xl font-black text-green-900 tabular-nums">
+                        <p className="text-xl font-extrabold text-green-900 tabular-nums">
                             {calculationResults.effective.reduce((a, b) => a + b, 0).toFixed(2)} <span className="text-sm font-normal">mm</span>
                         </p>
                     </div>

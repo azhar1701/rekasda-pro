@@ -29,12 +29,12 @@ export const Button: React.FC<ButtonProps> = ({
   };
   
   const variants = {
-    primary: "bg-[#0c3a66] text-white shadow-sm hover:bg-[#0d4578] hover:shadow-md active:scale-[0.98] border border-[#0a2f52]",
-    secondary: "border-2 border-slate-300 bg-white text-slate-700 hover:border-[#0c3a66] hover:bg-slate-50 active:bg-slate-100 shadow-sm",
+    primary: "bg-pupr-blue text-white shadow-sm hover:bg-pupr-blue/90 hover:shadow-md active:scale-[0.98] border border-[#0a2f52]",
+    secondary: "border-2 border-slate-300 bg-white text-slate-700 hover:border-pupr-blue hover:bg-slate-50 active:bg-slate-100 shadow-sm",
     ghost: "bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200",
     danger: "bg-error text-white shadow-sm hover:bg-error-dark hover:shadow-md active:scale-[0.98] border border-red-700",
-    outline: "border-2 border-slate-300 bg-white text-slate-700 hover:border-[#0c3a66] hover:bg-slate-50 active:bg-slate-100 shadow-sm",
-    default: "bg-[#0c3a66] text-white shadow-sm hover:bg-[#0d4578] hover:shadow-md active:scale-[0.98] border border-[#0a2f52]",
+    outline: "border-2 border-slate-300 bg-white text-slate-700 hover:border-pupr-blue hover:bg-slate-50 active:bg-slate-100 shadow-sm",
+    default: "bg-pupr-blue text-white shadow-sm hover:bg-pupr-blue/90 hover:shadow-md active:scale-[0.98] border border-[#0a2f52]",
     success: "bg-green-600 text-white shadow-sm hover:bg-green-700 hover:shadow-md active:scale-[0.98] border border-green-700"
   };
 

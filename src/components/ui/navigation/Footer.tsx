@@ -3,12 +3,12 @@ import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="hidden md:block bg-gradient-to-r from-[#0c3a66] via-[#0d4578] to-[#0c3a66] text-white mt-auto">
+    <footer aria-label="Informasi kontak dan referensi" className="hidden md:block bg-pupr-blue text-white mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Tentang */}
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Tentang RekaSDA Pro</h3>
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Tentang RekaSDA Pro</h2>
             <p className="text-sm text-blue-100 leading-relaxed">
               Platform analisis hidrologi profesional yang mematuhi Standar Nasional Indonesia (SNI) untuk mendukung perencanaan infrastruktur sumber daya air.
             </p>
@@ -16,7 +16,7 @@ export const Footer: React.FC = () => {
 
           {/* Kontak */}
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Kontak</h3>
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Kontak</h2>
             <div className="space-y-2 text-sm text-blue-100">
               <div className="flex items-start gap-2">
                 <Mail className="w-4 h-4 mt-0.5 shrink-0" />
@@ -35,31 +35,31 @@ export const Footer: React.FC = () => {
 
           {/* Tautan */}
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Referensi</h3>
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Referensi</h2>
             <div className="space-y-2">
-              <a 
-                href="https://bsn.go.id/" 
-                target="_blank" 
+              <a
+                href="https://bsn.go.id/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-blue-100 hover:text-white transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Badan Standardisasi Nasional</span>
               </a>
-              <a 
-                href="#" 
-                className="flex items-center gap-2 text-sm text-blue-100 hover:text-white transition-colors"
+              <span
+                className="flex items-center gap-2 text-sm text-blue-100/50 cursor-not-allowed"
+                aria-disabled="true"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Dokumentasi SNI</span>
-              </a>
-              <a 
-                href="#" 
-                className="flex items-center gap-2 text-sm text-blue-100 hover:text-white transition-colors"
+                <span>Dokumentasi SNI (Segera Hadir)</span>
+              </span>
+              <span
+                className="flex items-center gap-2 text-sm text-blue-100/50 cursor-not-allowed"
+                aria-disabled="true"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Panduan Pengguna</span>
-              </a>
+                <span>Panduan Pengguna (Segera Hadir)</span>
+              </span>
             </div>
           </div>
         </div>
@@ -69,9 +69,9 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-blue-200">
             <p>© {new Date().getFullYear()} RekaSDA Pro. Hak Cipta Dilindungi.</p>
             <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-white transition-colors">Kebijakan Privasi</a>
+              <span className="text-blue-200/50 cursor-not-allowed" aria-disabled="true">Kebijakan Privasi</span>
               <span className="text-white/20">•</span>
-              <a href="#" className="hover:text-white transition-colors">Syarat & Ketentuan</a>
+              <span className="text-blue-200/50 cursor-not-allowed" aria-disabled="true">Syarat &amp; Ketentuan</span>
               <span className="text-white/20">•</span>
               <span>v1.1.0</span>
             </div>

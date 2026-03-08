@@ -192,11 +192,11 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
           <div>
             <h2 className="text-lg font-bold text-gray-900 leading-none">Analisis Frekuensi Hujan</h2>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#0c3a66] mt-1 flex items-center gap-1">
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-pupr-blue mt-1 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Sumber: {sourceName}
             </p>
@@ -224,7 +224,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                 className={cn(
                   "flex-1 py-2 text-xs font-bold uppercase tracking-tight rounded-md transition-all",
                   activeRainfallSource === source.id
-                    ? "bg-[#0c3a66] text-white shadow-md shadow-blue-900/10"
+                    ? "bg-pupr-blue text-white shadow-md shadow-blue-900/10"
                     : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                 )}
               >
@@ -241,7 +241,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                     <div className="bg-red-100 p-2 rounded-lg">
                       <AlertTriangle className="w-5 h-5 text-red-600" />
                     </div>
-                    <h4 className="text-sm font-black text-red-900 uppercase tracking-tight">Data Belum Tersedia</h4>
+                    <h4 className="text-sm font-extrabold text-red-900 uppercase tracking-tight">Data Belum Tersedia</h4>
                   </div>
                   <p className="text-xs leading-relaxed text-red-800 font-bold italic">
                     Data Hujan Wilayah <span className="underline decoration-red-400 decoration-2 underline-offset-2">{sourceName}</span> belum dihitung. Silakan kembali ke Modul Maestro/Master Data (Hujan Wilayah).
@@ -251,7 +251,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                 <div className="space-y-4 animate-in fade-in duration-500">
                   {isAutofilled && (
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-inner">
-                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <h4 className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                         <CheckCircle className="w-3 h-3 text-emerald-500" />
                         Summary Puncak Tahunan ({sourceName})
                       </h4>
@@ -264,7 +264,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
                   </div>
 
                   {canAutofill && !isAutofilled && (
-                    <button onClick={handleAutofill} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold transition-all bg-[#0c3a66] text-white hover:bg-blue-800 shadow-md">
+                    <button onClick={handleAutofill} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-bold transition-all bg-pupr-blue text-white hover:bg-blue-800 shadow-md">
                       <Download className="w-4 h-4" />
                       Tarik Data Maksimum Tahunan
                     </button>

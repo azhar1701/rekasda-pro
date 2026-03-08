@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calculator, Activity, Info, Copy, Download } from 'lucide-react';
+import { Calculator, Activity, Info, Copy, Download, Zap } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { calculateHSSGamma1, calculateHSSSnyder } from '@/lib/engine/flood';
 import type { HSSNakayasuInput, HSSGamma1Input, HSSSnyderInput } from '@/types/hydrology';
@@ -15,6 +15,7 @@ import { Tabs } from '@/components/ui/tabs';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { CalculationType } from '@/types/types';
 import { useNakayasuMutation } from '@/hooks/api/useBanjirApi';
+import { toast } from '@/hooks/useToast';
 
 interface LocationData {
   channelName: string;
@@ -40,7 +41,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
     Ro: 0, Tg: 0, Tr: 0, Alpha: 2, A: 0, L: 0
   });
   const [gamma1Inputs, setGamma1Inputs] = useState<HSSGamma1Input>({
-    Ro: 0, A: 0, L: 0, SF: 1.0, Tc: undefined
+    Ro: 0, A: 0, L: 0, S: 0.01, SF: 1.0, SIM: 0.5, JN: 1, SN: 1, RUA: 0.5
   });
   const [snyderInputs, setSnyderInputs] = useState<HSSSnyderInput>({
     Ro: 0, A: 0, L: 0, Lc: 0, Ct: 0.6, Cp: 0.6
@@ -57,7 +58,18 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
   };
 
   const handleLoadGamma1 = (data: PilotDataGamma1) => {
-    setGamma1Inputs({ A: data.inputs.A, L: data.inputs.L, Ro: data.inputs.Ro, SF: data.inputs.SF, Tc: data.inputs.Tc });
+    setGamma1Inputs({
+      A: data.inputs.A,
+      L: data.inputs.L,
+      Ro: data.inputs.Ro,
+      SF: data.inputs.SF,
+      Tc: data.inputs.Tc,
+      S: 0.01,
+      SIM: 0.5,
+      JN: 1,
+      SN: 1,
+      RUA: 0.5
+    });
     if (data.location) setLocationData(data.location);
   };
 
@@ -89,7 +101,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
         setResult({ Qp: res.Qp, Tp: res.Tp, Tb: res.Tb, hydrograph: res.hydrograph });
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Calculation error');
+      toast.error(error instanceof Error ? error.message : 'Calculation error');
     }
   };
 
@@ -148,7 +160,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
     if (!result) return;
     const csv = 'Waktu (jam),Debit (m³/s)\n' + result.hydrograph.map(p => `${p.time},${p.discharge}`).join('\n');
     navigator.clipboard.writeText(csv);
-    alert('Data disalin ke clipboard!');
+    toast.success('Data disalin ke clipboard!');
   };
 
   const downloadCSV = () => {
@@ -324,11 +336,11 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-white rounded-md shadow-sm border border-slate-200 p-4 border-l-4 border-l-blue-500">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Debit Puncak (Qp)</div>
-                <div className="flex items-baseline gap-2"><div className="text-3xl font-black text-slate-900">{result.Qp.toFixed(2)}</div><div className="text-sm font-bold text-slate-500">m³/s</div></div>
+                <div className="flex items-baseline gap-2"><div className="text-3xl font-extrabold text-slate-900">{result.Qp.toFixed(2)}</div><div className="text-sm font-bold text-slate-500">m³/s</div></div>
               </div>
               <div className="bg-white rounded-md shadow-sm border border-slate-200 p-4 border-l-4 border-l-amber-500">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</div>
-                <div className="flex items-baseline gap-2"><div className="text-3xl font-black text-slate-900">{result.Tp.toFixed(2)}</div><div className="text-sm font-bold text-slate-500">jam</div></div>
+                <div className="flex items-baseline gap-2"><div className="text-3xl font-extrabold text-slate-900">{result.Tp.toFixed(2)}</div><div className="text-sm font-bold text-slate-500">jam</div></div>
               </div>
             </div>
 
@@ -406,7 +418,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
               <div className="bg-white border border-slate-200 rounded-md shadow-sm p-4">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">💧 Total Volume Banjir</h3>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-3xl font-black text-slate-900">{(calculateVolume() / 1000000).toFixed(2)}</div>
+                  <div className="text-3xl font-extrabold text-slate-900">{(calculateVolume() / 1000000).toFixed(2)}</div>
                   <div className="text-sm font-bold text-slate-500">× 10⁶ m³</div>
                 </div>
                 <p className="text-xs text-slate-400 mt-2">Untuk desain kolam retensi</p>
@@ -458,7 +470,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
                   onClick={onConsultAI}
                   className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-md px-4 py-2.5 transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  <Zap className="w-4 h-4" />
                   Konsultasi AI
                 </button>
               </div>

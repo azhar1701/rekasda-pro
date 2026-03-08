@@ -104,7 +104,7 @@ export const ModulBanjirStepper: React.FC = () => {
                     disabled={isLocked}
                     className={`w-full text-left p-3 rounded-r-md transition-all ${
                       isActive
-                        ? 'border-l-4 border-[#0c3a66] bg-[#0c3a66]/5 text-[#0c3a66]'
+                        ? 'border-l-4 border-pupr-blue bg-pupr-blue/5 text-pupr-blue'
                         : isCompleted
                         ? 'border-l-4 border-green-600 bg-green-50 text-green-900'
                         : isLocked
@@ -117,7 +117,7 @@ export const ModulBanjirStepper: React.FC = () => {
                         {isCompleted ? (
                           <CheckCircle2 className="w-5 h-5 text-green-600" />
                         ) : isActive ? (
-                          <CircleDot className="w-5 h-5 text-[#0c3a66]" />
+                          <CircleDot className="w-5 h-5 text-pupr-blue" />
                         ) : (
                           <Circle className="w-5 h-5" />
                         )}
@@ -127,7 +127,7 @@ export const ModulBanjirStepper: React.FC = () => {
                           isActive || isCompleted ? 'font-bold' : 'font-semibold'
                         }`}>{step.label}</p>
                         <p className={`text-xs mt-0.5 ${
-                          isActive ? 'text-[#0c3a66]/70' : isCompleted ? 'text-green-600' : 'text-slate-500'
+                          isActive ? 'text-pupr-blue/70' : isCompleted ? 'text-green-600' : 'text-slate-500'
                         }`}>
                           {step.description}
                         </p>
@@ -146,7 +146,7 @@ export const ModulBanjirStepper: React.FC = () => {
               </div>
               <div className="mt-2 h-2 bg-slate-100 rounded-md overflow-hidden">
                 <div
-                  className="h-full bg-[#0c3a66] transition-all duration-500"
+                  className="h-full bg-pupr-blue transition-all duration-500"
                   style={{ width: `${(completedSteps.size / 3) * 100}%` }}
                 />
               </div>

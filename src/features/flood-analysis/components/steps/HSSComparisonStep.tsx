@@ -243,7 +243,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
         <button
           onClick={handleCalculate}
           disabled={isCalculatingAPI}
-          className="w-full px-4 py-3 bg-[#0c3a66] hover:bg-[#0d4578] disabled:bg-slate-400 text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-pupr-blue hover:bg-pupr-blue/90 disabled:bg-slate-400 text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
         >
           <TrendingUp className="w-5 h-5" />
           {isCalculatingAPI ? 'Menghitung HSS Nakayasu via API...' : 'Hitung & Bandingkan HSS'}
@@ -295,7 +295,7 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
                   key={method.id}
                   onClick={() => setSelectedMethod(method.id)}
                   className={`p-3 rounded-md border-2 transition-all ${selectedMethod === method.id
-                      ? 'border-[#0c3a66] bg-[#0c3a66]/5'
+                      ? 'border-pupr-blue bg-pupr-blue/5'
                       : 'border-slate-200 hover:border-slate-300'
                     }`}
                 >

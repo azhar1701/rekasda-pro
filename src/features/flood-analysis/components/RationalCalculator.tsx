@@ -188,7 +188,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
 
                       {/* Main value */}
                       <div className="flex items-baseline">
-                        <h3 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">{rationalResults.Discharge}</h3>
+                        <h3 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tighter">{rationalResults.Discharge}</h3>
                         <span className="text-lg md:text-2xl font-bold text-slate-500 ml-2 md:ml-3">m³/s</span>
                       </div>
                     </div>
@@ -200,14 +200,14 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                     <div className="grid grid-cols-2 gap-4 mb-8">
                       <div className="bg-slate-50 p-4 rounded-md border border-slate-200">
                         <div className="flex items-center gap-1 mb-2">
-                          <span className="text-[9px] font-black text-slate-500 uppercase">Volume Est.</span>
+                          <span className="text-[9px] font-extrabold text-slate-500 uppercase">Volume Est.</span>
                           <HelpTooltip content="Volume total selama banjir" />
                         </div>
                         <span className="text-lg font-bold text-slate-800">{rationalResults.TotalVolume} <span className="text-[10px] text-slate-400">m³</span></span>
                       </div>
                       <div className="bg-slate-50 p-4 rounded-md border border-slate-200">
                         <div className="flex items-center gap-1 mb-2">
-                          <span className="text-[9px] font-black text-slate-500 uppercase">Debit Spesifik</span>
+                          <span className="text-[9px] font-extrabold text-slate-500 uppercase">Debit Spesifik</span>
                           <HelpTooltip content="Debit per unit luas (m³/s/km²)" />
                         </div>
                         <span className="text-lg font-bold text-slate-800">{rationalResults.SpecificDischarge}</span>
@@ -224,7 +224,7 @@ export const RationalCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => 
                       ].map((item, i) => (
                         <div key={i}>
                           <div className="flex items-center gap-1 mb-1.5">
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{item.l}</span>
+                            <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">{item.l}</span>
                             <HelpTooltip content={item.h} />
                           </div>
                           <span className="text-base md:text-lg font-bold text-slate-800">{item.v} <span className="text-[10px] text-slate-400 font-bold">{item.u}</span></span>

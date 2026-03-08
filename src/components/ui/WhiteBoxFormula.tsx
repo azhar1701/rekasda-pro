@@ -38,7 +38,7 @@ export const WhiteBoxFormula: React.FC<WhiteBoxFormulaProps> = ({
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute left-0 top-full mt-2 z-50 w-[480px] max-w-[90vw]">
-            <div className="bg-white/95 backdrop-blur-xl border-2 border-blue-200 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white/95 backdrop-blur-xl border-2 border-blue-200 rounded-xl shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">

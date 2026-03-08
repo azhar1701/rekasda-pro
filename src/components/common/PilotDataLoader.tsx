@@ -107,11 +107,11 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
           
           {/* Modal Content */}
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 pointer-events-none">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto">
+            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto">
               {/* Header */}
               <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-5 flex items-center justify-between flex-shrink-0">
                 <div>
-                  <h2 className="text-xl font-black text-white">Data Pilot - {getMethodLabel()}</h2>
+                  <h2 className="text-xl font-extrabold text-white">Data Pilot - {getMethodLabel()}</h2>
                   <p className="text-purple-100 text-xs mt-1">Pilih data pilot untuk dimuat ke dalam form</p>
                 </div>
                 <button

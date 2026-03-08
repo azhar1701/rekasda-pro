@@ -84,7 +84,7 @@ export interface ConvolutionResult {
  *   effectiveRainfall: [15.2, 42.6, 28.1, 18.5, 10.3, 5.8],
  *   timeStep: 1.0,
  * });
- * console.log(result.peakDischarge); // Peak of the design flood
+ *  // Peak of the design flood
  * ```
  */
 export function convolveUnitHydrograph(input: ConvolutionInput): ConvolutionResult {
@@ -238,7 +238,7 @@ export function resampleUnitHydrograph(
  *   abm,
  *   0.5
  * );
- * console.log(flood.peakDischarge);
+ * 
  * ```
  */
 export function computeDesignFloodHydrograph(

@@ -10,6 +10,7 @@ import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Wand2 } from 'lucide-react';
 import { infillMissingData } from '@/lib/utils/spatialMath';
 import { extractRainfallFromPdf } from '@/services/geminiService';
+import { toast } from '@/hooks/useToast';
 
 import { DailyRainfallMatrix } from './DailyRainfallMatrix';
 
@@ -115,13 +116,13 @@ export const MasterHidrologiTab: React.FC = () => {
         if (!bulkPreview || bulkPreview.length === 0 || !selectedStasiun) return;
         try {
             await importDataHujanBatch(bulkPreview);
-            alert(`✅ Berhasil mengimpor ${bulkPreview.length} data harian.`);
+            toast.success(`Berhasil mengimpor ${bulkPreview.length} data harian.`);
             setShowModalBulk(false);
             setBulkRawText('');
             setBulkPreview(null);
         } catch (err) {
             console.error(err);
-            alert('❌ Gagal menyimpan data bulk.');
+            toast.error('Gagal menyimpan data bulk.');
         }
     };
 
@@ -156,13 +157,13 @@ export const MasterHidrologiTab: React.FC = () => {
                             });
                         });
                         setBulkPreview(records);
-                        alert(`✅ AI berhasil mengekstrak ${records.length} data curah hujan.`);
+                        toast.success(`AI berhasil mengekstrak ${records.length} data curah hujan.`);
                     } else {
-                        alert('❌ AI gagal mengekstrak data. Pastikan file PDF berisi tabel curah hujan.');
+                        toast.error('AI gagal mengekstrak data. Pastikan file PDF berisi tabel curah hujan.');
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('❌ Terjadi kesalahan saat memproses OCR.');
+                    toast.error('Terjadi kesalahan saat memproses OCR.');
                 } finally {
                     setIsProcessingOcr(false);
                 }
@@ -240,16 +241,16 @@ export const MasterHidrologiTab: React.FC = () => {
                 }));
 
             if (dataList.length === 0) {
-                alert('Tidak ada data valid di file Excel');
+                toast.warning('Tidak ada data valid di file Excel.');
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 return;
             }
 
             await importDataHujanBatch(dataList);
-            alert(`✅ Berhasil import ${dataList.length} data ke stasiun ${selectedStasiun.nama_stasiun}`);
+            toast.success(`Berhasil import ${dataList.length} data ke stasiun ${selectedStasiun.nama_stasiun}`);
         } catch (err) {
             console.error(err);
-            alert('❌ Gagal import file. Pastikan format sesuai template.');
+            toast.error('Gagal import file. Pastikan format sesuai template.');
         }
 
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -257,7 +258,7 @@ export const MasterHidrologiTab: React.FC = () => {
 
     const downloadTemplate = async () => {
         if (!selectedStasiun) {
-            alert('Pilih stasiun terlebih dahulu');
+            toast.warning('Pilih stasiun terlebih dahulu.');
             return;
         }
         await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
@@ -291,10 +292,10 @@ export const MasterHidrologiTab: React.FC = () => {
             });
 
             updateDataHujanManual(filledData);
-            alert('✅ Berhasil mengisi data kosong menggunakan metode IDW/Normal Ratio');
+            toast.success('Berhasil mengisi data kosong menggunakan metode IDW/Normal Ratio.');
         } catch (error) {
             console.error('Error infilling data:', error);
-            alert('❌ Gagal mengisi data kosong.');
+            toast.error('Gagal mengisi data kosong.');
         } finally {
             setIsInfilling(false);
         }
@@ -307,10 +308,10 @@ Tindakan ini tidak dapat dibatalkan!`);
         if (confirmed) {
             try {
                 await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
-                alert(`✅ Data tahun ${selectedYear} berhasil dihapus.`);
+                toast.success(`Data tahun ${selectedYear} berhasil dihapus.`);
             } catch (err) {
                 console.error(err);
-                alert('❌ Gagal menghapus data.');
+                toast.error('Gagal menghapus data.');
             }
         }
     };
@@ -325,10 +326,10 @@ Tindakan ini tidak dapat dibatalkan!`);
                     await updateDataHujanSingle(selectedStasiun.id, dateStr, newVal);
                 } catch (err) {
                     console.error(err);
-                    alert('❌ Gagal mengupdate data.');
+                    toast.error('Gagal mengupdate data.');
                 }
             } else {
-                alert('❌ Nilai tidak valid. Masukkan angka positif.');
+                toast.warning('Nilai tidak valid. Masukkan angka positif.');
             }
         }
     };
@@ -350,7 +351,7 @@ Tindakan ini tidak dapat dibatalkan!`);
 
     const handleHubungkanDistribusi = () => {
         if (annualMaximums.length < 10) {
-            alert('Minimal butuh 10 tahun data untuk Analisis Frekuensi Distribusi Statistik.');
+            toast.warning('Minimal butuh 10 tahun data untuk Analisis Frekuensi Distribusi Statistik.');
         } else {
             setSelectedQCStations([selectedStasiun?.id || '']);
             setShowModalQC(true);
@@ -466,7 +467,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                                                 await deleteStasiun(stasiun.id);
                                                             } catch (err) {
                                                                 console.error(err);
-                                                                alert('Gagal menghapus stasiun.');
+                                                                toast.error('Gagal menghapus stasiun.');
                                                             }
                                                         }
                                                     }}
@@ -510,7 +511,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                 <Button
                                     onClick={async () => {
                                         await seedInitialStations();
-                                        alert('✅ Berhasil memuat daftar stasiun pilot Citanduy.');
+                                        toast.success('Berhasil memuat daftar stasiun pilot Citanduy.');
                                     }}
                                     className="bg-teal-600 hover:bg-teal-700 text-white font-bold"
                                 >
@@ -803,7 +804,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                     <Activity className="w-6 h-6 text-pupr-blue" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-slate-800 tracking-tight">Bulk Input Curah Hujan</h3>
+                                    <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Bulk Input Curah Hujan</h3>
                                     <p className="text-xs text-slate-500 font-medium">Otomasi OCR PDF & Manual Paste Matriks 31x12</p>
                                 </div>
                             </div>
@@ -829,11 +830,11 @@ Tindakan ini tidak dapat dibatalkan!`);
 
                                 <div className="relative group">
                                     <div className="p-8 border-2 border-dashed border-slate-300 group-hover:border-pupr-blue rounded-xl bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:bg-pupr-blue/[0.02]">
-                                        <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-pupr-blue group-hover:scale-110 transition-transform">
+                                        <div className="w-20 h-20 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-pupr-blue group-hover:scale-110 transition-transform">
                                             <CloudRain className="w-10 h-10" />
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-base font-black text-slate-800 uppercase tracking-widest">Otomasi PDF OCR</p>
+                                            <p className="text-base font-extrabold text-slate-800 uppercase tracking-widest">Otomasi PDF OCR</p>
                                             <p className="text-xs text-slate-500 mt-2 max-w-[280px] leading-relaxed">Unggah laporan BBWS (31x12). AI akan mengekstrak angka secara otomatis.</p>
                                         </div>
                                         <input
@@ -846,7 +847,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         <Button
                                             onClick={() => ocrFileInputRef.current?.click()}
                                             disabled={isProcessingOcr}
-                                            className="bg-pupr-blue hover:bg-slate-900 text-white w-full py-7 rounded-xl font-black text-sm shadow-lg shadow-pupr-blue/20"
+                                            className="bg-pupr-blue hover:bg-slate-900 text-white w-full py-7 rounded-xl font-extrabold text-sm shadow-lg shadow-pupr-blue/20"
                                         >
                                             {isProcessingOcr ? (
                                                 <>
@@ -868,7 +869,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         <span className="w-full border-t-2 border-slate-100"></span>
                                     </div>
                                     <div className="relative flex justify-center text-[11px] uppercase tracking-widest">
-                                        <span className="bg-white px-4 text-slate-400 font-black italic">Atau Manual Paste</span>
+                                        <span className="bg-white px-4 text-slate-400 font-extrabold italic">Atau Manual Paste</span>
                                     </div>
                                 </div>
 
@@ -889,7 +890,7 @@ Tindakan ini tidak dapat dibatalkan!`);
 
                             <div className="flex flex-col gap-4 overflow-hidden border-l border-slate-100 pl-4">
                                 <div className="flex justify-between items-center bg-slate-800 text-white px-4 py-3 rounded-lg shadow-inner">
-                                    <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                                    <h4 className="text-xs font-extrabold uppercase tracking-widest flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-teal-400" />
                                         Hasil Parsing
                                     </h4>
@@ -903,8 +904,8 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         <table className="w-full text-[11px] border-collapse">
                                             <thead className="bg-slate-200 sticky top-0 z-10">
                                                 <tr>
-                                                    <th className="p-3 border-b border-slate-300 text-left font-black text-slate-600">TANGGAL</th>
-                                                    <th className="p-3 border-b border-slate-300 text-right font-black text-slate-600">CH (MM)</th>
+                                                    <th className="p-3 border-b border-slate-300 text-left font-extrabold text-slate-600">TANGGAL</th>
+                                                    <th className="p-3 border-b border-slate-300 text-right font-extrabold text-slate-600">CH (MM)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -937,7 +938,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                     <Button
                                         onClick={handleBulkSave}
                                         disabled={!bulkPreview || bulkPreview.length === 0 || isLoading}
-                                        className="w-full bg-pupr-blue hover:bg-slate-900 text-white py-8 rounded-2xl font-black text-base shadow-xl shadow-pupr-blue/30 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
+                                        className="w-full bg-pupr-blue hover:bg-slate-900 text-white py-8 rounded-xl font-extrabold text-base shadow-xl shadow-pupr-blue/30 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
                                     >
                                         {isLoading ? (
                                             <span className="flex items-center gap-2">
@@ -1015,7 +1016,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                 disabled={isQCLoading}
                                 onClick={async () => {
                                     if (selectedQCStations.length === 0) {
-                                        alert('Pilih minimal 1 stasiun untuk melanjutkan.');
+                                        toast.warning('Pilih minimal 1 stasiun untuk melanjutkan.');
                                         return;
                                     }
 
@@ -1083,14 +1084,14 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         if (Object.keys(newQcStatus).length > 0) {
                                             useHydrologyStore.getState().setQCStatus(newQcStatus);
                                             useHydrologyStore.getState().setQCResults(newQcResults);
-                                            alert(`✅ ${Object.keys(newQcStatus).length} stasiun berhasil dianalisis dan ditampilkan pada Dashboard Quality Control.`);
+                                            toast.success(`${Object.keys(newQcStatus).length} stasiun berhasil dianalisis dan ditampilkan pada Dashboard Quality Control.`);
                                         } else {
-                                            alert('⚠️ Tidak ada stasiun yang memenuhi syarat minimal 10 tahun data.');
+                                            toast.warning('Tidak ada stasiun yang memenuhi syarat minimal 10 tahun data.');
                                         }
                                         setShowModalQC(false);
                                     } catch (err) {
                                         console.error('Error calculating QC:', err);
-                                        alert('❌ Terjadi kesalahan saat melakukan analisis Quality Control.');
+                                        toast.error('Terjadi kesalahan saat melakukan analisis Quality Control.');
                                     } finally {
                                         setIsQCLoading(false);
                                     }

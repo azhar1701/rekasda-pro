@@ -165,6 +165,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     setSelectedKalaUlang(25);
 
     setIsCalculated(true);
+    toast.success('Hasil analisis frekuensi berhasil disimpan');
   };
 
   const handleExport = () => {
@@ -238,7 +239,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         )
       }
     >
-      <div className="space-y-5 py-2">
+      <div className="space-y-5 py-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* TAHAP 1: Smart Data Context - Compressed Input */}
         <div className="rounded-md border border-slate-300 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
@@ -278,7 +279,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             {dataInput.length >= 10 && !showManualInput ? (
               <div className="space-y-3">
                 {/* Data Summary Card */}
-                <div className="flex items-start justify-between p-3 bg-[#0c3a66] text-white rounded-md border border-[#0c3a66] overflow-hidden shadow-sm">
+                <div className="flex items-start justify-between p-3 bg-pupr-blue text-white rounded-md border border-pupr-blue overflow-hidden shadow-sm">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-[#0d4578] rounded-md">
                       <CheckCircle2 className="w-5 h-5 text-white" />
@@ -332,7 +333,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   {dataInput.length > 10 && (
                     <button
                       onClick={() => setShowAllData(!showAllData)}
-                      className="w-full mt-2 px-3 py-2 text-xs font-semibold text-[#0c3a66] hover:text-[#0d4578] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-md transition-colors"
+                      className="w-full mt-2 px-3 py-2 text-xs font-semibold text-pupr-blue hover:text-[#0d4578] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-md transition-colors"
                     >
                       {showAllData ? '▲ Sembunyikan' : `▼ Tampilkan Semua (${dataInput.length} data)`}
                     </button>
@@ -349,7 +350,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handlePasteFromExcel}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0c3a66] hover:bg-[#0d4578] text-white text-xs font-semibold rounded-md transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-pupr-blue hover:bg-pupr-blue/90 text-white text-xs font-semibold rounded-md transition-colors"
                     >
                       <Clipboard className="w-3.5 h-3.5" />
                       Paste Excel
@@ -370,7 +371,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   <textarea
                     value={dataInput.map(v => v.toFixed(2)).join('\n')}
                     onChange={(e) => setDataInput(e.target.value.split('\n').map(v => parseFloat(v.trim())).filter(v => !isNaN(v)))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-xs focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-xs focus:border-pupr-blue focus:ring-1 focus:ring-pupr-blue focus:outline-none"
                     rows={10}
                     placeholder="Masukkan deret data hujan maksimum tahunan (satu nilai per baris)"
                   />
@@ -415,7 +416,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-[#0c3a66] text-white">
+                      <tr className="bg-pupr-blue text-white">
                         <th className="px-3 py-2 text-left font-semibold text-sm">Parameter</th>
                         <th className="px-3 py-2 text-right font-semibold text-sm">Asli</th>
                         <th className="px-3 py-2 text-right font-semibold text-sm">Log</th>
@@ -472,7 +473,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-[#0c3a66] text-white">
+                      <tr className="bg-pupr-blue text-white">
                         <th className="px-3 py-2 text-left font-semibold text-sm">Metode</th>
                         <th className="px-3 py-2 text-center font-semibold text-sm">Chi-Sq</th>
                         <th className="px-3 py-2 text-center font-semibold text-sm">K-S</th>
@@ -537,7 +538,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   <select
                     value={selectedMethod || ''}
                     onChange={(e) => setSelectedMethod(e.target.value)}
-                    className="px-3 py-1.5 border border-slate-300 rounded-md text-xs font-semibold bg-white focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
+                    className="px-3 py-1.5 border border-slate-300 rounded-md text-xs font-semibold bg-white focus:border-pupr-blue focus:ring-1 focus:ring-pupr-blue focus:outline-none"
                   >
                     {distributions.map(d => (
                       <option key={d.method} value={d.method}>
@@ -554,7 +555,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                       ? 'bg-slate-200 text-slate-500 cursor-not-allowed opacity-50'
                       : isCalculated
                         ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
-                        : 'bg-[#0c3a66] hover:bg-[#0d4578] text-white shadow-sm'
+                        : 'bg-pupr-blue hover:bg-pupr-blue/90 text-white shadow-sm'
                       }`}
                   >
                     <Save className="w-3.5 h-3.5" />
@@ -575,7 +576,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               )}
 
               {/* Interactive Comparison Bar */}
-              <div className="mb-6 p-5 bg-gradient-to-br from-[#0c3a66] to-[#0d4578] text-white rounded-xl border border-white/10 shadow-lg backdrop-blur-md relative overflow-hidden group">
+              <div className="mb-6 p-5 bg-gradient-to-br from-pupr-blue to-[#0d4578] text-white rounded-xl border border-white/10 shadow-lg backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-all duration-700"></div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
                   <div className="flex items-center gap-3">
@@ -592,8 +593,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                       <button
                         key={tr}
                         onClick={() => setSelectedTr(tr)}
-                        className={`px-3 py-1.5 text-[11px] font-black rounded-md transition-all duration-300 ${selectedTr === tr
-                          ? 'bg-yellow-400 text-[#0c3a66] shadow-md scale-105'
+                        className={`px-3 py-1.5 text-[11px] font-extrabold rounded-md transition-all duration-300 ${selectedTr === tr
+                          ? 'bg-yellow-400 text-pupr-blue shadow-md scale-105'
                           : 'text-slate-300 hover:text-white hover:bg-white/10'
                           }`}
                       >
@@ -618,8 +619,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                           <span className={`text-xs font-bold tracking-tight ${isSelected ? 'text-yellow-400' : isFailed ? 'text-slate-500 line-through' : 'text-slate-200'
                             }`}>
                             {METHOD_LABELS[d.method]}
-                            {isFailed && <span className="ml-1 text-[9px] uppercase font-black px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded">Fail</span>}
-                            {isSelected && <span className="ml-1 text-[9px] uppercase font-black px-1.5 py-0.5 bg-yellow-400/20 text-yellow-400 rounded">Selected</span>}
+                            {isFailed && <span className="ml-1 text-[9px] uppercase font-extrabold px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded">Fail</span>}
+                            {isSelected && <span className="ml-1 text-[9px] uppercase font-extrabold px-1.5 py-0.5 bg-yellow-400/20 text-yellow-400 rounded">Selected</span>}
                           </span>
                           <span className={`text-xs font-mono font-bold tracking-wider ${isSelected ? 'text-yellow-400' : 'text-slate-300'}`}>
                             {value.toFixed(1)} <span className="text-[10px] opacity-70">mm</span>
@@ -644,7 +645,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-[#0c3a66] text-white">
+                    <tr className="bg-pupr-blue text-white">
                       <th className="px-3 py-2 text-center font-semibold text-sm">Tr</th>
                       {distributions.map(d => {
                         const isSelected = d.method === selectedMethod;

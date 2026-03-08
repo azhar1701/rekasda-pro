@@ -483,17 +483,9 @@ body {
   animation-delay: 200ms;
 }
 
-/* SVG Transitions */
-svg * {
-  transition-property: all;
-  transition-timing-function: ease-out;
-}
-
-svg path,
-svg circle,
-svg line,
-svg text {
-  transition-duration: 500ms;
+/* SVG Transitions — scoped to nav icons only, not charts/maps */
+.nav-icon svg * {
+  transition: all 200ms ease-out;
 }
 
 /* Scrollbar Hide Utility (for horizontal-scroll navs) */

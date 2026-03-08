@@ -33,10 +33,10 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     const initData = async () => {
       try {
         setError(null);
-        console.log('Initializing location data...');
+        
         await locationService.init();
         const kabupatenData = locationService.getKabupaten();
-        console.log('Loaded kabupaten data:', kabupatenData.length, 'items');
+        
         setKabupatenList(kabupatenData);
         setLoading(false);
       } catch (error) {

@@ -117,7 +117,7 @@ export const ExecutiveDashboard = () => {
                 </div>
 
                 {/* Water Balance Chart */}
-                <CardGovTech 
+                <CardGovTech
                     title="Neraca Air Tahunan"
                     subtitle="Ketersediaan vs Kebutuhan Air Irigasi"
                     headerAction={
@@ -132,7 +132,7 @@ export const ExecutiveDashboard = () => {
                     <div className="w-full h-[300px]">
                         {!isDirty && hasilNeraca?.chartData ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={hasilNeraca.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <BarChart data={hasilNeraca.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                                     <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#1e293b', fontWeight: 600 }} dy={10} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#1e293b', fontWeight: 600 }} />
@@ -140,7 +140,7 @@ export const ExecutiveDashboard = () => {
                                         cursor={{ fill: '#f8fafc' }}
                                         contentStyle={{ borderRadius: '6px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontWeight: 600 }}
                                     />
-                                    <ReferenceLine y={0} stroke="#0c3a66" strokeDasharray="3 3" strokeWidth={2} />
+                                    <ReferenceLine y={0} stroke="currentColor" strokeDasharray="3 3" strokeWidth={2} />
                                     <Bar dataKey="ketersediaan" name="Ketersediaan (Q80)" fill="#0c3a66" radius={[4, 4, 0, 0]} barSize={24} />
                                     <Bar dataKey="kebutuhan" name="Kebutuhan Irigasi" fill="#DC2626" radius={[4, 4, 0, 0]} barSize={24} />
                                 </BarChart>

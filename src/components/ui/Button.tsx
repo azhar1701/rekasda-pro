@@ -23,10 +23,10 @@ const buttonVariants = cva(
           "bg-pupr-blue text-white hover:bg-pupr-blue/90 active:bg-pupr-blue/80",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        default: "h-10 px-4 py-2.5",
-        lg: "h-12 px-6 text-base",
-        icon: "h-10 w-10",
+        sm: "h-9 px-3 text-xs",
+        default: "h-11 px-6 py-2.5",
+        lg: "h-14 px-8 text-base",
+        icon: "h-11 w-11",
       },
     },
     defaultVariants: {
@@ -38,7 +38,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 

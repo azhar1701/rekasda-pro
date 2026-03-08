@@ -50,6 +50,7 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: (id: string) => void }> = (
       <p className="flex-1 text-sm font-medium">{toast.message}</p>
       <button
         onClick={() => onDismiss(toast.id)}
+        aria-label="Tutup notifikasi"
         className="text-current opacity-50 hover:opacity-100 transition-opacity"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -66,7 +67,7 @@ export const ToastContainer: React.FC = () => {
   useEffect(() => {
     const unsubscribe = toastService.subscribe((newToast: Toast) => {
       setToasts(prev => [...prev, newToast]);
-      
+
       if (newToast.duration && newToast.duration > 0) {
         setTimeout(() => {
           setToasts(prev => prev.filter(t => t.id !== newToast.id));

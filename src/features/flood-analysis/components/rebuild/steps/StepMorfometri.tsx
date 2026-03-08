@@ -160,7 +160,7 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
             <div className="flex justify-end">
                 <button
                     onClick={handleSave}
-                    className="px-8 py-3 bg-[#0c3a66] hover:bg-[#0d4578] text-white font-bold rounded-md shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                    className="px-8 py-3 bg-pupr-blue hover:bg-pupr-blue/90 text-white font-bold rounded-md shadow-md hover:shadow-lg transition-all flex items-center gap-2"
                 >
                     Simpan Karakteristik & Lanjut →
                 </button>

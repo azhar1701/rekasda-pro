@@ -44,8 +44,7 @@ function parseRainfallValue(val: any): number {
 }
 
 async function seedData() {
-  console.log('🚀 Starting Citanduy Data Seeding...');
-
+  
   const dataFilePath = path.join(__dirname, 'data', 'kadipaten_2011_2020.json');
 
   if (!fs.existsSync(dataFilePath)) {
@@ -58,13 +57,10 @@ async function seedData() {
     const jsonData = JSON.parse(rawContent);
 
     // Validate input
-    console.log('🔍 Validating input JSON...');
-    const validatedData = RawDataSchema.parse(jsonData);
-    console.log('✅ Validation successful.');
-
+        const validatedData = RawDataSchema.parse(jsonData);
+    
     for (const yearData of validatedData) {
-      console.log(`\n📅 Processing Year: ${yearData.year} for Station: ${yearData.station_id}`);
-      
+            
       // 1. Ensure station exists or get its ID
       const { data: station, error: stError } = await seedSupabase
         .from('master_stasiun')
@@ -79,8 +75,7 @@ async function seedData() {
 
       let stationUuid: string;
       if (!station) {
-        console.log(`⚠️ Station ${yearData.station_id} not found. Creating it...`);
-        const { data: newStation, error: createError } = await seedSupabase
+                const { data: newStation, error: createError } = await seedSupabase
           .from('master_stasiun')
           .insert([{ nama_stasiun: yearData.station_id }])
           .select()
@@ -122,8 +117,7 @@ async function seedData() {
       }
 
       // 3. Upsert batch
-      console.log(`📦 Upserting ${batchData.length} records for ${yearData.year}...`);
-      
+            
       const { error: upsertError } = await seedSupabase
         .from('master_data_hujan')
         .upsert(batchData, { onConflict: 'stasiun_id, tanggal' });
@@ -131,12 +125,10 @@ async function seedData() {
       if (upsertError) {
         console.error(`❌ Error upserting data for ${yearData.year}:`, upsertError.message);
       } else {
-        console.log(`✅ Successfully seeded ${yearData.year}.`);
-      }
+              }
     }
 
-    console.log('\n✨ Seeding process completed successfully.');
-  } catch (error) {
+      } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ Validation Error:', JSON.stringify(error.format(), null, 2));
     } else {

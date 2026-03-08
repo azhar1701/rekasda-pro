@@ -99,7 +99,7 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
         <div className="grid grid-cols-3 gap-3">
           {MONTHS.map((month, index) => (
             <div key={month} className="bg-slate-50 p-3 rounded-md border border-slate-200">
-              <div className="text-[10px] font-black text-slate-500 uppercase mb-2">{month}</div>
+              <div className="text-[10px] font-extrabold text-slate-500 uppercase mb-2">{month}</div>
               <div className="space-y-2">
                 <div className="relative">
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

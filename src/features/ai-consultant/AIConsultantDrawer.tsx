@@ -60,7 +60,7 @@ function parseActionableSuggestions(text: string): ActionableParam[] {
             actions.push({
                 label: `Terapkan Infiltration Factor = ${value}`,
                 description: `Mengubah Infiltration Factor menjadi ${value}`,
-                action: () => console.log(`[AI Action] Set Infiltration Factor = ${value}`),
+                action: () => { },
             });
         }
     }
@@ -199,7 +199,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                     )}
                                 </div>
                                 <div>
-                                    <h2 className="text-sm font-black text-white tracking-tight leading-none mb-1">Konsultan AI</h2>
+                                    <h2 className="text-sm font-extrabold text-white tracking-tight leading-none mb-1">Konsultan AI</h2>
                                     <p className="text-[9px] font-bold text-indigo-100 uppercase tracking-widest">{moduleSummary}</p>
                                 </div>
                             </div>
@@ -220,7 +220,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                             <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
                                 <div className="relative mb-6">
                                     <div className="absolute inset-0 bg-pupr-blue/10 blur-[40px] rounded-full scale-150" />
-                                    <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center relative z-10 ring-1 ring-black/5 rotate-3">
+                                    <div className="w-16 h-16 bg-white rounded-xl shadow-xl flex items-center justify-center relative z-10 ring-1 ring-black/5 rotate-3">
                                         <Sparkles className="w-8 h-8 text-pupr-blue" />
                                     </div>
                                     <div className="absolute -right-2 -top-2 w-8 h-8 bg-pupr-yellow rounded-xl shadow-lg flex items-center justify-center z-20 -rotate-12">
@@ -228,16 +228,16 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                     </div>
                                 </div>
 
-                                <h3 className="text-lg font-black text-slate-900 mb-2 tracking-tight">Halo, Saya Konsultan AI</h3>
+                                <h3 className="text-lg font-extrabold text-slate-900 mb-2 tracking-tight">Halo, Saya Konsultan AI</h3>
                                 <p className="text-[11px] text-slate-500 max-w-[240px] leading-relaxed font-medium mb-6">
                                     Saya siap membantu mengaudit parameter hidrologi Anda berdasarkan standar <span className="text-pupr-blue font-bold">SNI & Permen PUPR</span>.
                                 </p>
 
-                                <div className="w-full bg-slate-50 rounded-2xl border border-slate-200 p-4 mb-4 relative overflow-hidden group hover:border-pupr-blue/30 transition-all">
+                                <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-4 mb-4 relative overflow-hidden group hover:border-pupr-blue/30 transition-all">
                                     <div className="flex items-center justify-between mb-3 relative z-10">
                                         <div className="flex items-center gap-2">
                                             <Shield className="w-3.5 h-3.5 text-sky-500" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">Integritas Data</span>
+                                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-700">Integritas Data</span>
                                         </div>
                                         <span className="text-[10px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">{integrityPercentage}%</span>
                                     </div>
@@ -275,13 +275,13 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                         )}>
                                             <div className={cn(
                                                 "prose prose-sm max-w-none relative z-10",
-                                                msg.role === 'user' ? "prose-invert prose-p:leading-relaxed" : "prose-slate prose-p:leading-relaxed prose-headings:font-black prose-strong:text-pupr-blue"
+                                                msg.role === 'user' ? "prose-invert prose-p:leading-relaxed" : "prose-slate prose-p:leading-relaxed prose-headings:font-extrabold prose-strong:text-pupr-blue"
                                             )}>
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm, remarkMath]}
                                                     rehypePlugins={[rehypeKatex]}
                                                     components={{
-                                                        h3: ({ node, ...props }: any) => <h3 className="flex items-center gap-2 mb-3 text-pupr-blue font-black" {...props} />,
+                                                        h3: ({ node, ...props }: any) => <h3 className="flex items-center gap-2 mb-3 text-pupr-blue font-extrabold" {...props} />,
                                                         blockquote: ({ node, ...props }: any) => <blockquote className="border-l-4 border-pupr-yellow bg-slate-50 py-1 px-4 italic" {...props} />,
                                                         code: ({ node, inline, ...props }: any) =>
                                                             inline
@@ -294,7 +294,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                             </div>
                                         </div>
                                         <div className={cn(
-                                            "flex items-center gap-2 text-[9px] text-slate-400 font-black px-1 uppercase tracking-widest",
+                                            "flex items-center gap-2 text-[9px] text-slate-400 font-extrabold px-1 uppercase tracking-widest",
                                             msg.role === 'user' ? "justify-end" : "justify-start"
                                         )}>
                                             <Clock className="w-2.5 h-2.5" />
@@ -329,7 +329,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                         <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-slate-50/50">
                             <div className="flex items-center gap-1.5 mb-2.5">
                                 {hasIssues ? <AlertTriangle className="w-3 h-3 text-amber-500" /> : <Info className="w-3 h-3 text-slate-400" />}
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Audit Rekomendasi</span>
+                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Audit Rekomendasi</span>
                             </div>
                             <div className="grid grid-cols-1 gap-2">
                                 {suggestionChips.map((chip) => (

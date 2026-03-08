@@ -61,8 +61,8 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
   const renderSection = (title: string, obj: any, bgClass: string = "bg-slate-50") => {
     if (!obj) return null;
     return (
-      <div className={`p-4 md:p-5 rounded-2xl ${bgClass} border border-slate-100 mb-4`}>
-        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 pb-2">
+      <div className={`p-4 md:p-5 rounded-xl ${bgClass} border border-slate-100 mb-4`}>
+        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 pb-2">
           {title}
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-4">
@@ -91,12 +91,12 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
           <div className="relative z-10">
              <div className="flex items-center gap-2 mb-2">
-                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wide ${data?.type === CalculationType.MANNING ? 'bg-blue-500/20 text-blue-100' : 'bg-red-500/20 text-red-100'}`}>
+                <span className={`px-2 py-1 rounded text-[10px] font-extrabold uppercase tracking-wide ${data?.type === CalculationType.MANNING ? 'bg-blue-500/20 text-blue-100' : 'bg-red-500/20 text-red-100'}`}>
                     {data?.type}
                 </span>
                 <span className="text-slate-400 text-[10px] font-mono">{data?.date ? new Date(data.date).toLocaleString('id-ID') : '-'}</span>
              </div>
-            <h3 className="text-xl md:text-2xl font-black leading-tight">
+            <h3 className="text-xl md:text-2xl font-extrabold leading-tight">
                 {data?.inputs?.site?.channelName || 'Tanpa Nama Proyek'}
             </h3>
             {(() => {
@@ -116,7 +116,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
             {(data?.location || data?.photoUrl) && (
                 <div className={`grid gap-4 mb-6 ${data?.location && data?.photoUrl ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                     {data?.location && (
-                        <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 h-40 relative group overflow-hidden">
+                        <div className="bg-slate-50 p-1 rounded-xl border border-slate-200 h-40 relative group overflow-hidden">
                              {/* Simple Static Map Placeholder */}
                             <div className="w-full h-full bg-slate-200 rounded-xl flex items-center justify-center flex-col">
                                 <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -133,7 +133,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
                         </div>
                     )}
                     {data?.photoUrl && (
-                        <div className="h-48 md:h-40 rounded-2xl overflow-hidden border border-slate-200 relative group">
+                        <div className="h-48 md:h-40 rounded-xl overflow-hidden border border-slate-200 relative group">
                             <img src={data.photoUrl} alt="Dokumentasi" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <a href={data.photoUrl} download="dokumentasi_lapangan.jpg" className="bg-white/90 text-slate-900 px-3 py-1 rounded-full text-[10px] font-bold uppercase shadow-lg">Unduh Foto</a>
@@ -151,8 +151,8 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
 
             {/* Notes */}
             {data?.notes && (
-                <div className="mt-6 p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
-                    <h4 className="text-[10px] font-black text-yellow-600 uppercase tracking-widest mb-2">Catatan Lapangan</h4>
+                <div className="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+                    <h4 className="text-[10px] font-extrabold text-yellow-600 uppercase tracking-widest mb-2">Catatan Lapangan</h4>
                     <p className="text-sm text-slate-700 italic leading-relaxed">"{data.notes}"</p>
                 </div>
             )}

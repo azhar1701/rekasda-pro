@@ -14,12 +14,12 @@ interface DistribusiHujanStepProps {
 export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComplete, isCompleted }) => {
   const { getR24 } = useFrequencyAnalysis();
   const { tutupanLahan, setEffectiveRainfall } = useHydrologyStore();
-  
+
   const [returnPeriod, setReturnPeriod] = useState(25);
   const [durasi, setDurasi] = useState(6);
   const [lossMethod, setLossMethod] = useState<'C' | 'CN'>('C');
   const [calculated, setCalculated] = useState(false);
-  
+
   const R24 = getR24(returnPeriod) || 0;
   const C = tutupanLahan?.koefisienPengaliranGabungan || 0.65;
   const CN = tutupanLahan?.curveNumberGabungan || 75;
@@ -75,8 +75,8 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
       method: lossMethod === 'C' ? `Koef. C = ${C.toFixed(3)}` : `CN = ${CN}`,
       hourlyDistribution: effectiveRainfall
     });
+
     
-    console.log('✅ Menyimpan Hujan Efektif ke Store:', effectiveRainfall);
     onComplete(effectiveRainfall, durasi);
   };
 
@@ -113,7 +113,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
             <select
               value={returnPeriod}
               onChange={(e) => setReturnPeriod(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue focus:outline-none"
             >
               {[2, 5, 10, 25, 50, 100].map(tr => (
                 <option key={tr} value={tr}>Q{tr} - {getR24(tr)?.toFixed(2) || 0} mm</option>
@@ -126,7 +126,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
               type="number"
               value={durasi}
               onChange={(e) => setDurasi(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md tabular-nums tracking-tight focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md tabular-nums tracking-tight focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue focus:outline-none"
               min="2"
               max="24"
             />
@@ -136,7 +136,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
             <select
               value={lossMethod}
               onChange={(e) => setLossMethod(e.target.value as 'C' | 'CN')}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] focus:outline-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue focus:outline-none"
             >
               <option value="C">Koef. C = {C.toFixed(3)}</option>
               <option value="CN">Curve Number = {CN.toFixed(0)}</option>
@@ -146,7 +146,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
 
         <button
           onClick={handleCalculate}
-          className="w-full px-4 py-3 bg-[#0c3a66] hover:bg-[#0d4578] text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-pupr-blue hover:bg-pupr-blue/90 text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
         >
           <Calculator className="w-5 h-5" />
           Hitung Distribusi & Losses
@@ -167,7 +167,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-[#0c3a66] text-white">
+                  <tr className="bg-pupr-blue text-white">
                     <th className="px-3 py-2 text-center font-semibold text-sm">t (jam)</th>
                     <th className="px-3 py-2 text-right font-semibold text-sm">I (mm/jam)</th>
                     <th className="px-3 py-2 text-right font-semibold text-sm">X (mm)</th>
@@ -198,17 +198,17 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis 
-                  dataKey="jam" 
+                <XAxis
+                  dataKey="jam"
                   label={{ value: 'Jam ke-', position: 'insideBottom', offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
                   tick={{ fontSize: 11 }}
                 />
-                <YAxis 
+                <YAxis
                   label={{ value: 'Intensitas (mm)', angle: -90, position: 'insideLeft', style: { fontSize: 12, fontWeight: 600 } }}
                   tick={{ fontSize: 11 }}
                   tickFormatter={(value) => value.toFixed(1)}
                 />
-                <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} 
+                <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }}
                   contentStyle={{ fontSize: 12, fontFamily: 'monospace' }}
                   formatter={(value: any) => value?.toFixed(2)}
                 />
@@ -234,11 +234,10 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
               <button
                 onClick={handleComplete}
                 disabled={isCompleted}
-                className={`px-6 py-3 rounded-md font-semibold transition-colors ${
-                  isCompleted
+                className={`px-6 py-3 rounded-md font-semibold transition-colors ${isCompleted
                     ? 'bg-green-600 text-white cursor-default'
                     : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                  }`}
               >
                 {isCompleted ? '✓ Selesai' : 'Lanjut ke HSS →'}
               </button>

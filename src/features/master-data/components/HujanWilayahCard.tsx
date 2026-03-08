@@ -286,8 +286,8 @@ export const HujanWilayahCard: React.FC = () => {
       <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#0c3a66]/10 rounded">
-              <CloudRain className="w-5 h-5 text-[#0c3a66]" />
+            <div className="p-2 bg-pupr-blue/10 rounded">
+              <CloudRain className="w-5 h-5 text-pupr-blue" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Curah Hujan Wilayah</h3>
@@ -303,7 +303,7 @@ export const HujanWilayahCard: React.FC = () => {
               className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-800 hover:bg-amber-100 transition-colors w-full justify-between"
             >
               <div className="flex items-center gap-2 font-bold text-sm">
-                <Sparkles className="w-4 h-4 text-[#f2c114]" />
+                <Sparkles className="w-4 h-4 text-pupr-yellow" />
                 Asisten Penentuan Metode (Semi-Auto AI)
               </div>
               {isAssistantOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -320,7 +320,7 @@ export const HujanWilayahCard: React.FC = () => {
                           type="radio"
                           checked={params.hasCoordinates}
                           onChange={() => setParams({ ...params, hasCoordinates: true })}
-                          className="w-3.5 h-3.5 text-[#0c3a66]"
+                          className="w-3.5 h-3.5 text-pupr-blue"
                         />
                         <span className="text-sm text-slate-700">Tersedia</span>
                       </label>
@@ -329,7 +329,7 @@ export const HujanWilayahCard: React.FC = () => {
                           type="radio"
                           checked={!params.hasCoordinates}
                           onChange={() => setParams({ ...params, hasCoordinates: false })}
-                          className="w-3.5 h-3.5 text-[#0c3a66]"
+                          className="w-3.5 h-3.5 text-pupr-blue"
                         />
                         <span className="text-sm text-slate-700">Tidak Ada</span>
                       </label>
@@ -344,7 +344,7 @@ export const HujanWilayahCard: React.FC = () => {
                           type="radio"
                           checked={params.topography === 'flat'}
                           onChange={() => setParams({ ...params, topography: 'flat' })}
-                          className="w-3.5 h-3.5 text-[#0c3a66]"
+                          className="w-3.5 h-3.5 text-pupr-blue"
                         />
                         <span className="text-sm text-slate-700">Relatif Datar</span>
                       </label>
@@ -353,7 +353,7 @@ export const HujanWilayahCard: React.FC = () => {
                           type="radio"
                           checked={params.topography === 'varied'}
                           onChange={() => setParams({ ...params, topography: 'varied' })}
-                          className="w-3.5 h-3.5 text-[#0c3a66]"
+                          className="w-3.5 h-3.5 text-pupr-blue"
                         />
                         <span className="text-sm text-slate-700">Bervariasi</span>
                       </label>
@@ -368,7 +368,7 @@ export const HujanWilayahCard: React.FC = () => {
                           type="radio"
                           checked={params.distribution === 'uniform'}
                           onChange={() => setParams({ ...params, distribution: 'uniform' })}
-                          className="w-3.5 h-3.5 text-[#0c3a66]"
+                          className="w-3.5 h-3.5 text-pupr-blue"
                         />
                         <span className="text-sm text-slate-700">Merata</span>
                       </label>
@@ -377,7 +377,7 @@ export const HujanWilayahCard: React.FC = () => {
                           type="radio"
                           checked={params.distribution === 'uneven'}
                           onChange={() => setParams({ ...params, distribution: 'uneven' })}
-                          className="w-3.5 h-3.5 text-[#0c3a66]"
+                          className="w-3.5 h-3.5 text-pupr-blue"
                         />
                         <span className="text-sm text-slate-700">Tidak Merata</span>
                       </label>
@@ -391,20 +391,20 @@ export const HujanWilayahCard: React.FC = () => {
                         type="number"
                         value={params.stationCount}
                         onChange={(e) => setParams({ ...params, stationCount: parseInt(e.target.value) || 0 })}
-                        className="w-20 px-2 py-1 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-[#0c3a66] tabular-nums"
+                        className="w-20 px-2 py-1 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-pupr-blue tabular-nums"
                       />
                       <span className="text-xs text-slate-500 italic">(Terdeteksi: {stasiunList.length})</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white border border-amber-200 p-3 rounded-md border-l-4 border-l-[#f2c114]">
+                <div className="bg-white border border-amber-200 p-3 rounded-md border-l-4 border-l-pupr-yellow">
                   <h4 className="text-xs font-bold text-amber-900 uppercase mb-1">Rekomendasi Terdeteksi</h4>
-                  <p className="text-sm font-bold text-[#0c3a66]">{recommendation?.method}</p>
+                  <p className="text-sm font-bold text-pupr-blue">{recommendation?.method}</p>
                   <p className="text-xs text-slate-600 mt-1 leading-relaxed">{recommendation?.reason}</p>
                   <button
                     onClick={handleApplyRecommendation}
-                    className="mt-3 px-3 py-1.5 bg-[#0c3a66] text-white text-xs font-bold rounded hover:bg-[#092b4d] transition-all flex items-center gap-2"
+                    className="mt-3 px-3 py-1.5 bg-pupr-blue text-white text-xs font-bold rounded hover:bg-[#092b4d] transition-all flex items-center gap-2"
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
                     Terapkan Rekomendasi
@@ -419,8 +419,8 @@ export const HujanWilayahCard: React.FC = () => {
             <div className="inline-flex border border-slate-300 rounded-md overflow-hidden">
               <button
                 onClick={() => setMetode('aljabar')}
-                className={`px-4 py-2 text-sm font-semibold transition-all ${metode === 'aljabar'
-                  ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r border-[#0c3a66]'
+                className={`px-4 py-2.5 text-sm font-semibold transition-all ${metode === 'aljabar'
+                  ? 'bg-pupr-blue/10 text-pupr-blue border-r border-pupr-blue'
                   : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
                   }`}
               >
@@ -428,8 +428,8 @@ export const HujanWilayahCard: React.FC = () => {
               </button>
               <button
                 onClick={() => setMetode('thiessen')}
-                className={`px-4 py-2 text-sm font-semibold transition-all ${metode === 'thiessen'
-                  ? 'bg-[#0c3a66]/10 text-[#0c3a66] border-r border-[#0c3a66]'
+                className={`px-4 py-2.5 text-sm font-semibold transition-all ${metode === 'thiessen'
+                  ? 'bg-pupr-blue/10 text-pupr-blue border-r border-pupr-blue'
                   : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
                   }`}
               >
@@ -437,8 +437,8 @@ export const HujanWilayahCard: React.FC = () => {
               </button>
               <button
                 onClick={() => setMetode('isohyet')}
-                className={`px-4 py-2 text-sm font-semibold transition-all ${metode === 'isohyet'
-                  ? 'bg-[#0c3a66]/10 text-[#0c3a66]'
+                className={`px-4 py-2.5 text-sm font-semibold transition-all ${metode === 'isohyet'
+                  ? 'bg-pupr-blue/10 text-pupr-blue'
                   : 'bg-white text-slate-600 hover:bg-slate-50'
                   }`}
               >
@@ -474,7 +474,7 @@ export const HujanWilayahCard: React.FC = () => {
                                 type="number"
                                 value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
                                 onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
-                                className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-[#0c3a66] focus:border-[#0c3a66] tabular-nums"
+                                className="w-full h-9 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
                                 placeholder="0.00"
                                 step="0.01"
                               />
@@ -523,11 +523,11 @@ export const HujanWilayahCard: React.FC = () => {
           {metode === 'isohyet' && (
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-slate-700 font-formal">Data Luas Antar Garis Isohyet</h4>
+                <h4 className="text-sm font-bold text-slate-700 ">Data Luas Antar Garis Isohyet</h4>
                 <Button
                   onClick={() => setIsohyetalConfigs([...isohyetalConfigs, { id: crypto.randomUUID(), label: `Area ${isohyetalConfigs.length + 1}`, curahHujanRataRata: 0, luasAntarGaris: 0, bobot: 0 }])}
                   variant="outline"
-                  className="px-3 py-1 text-xs border-[#0c3a66] text-[#0c3a66]"
+                  className="px-3 py-1 text-xs border-pupr-blue text-pupr-blue"
                 >
                   + Tambah Area
                 </Button>
@@ -555,7 +555,7 @@ export const HujanWilayahCard: React.FC = () => {
                               setIsohyetalConfigs(newConfigs);
                               setIsSaved(false);
                             }}
-                            className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:ring-1 focus:ring-[#0c3a66]"
+                            className="w-full h-8 px-2 text-xs border border-slate-200 rounded focus:ring-1 focus:ring-pupr-blue"
                           />
                         </td>
                         <td className="px-2 py-2">
@@ -571,7 +571,7 @@ export const HujanWilayahCard: React.FC = () => {
                               setIsSaved(false);
                             }}
                             rows={1}
-                            className="w-full px-2 py-1 text-xs text-right border border-slate-200 rounded focus:ring-1 focus:ring-[#0c3a66] font-mono"
+                            className="w-full px-2 py-1 text-xs text-right border border-slate-200 rounded focus:ring-1 focus:ring-pupr-blue font-mono"
                             placeholder="60, 70, 80..."
                           />
                         </td>
@@ -585,7 +585,7 @@ export const HujanWilayahCard: React.FC = () => {
                               setIsohyetalConfigs(newConfigs);
                               setIsSaved(false);
                             }}
-                            className="w-full px-2 py-1 text-xs text-right border border-slate-200 rounded focus:ring-1 focus:ring-[#0c3a66]"
+                            className="w-full h-8 px-2 text-xs text-right border border-slate-200 rounded focus:ring-1 focus:ring-pupr-blue"
                             placeholder="0.00"
                           />
                         </td>
@@ -616,9 +616,9 @@ export const HujanWilayahCard: React.FC = () => {
           )}
 
           {metode === 'aljabar' && (
-            <div className="mb-4 p-3 bg-blue-50 border-l-4 border-[#0c3a66] rounded-md">
+            <div className="mb-4 p-3 bg-blue-50 border-l-4 border-pupr-blue rounded-md">
               <p className="text-sm text-slate-700 leading-relaxed">
-                <strong className="text-[#0c3a66]">Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama.
+                <strong className="text-pupr-blue">Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama.
                 Hujan wilayah dihitung dengan rata-rata aritmatik dari semua stasiun pengamatan yang tersedia.
               </p>
             </div>
@@ -631,7 +631,7 @@ export const HujanWilayahCard: React.FC = () => {
               ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
               : isSaved
                 ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
-                : 'bg-[#0c3a66] hover:bg-[#0d4578] text-white shadow-sm'
+                : 'bg-pupr-blue hover:bg-pupr-blue/90 text-white shadow-sm'
               }`}
           >
             {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}

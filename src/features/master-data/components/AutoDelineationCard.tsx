@@ -62,8 +62,8 @@ export const AutoDelineationCard: React.FC = () => {
     <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
       <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#f2c114]/10 rounded">
-            <Map className="w-5 h-5 text-[#0c3a66]" />
+          <div className="p-2 bg-pupr-yellow/10 rounded">
+            <Map className="w-5 h-5 text-pupr-blue" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900">Auto-Delineasi DAS (DEM)</h3>
@@ -77,7 +77,7 @@ export const AutoDelineationCard: React.FC = () => {
           className={`relative border-2 border-dashed rounded-md p-6 transition-all flex flex-col items-center justify-center gap-3 ${
             isProcessing 
               ? 'border-blue-300 bg-blue-50' 
-              : 'border-slate-300 hover:border-[#0c3a66] hover:bg-slate-50 cursor-pointer'
+              : 'border-slate-300 hover:border-pupr-blue hover:bg-slate-50 cursor-pointer'
           }`}
           onClick={!isProcessing ? triggerFileInput : undefined}
         >
@@ -92,9 +92,9 @@ export const AutoDelineationCard: React.FC = () => {
 
           {isProcessing ? (
             <>
-              <Loader2 className="w-10 h-10 text-[#0c3a66] animate-spin" />
+              <Loader2 className="w-10 h-10 text-pupr-blue animate-spin" />
               <div className="text-center">
-                <p className="text-sm font-bold text-[#0c3a66]">Sedang Memproses DEM...</p>
+                <p className="text-sm font-bold text-pupr-blue">Sedang Memproses DEM...</p>
                 <p className="text-xs text-slate-500 mt-1">Menganalisis topografi dan jaringan sungai</p>
               </div>
             </>
@@ -129,7 +129,7 @@ export const AutoDelineationCard: React.FC = () => {
         )}
 
         <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
-          <p className="text-[10px] uppercase tracking-wider font-bold text-[#0c3a66] mb-1">Tips</p>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-pupr-blue mb-1">Tips</p>
           <p className="text-xs text-slate-600 leading-relaxed">
             Gunakan DEM dengan resolusi minimal 30m (SRTM/ASTER) atau 8m (DEMNAS) untuk hasil yang lebih akurat.
           </p>

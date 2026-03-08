@@ -36,7 +36,7 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
     <Dialog open={isOpen} onClose={onClose} className="relative z-[9999]">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto">
+        <Dialog.Panel className="bg-white rounded-xl shadow-2xl w-full max-w-5xl p-6 relative max-h-[90vh] overflow-y-auto">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
@@ -102,7 +102,7 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
             <div className="grid grid-cols-4 gap-4">
               {MONTHS.map((month, index) => (
                 <div key={month} className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl p-4 border border-slate-200 shadow-sm">
-                  <label className="text-xs font-black text-slate-700 uppercase mb-3 block text-center">{month}</label>
+                  <label className="text-xs font-extrabold text-slate-700 uppercase mb-3 block text-center">{month}</label>
 
                   <div className="space-y-3">
                     <div className="relative">

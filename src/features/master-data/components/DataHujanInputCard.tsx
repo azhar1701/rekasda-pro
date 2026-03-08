@@ -5,6 +5,7 @@ import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { infillMissingData } from '@/lib/utils/spatialMath';
 import { fetchSatelliteRainfall } from '@/services/satelliteRainfallService';
+import { toast } from '@/hooks/useToast';
 export const DataHujanInputCard: React.FC = () => {
   const { dataHujan, updateDataHujanManual, selectedStasiun, stasiunList } = useHydrologyStore();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -45,7 +46,7 @@ export const DataHujanInputCard: React.FC = () => {
   const handleInfillData = async () => {
     if (!selectedStasiun) return;
     setIsInfilling(true);
-    
+
     try {
       const allData = dataHujan;
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -73,7 +74,7 @@ export const DataHujanInputCard: React.FC = () => {
 
   const handleFetchSatelliteData = async () => {
     if (!selectedStasiun || selectedStasiun.koordinat_x === null || selectedStasiun.koordinat_y === null) {
-      alert('Stasiun tidak memiliki koordinat (X, Y). Silakan lengkapi data stasiun terlebih dahulu.');
+      toast.warning('Stasiun tidak memiliki koordinat (X, Y). Silakan lengkapi data stasiun terlebih dahulu.');
       return;
     }
 
@@ -98,7 +99,7 @@ export const DataHujanInputCard: React.FC = () => {
       updateDataHujanManual(mappedData);
     } catch (error) {
       console.error('Error fetching satellite data:', error);
-      alert('Gagal mengambil data satelit. Silakan coba lagi.');
+      toast.error('Gagal mengambil data satelit. Silakan coba lagi.');
     } finally {
       setIsFetchingSatellite(false);
     }
@@ -111,7 +112,7 @@ export const DataHujanInputCard: React.FC = () => {
       <div className="border-b border-slate-200 bg-blue-50 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#0c3a66] rounded-md">
+            <div className="p-2 bg-pupr-blue rounded-md">
               <CloudRain className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -128,7 +129,7 @@ export const DataHujanInputCard: React.FC = () => {
               className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Tarik data curah hujan historis dari satelit (CHIRPS/GPM)"
             >
-              <Satellite className={`w-4 h-4 text-[#0c3a66] ${isFetchingSatellite ? 'animate-spin' : ''}`} />
+              <Satellite className={`w-4 h-4 text-pupr-blue ${isFetchingSatellite ? 'animate-spin' : ''}`} />
               <span className="text-sm font-medium text-slate-700">
                 {isFetchingSatellite ? 'Menarik...' : 'Tarik Data Satelit'}
               </span>
@@ -139,7 +140,7 @@ export const DataHujanInputCard: React.FC = () => {
               className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Isi data kosong (0) menggunakan metode IDW/Normal Ratio"
             >
-              <Wand2 className={`w-4 h-4 text-[#0c3a66] ${isInfilling ? 'animate-pulse' : ''}`} />
+              <Wand2 className={`w-4 h-4 text-pupr-blue ${isInfilling ? 'animate-pulse' : ''}`} />
               <span className="text-sm font-medium text-slate-700">
                 {isInfilling ? 'Memproses...' : 'Isi Data Kosong'}
               </span>
@@ -148,61 +149,61 @@ export const DataHujanInputCard: React.FC = () => {
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
             >
-              <Edit className="w-4 h-4 text-[#0c3a66]" />
+              <Edit className="w-4 h-4 text-pupr-blue" />
               <span className="text-sm font-medium text-slate-700">Edit</span>
             </button>
           </div>
-      </div>
-
-      {/* Body - Preview Mode */}
-      <div className="p-4">
-        {/* Statistics */}
-        <div className="flex items-center gap-6 mb-4 text-sm">
-          <div>
-            <span className="text-slate-300">Min: </span>
-            <span className="font-medium text-white tabular-nums">{stats.min.toFixed(1)}</span>
-            <span className="text-slate-300 ml-1">mm</span>
-          </div>
-          <div>
-            <span className="text-slate-300">Max: </span>
-            <span className="font-medium text-white tabular-nums">{stats.max.toFixed(1)}</span>
-            <span className="text-slate-300 ml-1">mm</span>
-          </div>
-          <div>
-            <span className="text-slate-300">Rata-rata: </span>
-            <span className="font-medium text-white tabular-nums">{stats.avg.toFixed(1)}</span>
-            <span className="text-slate-300 ml-1">mm</span>
-          </div>
         </div>
 
-        {/* Grid Preview - First 10 */}
-        <div className="grid grid-cols-5 gap-3 mb-3">
-          {localData.slice(0, 10).map((item, idx) => {
-            // const year = item.tanggal ? new Date(item.tanggal).getFullYear() : idx + 1;
-            const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
-            const isOutlier = value > 300;
-            return (
-              <div key={item.id} className={`border rounded-md p-3 ${isOutlier ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="text-xs text-slate-600">Tahun {idx + 1}</div>
-                  {isOutlier && (
-                    <span title="Outlier (>300 mm)">
-                      <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                    </span>
-                  )}
+        {/* Body - Preview Mode */}
+        <div className="p-4">
+          {/* Statistics */}
+          <div className="flex items-center gap-6 mb-4 text-sm">
+            <div>
+              <span className="text-slate-300">Min: </span>
+              <span className="font-medium text-white tabular-nums">{stats.min.toFixed(1)}</span>
+              <span className="text-slate-300 ml-1">mm</span>
+            </div>
+            <div>
+              <span className="text-slate-300">Max: </span>
+              <span className="font-medium text-white tabular-nums">{stats.max.toFixed(1)}</span>
+              <span className="text-slate-300 ml-1">mm</span>
+            </div>
+            <div>
+              <span className="text-slate-300">Rata-rata: </span>
+              <span className="font-medium text-white tabular-nums">{stats.avg.toFixed(1)}</span>
+              <span className="text-slate-300 ml-1">mm</span>
+            </div>
+          </div>
+
+          {/* Grid Preview - First 10 */}
+          <div className="grid grid-cols-5 gap-3 mb-3">
+            {localData.slice(0, 10).map((item, idx) => {
+              // const year = item.tanggal ? new Date(item.tanggal).getFullYear() : idx + 1;
+              const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
+              const isOutlier = value > 300;
+              return (
+                <div key={item.id} className={`border rounded-md p-3 ${isOutlier ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-xs text-slate-600">Tahun {idx + 1}</div>
+                    {isOutlier && (
+                      <span title="Outlier (>300 mm)">
+                        <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                      </span>
+                    )}
+                  </div>
+                  <div className={`text-lg font-bold tabular-nums ${isOutlier ? 'text-red-700' : 'text-slate-900'}`}>{value.toFixed(1)}</div>
                 </div>
-                <div className={`text-lg font-bold tabular-nums ${isOutlier ? 'text-red-700' : 'text-slate-900'}`}>{value.toFixed(1)}</div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Expand Button */}
         {localData.length > 10 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full py-2 text-sm text-[#0c3a66] font-medium hover:bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-2 text-sm text-pupr-blue font-medium hover:bg-slate-50 rounded-md border border-slate-200 flex items-center justify-center gap-2 transition-colors"
           >
             {isExpanded ? (
               <>
@@ -222,7 +223,7 @@ export const DataHujanInputCard: React.FC = () => {
         {isExpanded && (
           <div className="mt-4 border border-slate-300 rounded-md overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-[#0c3a66] text-white">
+              <thead className="bg-pupr-blue text-white">
                 <tr>
                   <th className="px-3 py-2 text-left font-semibold">Tahun</th>
                   <th className="px-3 py-2 text-left font-semibold">Tanggal</th>
@@ -241,7 +242,7 @@ export const DataHujanInputCard: React.FC = () => {
                           type="date"
                           value={item.tanggal}
                           onChange={(e) => setLocalData(prev => prev.map(d => d.id === item.id ? { ...d, tanggal: e.target.value } : d))}
-                          className="w-full px-2 py-1 border border-slate-300 rounded-md focus:border-[#0c3a66] focus:ring-1 focus:ring-[#0c3a66] focus:outline-none"
+                          className="w-full px-2 py-1 border border-slate-300 rounded-md focus:border-pupr-blue focus:ring-1 focus:ring-pupr-blue focus:outline-none"
                         />
                       </td>
                       <td className="px-3 py-2 tabular-nums tracking-tight relative">
@@ -250,11 +251,10 @@ export const DataHujanInputCard: React.FC = () => {
                             type="number"
                             value={item.curah_hujan === 0 ? 0 : (item.curah_hujan ?? '')}
                             onChange={(e) => handleValueChange(item.id, e.target.value)}
-                            className={`w-full px-2 py-1 text-right tabular-nums border rounded-md focus:ring-1 focus:outline-none ${
-                              isOutlier 
-                                ? 'border-red-300 text-red-700 focus:border-red-500 focus:ring-red-500' 
-                                : 'border-slate-300 focus:border-[#0c3a66] focus:ring-[#0c3a66]'
-                            }`}
+                            className={`w-full px-2 py-1 text-right tabular-nums border rounded-md focus:ring-1 focus:outline-none ${isOutlier
+                                ? 'border-red-300 text-red-700 focus:border-red-500 focus:ring-red-500'
+                                : 'border-slate-300 focus:border-pupr-blue focus:ring-pupr-blue'
+                              }`}
                             placeholder="0.0"
                             step="0.1"
                           />

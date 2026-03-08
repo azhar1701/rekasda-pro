@@ -93,7 +93,7 @@ export const AreaReductionCard: React.FC = () => {
                 {/* Point rainfall */}
                 <div className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-center">
                     <p className="text-[10px] font-semibold text-slate-400 uppercase">Hujan Titik</p>
-                    <p className="text-lg font-black text-slate-800">{hujanTitik.toFixed(1)}</p>
+                    <p className="text-lg font-extrabold text-slate-800">{hujanTitik.toFixed(1)}</p>
                     <p className="text-[10px] text-slate-400">mm</p>
                 </div>
 
@@ -130,7 +130,7 @@ export const AreaReductionCard: React.FC = () => {
                         value={isOverridden ? arfOverride : (arfResult?.arf?.toFixed(4) || '—')}
                         onChange={(e) => setArfOverride(e.target.value)}
                         className={cn(
-                            'w-full text-center text-lg font-black bg-transparent outline-none',
+                            'w-full text-center text-lg font-extrabold bg-transparent outline-none',
                             isOverridden ? 'text-amber-700' : 'text-pupr-blue'
                         )}
                     />
@@ -147,7 +147,7 @@ export const AreaReductionCard: React.FC = () => {
 
                 <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 text-center">
                     <p className="text-[10px] font-semibold text-pupr-blue uppercase">Hujan DAS</p>
-                    <p className="text-lg font-black text-emerald-700">{effectiveHujanDAS.toFixed(1)}</p>
+                    <p className="text-lg font-extrabold text-emerald-700">{effectiveHujanDAS.toFixed(1)}</p>
                     <p className="text-[10px] text-pupr-blue">mm</p>
                 </div>
             </div>

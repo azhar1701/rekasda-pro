@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { runFullQC, RainfallData, getQCSummary, QCValidationError } from '@/lib/utils/qc/dataQualityMath';
+import { runFullQC, RainfallData, QCValidationError } from '@/lib/utils/qc/dataQualityMath';
 
 export const useDataQualityControl = () => {
   const { setQCStatus, setError } = useHydrologyStore();
@@ -19,7 +19,7 @@ export const useDataQualityControl = () => {
 
       // Log summary for debugging
       if (import.meta.env.DEV) {
-        console.log('[QC]', getQCSummary(result));
+        // Log removed
       }
 
       return result;

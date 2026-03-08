@@ -39,7 +39,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
       />
 
       {/* Modal */}
-      <div className={`relative glass-strong rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200`}>
+      <div className={`relative glass-strong rounded-xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200`}>
         {/* Header */}
         {title && (
           <div className="px-6 py-4 border-b border-white/20 flex items-center justify-between">

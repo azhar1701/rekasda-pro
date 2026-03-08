@@ -18,6 +18,8 @@ export interface RationalMethodInput {
   S: number;
   /** Curah Hujan Harian Maksimum (Max Daily Rainfall) - mm */
   R24: number;
+  /** Intensitas Hujan (Intensity) - mm/jam (Optional: if already calculated) */
+  I?: number;
   /** Waktu Konsentrasi (Optional: akan dihitung Kirpich) - jam */
   tc?: number;
 }
@@ -159,6 +161,8 @@ export interface HSSGamma1Input {
   SN: number;
   /** Luas Relatif Hulu (Relative Upstream Area) */
   RUA: number;
+  /** Waktu Konsentrasi (Optional) */
+  Tc?: number;
 }
 
 /**

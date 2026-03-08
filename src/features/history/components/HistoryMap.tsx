@@ -245,7 +245,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
           <div className="bg-pupr-blue text-white p-3 sm:p-4 rounded-md border border-slate-200">
             <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">{selInfo.outputLabel}</span>
             <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-2xl sm:text-3xl font-black text-slate-900">{selectedMarker.outputs.Discharge}</span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{selectedMarker.outputs.Discharge}</span>
               <span className="text-xs sm:text-sm font-semibold text-slate-600">m³/s</span>
             </div>
           </div>

@@ -19,10 +19,10 @@ export class CSVParser {
       
       for (const path of possiblePaths) {
         try {
-          console.log(`Trying to load CSV from: ${path}`);
+          
           response = await fetch(path);
           if (response.ok) {
-            console.log(`Successfully loaded CSV from: ${path}`);
+            
             break;
           } else {
             console.warn(`Failed to load from ${path}: ${response.status}`);
@@ -69,7 +69,7 @@ export class CSVParser {
         }) as LocationData[];
 
       this.data = parsedData;
-      console.log(`Loaded ${parsedData.length} location records for Jawa Barat`);
+      
       
       return parsedData;
     } catch (error) {

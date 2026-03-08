@@ -357,7 +357,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
                 <div>
                   <div className="text-xs font-bold uppercase text-slate-500 tracking-wider mb-1">Debit Puncak Banjir Rencana</div>
                   <div className="flex items-baseline gap-2">
-                    <div className="text-4xl font-black text-slate-900">{result.Qp.toFixed(2)}</div>
+                    <div className="text-4xl font-extrabold text-slate-900">{result.Qp.toFixed(2)}</div>
                     <div className="text-lg font-bold text-slate-500">m³/s</div>
                   </div>
                 </div>

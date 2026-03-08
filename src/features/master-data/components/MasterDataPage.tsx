@@ -27,21 +27,20 @@ export const MasterDataPage: React.FC = () => {
     >
       <div className="space-y-6">
         {/* GovTech Grounded Tabs */}
-        <div className="border-b border-slate-300">
-          <div className="flex gap-0">
+        <div className="border-b border-slate-300 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-0 min-w-max">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
-              
+
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-4 ${
-                    isActive
-                      ? 'text-[#0c3a66] border-[#f2c114] bg-slate-50'
+                  className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-4 ${isActive
+                      ? 'text-pupr-blue border-pupr-yellow bg-slate-50'
                       : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50/50'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{tab.label}</span>

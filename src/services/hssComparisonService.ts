@@ -100,7 +100,12 @@ export async function calculateAllHSS(
       Ro: effectiveRainfall,
       A,
       L,
+      S: 0.01, // Default slope
       SF: defaultSF,
+      SIM: 0.5,
+      JN: 1,
+      SN: 1,
+      RUA: 0.5
     });
     
     results.push({

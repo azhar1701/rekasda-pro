@@ -296,7 +296,7 @@ export interface GoodnessOfFitResult {
  * ```typescript
  * const result = validateDistributionFit(rainfallData, 'gumbel');
  * if (result.isValid) {
- *   console.log('Distribution fits the data');
+ *   
  * }
  * ```
  */

@@ -13,9 +13,7 @@ export interface DelineationResult {
  * @param file The DEM file to process (mocked)
  * @returns A promise that resolves with mock Area and Length after a delay.
  */
-export const processDEM = async (file: File): Promise<DelineationResult> => {
-  console.log(`Processing DEM file: ${file.name} (${file.size} bytes)`);
-
+export const processDEM = async (_file: File): Promise<DelineationResult> => {
   // Simulate network/processing delay (1.5 - 3 seconds)
   const delay = 1500 + Math.random() * 1500;
   await new Promise((resolve) => setTimeout(resolve, delay));

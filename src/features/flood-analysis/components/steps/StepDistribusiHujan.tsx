@@ -84,7 +84,7 @@ export const StepDistribusiHujan: React.FC = () => {
     <div className="space-y-4">
       <div className="bg-white border border-slate-300 rounded-md p-4">
         <div className="flex items-center gap-2 mb-4">
-          <CloudRain className="w-5 h-5 text-[#0c3a66]" />
+          <CloudRain className="w-5 h-5 text-pupr-blue" />
           <h3 className="text-sm font-bold text-slate-900">Distribusi Hujan Jam-jaman (IDF + ABM)</h3>
         </div>
 
@@ -123,7 +123,7 @@ export const StepDistribusiHujan: React.FC = () => {
         <button
           onClick={handleCalculate}
           disabled={isCalculatingABM}
-          className="w-full px-4 py-2 bg-[#0c3a66] hover:bg-[#0d4578] disabled:bg-slate-400 text-white text-sm font-semibold rounded flex items-center justify-center gap-2 transition-colors"
+          className="w-full px-4 py-2 bg-pupr-blue hover:bg-pupr-blue/90 disabled:bg-slate-400 text-white text-sm font-semibold rounded flex items-center justify-center gap-2 transition-colors"
         >
           <Calculator className="w-4 h-4" />
           {isCalculatingABM ? 'Menghitung ABM via API...' : 'Simpan & Lanjutkan Distribusi ABM'}
@@ -146,7 +146,7 @@ export const StepDistribusiHujan: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-[#0c3a66] text-white">
+                  <tr className="bg-pupr-blue text-white">
                     <th className="px-2 py-2 text-center">t (jam)</th>
                     <th className="px-2 py-2 text-right">I (mm/jam)</th>
                     <th className="px-2 py-2 text-right">X (mm)</th>

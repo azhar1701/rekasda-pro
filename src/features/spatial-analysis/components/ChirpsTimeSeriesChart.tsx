@@ -25,8 +25,8 @@ export const ChirpsTimeSeriesChart: React.FC<ChirpsTimeSeriesChartProps> = ({
   const maxRainfall = Math.max(...chartData.map(d => d.rainfall), 10);
 
   return (
-    <Card className="p-4 border-l-4 border-l-[#0c3a66] shadow-sm bg-white">
-      <h4 className="text-sm font-bold text-slate-700 mb-4 font-formal flex items-center justify-between">
+    <Card className="p-4 border-l-4 border-l-pupr-blue shadow-sm bg-white">
+      <h4 className="text-sm font-bold text-slate-700 mb-4  flex items-center justify-between">
         {title}
         <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded font-mono">
           N = {data.length} Hari
