@@ -2,16 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { CloudRain, AlertCircle, Save, CheckCircle, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig } from '@/stores/useHydrologyStore';
-import { calculateIsohyetAverage } from '@/lib/engine/rainfallAnalysis';
+import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig, type DataHujan } from '@/stores/useHydrologyStore';
+import { calculateAlgebraicMean, calculateThiessenPolygon, calculateIsohyet } from '@/lib/utils/hydrology/arealRainfall';
 import { determineRainfallMethod, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
-import { calculateArealSeries, extractAnnualMaximums } from '@/utils/rainfallSeriesUtils';
 import { toast } from '@/hooks/useToast';
 
 export const HujanWilayahCard: React.FC = () => {
   const {
     curahHujanWilayah, setCurahHujanWilayah, stasiunList, morfometriDAS,
-    fetchMultipleStationsData, setArealRainfallData
+    fetchMultipleStationsData, setArealRainfallData, setActiveRainfallSource
   } = useHydrologyStore();
 
   const [metode, setMetode] = useState<'aljabar' | 'thiessen' | 'isohyet'>(curahHujanWilayah?.metode || 'aljabar');
@@ -117,56 +116,140 @@ export const HujanWilayahCard: React.FC = () => {
       let avgValue = 0;
       let amsArray: number[] = [];
 
-      if (metode === 'thiessen' && safeConfigs.length > 0) {
-        // --- Calculate Weights ---
-        const total = safeConfigs.reduce((sum, c) => sum + c.luasPengaruh, 0);
-        const weights: Record<string, number> = {};
-        safeConfigs.forEach(c => weights[c.stasiunId] = c.luasPengaruh / total);
+      // HELPER: Ekstrak data curah hujan tahunan maksimum dari stasiun
+      const extractStationAms = (stationData: any[]) => {
+        const byYear = new Map<number, number>();
+        stationData.forEach(d => {
+          const year = new Date(d.tanggal).getFullYear();
+          const current = byYear.get(year) || 0;
+          if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
+        });
+        return Array.from(byYear.entries()).map(([year, hujan]) => ({ year, hujan }));
+      };
 
-        // --- Fetch Data & Calculate Series ---
+      if (metode === 'thiessen' && safeConfigs.length > 0) {
         const stasiunIds = safeConfigs.map(c => c.stasiunId);
         await fetchMultipleStationsData(stasiunIds);
         const currentData = useHydrologyStore.getState().dataHujan;
 
-        const dailySeries = calculateArealSeries(currentData, weights);
-        const amsSeries = extractAnnualMaximums(dailySeries);
-        
-        amsArray = amsSeries.map(d => d.value);
-        avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+        // Buat struktur array tahunan konsolidasi untuk Thiessen AMS
+        const yearsAvailable = new Set<number>();
+        const stationAmsMap = new Map<string, { year: number, hujan: number }[]>();
 
-        setArealRainfallData('thiessen', dailySeries);
-        toast.success(`Series AMS Thiessen (${amsArray.length} tahun) berhasil dihitung.`);
+        stasiunIds.forEach(id => {
+          const sData = currentData.filter(d => d.stasiun_id === id);
+          const sAms = extractStationAms(sData);
+          sAms.forEach(val => yearsAvailable.add(val.year));
+          stationAmsMap.set(id, sAms);
+        });
+
+        const arealResults: DataHujan[] = [];
+
+        // Loop per tahun, jalankan kalkulasi murni P = Σ(Ai*Xi)/ΣAi
+        Array.from(yearsAvailable).sort().forEach(year => {
+          const stationsInput = safeConfigs.map(cfg => {
+            const sAms = stationAmsMap.get(cfg.stasiunId);
+            const yearData = sAms?.find(a => a.year === year);
+            return {
+              rainfall: yearData ? yearData.hujan : 0,
+              area: cfg.luasPengaruh
+            };
+          });
+
+          const thiessenP = calculateThiessenPolygon(stationsInput);
+          amsArray.push(thiessenP);
+          arealResults.push({
+            id: `thiessen-${year}`,
+            stasiun_id: 'thiessen',
+            tanggal: `${year}-12-31`,
+            curah_hujan: Number(thiessenP.toFixed(2))
+          });
+        });
+
+        avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+        setArealRainfallData('thiessen', arealResults);
+        setActiveRainfallSource('thiessen');
+        toast.success(`Hujan Kawasan Thiessen (${amsArray.length} tahun) berhasil dihitung.`);
 
       } else if (metode === 'isohyet' && safeIsohyet.length > 0) {
-        // For Isohyet, we use the updated calculateIsohyetAverage that supports arrays
-        const segments = safeIsohyet.map(s => ({
-          luasAntarGaris: s.luasAntarGaris,
-          annualMax: s.annualMax || [s.curahHujanRataRata] // Fallback to single value if series not provided
+        // Asumsi data yang dipassing oleh user Isohyet di UI sudah berupa CurahHujanRataRata per zona.
+        // Berbeda dengan thiessen, ini biasanya dimasukkan manual (dari kontur Arcgis statik)
+
+        // Jalankan kalkulasi murni P = Σ(Ai * Rata2_i) / ΣAi
+        const isohyetInput = safeIsohyet.map(s => ({
+          averageRainfall: s.curahHujanRataRata,
+          area: s.luasAntarGaris
         }));
-        
-        amsArray = calculateIsohyetAverage(segments as any);
-        avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
-        
-        setArealRainfallData('isohyet', null);
-        toast.success(`Series AMS Isohyet (${amsArray.length} tahun) berhasil dihitung.`);
+
+        avgValue = calculateIsohyet(isohyetInput);
+
+        // Map existing annualMax if available to DataHujan format
+        const arealResults: DataHujan[] = [];
+        const amsBase = safeIsohyet[0]?.annualMax || [];
+
+        amsBase.forEach((val, idx) => {
+          // If years are not explicitly provided for Isohyet, we fallback to an indexed year starting from 2011
+          // or try to match the store's available years. For now, we'll use 2011 + idx as a placeholder
+          // unless the user adds year support to Isohyet UI.
+          const year = 2011 + idx;
+          arealResults.push({
+            id: `isohyet-${year}`,
+            stasiun_id: 'isohyet',
+            tanggal: `${year}-12-31`,
+            curah_hujan: val
+          });
+        });
+
+        amsArray = amsBase.length > 0 ? amsBase : [avgValue];
+
+        setArealRainfallData('isohyet', arealResults.length > 0 ? arealResults : null);
+        setActiveRainfallSource('isohyet');
+        toast.success(`Hujan Kawasan Isohyet berhasil dihitung (Rata-rata: ${avgValue.toFixed(2)} mm).`);
 
       } else if (metode === 'aljabar') {
         const stasiunIds = stasiunList.map(s => s.id);
         if (stasiunIds.length > 0) {
-          const weights: Record<string, number> = {};
-          stasiunIds.forEach(id => weights[id] = 1 / stasiunIds.length);
-
           await fetchMultipleStationsData(stasiunIds);
           const currentData = useHydrologyStore.getState().dataHujan;
 
-          const dailySeries = calculateArealSeries(currentData, weights);
-          const amsSeries = extractAnnualMaximums(dailySeries);
-          
-          amsArray = amsSeries.map(d => d.value);
-          avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+          const yearsAvailable = new Set<number>();
+          const stationAmsMap = new Map<string, { year: number, hujan: number }[]>();
 
-          setArealRainfallData('aljabar', dailySeries);
-          toast.success(`Series AMS Aljabar (${amsArray.length} tahun) berhasil dihitung.`);
+          stasiunIds.forEach(id => {
+            const sData = currentData.filter(d => d.stasiun_id === id);
+            const sAms = extractStationAms(sData);
+            sAms.forEach(val => yearsAvailable.add(val.year));
+            stationAmsMap.set(id, sAms);
+          });
+
+          const arealResults: DataHujan[] = [];
+
+          // Loop per tahun, jalankan kalkulasi murni P = (X1+X2+...Xn)/n
+          Array.from(yearsAvailable).sort().forEach(year => {
+            const stationsRainfall = stasiunIds.map(id => {
+              const sAms = stationAmsMap.get(id);
+              const yearData = sAms?.find(a => a.year === year);
+              return yearData ? yearData.hujan : 0;
+            });
+
+            // Abaikan stasiun bernilai 0 jika data memang hilang (atau biarkan 0 jika memang kering)
+            const validRainfalls = stationsRainfall.filter(r => r > 0);
+            if (validRainfalls.length > 0) {
+              const aljabarP = calculateAlgebraicMean(validRainfalls);
+              amsArray.push(aljabarP);
+              arealResults.push({
+                id: `aljabar-${year}`,
+                stasiun_id: 'aljabar',
+                tanggal: `${year}-12-31`,
+                curah_hujan: Number(aljabarP.toFixed(2))
+              });
+            }
+          });
+
+          avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
+          setArealRainfallData('aljabar', arealResults);
+          setActiveRainfallSource('aljabar');
+          toast.success(`Hujan Kawasan Aljabar (${amsArray.length} tahun) berhasil dihitung.`);
         }
       }
 

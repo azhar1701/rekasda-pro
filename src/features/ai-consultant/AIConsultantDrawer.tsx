@@ -15,9 +15,9 @@ import 'katex/dist/katex.min.css';
 import { consultHydrologist } from '@/services/geminiService';
 import { useAIContext, type ActiveModule, type SuggestionChip } from '@/hooks/useAIContext';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { 
-    Bot, User, Send, X, Sparkles, Zap, 
-    AlertTriangle, Info, Maximize2, Minimize2, 
+import {
+    Bot, User, Send, X, Sparkles, Zap,
+    AlertTriangle, Info, Maximize2, Minimize2,
     Shield, Activity, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -227,7 +227,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                         <Zap className="w-4 h-4 text-pupr-blue" />
                                     </div>
                                 </div>
-                                
+
                                 <h3 className="text-lg font-black text-slate-900 mb-2 tracking-tight">Halo, Saya Konsultan AI</h3>
                                 <p className="text-[11px] text-slate-500 max-w-[240px] leading-relaxed font-medium mb-6">
                                     Saya siap membantu mengaudit parameter hidrologi Anda berdasarkan standar <span className="text-pupr-blue font-bold">SNI & Permen PUPR</span>.
@@ -281,10 +281,10 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                                     remarkPlugins={[remarkGfm, remarkMath]}
                                                     rehypePlugins={[rehypeKatex]}
                                                     components={{
-                                                        h3: ({node, ...props}: any) => <h3 className="flex items-center gap-2 mb-3 text-pupr-blue font-black" {...props} />,
-                                                        blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-pupr-yellow bg-slate-50 py-1 px-4 italic" {...props} />,
-                                                        code: ({node, inline, ...props}: any) => 
-                                                            inline 
+                                                        h3: ({ node, ...props }: any) => <h3 className="flex items-center gap-2 mb-3 text-pupr-blue font-black" {...props} />,
+                                                        blockquote: ({ node, ...props }: any) => <blockquote className="border-l-4 border-pupr-yellow bg-slate-50 py-1 px-4 italic" {...props} />,
+                                                        code: ({ node, inline, ...props }: any) =>
+                                                            inline
                                                                 ? <code className="bg-slate-100 text-pupr-blue px-1.5 py-0.5 rounded font-bold" {...props} />
                                                                 : <code className="block bg-slate-900 text-slate-100 p-3 rounded-xl my-3 text-[10px] font-mono overflow-x-auto" {...props} />
                                                     }}
@@ -388,5 +388,3 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         </>
     );
 };
-
-export default AIConsultantDrawer;

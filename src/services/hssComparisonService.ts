@@ -5,6 +5,7 @@
 
 import { calculateHSSNakayasu, calculateHSSSnyder } from '@/lib/engine/flood';
 import { calculateHSSGamma1 } from '@/lib/engine/flood';
+import { calculateMononobeIntensity } from '@/lib/utils/hydrology/runoff';
 import type { HSSComparisonResult } from '@/stores/useHydrologyStore';
 
 export interface HSSComparisonInput {
@@ -169,7 +170,7 @@ export function compareRainfallDistributions(
 function calculateMononobeDistribution(R: number, duration: number): number[] {
   const distribution: number[] = [];
   for (let t = 1; t <= duration; t++) {
-    const I = (R / 24) * Math.pow(24 / t, 2 / 3);
+    const I = calculateMononobeIntensity(R, t);
     distribution.push(I);
   }
   return distribution;

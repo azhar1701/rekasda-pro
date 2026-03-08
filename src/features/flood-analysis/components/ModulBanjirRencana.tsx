@@ -24,7 +24,6 @@ import { toast } from '@/hooks/useToast';
 import * as Select from '@radix-ui/react-select';
 import { cn } from '@/lib/utils';
 import { useFloodMethod } from '@/hooks/useFloodMethod';
-import { FloodMethodRecommenderBanner } from '@/features/flood-analysis/components/FloodMethodRecommenderBanner';
 import { useEffect } from 'react';
 
 // ────────────────────────────────────────────
@@ -411,9 +410,6 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
                     <div className="md:col-span-5 flex flex-col gap-5">
                         <div className="bg-white/60 backdrop-blur border border-white/60 rounded-md shadow-sm p-5 space-y-5">
-
-                            {/* Expert Recommender Banner */}
-                            <FloodMethodRecommenderBanner />
 
                             {/* Project Banner (SSOT) */}
                             <ProjectContextBanner />

@@ -554,7 +554,7 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
   selectStasiun: (stasiun) => {
-    set({ selectedStasiun: stasiun });
+    set({ selectedStasiun: stasiun, activeRainfallSource: 'titik' });
     if (stasiun) {
       get().fetchDataHujan(stasiun.id);
     } else {
@@ -743,14 +743,33 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     if (!supabase || stasiunIds.length === 0) return;
     set({ isLoading: true });
     try {
-      const { data, error } = await supabase
-        .from('master_data_hujan')
-        .select('*')
-        .in('stasiun_id', stasiunIds)
-        .order('tanggal', { ascending: true });
-      
-      if (error) throw error;
-      set({ dataHujan: data || [] });
+      let allData: any[] = [];
+      let hasMore = true;
+      let page = 0;
+      const pageSize = 1000;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('master_data_hujan')
+          .select('*')
+          .in('stasiun_id', stasiunIds)
+          .order('tanggal', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          if (data.length < pageSize) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+      set({ dataHujan: allData });
     } catch (error: any) {
       set({ error: error.message });
     } finally {

@@ -16,15 +16,17 @@ import '@xyflow/react/dist/style.css';
 
 import { GovTechNode, GovTechNodeData } from '../../components/GovTechNode';
 import { useWorkflowStore } from '../../stores/useWorkflowStore';
+import { useHydrologyStore } from '../../stores/useHydrologyStore';
 
 
 const nodeTypes = {
   govtech: GovTechNode,
 };
 
-const initialNodes: GovTechNodeData[] = [
+// Base Node Definition (Static Coordinates & Labels)
+const baseNodes: GovTechNodeData[] = [
   // ── PHASE 1: INPUT (y=0) ──
-  { id: 'I1', type: 'govtech', position: { x: 0, y: 0 },   data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas' } },
+  { id: 'I1', type: 'govtech', position: { x: 0, y: 0 }, data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas' } },
   { id: 'I2', type: 'govtech', position: { x: 280, y: 0 }, data: { label: 'Data Hujan (Manual/Excel/OCR)', phase: 'input', moduleId: 'hujan' } },
   { id: 'I3', type: 'govtech', position: { x: 560, y: 0 }, data: { label: 'Karakteristik & Spasial DAS', phase: 'input', moduleId: 'spasial' } },
   { id: 'I4', type: 'govtech', position: { x: 840, y: 0 }, data: { label: 'Tutupan Lahan (Parameter C)', phase: 'input', moduleId: 'tutupan' } },
@@ -40,7 +42,7 @@ const initialNodes: GovTechNodeData[] = [
   { id: 'E3', type: 'govtech', position: { x: 700, y: 400 }, data: { label: 'Distribusi Jam-jaman & Hujan Efektif', phase: 'engine', moduleId: 'distribusi' } },
 
   // ── PHASE 4: APPLICATION MODULES (y=600) ──
-  { id: 'M1', type: 'govtech', position: { x: 0, y: 600 },   data: { label: 'Banjir Rencana (HSS)', phase: 'module', moduleId: 'banjir' } },
+  { id: 'M1', type: 'govtech', position: { x: 0, y: 600 }, data: { label: 'Banjir Rencana (HSS)', phase: 'module', moduleId: 'banjir' } },
   { id: 'M2', type: 'govtech', position: { x: 280, y: 600 }, data: { label: 'Neraca Air (FJ Mock)', phase: 'module', moduleId: 'neraca' } },
   { id: 'M3', type: 'govtech', position: { x: 560, y: 600 }, data: { label: 'Perencanaan Embung', phase: 'module', moduleId: 'embung' } },
   { id: 'M4', type: 'govtech', position: { x: 840, y: 600 }, data: { label: 'Kapasitas Saluran (Manning)', phase: 'module', moduleId: 'saluran' } },
@@ -90,9 +92,54 @@ const initialEdges: Edge[] = [
 ];
 
 export function WorkflowCanvas() {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const setActiveModule = useWorkflowStore((state) => state.setActiveModule);
+  const hydroState = useHydrologyStore();
+
+  // Compute dynamic node statuses based on store values
+  const computeStatus = (moduleId: string): string => {
+    switch (moduleId) {
+      // Inputs
+      case 'identitas': return hydroState.identitasLokasi?.namaPekerjaan ? 'Selesai' : 'Siap Diisi';
+      case 'hujan': return hydroState.dataHujan?.length > 0 ? 'Selesai' : 'Siap Diisi';
+      case 'spasial': return hydroState.morfometriDAS ? 'Selesai' : 'Menunggu Data';
+      case 'tutupan': return hydroState.tutupanLahan ? 'Selesai' : 'Menunggu Data';
+
+      // Pre-Processing
+      case 'qc': return hydroState.qcResults || hydroState.isQCOverridden ? 'Selesai' : (hydroState.dataHujan?.length > 0 ? 'Siap Diuji' : 'Menunggu Data');
+      case 'thiessen': return hydroState.hasilThiessen ? 'Selesai' : (hydroState.stasiunList?.length > 0 ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'satelit': return 'Menunggu Data'; // Usually optional/manual flow
+
+      // Engine
+      case 'frekuensi': return hydroState.hasilAnalisisFrekuensi ? 'Selesai' : (hydroState.hasilThiessen ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'arf': return hydroState.hasilARF ? 'Selesai' : (hydroState.hasilAnalisisFrekuensi && hydroState.morfometriDAS ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'distribusi': return hydroState.distribusiHujanJamJaman && hydroState.hujanEfektif ? 'Selesai' : (hydroState.hasilARF && hydroState.landCoverParams ? 'Siap Dihitung' : 'Menunggu Data');
+
+      // Modules
+      case 'banjir': return hydroState.hasilBanjir ? 'Selesai' : (hydroState.hujanEfektif && hydroState.morfometriDAS ? 'Siap Disimulasi' : 'Menunggu Data');
+      case 'neraca': return hydroState.hasilMock ? 'Selesai' : (hydroState.hasilThiessen ? 'Siap Disimulasi' : 'Menunggu Data');
+      case 'embung': return hydroState.hasilEmbung ? 'Selesai' : (hydroState.hasilBanjir ? 'Siap Didesain' : 'Menunggu Data');
+      case 'saluran': return 'Tersedia'; // Independent usually
+
+      // Outputs
+      case 'dashboard': return hydroState.hasilBanjir || hydroState.hasilMock ? 'Tersedia' : 'Menunggu Data';
+      case 'ai': return 'Tersedia';
+      case 'ekspor': return hydroState.hasilBanjir || hydroState.hasilMock ? 'Tersedia' : 'Menunggu Data';
+
+      default: return 'Siap Diisi';
+    }
+  };
+
+  // Map the computed status into the nodes
+  const initialNodesWithStatus = baseNodes.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      status: computeStatus(node.data.moduleId || '')
+    }
+  }));
+
+  const [nodes, , onNodesChange] = useNodesState(initialNodesWithStatus);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'smoothstep' }, eds)), [setEdges]);
 

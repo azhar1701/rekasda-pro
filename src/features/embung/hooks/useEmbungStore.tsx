@@ -24,7 +24,7 @@ import type {
 // State Shape
 // ---------------------------------------------------------------------------
 
-export interface EmbungState {
+interface EmbungState {
     /** Active sub-tab */
     activeTab: 'capacity' | 'routing' | 'operation' | 'sediment';
 

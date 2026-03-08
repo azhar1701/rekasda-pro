@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useHydrologyStore, type ThiessenStasiunConfig } from '@/stores/useHydrologyStore';
-import { calculateThiessenAverage, type ThiessenStation } from '@/lib/engine/rainfallAnalysis';
-import { Layers, Plus, Trash2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Layers, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
@@ -82,44 +81,17 @@ export const ThiessenCalculator: React.FC = () => {
         }
 
         try {
-            // Build station data with mock annual max from dataHujan
-            // In production, each station would have its own data series
-            const stations: ThiessenStation[] = configs.map(c => {
-                // Extract annual max from dataHujan for this station
-                const stationData = dataHujan.filter(d => d.stasiun_id === c.stasiunId);
-                const byYear = new Map<number, number>();
-                stationData.forEach(d => {
-                    const year = new Date(d.tanggal).getFullYear();
-                    const current = byYear.get(year) || 0;
-                    if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
-                });
-
-                // If no station-specific data, generate mock based on ID hash
-                let annualMax = Array.from(byYear.values());
-                if (annualMax.length === 0) {
-                    throw new Error(`Data hujan untuk stasiun ${c.namaStasiun} tidak ditemukan. Silakan isi data di Master Hidrologi.`);
-                }
-
-                return {
-                    stasiunId: c.stasiunId,
-                    namaStasiun: c.namaStasiun,
-                    luasPengaruh: c.luasPengaruh,
-                    annualMax,
-                };
-            });
-
-            const result = calculateThiessenAverage(stations);
-
+            // Kita simpan pembobotan Thiessen saja ke store Pipeline
             setHasilThiessen({
-                stasiunConfigs: result.bobotStasiun.map((b, i) => ({
-                    ...b,
-                    luasPengaruh: configs[i].luasPengaruh,
+                stasiunConfigs: configsWithBobot.map(c => ({
+                    ...c,
+                    luasPengaruh: c.luasPengaruh,
                 })),
-                totalLuas: result.totalLuas,
-                hujanRataRataDAS: result.hujanRataRataDAS,
+                totalLuas: totalLuas,
+                hujanRataRataDAS: [], // Akan dikalkukasi penuh di tab Curah Hujan Wilayah
             });
 
-            toast.success(`Thiessen selesai: ${result.bobotStasiun.length} stasiun, total luas ${result.totalLuas.toFixed(1)} km²`);
+            toast.success(`Konfigurasi Thiessen disimpan: ${configsWithBobot.length} stasiun, total luas ${totalLuas.toFixed(1)} km²`);
         } catch (err: any) {
             toast.error(err.message || 'Gagal menghitung Thiessen.');
         }
@@ -263,14 +235,7 @@ export const ThiessenCalculator: React.FC = () => {
                     </div>
                 )}
 
-                {/* Thiessen result summary */}
-                {hasilThiessen && hasilThiessen.hujanRataRataDAS.length > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-md text-emerald-700 text-xs font-medium">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Seri hujan rata-rata DAS: {hasilThiessen.hujanRataRataDAS.length} tahun ·
-                        Rata-rata: {(hasilThiessen.hujanRataRataDAS.reduce((s, v) => s + v, 0) / hasilThiessen.hujanRataRataDAS.length).toFixed(1)} mm
-                    </div>
-                )}
+                {/* Output indicator removed, processed downstream instead */}
 
                 {/* Calculate button */}
                 {configs.length >= 2 && (

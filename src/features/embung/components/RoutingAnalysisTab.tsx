@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
 import { Download, Calculator, Info, Activity, ArrowDownRight, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
-// import { calculateFloodRouting } from '@/lib/engine/embung';
 import { toast } from '@/hooks/useToast';
+import { modifiedPulsRouting, ReservoirCharacteristicCurve } from '@/lib/utils/hydrology/floodRouting';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
@@ -81,33 +81,41 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
         setResultData(null);
         setSummary(null);
 
+        // Preference: Try local pure calculation first for "Pure Hydrology" integration
         try {
-            const inflowInput = hydrograph.map(h => ({
-                time: h.time * 3600,
-                discharge: h.inflow
-            }));
+            const dtSeconds = 3600; // 1 jam
+            const inflowArray = hydrograph.map(h => h.inflow);
 
-            const routingResult = await routingMutation.mutateAsync({
-                inflowHydrograph: inflowInput,
-                stageStorageCurve: MOCK_STAGE_STORAGE,
-                stageDischargeCurve: MOCK_STAGE_DISCHARGE,
-                deltaT: 3600,
-                initialElevation: 100
-            });
+            const characteristicCurve: ReservoirCharacteristicCurve = {
+                elevations: MOCK_STAGE_STORAGE.elevation,
+                storages: MOCK_STAGE_STORAGE.storage,
+                outflows: MOCK_STAGE_DISCHARGE.discharge
+            };
 
-            const chartData = routingResult.steps.map((step: any) => ({
-                time: step.time / 3600,
-                inflow: Number(step.inflowAvg.toFixed(2)),
+            const routingResult = modifiedPulsRouting(
+                inflowArray,
+                dtSeconds,
+                characteristicCurve,
+                MOCK_STAGE_STORAGE.elevation[0] // Initial elevation at spillway crest
+            );
+
+            const chartData = routingResult.map((step) => ({
+                time: step.timeIndex, // in hours
+                inflow: Number(step.inflow.toFixed(2)),
                 outflow: Number(step.outflow.toFixed(2)),
                 elevation: Number(step.elevation.toFixed(2))
             }));
 
             setResultData(chartData);
 
+            const peakInflow = Math.max(...inflowArray);
+            const peakOutflow = Math.max(...routingResult.map(r => r.outflow));
+            const attenuation = peakInflow > 0 ? ((peakInflow - peakOutflow) / peakInflow) * 100 : 0;
+
             const s = {
-                peakInflow: Number(routingResult.peakInflow.toFixed(2)),
-                peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
-                attenuation: Number((routingResult.attenuationRatio).toFixed(1))
+                peakInflow: Number(peakInflow.toFixed(2)),
+                peakOutflow: Number(peakOutflow.toFixed(2)),
+                attenuation: Number(attenuation.toFixed(1))
             };
 
             setSummary(s);
@@ -117,9 +125,44 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
                 umurSedimen: hasilEmbung?.umurSedimen || 0
             });
 
-            toast.success('Simulasi Penelusuran Banjir REST API Engine berhasil.');
+            toast.success('Simulasi Penelusuran Banjir (Pure Local Engine) berhasil.');
         } catch (error: any) {
-            toast.error(`Terjadi kesalahan: ${error.detail ?? error.message ?? 'Unknown error'}`);
+            console.error('Local routing failed, trying mutation...', error);
+            // Fallback to mutation if local fails (optional, based on requirement)
+            try {
+                const inflowInput = hydrograph.map(h => ({
+                    time: h.time * 3600,
+                    discharge: h.inflow
+                }));
+
+                const routingResult = await routingMutation.mutateAsync({
+                    inflowHydrograph: inflowInput,
+                    stageStorageCurve: MOCK_STAGE_STORAGE,
+                    stageDischargeCurve: MOCK_STAGE_DISCHARGE,
+                    deltaT: 3600,
+                    initialElevation: 100
+                });
+
+                const chartData = routingResult.steps.map((step: any) => ({
+                    time: step.time / 3600,
+                    inflow: Number(step.inflowAvg.toFixed(2)),
+                    outflow: Number(step.outflow.toFixed(2)),
+                    elevation: Number(step.elevation.toFixed(2))
+                }));
+
+                setResultData(chartData);
+
+                const s = {
+                    peakInflow: Number(routingResult.peakInflow.toFixed(2)),
+                    peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
+                    attenuation: Number((routingResult.attenuationRatio).toFixed(1))
+                };
+
+                setSummary(s);
+                toast.success('Simulasi Penelusuran Banjir REST API berhasil.');
+            } catch (innerError: any) {
+                toast.error(`Gagal: ${innerError.message}`);
+            }
         }
     };
 

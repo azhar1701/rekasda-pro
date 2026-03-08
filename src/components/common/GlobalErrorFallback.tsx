@@ -39,7 +39,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
   const [timestamp] = useState(() => formatTimestamp());
 
   // const handleReload = () => {
-    // window.location.reload();
+  // window.location.reload();
   // };
 
   const handleGoHome = () => {
@@ -170,5 +170,3 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
     </div>
   );
 };
-
-export default GlobalErrorFallback;

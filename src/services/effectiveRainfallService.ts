@@ -5,6 +5,12 @@
 
 import type { LandCoverParameters, EffectiveRainfallResult } from '@/stores/useHydrologyStore';
 
+import { 
+  calculateEffectiveRainfallByC as calcC, 
+  calculateEffectiveRainfallByCN as calcCN, 
+  calculateEffectiveRainfallByPhi as calcPhi 
+} from '@/lib/utils/hydrology/runoff';
+
 /**
  * Metode Koefisien Pengaliran (C)
  * Sesuai SNI 2415:2016 untuk Metode Rasional
@@ -13,7 +19,7 @@ export function calculateEffectiveRainfallByC(
   totalRainfall: number,
   C: number
 ): EffectiveRainfallResult {
-  const effectiveRainfall = totalRainfall * C;
+  const effectiveRainfall = calcC(totalRainfall, C);
   const losses = totalRainfall - effectiveRainfall;
 
   return {
@@ -32,23 +38,7 @@ export function calculateEffectiveRainfallByCN(
   totalRainfall: number,
   CN: number
 ): EffectiveRainfallResult {
-  // Convert rainfall to inches for SCS formula
-  const P = totalRainfall / 25.4;
-  
-  // Calculate potential maximum retention (inches)
-  const S = (1000 / CN) - 10;
-  
-  // Initial abstraction (typically 0.2 * S)
-  const Ia = 0.2 * S;
-  
-  // Calculate effective rainfall (runoff)
-  let effectiveRainfall_inches = 0;
-  if (P > Ia) {
-    effectiveRainfall_inches = Math.pow(P - Ia, 2) / (P - Ia + S);
-  }
-  
-  // Convert back to mm
-  const effectiveRainfall = effectiveRainfall_inches * 25.4;
+  const effectiveRainfall = calcCN(totalRainfall, CN);
   const losses = totalRainfall - effectiveRainfall;
 
   return {
@@ -68,11 +58,7 @@ export function calculateEffectiveRainfallByPhiIndex(
   phiIndex: number,
   duration: number
 ): EffectiveRainfallResult {
-  // Total infiltration over duration
-  const totalInfiltration = phiIndex * duration;
-  
-  // Effective rainfall is total minus infiltration
-  const effectiveRainfall = Math.max(0, totalRainfall - totalInfiltration);
+  const effectiveRainfall = calcPhi(totalRainfall, phiIndex, duration);
   const losses = totalRainfall - effectiveRainfall;
 
   return {

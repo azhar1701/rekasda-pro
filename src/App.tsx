@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, FileText, TrendingUp, History } from 'lucide-react';
 import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
-import { FloodAnalysisTab } from '@/features/flood-analysis/components/FloodAnalysisTab';
-import { WaterBalanceTab } from '@/features/water-balance/components/WaterBalanceTab';
-
-import { EmbungDashboard } from '@/features/embung/components/EmbungDashboard';
+import { MasterDataPage } from '@/features/master-data/components/MasterDataPage';
+import { ModulAnalisisFrekuensi } from '@/features/flood-analysis/components/ModulAnalisisFrekuensi';
 import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
 import { AIConsultantDrawer } from '@/features/ai-consultant/AIConsultantDrawer';
-import { MasterDataPage } from '@/features/master-data/components/MasterDataPage';
-import { ModulAnalisisFrekuensi } from '@/features/flood-analysis/components/ModulAnalisisFrekuensi';
-import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataTab } from '@/features/history/components/AllDataTab';
+import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
+
+// Lazy load heavy computational tabs/modules
+const FloodAnalysisTab = React.lazy(() => import('@/features/flood-analysis/components/FloodAnalysisTab').then(m => ({ default: m.FloodAnalysisTab })));
+const WaterBalanceTab = React.lazy(() => import('@/features/water-balance/components/WaterBalanceTab').then(m => ({ default: m.WaterBalanceTab })));
+const EmbungDashboard = React.lazy(() => import('@/features/embung/components/EmbungDashboard').then(m => ({ default: m.EmbungDashboard })));
+const WorkflowCanvas = React.lazy(() => import('@/features/workflow/WorkflowCanvas').then(m => ({ default: m.WorkflowCanvas })));
 import { AllCalculationsData } from '@/services/allCalculationsService';
 import { ToastContainer } from '@/components/ui/feedback/Toast';
 import { CalculationType } from '@/types/types';
@@ -26,24 +29,33 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { useDatabaseStatus } from '@/features/history/components/DatabaseTest';
 import { APP_NAME } from '@/constants';
 import { SideDrawer } from '@/components/SideDrawer';
-import { WorkflowCanvas } from '@/features/workflow/WorkflowCanvas';
 import { GitMerge } from 'lucide-react';
 
+// Loading fallback component
+const TabFallback = () => (
+  <div className="flex flex-col items-center justify-center p-12 w-full h-96 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm">
+    <div className="w-12 h-12 border-4 border-[#0c3a66]/20 border-t-[#0c3a66] rounded-full animate-spin mb-4" />
+    <p className="text-sm font-bold text-slate-500 animate-pulse">Memuat Modul...</p>
+  </div>
+);
+
 enum Tab {
-  WORKFLOW = 'WORKFLOW',
-  SALURAN = 'SALURAN',
-  BANJIR = 'BANJIR',
-  NERACA = 'NERACA',
-  EMBUNG = 'EMBUNG',
-  MASTER = 'MASTER',
-  FREKUENSI = 'FREKUENSI',
-  HISTORY = 'HISTORY',
-  AI = 'AI',
-  EXEC = 'EXEC'
+  WORKFLOW = '/workflow',
+  SALURAN = '/saluran',
+  BANJIR = '/banjir',
+  NERACA = '/neraca',
+  EMBUNG = '/embung',
+  MASTER = '/master',
+  FREKUENSI = '/frekuensi',
+  HISTORY = '/history',
+  AI = '/ai',
+  EXEC = '/exec'
 }
 
-const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>(Tab.MASTER);
+const AppLayout: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activeTab = location.pathname;
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [tempCalculation, setTempCalculation] = useState<Partial<CalculationResult> | null>(null);
 
@@ -58,14 +70,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleNavigateToTab = (e: CustomEvent) => {
-      const tabName = e.detail as string;
-      if (tabName in Tab) {
-        setActiveTab(Tab[tabName as keyof typeof Tab]);
+      const tabPath = e.detail as string;
+      if (Object.values(Tab).includes(tabPath as Tab)) {
+        navigate(tabPath);
+      } else if (tabPath in Tab) { // Fallback if using old enum keys
+        navigate(Tab[tabPath as keyof typeof Tab]);
       }
     };
     window.addEventListener('navigateToTab', handleNavigateToTab as EventListener);
     return () => window.removeEventListener('navigateToTab', handleNavigateToTab as EventListener);
-  }, []);
+  }, [navigate]);
 
 
 
@@ -75,7 +89,7 @@ const App: React.FC = () => {
     try {
       await saveCalculation(record);
       setReportModalOpen(false);
-      setActiveTab(Tab.HISTORY);
+      navigate(Tab.HISTORY);
     } catch (error) {
       console.error('Error saving to database:', error);
       alert('Gagal menyimpan ke database. Data disimpan lokal.');
@@ -84,7 +98,7 @@ const App: React.FC = () => {
       const updated = [record, ...storedHistory];
       localStorage.setItem('hydrofield_history', JSON.stringify(updated));
       setReportModalOpen(false);
-      setActiveTab(Tab.HISTORY);
+      navigate(Tab.HISTORY);
     }
   };
 
@@ -157,43 +171,49 @@ const App: React.FC = () => {
         {/* --- Main Content --- */}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 pb-28 md:pb-8 md:pt-24">
           <div className="transition-opacity duration-300">
-            {activeTab === Tab.WORKFLOW && <div className="h-[800px] w-full"><WorkflowCanvas /></div>}
-            {activeTab === Tab.SALURAN && <ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />}
-            {activeTab === Tab.BANJIR && <FloodAnalysisTab onConsultAI={() => {
-              setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');
-              setAiInitialQuery('Audit hasil perhitungan hidrograf banjir saya. Apakah debit puncak dan Tp yang dihasilkan masuk akal untuk karakteristik DAS ini? Berikan saran optimasi parameter jika perlu.');
-              setAiTriggerCount(prev => prev + 1);
-              setIsAIDrawerOpen(true);
-            }} />}
-
-            {activeTab === Tab.NERACA && <WaterBalanceTab onConsultAI={() => {
-              setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
-              setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
-              setAiTriggerCount(prev => prev + 1);
-              setIsAIDrawerOpen(true);
-            }} />}
-            {activeTab === Tab.EMBUNG && <EmbungDashboard onConsultAI={(tabType, data, result) => {
-              setLastContext(`Modul Embung: ${tabType}\nInput: ${JSON.stringify(data)}\nOutput: ${JSON.stringify(result)}`);
-              setAiInitialQuery(`Berikan analisis teknis komprehensif mengenai hasil perhitungan ${tabType} ini. Sebutkan poin-poin penting, potensi isu, dan rekomendasi desain yang sesuai dengan SNI.`);
-              setAiTriggerCount(prev => prev + 1);
-              setIsAIDrawerOpen(true);
-            }} />}
-            {activeTab === Tab.MASTER && <MasterDataPage />}
-            {activeTab === Tab.FREKUENSI && <ModulAnalisisFrekuensi />}
-            {activeTab === Tab.EXEC && <ExecutiveDashboard />}
-            {activeTab === Tab.AI && <div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>}
-
-            {activeTab === Tab.HISTORY && <AllDataTab
-              onViewDetail={(item) => setViewAllDataDetail(item)}
-              onMapDetail={(item) => setMapDetailItem(item)}
-              onConsultAI={(item) => {
-                const typeLabel = item.type === 'manning' ? 'Saluran Manning' : item.type === 'flood' ? 'Banjir' : 'Neraca Air';
-                setLastContext(`Tipe: ${typeLabel}\nProyek: ${item.project_name}\nData: ${JSON.stringify(item.data)}`);
-                setAiInitialQuery(`Analisis hasil perhitungan ${typeLabel} untuk proyek ${item.project_name} menurut SNI.`);
-                setAiTriggerCount(prev => prev + 1);
-                setIsAIDrawerOpen(true);
-              }}
-            />}
+            <React.Suspense fallback={<TabFallback />}>
+              <Routes>
+                <Route path="/" element={<Navigate to={Tab.MASTER} replace />} />
+                <Route path={Tab.WORKFLOW} element={<div className="h-[800px] w-full"><WorkflowCanvas /></div>} />
+                <Route path={Tab.SALURAN} element={<ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />} />
+                <Route path={Tab.BANJIR} element={<FloodAnalysisTab onConsultAI={() => {
+                  setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');
+                  setAiInitialQuery('Audit hasil perhitungan hidrograf banjir saya. Apakah debit puncak dan Tp yang dihasilkan masuk akal untuk karakteristik DAS ini? Berikan saran optimasi parameter jika perlu.');
+                  setAiTriggerCount(prev => prev + 1);
+                  setIsAIDrawerOpen(true);
+                }} />} />
+                <Route path={Tab.NERACA} element={<WaterBalanceTab onConsultAI={() => {
+                  setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
+                  setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
+                  setAiTriggerCount(prev => prev + 1);
+                  setIsAIDrawerOpen(true);
+                }} />} />
+                <Route path={Tab.EMBUNG} element={<EmbungDashboard onConsultAI={(tabType, data, result) => {
+                  setLastContext(`Modul Embung: ${tabType}\nInput: ${JSON.stringify(data)}\nOutput: ${JSON.stringify(result)}`);
+                  setAiInitialQuery(`Berikan analisis teknis komprehensif mengenai hasil perhitungan ${tabType} ini. Sebutkan poin-poin penting, potensi isu, dan rekomendasi desain yang sesuai dengan SNI.`);
+                  setAiTriggerCount(prev => prev + 1);
+                  setIsAIDrawerOpen(true);
+                }} />} />
+                <Route path={Tab.MASTER} element={<MasterDataPage />} />
+                <Route path={Tab.FREKUENSI} element={<ModulAnalisisFrekuensi />} />
+                <Route path={Tab.EXEC} element={<ExecutiveDashboard />} />
+                <Route path={Tab.AI} element={<div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>} />
+                <Route path={Tab.HISTORY} element={
+                  <AllDataTab
+                    onViewDetail={(item) => setViewAllDataDetail(item)}
+                    onMapDetail={(item) => setMapDetailItem(item)}
+                    onConsultAI={(item) => {
+                      const typeLabel = item.type === 'manning' ? 'Saluran Manning' : item.type === 'flood' ? 'Banjir' : 'Neraca Air';
+                      setLastContext(`Tipe: ${typeLabel}\nProyek: ${item.project_name}\nData: ${JSON.stringify(item.data)}`);
+                      setAiInitialQuery(`Analisis hasil perhitungan ${typeLabel} untuk proyek ${item.project_name} menurut SNI.`);
+                      setAiTriggerCount(prev => prev + 1);
+                      setIsAIDrawerOpen(true);
+                    }}
+                  />
+                } />
+                <Route path="*" element={<Navigate to={Tab.MASTER} replace />} />
+              </Routes>
+            </React.Suspense>
           </div>
         </main>
 
@@ -344,12 +364,11 @@ const App: React.FC = () => {
                     {group.items.map((item) => (
                       <button
                         key={item.tab}
-                        onClick={() => setActiveTab(item.tab)}
-                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                          activeTab === item.tab
+                        onClick={() => navigate(item.tab)}
+                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab.startsWith(item.tab)
                             ? 'bg-[#0c3a66] text-white shadow-md'
                             : 'text-slate-600 hover:bg-slate-100 hover:text-[#0c3a66]'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-center">
                           {item.icon}
@@ -359,18 +378,17 @@ const App: React.FC = () => {
                     ))}
                   </React.Fragment>
                 ))}
-                
+
                 {/* Divider before AI */}
                 <div className="w-px h-8 bg-slate-200 mx-2 shrink-0" />
-                
+
                 {/* AI Consultant */}
                 <button
                   onClick={() => setIsAIDrawerOpen((prev) => !prev)}
-                  className={`relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap ${
-                    isAIDrawerOpen
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg ring-2 ring-indigo-200'
-                      : 'text-indigo-600 hover:bg-indigo-50 border border-indigo-200'
-                  }`}
+                  className={`relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap ${isAIDrawerOpen
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg ring-2 ring-indigo-200'
+                    : 'text-indigo-600 hover:bg-indigo-50 border border-indigo-200'
+                    }`}
                 >
                   <div className="flex items-center justify-center">
                     <Sparkles strokeWidth={2.5} className="w-5 h-5" />
@@ -393,19 +411,17 @@ const App: React.FC = () => {
                     {group.items.map((item) => (
                       <button
                         key={item.tab}
-                        onClick={() => setActiveTab(item.tab)}
-                        className={`flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-lg transition-all duration-200 ${
-                          activeTab === item.tab
+                        onClick={() => navigate(item.tab)}
+                        className={`flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-lg transition-all duration-200 ${activeTab.startsWith(item.tab)
                             ? 'text-pupr-blue bg-blue-50/80 shadow-sm'
                             : 'text-slate-500 hover:bg-slate-50/80'
-                        }`}
+                          }`}
                       >
-                        <div className={`flex items-center justify-center transition-transform duration-200 ${activeTab === item.tab ? 'scale-110' : 'scale-100'}`}>
+                        <div className={`flex items-center justify-center transition-transform duration-200 ${activeTab.startsWith(item.tab) ? 'scale-110' : 'scale-100'}`}>
                           {React.cloneElement(item.icon as React.ReactElement, { className: 'w-[18px] h-[18px] sm:w-5 sm:h-5' })}
                         </div>
-                        <span className={`text-[9px] sm:text-[10px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${
-                          activeTab === item.tab ? 'font-bold' : 'font-medium'
-                        }`}>{item.label}</span>
+                        <span className={`text-[9px] sm:text-[10px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${activeTab.startsWith(item.tab) ? 'font-bold' : 'font-medium'
+                          }`}>{item.label}</span>
                       </button>
                     ))}
                   </React.Fragment>
@@ -414,18 +430,16 @@ const App: React.FC = () => {
                 {/* AI Consultant Mobile */}
                 <button
                   onClick={() => setIsAIDrawerOpen((prev) => !prev)}
-                  className={`relative flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-lg transition-all duration-200 ${
-                    isAIDrawerOpen
-                      ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200 shadow-sm'
-                      : 'text-indigo-400 hover:bg-indigo-50/50'
-                  }`}
+                  className={`relative flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-lg transition-all duration-200 ${isAIDrawerOpen
+                    ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200 shadow-sm'
+                    : 'text-indigo-400 hover:bg-indigo-50/50'
+                    }`}
                 >
                   <div className={`flex items-center justify-center transition-transform duration-200 ${isAIDrawerOpen ? 'scale-110' : 'scale-100'}`}>
                     <Sparkles strokeWidth={2.5} className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                   </div>
-                  <span className={`text-[9px] sm:text-[10px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${
-                    isAIDrawerOpen ? 'font-bold' : 'font-medium'
-                  }`}>AI</span>
+                  <span className={`text-[9px] sm:text-[10px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${isAIDrawerOpen ? 'font-bold' : 'font-medium'
+                    }`}>AI</span>
                   {isAIDrawerOpen && (
                     <div className="absolute top-1 right-2 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse border border-white" />
                   )}
@@ -440,6 +454,14 @@ const App: React.FC = () => {
 
       </div>
     </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AppLayout />
+    </BrowserRouter>
   );
 };
 

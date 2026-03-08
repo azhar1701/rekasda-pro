@@ -13,6 +13,7 @@ import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner
 import { performQualityControl } from '@/services/qualityControlService';
 import { calculateEffectiveRainfallByC, getRecommendedC } from '@/services/effectiveRainfallService';
 import { calculateAllHSS } from '@/services/hssComparisonService';
+import { calculateMononobeIntensity, calculateRationalPeak } from '@/lib/utils/hydrology/runoff';
 
 type MethodType = 'rasional' | 'haspers' | 'nakayasu';
 
@@ -30,10 +31,10 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
   const [showEffective, setShowEffective] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
 
-  const { 
-    setHasilBanjir, 
-    luasDas, 
-    setLuasDas, 
+  const {
+    setHasilBanjir,
+    luasDas,
+    setLuasDas,
     panjangSungai,
     setPanjangSungai,
     curahHujanRencana,
@@ -97,19 +98,38 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
       return;
     }
 
+    if (!curahHujanRencana || isNaN(parseFloat(curahHujanRencana))) {
+      toast.error('Silakan masukkan nilai Hujan Rencana (R24).');
+      return;
+    }
+
     setIsCalculating(true);
 
-    // Mock Calculation for Hydrograph based on Luas DAS & Method
     setTimeout(() => {
       const area = parseFloat(luasDas);
-      const peak = method === 'rasional' ? area * 2.5 : method === 'haspers' ? area * 3.1 : area * 1.8;
+      const R24 = parseFloat(curahHujanRencana);
+      const C = getRecommendedC(landUse);
 
-      // Generate mock hydrograph curve
+      // Default tc (time of concentration) assumed 2 hours for mock-to-real transition
+      // In production, tc should be calculated from L and S (Kirpich etc)
+      const tc = 2.0;
+      const intensity = calculateMononobeIntensity(R24, tc);
+      const peak = method === 'rasional'
+        ? calculateRationalPeak(C, intensity, area)
+        : method === 'haspers' ? area * 3.1 : area * 1.8;
+
+      // Generate a synthetic hydrograph based on the peak
+      // For Rational Method, we often use a simplified duration or triangular shape
       const mockHydrograph = [];
-      for (let i = 0; i <= 10; i++) {
+      const duration = Math.ceil(tc * 3); // Base time approx 3 * tc
+
+      for (let i = 0; i <= duration; i++) {
         let val = 0;
-        if (i <= 3) val = (peak / 3) * i; // Rising limb
-        else val = peak * Math.exp(-0.4 * (i - 3)); // Falling limb
+        if (i <= tc) {
+          val = (peak / tc) * i; // Rising limb
+        } else {
+          val = peak * Math.exp(-0.5 * (i - tc)); // Falling limb (Recession)
+        }
 
         mockHydrograph.push({
           time: i,
@@ -125,7 +145,7 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
       });
 
       setIsCalculating(false);
-      toast.success('Hidrograf banjir disinkronisasikan ke Modul Embung.');
+      toast.success(`Simulasi ${method.toUpperCase()} selesai. Debit Puncak: ${peak.toFixed(2)} m³/s`);
     }, 800);
   };
 
@@ -140,9 +160,9 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
       icon={<CloudRain className="w-6 h-6" />}
       iconColorClass="bg-blue-50 text-pupr-blue"
       actions={
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           className="bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 font-bold"
           onClick={handleConsultAIFromButton}
         >
@@ -171,20 +191,20 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
                 const firstResult = firstKey ? qcResults[firstKey] : null;
                 if (!firstResult) return null;
                 return (
-                <div className="space-y-2 text-sm">
-                  <div className={`flex items-center gap-2 ${firstResult.konsistensi.isPassed ? 'text-green-600' : 'text-red-600'}`}>
-                    {firstResult.konsistensi.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    <span>Konsistensi</span>
+                  <div className="space-y-2 text-sm">
+                    <div className={`flex items-center gap-2 ${firstResult.konsistensi.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                      {firstResult.konsistensi.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                      <span>Konsistensi</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${firstResult.homogenitas.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                      {firstResult.homogenitas.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                      <span>Homogenitas</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${firstResult.outlier.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                      {firstResult.outlier.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                      <span>Outlier</span>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 ${firstResult.homogenitas.isPassed ? 'text-green-600' : 'text-red-600'}`}>
-                    {firstResult.homogenitas.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    <span>Homogenitas</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${firstResult.outlier.isPassed ? 'text-green-600' : 'text-red-600'}`}>
-                    {firstResult.outlier.isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    <span>Outlier</span>
-                  </div>
-                </div>
                 );
               })()}
             </div>
