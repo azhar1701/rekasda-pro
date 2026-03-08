@@ -1,6 +1,10 @@
 import { calculateStatisticalParameters } from './statistics';
 
 /**
+ * @deprecated Modul ini telah digantikan oleh `@/lib/utils/frequencyMath.ts`.
+ * Jangan import dari file ini — gunakan `frequencyMath.ts` sebagai single source of truth.
+ * File ini dipertahankan sementara sebagai referensi dan akan dihapus di versi berikutnya.
+ *
  * Modul Analisis Frekuensi Hidrologi
  * 
  * Modul ini menyediakan fungsi untuk menghitung Curah Hujan Rencana (Xt) 

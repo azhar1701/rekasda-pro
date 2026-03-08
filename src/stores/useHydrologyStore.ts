@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
 import { supabase } from '@/lib/api/supabase';
@@ -314,7 +315,9 @@ export interface HydrologyState {
 // Mock data removed for production integration
 
 
-export const useHydrologyStore = create<HydrologyState>((set, get) => ({
+export const useHydrologyStore = create<HydrologyState>()(
+  persist(
+    (set, get) => ({
   luasDas: '', panjangSungai: '', curahHujanRencana: '', stasiunList: [], selectedStasiun: null, dataHujan: [],
   identitasLokasi: { namaPekerjaan: '', namaDAS: '', namaSungai: '', provinsi: '', kabupaten: '', koordinat: { lat: null, lng: null } },
   morfometriDAS: null, tutupanLahan: null, curahHujanWilayah: null, analisisFrekuensi: null,
@@ -800,5 +803,17 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     if (type === 'aljabar') set({ arealRainfallAlgebraic: data });
     else if (type === 'thiessen') set({ arealRainfallThiessen: data });
     else if (type === 'isohyet') set({ arealRainfallIsohyet: data });
-  },
-}));
+    },
+  }),
+  {
+    name: 'rekasda-hydrology-store',
+    version: 1,
+    storage: createJSONStorage(() => localStorage),
+    partialize: (state) => {
+      // Hanya persist state yang penting — exclude transient/loading states
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { isLoading, error, isBanjirDirty, isNeracaDirty, isQCCalculating, ...persisted } = state;
+      return persisted;
+    },
+  }
+));

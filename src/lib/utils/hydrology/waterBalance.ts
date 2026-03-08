@@ -1,4 +1,8 @@
 /**
+ * @deprecated Neraca air dan SPA telah dikonsolidasikan ke `@/services/waterBalanceEngine.ts`.
+ * Gunakan `calculateWaterBalance()` dan `sequentPeakAlgorithm()` dari `waterBalanceEngine.ts`.
+ * File ini dipertahankan sementara sebagai referensi dan akan dihapus di versi berikutnya.
+ *
  * Modul Neraca Air & Kapasitas Waduk (Water Balance)
  * 
  * Meliputi simulasi tata guna air (Ketersediaan vs Kebutuhan) 

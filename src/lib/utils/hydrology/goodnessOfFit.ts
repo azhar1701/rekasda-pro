@@ -1,4 +1,8 @@
 /**
+ * @deprecated Uji kecocokan telah dikonsolidasikan ke `@/lib/utils/frequencyMath.ts`.
+ * Gunakan `calculateGoodnessOfFit()` dari `frequencyMath.ts` sebagai single source of truth.
+ * File ini dipertahankan sementara sebagai referensi dan akan dihapus di versi berikutnya.
+ *
  * Modul Uji Kecocokan (Goodness of Fit Test)
  * 
  * Melakukan dua macam pengujian statistik untuk menentukan kecocokan

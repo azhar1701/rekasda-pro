@@ -132,3 +132,51 @@ export const getWaterBalanceSummary = (results: WaterBalanceResult[]) => {
     reliability: parseFloat(reliability.toFixed(1))
   };
 };
+
+/**
+ * Algoritma Sequent Peak (SPA)
+ * 
+ * Menentukan Volume Tampungan Efektif Waduk yang dibutuhkan untuk
+ * mengatisipasi kemarau kritis. Memakai 2 siklus (2 tahun/periode)
+ * jika ujung tahun tidak kosong.
+ * 
+ * Xt = Inflow - Outflow - Losses
+ * Vt = Vt-1 - Xt
+ * Jika Vt < 0 maka Vt = 0.
+ * Kapasitas Minimum Waduk (C) = Max(Vt) dari seluruh siklus.
+ * 
+ * @param inflows Array Ketersediaan (m3)
+ * @param outflows Array Kebutuhan Total (m3)
+ * @param losses Optional array kehilangan/evaporasi (m3)
+ * @returns Kapasitas Tampungan Minimum yang diwajibkan (m3)
+ */
+export function sequentPeakAlgorithm(
+  inflows: number[],
+  outflows: number[],
+  losses?: number[]
+): number {
+  if (inflows.length !== outflows.length || inflows.length === 0) return 0;
+
+  // Gandakan array menjadi 2 siklus (mengakomodir kemarau panjang lintas akhir tahun)
+  const cycleInflows = [...inflows, ...inflows];
+  const cycleOutflows = [...outflows, ...outflows];
+  const cycleLosses = losses ? [...losses, ...losses] : cycleInflows.map(() => 0);
+
+  let currentV = 0;
+  let maxV = 0;
+
+  for (let i = 0; i < cycleInflows.length; i++) {
+    const Xt = cycleInflows[i] - cycleOutflows[i] - cycleLosses[i];
+    currentV = currentV - Xt;
+
+    if (currentV < 0) {
+      currentV = 0; // Surplus tidak bisa kurang dari nol
+    }
+
+    if (currentV > maxV) {
+      maxV = currentV;
+    }
+  }
+
+  return maxV;
+}
