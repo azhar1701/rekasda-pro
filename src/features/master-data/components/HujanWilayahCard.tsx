@@ -187,11 +187,12 @@ export const HujanWilayahCard: React.FC = () => {
         const arealResults: DataHujan[] = [];
         const amsBase = safeIsohyet[0]?.annualMax || [];
 
+        // Kombinasi: ambil tahun dari data store jika tersedia, fallback ke sekuensial
+        const storeData = useHydrologyStore.getState().dataHujan;
+        const storeYears = Array.from(new Set(storeData.map(d => new Date(d.tanggal).getFullYear()))).sort((a, b) => a - b);
+
         amsBase.forEach((val, idx) => {
-          // If years are not explicitly provided for Isohyet, we fallback to an indexed year starting from 2011
-          // or try to match the store's available years. For now, we'll use 2011 + idx as a placeholder
-          // unless the user adds year support to Isohyet UI.
-          const year = 2011 + idx;
+          const year = storeYears[idx] ?? (storeYears.length > 0 ? storeYears[storeYears.length - 1] + idx + 1 : new Date().getFullYear() - amsBase.length + idx + 1);
           arealResults.push({
             id: `isohyet-${year}`,
             stasiun_id: 'isohyet',

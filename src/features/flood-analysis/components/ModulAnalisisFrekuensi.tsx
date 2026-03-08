@@ -5,14 +5,13 @@ import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ActionableEmptyState } from '@/components/ui/ActionableEmptyState';
 import { WhiteBoxFormula } from '@/components/ui/WhiteBoxFormula';
-import { calculateStatisticalParameters } from '@/lib/utils/hydrology/statistics';
+import { toast } from '@/hooks/useToast';
 import {
-  distNormal,
-  distLogNormal,
-  distLogPearsonIII,
-  distGumbel
-} from '@/lib/utils/hydrology/frequencyAnalysis';
-import { calculateGoodnessOfFit, selectBestMethod } from '@/lib/utils/frequencyMath'; // We will retain GOF for now or rebuild using the new module if time permits, but first we replace params and distributions.
+  calculateStatisticalParams,
+  calculateDistributions,
+  calculateGoodnessOfFit,
+  selectBestMethod,
+} from '@/lib/utils/frequencyMath';
 
 const METHOD_LABELS: Record<string, string> = {
   normal: 'Normal',
@@ -93,41 +92,21 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       return { paramsAsli: null, paramsLog: null, distributions: null, goodnessOfFit: null, recommendedMethod: null };
     }
 
-    const asli = calculateStatisticalParameters(dataInput);
+    // Gunakan consolidated module (single source of truth)
+    const asli = calculateStatisticalParams(dataInput);
+    const logData = dataInput.map(x => Math.log10(Math.max(x, 1e-10)));
+    const log = calculateStatisticalParams(logData);
 
-    // Log parameters needed for tables
-    const logData = dataInput.map(x => Math.log10(x));
-    const log = calculateStatisticalParameters(logData);
+    // Hitung semua distribusi sekaligus (log-transform sudah di-handle internal)
+    const dist = calculateDistributions(dataInput);
 
-    // Distribution Returns
-    const returnPeriods = [2, 5, 10, 25, 50, 100];
-
-    // Maps
-    const getValuesForMethod = (method: (data: number[], tr: number) => number, useLogData: boolean = false) => {
-      return returnPeriods.map(tr => {
-        const r24 = method(useLogData ? logData : dataInput, tr);
-        return { Tr: tr, R24: r24, kalaUlang: tr, curahHujan: r24 };
-      });
-    };
-
-    const dist = [
-      { method: 'normal', values: getValuesForMethod(distNormal) },
-      { method: 'lognormal', values: getValuesForMethod(distLogNormal) },
-      { method: 'gumbel', values: getValuesForMethod(distGumbel) },
-      { method: 'logpearson3', values: getValuesForMethod(distLogPearsonIII) }
-    ];
-
-    // Reusing existing GOF for now
-    const gof = calculateGoodnessOfFit(dataInput, dist as any);
+    // Goodness-of-Fit menggunakan tabel SNI lengkap
+    const gof = calculateGoodnessOfFit(dataInput, dist);
     const recommended = selectBestMethod(gof);
 
-    // Shim to old struct specifically for UI rendering
-    const asliOldStruct = { mean: asli.mean, stdDev: asli.stdDev, cv: asli.cv, cs: asli.skewness, ck: asli.kurtosis };
-    const logOldStruct = { mean: log.mean, stdDev: log.stdDev, cv: log.cv, cs: log.skewness, ck: log.kurtosis };
-
     return {
-      paramsAsli: asliOldStruct,
-      paramsLog: logOldStruct,
+      paramsAsli: { mean: asli.mean, stdDev: asli.stdDev, cv: asli.cv, cs: asli.cs, ck: asli.ck },
+      paramsLog: { mean: log.mean, stdDev: log.stdDev, cv: log.cv, cs: log.cs, ck: log.ck },
       distributions: dist,
       goodnessOfFit: gof,
       recommendedMethod: recommended
@@ -151,7 +130,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
         setDataInput(values);
       }
     } catch (err) {
-      alert('Gagal membaca clipboard. Pastikan Anda sudah menyalin data dari Excel.');
+      toast.error('Gagal membaca clipboard. Pastikan Anda sudah menyalin data dari Excel.');
     }
   };
 

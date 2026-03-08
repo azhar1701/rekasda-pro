@@ -609,7 +609,25 @@ export const useHydrologyStore = create<HydrologyState>((set, get) => ({
     }
   },
 
-  setHasilThiessen: (hasil: HasilThiessen | null) => set({ hasilThiessen: hasil, isBanjirDirty: true, isNeracaDirty: true }),
+  setHasilThiessen: (hasil: HasilThiessen | null) => {
+    // Bridge: auto-sync legacy hasilThiessen → new arealRainfallThiessen
+    let arealData: DataHujan[] | null = null;
+    if (hasil && hasil.hujanRataRataDAS && hasil.hujanRataRataDAS.length > 0) {
+      arealData = hasil.hujanRataRataDAS.map((val, idx) => ({
+        id: `thiessen-bridge-${idx}`,
+        stasiun_id: 'thiessen',
+        tanggal: `${2011 + idx}-12-31`,
+        curah_hujan: val
+      }));
+    }
+    set({
+      hasilThiessen: hasil,
+      arealRainfallThiessen: arealData,
+      activeRainfallSource: hasil ? 'thiessen' : 'titik',
+      isBanjirDirty: true,
+      isNeracaDirty: true
+    });
+  },
   setHasilARF: (hasil) => set((state) => {
     const freq = state.hasilAnalisisFrekuensi;
     let newRainfall = state.curahHujanRencana;

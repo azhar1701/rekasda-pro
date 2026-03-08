@@ -96,16 +96,15 @@ export function calculateEffectiveRainfallByC(P: number, C: number): number {
  * P_eff = (P - 0.2S)^2 / (P + 0.8S)
  */
 export function calculateEffectiveRainfallByCN(totalRainfallMm: number, CN: number): number {
-  const P = totalRainfallMm / 25.4; // Konversi ke inci
   if (CN <= 0 || CN >= 100) return 0;
 
-  const S = (1000 / CN) - 10;
-  const Ia = 0.2 * S; // Initial Abstraction
+  // Varian metrik langsung (mm) — tanpa konversi inci
+  const S_mm = (25400 / CN) - 254;
+  const Ia = 0.2 * S_mm; // Initial Abstraction
 
-  if (P <= Ia) return 0;
+  if (totalRainfallMm <= Ia) return 0;
 
-  const Peff_inches = Math.pow(P - Ia, 2) / (P + 0.8 * S);
-  return Peff_inches * 25.4; // Konversi balik ke mm
+  return Math.pow(totalRainfallMm - Ia, 2) / (totalRainfallMm + 0.8 * S_mm);
 }
 
 /**
