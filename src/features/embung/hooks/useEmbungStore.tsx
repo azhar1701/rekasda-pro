@@ -18,6 +18,7 @@ import type {
     WaterBalanceResult,
     SedimentationInput,
     SedimentYieldResult,
+    StageStorageCurve,
 } from '@/features/embung/types/embung.types';
 
 // ---------------------------------------------------------------------------
@@ -25,8 +26,11 @@ import type {
 // ---------------------------------------------------------------------------
 
 interface EmbungState {
-    /** Active sub-tab */
-    activeTab: 'capacity' | 'routing' | 'operation' | 'sediment';
+    /** Active sub-tab or step */
+    activeTab: 'capacity' | 'routing' | 'operation' | 'sediment' | 'geometry';
+
+    /** Step 1: Geometry Data (Curve builder) */
+    stageStorageCurve: StageStorageCurve | null;
 
     /** Tab 1: Capacity Analysis */
     capacityData: MonthlyData[];
@@ -60,7 +64,8 @@ const DEFAULT_CAPACITY_DATA: MonthlyData[] = MONTH_LABELS.map((month, i) => ({
 }));
 
 const initialState: EmbungState = {
-    activeTab: 'capacity',
+    activeTab: 'geometry',
+    stageStorageCurve: null,
     capacityData: DEFAULT_CAPACITY_DATA,
     capacityResult: null,
     routingInput: null,
@@ -80,6 +85,7 @@ const initialState: EmbungState = {
 
 type EmbungAction =
     | { type: 'SET_ACTIVE_TAB'; payload: EmbungState['activeTab'] }
+    | { type: 'SET_STAGE_STORAGE_CURVE'; payload: StageStorageCurve | null }
     | { type: 'SET_CAPACITY_DATA'; payload: MonthlyData[] }
     | { type: 'SET_CAPACITY_RESULT'; payload: SequentPeakResult | null }
     | { type: 'SET_ROUTING_INPUT'; payload: Partial<FloodRoutingInput> | null }
@@ -97,6 +103,8 @@ function embungReducer(state: EmbungState, action: EmbungAction): EmbungState {
     switch (action.type) {
         case 'SET_ACTIVE_TAB':
             return { ...state, activeTab: action.payload };
+        case 'SET_STAGE_STORAGE_CURVE':
+            return { ...state, stageStorageCurve: action.payload };
         case 'SET_CAPACITY_DATA':
             return { ...state, capacityData: action.payload };
         case 'SET_CAPACITY_RESULT':
