@@ -134,6 +134,13 @@ export default {
 				stagger: 'staggerFadeIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1) backwards',
 				'pulse-subtle': 'pulseSubtle 3s ease-in-out infinite'
 			},
+			transitionDelay: {
+				'100': '100ms',
+				'200': '200ms',
+				'300': '300ms',
+				'400': '400ms',
+				'500': '500ms',
+			},
 			keyframes: {
 				pulseSubtle: {
 					'0%, 100%': { opacity: '1' },

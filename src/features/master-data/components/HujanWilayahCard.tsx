@@ -310,7 +310,7 @@ export const HujanWilayahCard: React.FC = () => {
             </button>
 
             {isAssistantOpen && (
-              <div className="mt-3 p-4 border border-slate-200 rounded-md bg-slate-50 space-y-5">
+              <div className="mt-3 p-4 border border-slate-200 rounded-md bg-slate-50 space-y-5 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-300 origin-top">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Ketersediaan Koordinat</label>
@@ -634,7 +634,7 @@ export const HujanWilayahCard: React.FC = () => {
                 : 'bg-pupr-blue hover:bg-pupr-blue/90 text-white shadow-sm'
               }`}
           >
-            {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {isSaved ? <CheckCircle className="w-4 h-4 animate-in fade-in scale-in-90 duration-300" /> : <Save className="w-4 h-4" />}
             {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi'}
           </button>
         </div>

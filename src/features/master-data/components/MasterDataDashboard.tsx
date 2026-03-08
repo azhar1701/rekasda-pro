@@ -104,7 +104,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: QC Status */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-blue">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-blue animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-pupr-blue/10 flex items-center justify-center shrink-0">
@@ -179,7 +179,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
         </div>
 
         {/* Card 2: Morfometri DAS */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-yellow">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-yellow animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
           <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-pupr-yellow/10 flex items-center justify-center shrink-0">
@@ -233,7 +233,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
         </div>
 
         {/* Card 3: Koefisien Limpasan */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-teal-500">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-teal-500 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
           <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0">
@@ -279,10 +279,10 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                         <div className="w-full bg-slate-100 rounded h-2">
                           <div
                             className={`h-2 rounded transition-all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
-                                ? 'bg-green-600'
-                                : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan')
-                                  ? 'bg-orange-500'
-                                  : 'bg-pupr-blue'
+                              ? 'bg-green-600'
+                              : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan')
+                                ? 'bg-orange-500'
+                                : 'bg-pupr-blue'
                               }`}
                             style={{ width: `${Math.min(item.percentage, 100)}%` }}
                           />

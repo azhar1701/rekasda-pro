@@ -56,12 +56,12 @@ export const InputGroup: React.FC<InputGroupProps> = ({
         {error && <span className="text-[10px] text-red-500 font-bold animate-pulse">{error}</span>}
       </div>
 
-      <div className="relative flex items-center group">
+      <div className="relative flex items-center group transition-all duration-300">
         <Input
           id={inputId}
           name={name || inputId}
           className={cn(
-            "h-11 font-mono font-bold text-slate-900 border-slate-200 focus-visible:ring-primary-500/20",
+            "h-11 font-mono font-bold text-slate-900 border-slate-200 transition-all duration-200 focus-visible:ring-primary-500/20 focus-visible:border-pupr-blue/50",
             unit && "pr-16",
             error && "border-red-500 focus-visible:ring-red-500/20"
           )}

@@ -38,8 +38,8 @@ export const MasterDataPage: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all border-b-4 ${isActive
-                      ? 'text-pupr-blue border-pupr-yellow bg-slate-50'
-                      : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50/50'
+                    ? 'text-pupr-blue border-pupr-yellow bg-slate-50'
+                    : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50/50'
                     }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -53,7 +53,7 @@ export const MasterDataPage: React.FC = () => {
         {/* Tab Content with Transition */}
         <div className="min-h-[600px] transition-all duration-300">
           {activeTab === 'dashboard' && (
-            <div className="animate-fade-in">
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
               <MasterDataDashboard
                 onNavigateToSection={(section) => {
                   if (section === 'qc') setActiveTab('data-hujan');
@@ -63,17 +63,17 @@ export const MasterDataPage: React.FC = () => {
             </div>
           )}
           {activeTab === 'identitas' && (
-            <div className="animate-fade-in">
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
               <FormIdentitasLokasi />
             </div>
           )}
           {activeTab === 'data-hujan' && (
-            <div className="animate-fade-in">
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
               <MasterHidrologiTab />
             </div>
           )}
           {activeTab === 'parameter-spasial' && (
-            <div className="animate-fade-in">
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
               <ParameterSpasial />
             </div>
           )}

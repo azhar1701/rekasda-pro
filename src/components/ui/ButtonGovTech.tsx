@@ -7,24 +7,24 @@ interface ButtonGovTechProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   isLoading?: boolean;
 }
 
-export const ButtonGovTech: React.FC<ButtonGovTechProps> = ({ 
-  children, 
-  variant = 'pupr-primary', 
+export const ButtonGovTech: React.FC<ButtonGovTechProps> = ({
+  children,
+  variant = 'pupr-primary',
   size = 'default',
   fullWidth = false,
   isLoading = false,
   className = '',
   disabled = false,
-  ...props 
+  ...props
 }) => {
-  const baseStyle = "inline-flex items-center justify-center gap-2 font-semibold rounded-md transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-4 [&_svg]:shrink-0";
-  
+  const baseStyle = "inline-flex items-center justify-center gap-2 font-semibold rounded-md transition-all duration-200 active:scale-95 hover:translate-y-[-1px] hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none [&_svg]:size-4 [&_svg]:shrink-0";
+
   const sizes = {
     sm: "h-8 px-3 text-xs",
     default: "h-10 px-4 text-sm",
     lg: "h-11 px-6 text-base",
   };
-  
+
   const variants = {
     'pupr-primary': "bg-pupr-blue text-white hover:bg-pupr-blue/90 active:bg-pupr-blue/80 border border-pupr-blue",
     'pupr-accent': "bg-pupr-yellow text-slate-900 hover:bg-pupr-yellow/90 active:bg-pupr-yellow/80 border border-pupr-yellow font-bold",
@@ -36,7 +36,7 @@ export const ButtonGovTech: React.FC<ButtonGovTechProps> = ({
   const widthClass = fullWidth ? "w-full" : "";
 
   return (
-    <button 
+    <button
       className={`${baseStyle} ${sizes[size]} ${variants[variant]} ${widthClass} ${className}`}
       disabled={disabled || isLoading}
       {...props}
