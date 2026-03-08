@@ -35,7 +35,7 @@ export const useAuth = () => {
 
   const signOut = async () => {
     if (!supabase) {
-      toast.error('Supabase tidak dikonfigurasi.');
+      toast.error('Koneksi ke layanan basis data (Supabase) belum dikonfigurasi. Silakan hubungi administrator.');
       return;
     }
     try {
@@ -43,7 +43,7 @@ export const useAuth = () => {
       if (error) throw error;
       toast.success('Berhasil keluar');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Gagal keluar';
+      const message = err instanceof Error ? err.message : 'Terjadi kesalahan sistem saat mencoba keluar.';
       toast.error(message);
     }
   };

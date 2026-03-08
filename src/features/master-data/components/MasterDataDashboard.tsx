@@ -108,7 +108,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Droplets className="w-5 h-5 text-pupr-blue" />
-              <h3 className="font-semibold text-slate-800 text-sm">Status Kualitas Data</h3>
+              <h3 className="font-semibold text-slate-800 text-sm">Audit Kualitas Data</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('qc')}
@@ -181,7 +181,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="w-5 h-5 text-pupr-blue" />
-              <h3 className="font-semibold text-slate-800 text-sm">Morfometri DAS</h3>
+              <h3 className="font-semibold text-slate-800 text-sm">Karakteristik Fisik DAS</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('morfometri')}
@@ -196,7 +196,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             {morfometriDAS?.luasDAS ? (
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1 font-medium">Luas DAS</p>
+                  <p className="text-xs text-slate-500 mb-1 font-medium">Total Luas DAS</p>
                   <p className="text-3xl font-bold text-slate-800 tabular-nums">
                     {morfometriDAS.luasDAS.toFixed(2)}
                     <span className="text-sm font-normal text-slate-500 ml-2">km²</span>

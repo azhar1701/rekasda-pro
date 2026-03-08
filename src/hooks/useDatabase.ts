@@ -63,7 +63,7 @@ export const useDatabase = (): UseDatabaseReturn => {
       if (response.error) throw new Error(response.error.message);
     },
     onSuccess: () => {
-      toast.success('Data berhasil dihapus');
+      toast.success('Data hasil perhitungan berhasil dihapus dari sistem.');
       queryClient.invalidateQueries({ queryKey: ['calculations'] });
     },
     onError: (error: Error) => {

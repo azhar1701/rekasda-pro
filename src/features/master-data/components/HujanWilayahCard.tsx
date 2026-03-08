@@ -304,7 +304,7 @@ export const HujanWilayahCard: React.FC = () => {
             >
               <div className="flex items-center gap-2 font-bold text-sm">
                 <Sparkles className="w-4 h-4 text-pupr-yellow" />
-                Asisten Penentuan Metode (Semi-Auto AI)
+                Rekomendasi Metode Berbasis Lokasi (AI Assistant)
               </div>
               {isAssistantOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
@@ -407,7 +407,7 @@ export const HujanWilayahCard: React.FC = () => {
                     className="mt-3 px-3 py-1.5 bg-pupr-blue text-white text-xs font-bold rounded hover:bg-[#092b4d] transition-all flex items-center gap-2"
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
-                    Terapkan Rekomendasi
+                    Gunakan Rekomendasi Ini
                   </button>
                 </div>
               </div>

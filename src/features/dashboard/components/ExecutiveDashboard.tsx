@@ -148,7 +148,9 @@ export const ExecutiveDashboard = () => {
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-pupr-surface rounded-md border border-dashed border-pupr-border">
                                 <AlertTriangle className="w-8 h-8 text-pupr-text/40 mb-2" />
-                                <p className="text-sm font-bold text-pupr-text/60">Data tidak tersedia</p>
+                                <p className="text-sm font-bold text-pupr-text/60 text-center px-4">
+                                    Data belum lengkap atau belum diproses. Silakan selesaikan input di modul Master Data dan Analisis Banjir.
+                                </p>
                             </div>
                         )}
                     </div>
