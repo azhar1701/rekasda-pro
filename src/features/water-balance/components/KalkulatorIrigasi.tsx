@@ -4,13 +4,16 @@ import { AlertTriangle, Zap } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import {
     generateDefaultIrrigationInput,
+    calculateIrrigationDemand,
+    calculateRawWaterDemand,
+    calculateNeracaAirFinal,
     DEFAULT_KC,
     DEFAULT_PERKOLASI,
     type IrrigationMonthlyInput,
     type IrrigationMonthlyResult,
     type PolaTanam,
     type NeracaAirFinalRow,
-} from '@/lib/engine/irrigationDemand'; // Keeping types and defaults
+} from '@/lib/engine/irrigationDemand';
 
 const POLA_OPTIONS: { value: PolaTanam; label: string }[] = [
     { value: 'padi', label: 'Padi' },
@@ -62,58 +65,45 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
 
     const [isCalculating, setIsCalculating] = useState(false);
 
-    const handleCalculate = useCallback(async () => {
+    const handleCalculate = useCallback(() => {
         setError(null);
         setIsCalculating(true);
-        try {
-            // 1. Calculate irrigation demand via API
-            const irrResponse = await fetch('http://localhost:8000/api/v1/neraca-air/kebutuhan-irigasi', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    luas_irigasi: luasIrigasi,
-                    efisiensi,
-                    data: irrData
-                })
-            });
 
-            if (!irrResponse.ok) {
-                const errorData = await irrResponse.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal menghitung Kebutuhan Irigasi');
+        // Timeout to allow UI state update
+        setTimeout(() => {
+            try {
+                // 1. Calculate Irrigation Demand locally
+                const irrResultsLocal = calculateIrrigationDemand(
+                    { luasIrigasi, efisiensi },
+                    irrData
+                );
+                setIrrResults(irrResultsLocal);
+
+                const irrigationDR = irrResultsLocal.map(r => r.dr);
+
+                // 2. Calculate Raw Water Demand locally
+                const rawWaterM3s = calculateRawWaterDemand({
+                    populasi,
+                    standarDomestik,
+                    industriM3s: industri
+                });
+
+                // 3. Calculate Final Water Balance locally
+                const neraca = calculateNeracaAirFinal(
+                    monthlySupply,
+                    irrigationDR,
+                    rawWaterM3s
+                );
+
+                // 4. Save to store
+                setNeracaFinal(neraca);
+                onNeracaCalculated?.(neraca);
+            } catch (err: any) {
+                setError(err.message || 'Perhitungan gagal.');
+            } finally {
+                setIsCalculating(false);
             }
-            const irr: IrrigationMonthlyResult[] = await irrResponse.json();
-            setIrrResults(irr);
-
-            const irrigationDR = irr.map(r => r.dr);
-
-            // 2. Calculate Final Water Balance via API (combines raw water & final comparison)
-            const neracaResponse = await fetch('http://localhost:8000/api/v1/neraca-air/neraca-air', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    supply: monthlySupply,
-                    irrigation_dr: irrigationDR,
-                    populasi: populasi,
-                    standar_domestik: standarDomestik,
-                    industri_m3s: industri
-                })
-            });
-
-            if (!neracaResponse.ok) {
-                const errorData = await neracaResponse.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Gagal menghitung Neraca Air Final');
-            }
-
-            const neraca: NeracaAirFinalRow[] = await neracaResponse.json();
-
-            // 4. Save to store
-            setNeracaFinal(neraca);
-            onNeracaCalculated?.(neraca);
-        } catch (err: any) {
-            setError(err.message || 'Perhitungan API gagal.');
-        } finally {
-            setIsCalculating(false);
-        }
+        }, 100);
     }, [luasIrigasi, efisiensi, irrData, populasi, standarDomestik, industri, monthlySupply, setNeracaFinal, onNeracaCalculated]);
 
     return (

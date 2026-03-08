@@ -229,6 +229,8 @@ export interface HydrologyState {
   hasilARF: HasilARF | null;
   hasilAnalisisFrekuensi: HasilAnalisisFrekuensi | null;
   hasilBanjir: HasilBanjir | null;
+  hasilBanjirEmpiris: Record<string, any> | null;
+  hasilBanjirHSS: Record<string, any> | null;
   hasilKonvolusi: HasilKonvolusi | null;
   hasilNeraca: HasilNeraca | null;
   hasilEmbung: HasilEmbung | null;
@@ -245,18 +247,17 @@ export interface HydrologyState {
   landCoverParams: LandCoverParameters | null;
   effectiveRainfall: EffectiveRainfallResult | null;
   hssComparisonResults: HSSComparisonResult[] | null;
-  isBanjirDirty: boolean;
-  isNeracaDirty: boolean;
-  isLoading: boolean;
-  error: string | null;
-
-  // --- Rainfall Data Routing ---
   activeRainfallSource: 'titik' | 'aljabar' | 'thiessen' | 'isohyet';
   arealRainfallAlgebraic: DataHujan[] | null;
   arealRainfallThiessen: DataHujan[] | null;
   arealRainfallIsohyet: DataHujan[] | null;
+  isBanjirDirty: boolean;
+  isNeracaDirty: boolean;
+  isLoading: boolean;
+  error: string | null;
+  selectedKalaUlang: number;
 
-  setLoading: (loading: boolean) => void;
+  // Actions
   setError: (error: string | null) => void;
   setLuasDas: (luas: string) => void;
   setPanjangSungai: (val: string) => void;
@@ -295,6 +296,8 @@ export interface HydrologyState {
   setHasilAnalisisFrekuensi: (hasil: HasilAnalisisFrekuensi | null) => void;
   setSelectedKalaUlang: (kalaUlang: number) => void;
   setHasilBanjir: (hasil: HasilBanjir | null) => void;
+  setHasilBanjirEmpiris: (hasil: Record<string, any> | null) => void;
+  setHasilBanjirHSS: (hasil: Record<string, any> | null) => void;
   setHasilKonvolusi: (hasil: HasilKonvolusi | null) => void;
   setDistribusiHujanJamJaman: (data: number[] | null) => void;
   setHujanEfektif: (data: number[] | null) => void;
@@ -321,10 +324,13 @@ export const useHydrologyStore = create<HydrologyState>()(
   luasDas: '', panjangSungai: '', curahHujanRencana: '', stasiunList: [], selectedStasiun: null, dataHujan: [],
   identitasLokasi: { namaPekerjaan: '', namaDAS: '', namaSungai: '', provinsi: '', kabupaten: '', koordinat: { lat: null, lng: null } },
   morfometriDAS: null, tutupanLahan: null, curahHujanWilayah: null, analisisFrekuensi: null,
-  hasilThiessen: null, hasilARF: null, hasilAnalisisFrekuensi: null, hasilBanjir: null, hasilNeraca: null, hasilEmbung: null, hasilMock: null,
+  hasilThiessen: null, hasilARF: null, hasilAnalisisFrekuensi: null,
+  hasilBanjir: null, hasilBanjirEmpiris: null, hasilBanjirHSS: null,
+  hasilNeraca: null, hasilEmbung: null, hasilMock: null,
   hasilKonvolusi: null, neracaFinal: null, distribusiHujanJamJaman: null, hujanEfektif: null, durasiHujan: 6,
   qcResults: null, qcStatus: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
   hssComparisonResults: null, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
+  selectedKalaUlang: 25,
 
   // --- Initial Rainfall Routing States ---
   activeRainfallSource: 'titik',
@@ -332,11 +338,11 @@ export const useHydrologyStore = create<HydrologyState>()(
   arealRainfallThiessen: null,
   arealRainfallIsohyet: null,
 
-  setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
-  setLuasDas: (luas) => set({ luasDas: luas, isBanjirDirty: true, isNeracaDirty: true }),
-  setPanjangSungai: (val) => set({ panjangSungai: val, isBanjirDirty: true }),
-  setCurahHujanRencana: (val) => set({ curahHujanRencana: val, isBanjirDirty: true, isNeracaDirty: true }),
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
+  setError: (error: string | null) => set({ error }),
+  setLuasDas: (luas: string) => set({ luasDas: luas, isBanjirDirty: true, isNeracaDirty: true }),
+  setPanjangSungai: (val: string) => set({ panjangSungai: val, isBanjirDirty: true }),
+  setCurahHujanRencana: (val: string) => set({ curahHujanRencana: val, isBanjirDirty: true, isNeracaDirty: true }),
   
   fetchStasiun: async () => {
     if (!supabase) return;
@@ -750,6 +756,8 @@ export const useHydrologyStore = create<HydrologyState>()(
   }),
 
   setHasilBanjir: (hasil) => set({ hasilBanjir: hasil, isBanjirDirty: false }),
+  setHasilBanjirEmpiris: (results) => set({ hasilBanjirEmpiris: results }),
+  setHasilBanjirHSS: (results) => set({ hasilBanjirHSS: results }),
   setHasilKonvolusi: (hasil) => set({ hasilKonvolusi: hasil }),
   setHSSComparisonResults: (results) => set({ hssComparisonResults: results }),
   setHasilNeraca: (hasil) => set({ hasilNeraca: hasil, isNeracaDirty: false }),

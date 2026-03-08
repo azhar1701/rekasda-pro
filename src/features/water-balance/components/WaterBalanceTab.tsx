@@ -15,10 +15,12 @@ import {
   DEFAULT_ETO_INDONESIA,
   DAYS_IN_MONTH,
   MONTH_LABELS,
+  calculateFJMock,
+  calculateWeibullDependableFlow,
   type MockParams,
   type MockMonthlyInput,
   type MockMonthlyResult,
-} from '@/lib/engine/fjMock'; // Keeping types and defaults
+} from '@/lib/engine/fjMock';
 import { KalkulatorIrigasi } from './KalkulatorIrigasi';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -90,85 +92,76 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   };
 
   // ── F.J. Mock Calculate Handler ──
-  // ── F.J. Mock Calculate Handler ──
   const [isMockCalculating, setIsMockCalculating] = useState(false);
 
-  const handleMockCalculate = useCallback(async () => {
+  const handleMockCalculate = useCallback(() => {
     setMockError(null);
     setIsMockCalculating(true);
-    try {
-      if (luasDasNum <= 0) {
-        setMockError('Luas DAS belum diisi. Atur di Master Data terlebih dahulu.');
+
+    // Use a small timeout to let the UI update the "Calculating" state
+    setTimeout(() => {
+      try {
+        if (luasDasNum <= 0) {
+          setMockError('Luas DAS belum diisi. Atur di Master Data terlebih dahulu.');
+          setIsMockCalculating(false);
+          return;
+        }
+
+        const params: MockParams = {
+          luasDas: luasDasNum,
+          smc: mockParams.smc,
+          ism: mockParams.ism,
+          infiltrationFactor: mockParams.infiltrationFactor,
+          k: mockParams.k,
+          exposedSurface: mockParams.exposedSurface,
+        };
+
+        const data_mock: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
+          month,
+          precipitation: monthlyPrecip[i],
+          eto: monthlyETo[i],
+          daysInMonth: DAYS_IN_MONTH[i],
+        }));
+
+        // ── PURE LOCAL CALCULATION ──
+        const results_mock = calculateFJMock(params, data_mock);
+
+        // Calculate Q80 (Dependable Flow) using the discharge series
+        const dischargeSeries = results_mock.map((r: MockMonthlyResult) => r.discharge);
+        const weibullResults = calculateWeibullDependableFlow(dischargeSeries, targetProb);
+
+        const qAndalan = weibullResults.qAndalan;
+        const targetProb_val = weibullResults.probability;
+
+        setMockResults(results_mock);
+
+        // Apply Mock discharges as monthlySupply for Water Balance
+        setInputs(prev => ({ ...prev, monthlySupply: dischargeSeries }));
+
+        // Save to store
+        setHasilMock({
+          monthlyResults: results_mock.map((r: MockMonthlyResult) => ({
+            month: r.month,
+            precipitation: r.precipitation,
+            eto: r.eto,
+            waterSurplus: r.waterSurplus,
+            baseFlow: r.baseFlow,
+            directRunoff: r.directRunoff,
+            totalRunoff: r.totalRunoff,
+            discharge: r.discharge,
+            daysInMonth: r.daysInMonth,
+          })),
+          qAndalan: qAndalan,
+          probability: targetProb_val,
+          metode: 'mock',
+        });
+      } catch (err: any) {
+        setMockError(err.message || 'Perhitungan F.J. Mock gagal.');
+      } finally {
         setIsMockCalculating(false);
-        return;
       }
-
-      const params: MockParams = {
-        luasDas: luasDasNum,
-        smc: mockParams.smc,
-        ism: mockParams.ism,
-        infiltrationFactor: mockParams.infiltrationFactor,
-        k: mockParams.k,
-        exposedSurface: mockParams.exposedSurface,
-      };
-
-      const data_mock: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
-        month,
-        precipitation: monthlyPrecip[i],
-        eto: monthlyETo[i],
-        daysInMonth: DAYS_IN_MONTH[i],
-      }));
-
-      const response = await fetch('http://localhost:8000/api/v1/neraca-air/fj-mock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          params,
-          data: data_mock
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Gagal menghitung FJ Mock di Python Engine');
-      }
-
-      const mockResponse = await response.json();
-      const results_mock = mockResponse.monthlyResults;
-      const qAndalan = mockResponse.qAndalan;
-      const targetProb_val = mockResponse.probability;
-
-      setMockResults(results_mock);
-
-      // Extract discharge series
-      const discharges = results_mock.map((r: any) => r.discharge);
-
-      // Apply Mock discharges as monthlySupply for Water Balance
-      setInputs(prev => ({ ...prev, monthlySupply: discharges }));
-
-      // Save to store
-      setHasilMock({
-        monthlyResults: results_mock.map((r: any) => ({
-          month: r.month,
-          precipitation: r.precipitation,
-          eto: r.eto,
-          waterSurplus: r.waterSurplus,
-          baseFlow: r.baseFlow,
-          directRunoff: r.directRunoff,
-          totalRunoff: r.totalRunoff,
-          discharge: r.discharge,
-          daysInMonth: r.daysInMonth,
-        })),
-        qAndalan: qAndalan,
-        probability: targetProb_val,
-        metode: 'mock',
-      });
-    } catch (err: any) {
-      setMockError(err.message || 'Perhitungan F.J. Mock API gagal.');
-    } finally {
-      setIsMockCalculating(false);
-    }
-  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, setHasilMock, setInputs]);
+    }, 100);
+  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, targetProb, setHasilMock, setInputs]);
 
   const totalSupply = inputs.monthlySupply.reduce((a, b) => a + b, 0);
   const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);

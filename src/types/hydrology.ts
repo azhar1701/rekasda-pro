@@ -8,12 +8,18 @@
  * Sesuai SNI 2415:2016 Pasal 5
  */
 export interface RationalMethodInput {
-  /** Koefisien Pengaliran (Runoff Coefficient) - Dimensionless (0-1) */
+  /** Koefisien Limpasan (Runoff Coefficient) */
   C: number;
-  /** Intensitas Hujan (Rainfall Intensity) - mm/jam */
-  I: number;
-  /** Luas Daerah Aliran Sungai (Catchment Area) - km² */
+  /** Luas DAS (Catchment Area) - km² */
   A: number;
+  /** Panjang Sungai Utama (River Length) - km */
+  L: number;
+  /** Kemiringan Rata-rata DAS (Slope) - m/m */
+  S: number;
+  /** Curah Hujan Harian Maksimum (Max Daily Rainfall) - mm */
+  R24: number;
+  /** Waktu Konsentrasi (Optional: akan dihitung Kirpich) - jam */
+  tc?: number;
 }
 
 /**
@@ -21,9 +27,80 @@ export interface RationalMethodInput {
  */
 export interface RationalMethodOutput {
   /** Debit Puncak (Peak Discharge) - m³/s */
-  Q: number;
+  Qp: number;
+  /** Intensitas Hujan (Intensity) - mm/jam */
+  I: number;
   /** Waktu Konsentrasi (Time of Concentration) - jam */
-  tc?: number;
+  tc: number;
+}
+
+/**
+ * Metode Melchior - Input Parameters
+ */
+export interface MelchiorInput {
+  /** Luas DAS (A) - km² */
+  A: number;
+  /** Panjang Sungai (L) - km */
+  L: number;
+  /** Kemiringan Rata-rata (Slope) - m/m */
+  S: number;
+  /** Curah Hujan Harian Maksimum (R24) - mm */
+  R24: number;
+}
+
+export interface MelchiorOutput {
+  /** Debit Puncak (Qp) - m³/s */
+  Qp: number;
+  /** Koefisien Reduksi (Alpha) */
+  Alpha: number;
+  /** Waktu Konsentrasi (tc) - jam */
+  tc: number;
+}
+
+/**
+ * Metode Haspers - Input Parameters
+ */
+export interface HaspersInput {
+  /** Luas DAS (A) - km² */
+  A: number;
+  /** Panjang Sungai (L) - km */
+  L: number;
+  /** Kemiringan Rata-rata (Slope) - m/m */
+  S: number;
+  /** Curah Hujan Harian Maksimum (R24) - mm */
+  R24: number;
+}
+
+export interface HaspersOutput {
+  /** Debit Puncak (Qp) - m³/s */
+  Qp: number;
+  /** Koefisien Reduksi (Alpha) */
+  Alpha: number;
+  /** Waktu Konsentrasi (tc) - jam */
+  tc: number;
+}
+
+/**
+ * Metode Der Weduwen - Input Parameters
+ */
+export interface DerWeduwenInput {
+  /** Luas DAS (A) - km² */
+  A: number;
+  /** Panjang Sungai (L) - km */
+  L: number;
+  /** Kemiringan Rata-rata (Slope) - m/m */
+  S: number;
+  /** Curah Hujan Harian Maksimum (R24) - mm */
+  R24: number;
+}
+
+export interface DerWeduwenOutput {
+  /** Debit Puncak (Qp) - m³/s */
+  Qp: number;
+  /** Koefisien Reduksi (Alpha) */
+  Alpha: number;
+  /** Waktu Konsentrasi (tc) - jam */
+  tc: number;
 }
 
 /**
@@ -33,10 +110,10 @@ export interface RationalMethodOutput {
 export interface HSSNakayasuInput {
   /** Hujan Satuan (Unit Rainfall) - mm */
   Ro: number;
-  /** Time Lag - jam */
-  Tg: number;
-  /** Time Unit (0.5 - 1.0 * Tg) - jam */
-  Tr: number;
+  /** Time Lag - jam (Optional: akan dihitung otomatis jika tidak diisi) */
+  Tg?: number;
+  /** Time Unit (0.5 - 1.0 * Tg) - jam (Optional: akan dihitung otomatis) */
+  Tr?: number;
   /** Parameter Hidrograf (1.5 - 3.0, standard = 2.0) */
   Alpha: number;
   /** Luas DAS (Catchment Area) - km² */
@@ -70,10 +147,18 @@ export interface HSSGamma1Input {
   A: number;
   /** Panjang Sungai Utama (Main River Length) - km */
   L: number;
+  /** Kemiringan Sungai (Slope) - m/m */
+  S: number;
   /** Faktor Sumber (Source Factor) - dimensionless */
   SF: number;
-  /** Waktu Konsentrasi (Time of Concentration) - jam */
-  Tc?: number;
+  /** Faktor Simetri (Symmetry Index) */
+  SIM: number;
+  /** Jumlah Pertemuan Sungai (Number of Junctions) */
+  JN: number;
+  /** Frekuensi Sumber (Source Frequency) */
+  SN: number;
+  /** Luas Relatif Hulu (Relative Upstream Area) */
+  RUA: number;
 }
 
 /**
@@ -91,9 +176,36 @@ export interface HSSGamma1Output {
 }
 
 /**
- * HSS Snyder - Input Parameters
- * Metode Hidrograf Satuan Sintetik Snyder (1938)
+ * HSS SCS - Input Parameters
+ * Metode Hidrograf Satuan Sintetik SCS (Soil Conservation Service)
  */
+export interface HSSSCSInput {
+  /** Hujan Satuan (Unit Rainfall) - mm */
+  Ro: number;
+  /** Luas DAS (Catchment Area) - km² */
+  A: number;
+  /** Panjang Sungai Utama (Main River Length) - km */
+  L: number;
+  /** Kemiringan Rata-rata (Slope) - m/m */
+  S: number;
+  /** Waktu Konsentrasi (Tc) - jam (Optional) */
+  Tc?: number;
+}
+
+/**
+ * HSS SCS - Output
+ */
+export interface HSSSCSOutput {
+  /** Debit Puncak (Peak Discharge) - m³/s */
+  Qp: number;
+  /** Waktu Puncak (Time to Peak) - jam */
+  Tp: number;
+  /** Waktu Dasar (Base Time) - jam */
+  Tb: number;
+  /** Data Hidrograf (Time-Discharge pairs) */
+  hydrograph: Array<{ time: number; discharge: number }>;
+}
+
 export interface HSSSnyderInput {
   /** Hujan Satuan (Unit Rainfall) - mm */
   Ro: number;
@@ -107,6 +219,46 @@ export interface HSSSnyderInput {
   Ct: number;
   /** Koefisien Cp (0.4 - 0.8, standard = 0.6) */
   Cp: number;
+}
+
+export interface HSSSnyderOutput {
+  /** Debit Puncak (Peak Discharge) - m³/s */
+  Qp: number;
+  /** Waktu Puncak (Time to Peak) - jam */
+  Tp: number;
+  /** Waktu Dasar (Base Time) - jam */
+  Tb: number;
+  /** Data Hidrograf (Time-Discharge pairs) */
+  hydrograph: Array<{ time: number; discharge: number }>;
+}
+
+/**
+ * HSS Clark - Input Parameters
+ * Metode Hidrograf Satuan Sintetik Clark
+ */
+export interface HSSClarkInput {
+  /** Hujan Satuan (Unit Rainfall) - mm */
+  Ro: number;
+  /** Luas DAS (Catchment Area) - km² */
+  A: number;
+  /** Waktu Konsentrasi (Tc) - jam */
+  Tc: number;
+  /** Koefisien Tampungan (Storage Coefficient R) - jam */
+  R: number;
+}
+
+/**
+ * HSS Clark - Output
+ */
+export interface HSSClarkOutput {
+  /** Debit Puncak (Peak Discharge) - m³/s */
+  Qp: number;
+  /** Waktu Puncak (Time to Peak) - jam */
+  Tp: number;
+  /** Waktu Dasar (Base Time) - jam */
+  Tb: number;
+  /** Data Hidrograf (Time-Discharge pairs) */
+  hydrograph: Array<{ time: number; discharge: number }>;
 }
 
 /**
@@ -176,6 +328,28 @@ export interface RainfallIntensityInput {
   t: number;
   /** Metode perhitungan */
   method: 'mononobe' | 'talbot';
+}
+
+/**
+ * Convolution - Input Parameters
+ */
+export interface ConvolutionInput {
+  /** Hujan Efektif (Effective Rainfall) - mm (array per jam) */
+  effectiveRainfall: number[];
+  /** Ordinat Hidrograf Satuan (Unit Hydrograph) - m³/s/mm */
+  unitHydrograph: Array<{ time: number; discharge: number }>;
+}
+
+/**
+ * Convolution - Output
+ */
+export interface ConvolutionOutput {
+  /** Hidrograf Banjir (Flood Hydrograph) - m³/s */
+  hydrograph: Array<{ time: number; discharge: number }>;
+  /** Debit Puncak (Peak Discharge) - m³/s */
+  Qp: number;
+  /** Waktu Puncak (Time to Peak) - jam */
+  Tp: number;
 }
 
 /**
