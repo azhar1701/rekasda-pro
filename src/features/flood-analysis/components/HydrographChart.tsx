@@ -85,11 +85,11 @@ export const HydrographChart = ({
       <div className="px-6 py-5 border-b border-slate-100 bg-pupr-blue text-white">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <div>
-            <h3 className="text-xl font-extrabold text-white mb-2 uppercase tracking-tighter italic">{title}</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
             {volume > 0 && (
-              <p className="text-sm text-white/80 font-medium">
-                <span className="text-white/60 uppercase text-[10px] font-bold tracking-widest mr-2">Volume Total:</span>
-                <span className="font-extrabold text-pupr-yellow">{formatNumber(volume, 0)} Juta m³</span>
+              <p className="text-sm text-slate-600 font-medium">
+                <span className="text-slate-400">Volume:</span>{' '}
+                <span className="font-semibold text-slate-800">{formatNumber(volume, 0)} juta m³</span>
               </p>
             )}
           </div>
@@ -97,14 +97,14 @@ export const HydrographChart = ({
           {showPeakIndicators && (
             <div className="grid grid-cols-2 gap-8 md:justify-end">
               <div className="text-center md:text-right">
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">Q-Peak Max</p>
-                <p className="text-3xl font-extrabold text-pupr-yellow leading-none italic">{formatNumber(qPeak, 2)}</p>
-                <p className="text-[10px] text-white/40 font-bold mt-1 uppercase">m³/detik</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Q-Peak</p>
+                <p className="text-3xl font-bold text-pupr-blue leading-none">{formatNumber(qPeak, 2)}</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">m³/s</p>
               </div>
               <div className="text-center md:text-right">
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">T-Peak Waktu</p>
-                <p className="text-3xl font-extrabold text-white leading-none italic">{tPeak.toFixed(1)}</p>
-                <p className="text-[10px] text-white/40 font-bold mt-1 uppercase">Jam Ke-</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">T-Peak</p>
+                <p className="text-3xl font-bold text-slate-700 leading-none">{tPeak.toFixed(1)}</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">jam</p>
               </div>
             </div>
           )}
@@ -130,9 +130,9 @@ export const HydrographChart = ({
                   value: 'Waktu (jam)',
                   position: 'bottom',
                   offset: 10,
-                  style: { fontSize: '11px', fontWeight: 700, fill: '#94a3b8', textTransform: 'uppercase' },
+                  style: { fontSize: '13px', fontWeight: 600, fill: '#64748b' },
                 }}
-                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+                tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
                 axisLine={false}
                 tickLine={false}
                 type="number"
@@ -144,9 +144,9 @@ export const HydrographChart = ({
                   angle: -90,
                   position: 'insideLeft',
                   offset: 10,
-                  style: { fontSize: '11px', fontWeight: 700, fill: '#94a3b8', textTransform: 'uppercase' },
+                  style: { fontSize: '13px', fontWeight: 600, fill: '#64748b' },
                 }}
-                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+                tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
                 axisLine={false}
                 tickLine={false}
               />

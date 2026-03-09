@@ -75,9 +75,7 @@
   --font-semibold: 600;
   --font-bold: 700;
 
-  /* === BRAND COLORS (PUPR Identity) === */
-  --color-pupr-blue: #0c3a66;
-  --color-pupr-yellow: #f2c114;
+  /* === COLORS === */
   --color-primary-600: #2563EB;
   --color-accent-500: #06B6D4;
   --color-neutral-50: #F8FAFC;
@@ -123,7 +121,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   background: linear-gradient(to bottom, #f0f4f8 0%, #ffffff 100%);
   font-feature-settings: 'tnum' on, 'lnum' on;
   font-size: var(--font-size-base);
@@ -131,31 +129,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #1e293b;
-}
-
-/* Centralized Animations */
-@keyframes progress-indeterminate {
-  0% {
-    left: -33%;
-  }
-
-  100% {
-    left: 100%;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
 }
 
 /* ========================================
@@ -510,7 +483,18 @@ body {
   animation-delay: 200ms;
 }
 
-/* SVG Transitions — removed global rule to prevent chart lag */
+/* SVG Transitions */
+svg * {
+  transition-property: all;
+  transition-timing-function: ease-out;
+}
+
+svg path,
+svg circle,
+svg line,
+svg text {
+  transition-duration: 500ms;
+}
 
 /* Scrollbar Hide Utility (for horizontal-scroll navs) */
 .scrollbar-hide::-webkit-scrollbar {

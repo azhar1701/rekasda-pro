@@ -32,49 +32,45 @@ export const DoubleMassCurveChart: React.FC<DoubleMassCurveChartProps> = ({
   ];
 
   return (
-    <Card className={`p-5 rounded-[2rem] border-l-[6px] shadow-xl bg-white transition-all hover:shadow-2xl ${isKonsisten ? 'border-l-emerald-500' : 'border-l-rose-500'}`}>
-      <div className="flex justify-between items-start mb-6">
+    <Card className={`p-4 border-l-4 shadow-sm bg-white ${isKonsisten ? 'border-l-emerald-500' : 'border-l-rose-500'}`}>
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <h4 className="text-base font-extrabold text-slate-800 uppercase tracking-tighter italic">Double Mass Curve</h4>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Uji Konsistensi Data Spasial</p>
+          <h4 className="text-sm font-bold text-slate-700 ">Double Mass Curve</h4>
+          <p className="text-[10px] text-slate-500">Uji Konsistensi Data Spasial</p>
         </div>
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-widest shadow-sm ${isKonsisten ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+        <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${isKonsisten ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
           {isKonsisten ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-          {isKonsisten ? 'Konsisten' : 'Inkonsisten'}
+          {isKonsisten ? 'KONSISTEN' : 'INKONSISTEN'}
         </div>
       </div>
 
       <div style={{ height: 250, width: '100%' }}>
         <ResponsiveContainer>
-          <ComposedChart margin={{ top: 10, right: 10, left: -10, bottom: 15 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+          <ComposedChart margin={{ top: 5, right: 10, left: -20, bottom: 15 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="akumulasiReferensi"
               type="number"
-              tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
-              axisLine={{ stroke: '#e2e8f0' }}
-              tickLine={false}
+              tick={{ fontSize: 10, fill: '#64748b' }}
               domain={[0, 'dataMax']}
-              label={{ value: `Σ Hujan ${referenceName} (mm)`, position: 'insideBottom', offset: -5, fontSize: 10, fill: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}
+              label={{ value: `Σ Hujan ${referenceName} (mm)`, position: 'insideBottom', offset: -10, fontSize: 10, fill: '#64748b' }}
             />
             <YAxis
               dataKey="akumulasiTarget"
               type="number"
-              tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
-              axisLine={false}
-              tickLine={false}
+              tick={{ fontSize: 10, fill: '#64748b' }}
               domain={[0, 'dataMax']}
               width={60}
-              label={{ value: `Σ Hujan ${targetName} (mm)`, angle: -90, position: 'insideLeft', fontSize: 10, fill: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}
+              label={{ value: `Σ Hujan ${targetName} (mm)`, angle: -90, position: 'insideLeft', fontSize: 10, fill: '#64748b' }}
             />
             <Tooltip
-              cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
-              contentStyle={{ borderRadius: '12px', fontSize: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+              cursor={{ strokeDasharray: '3 3' }}
+              contentStyle={{ borderRadius: '8px', fontSize: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               formatter={(val: number, name: string) => [val.toFixed(1), name === 'akumulasiTarget' ? targetName : 'Trend']}
               labelFormatter={(label) => `Σ Referensi: ${Number(label).toFixed(1)} mm`}
             />
-            <Line data={regressionData} dataKey="regressionY" stroke="#e2e8f0" strokeWidth={2} strokeDasharray="5 5" dot={false} activeDot={false} isAnimationActive={false} />
-            <Scatter data={dataPlot} fill="#0c3a66" line={{ stroke: '#0c3a66', strokeWidth: 2, strokeOpacity: 0.3 }} />
+            <Line data={regressionData} dataKey="regressionY" stroke="#94a3b8" strokeWidth={1} strokeDasharray="5 5" dot={false} activeDot={false} isAnimationActive={false} />
+            <Scatter data={dataPlot} fill="#0c3a66" line={{ stroke: '#0ea5e9', strokeWidth: 1.5 }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

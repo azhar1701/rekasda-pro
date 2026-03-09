@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
-import { Droplets, MapPin, BarChart3, AlertTriangle, Edit2, CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
-import { StaggeredReveal } from '@/components/ui/govtech';
+import { useMemo } from 'react';
 
 interface MasterDataDashboardProps {
   onNavigateToSection?: (section: 'qc' | 'morfometri' | 'tutupan' | 'hujan') => void;
@@ -30,7 +29,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     const years = dataHujan.map(d => new Date(d.tanggal).getFullYear());
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
-    return `${minYear} - ${maxYear} `;
+    return `${minYear} - ${maxYear}`;
   }, [dataHujan]);
 
   const rainfallChartData = useMemo(() => {
@@ -38,7 +37,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     const thiessenResults = useHydrologyStore.getState().hasilThiessen;
     if (thiessenResults?.hujanRataRataDAS && thiessenResults.hujanRataRataDAS.length > 0) {
       return thiessenResults.hujanRataRataDAS.map((val, idx) => ({
-        tahun: `Data ${idx + 1} `,
+        tahun: `Data ${idx + 1}`,
         hujan: Number(val.toFixed(2)),
       }));
     }
@@ -47,7 +46,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     if (!curahHujanWilayah?.stasiunConfigs) return [];
     return curahHujanWilayah.stasiunConfigs
       .map((item, idx) => ({
-        tahun: item.namaStasiun || `Stasiun ${idx + 1} `,
+        tahun: item.namaStasiun || `Stasiun ${idx + 1}`,
         hujan: Number(item.bobot.toFixed(2)),
         isWeight: true
       }));
@@ -103,15 +102,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     <div className="space-y-4 p-6">
       <ProjectContextBanner />
 
-      <StaggeredReveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: QC Status */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-blue">
-          <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 relative z-10">
-              <div className="w-8 h-8 rounded-full bg-pupr-blue/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <Droplets className="w-4 h-4 text-pupr-blue" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-sm">Audit Kualitas Data</h3>
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Droplets className="w-5 h-5 text-pupr-blue" />
+              <h3 className="font-semibold text-slate-800 text-sm">Status Kualitas Data</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('qc')}
@@ -125,40 +122,40 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
           <div className="p-4">
             {qcStatus ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between group/item">
-                  <span className="text-sm text-gray-600 font-medium">Konsistensi RAPS</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Konsistensi RAPS</span>
                   {qcStatus.rapsValid ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100/50 px-2 py-1 rounded-md group-hover/item:scale-105 transition-transform duration-300">
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
                       <CheckCircle2 className="w-3 h-3" /> Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-100/50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
                       <XCircle className="w-3 h-3" /> Tidak Valid
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between group/item">
-                  <span className="text-sm text-gray-600 font-medium">Outlier Grubbs</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Outlier Grubbs</span>
                   {qcStatus.grubbsValid ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100/50 px-2 py-1 rounded-md group-hover/item:scale-105 transition-transform duration-300">
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
                       <CheckCircle2 className="w-3 h-3" /> Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-100/50 px-2 py-1 rounded-md">
-                      <XCircle className="w-3 h-3" /> Outlier
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
+                      <XCircle className="w-3 h-3" /> Outlier Terdeteksi
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between group/item">
-                  <span className="text-sm text-gray-600 font-medium">Homogenitas</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Homogenitas</span>
                   {qcStatus.homogeneityValid ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100/50 px-2 py-1 rounded-md group-hover/item:scale-105 transition-transform duration-300">
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
                       <CheckCircle2 className="w-3 h-3" /> Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-100/50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
                       <XCircle className="w-3 h-3" /> Tidak Valid
                     </span>
                   )}
@@ -166,28 +163,25 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
                 {yearRange && (
                   <div className="pt-3 border-t border-gray-100">
-                    <span className="text-xs text-slate-500 tabular-nums font-bold">Periode: {yearRange}</span>
+                    <span className="text-xs text-slate-500 tabular-nums font-medium">Rentang Data: {yearRange}</span>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 bg-pupr-blue/[0.02] rounded-md border border-dashed border-slate-200 relative overflow-hidden group/empty">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-pupr-blue/5 to-transparent -translate-x-[100%] animate-shimmer opacity-0 group-hover/empty:opacity-100 transition-opacity" />
-                <AlertTriangle className="w-8 h-8 mb-2 text-pupr-blue/30 relative z-10" />
-                <p className="text-sm font-medium text-slate-500 relative z-10">Belum ada hasil QC</p>
+              <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                <AlertTriangle className="w-8 h-8 mb-2 text-pupr-blue/50" />
+                <p className="text-sm">Belum ada hasil QC</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Card 2: Morfometri DAS */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-yellow">
-          <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 relative z-10">
-              <div className="w-8 h-8 rounded-full bg-pupr-yellow/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <MapPin className="w-4 h-4 text-pupr-blue" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-sm">Karakteristik Fisik DAS</h3>
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-pupr-blue" />
+              <h3 className="font-semibold text-slate-800 text-sm">Morfometri DAS</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('morfometri')}
@@ -202,7 +196,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             {morfometriDAS?.luasDAS ? (
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1 font-medium">Total Luas DAS</p>
+                  <p className="text-xs text-slate-500 mb-1 font-medium">Luas DAS</p>
                   <p className="text-3xl font-bold text-slate-800 tabular-nums">
                     {morfometriDAS.luasDAS.toFixed(2)}
                     <span className="text-sm font-normal text-slate-500 ml-2">km²</span>
@@ -235,13 +229,11 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
         </div>
 
         {/* Card 3: Koefisien Limpasan */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-teal-500">
-          <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 relative z-10">
-              <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <BarChart3 className="w-4 h-4 text-teal-600" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-sm">Koefisien Limpasan</h3>
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-pupr-blue" />
+              <h3 className="font-semibold text-slate-800 text-sm">Koefisien Limpasan</h3>
             </div>
             <button
               onClick={() => onNavigateToSection?.('tutupan')}
@@ -280,12 +272,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                         </div>
                         <div className="w-full bg-slate-100 rounded h-2">
                           <div
-                            className={`h-2 rounded transition-all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
-                              ? 'bg-green-600'
-                              : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan') || item.name.toLowerCase().includes('pemukiman') || item.name.toLowerCase().includes('villa')
-                                ? 'bg-orange-500'
-                                : 'bg-pupr-blue'
-                              }`}
+                            className="bg-pupr-blue h-2 rounded transition-all"
                             style={{ width: `${Math.min(item.percentage, 100)}%` }}
                           />
                         </div>
@@ -362,7 +349,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                     }}
                     labelStyle={{ color: '#1e293b', fontWeight: 600 }}
                     formatter={(value: number, _name: any, props: any) => [
-                      `${value.toFixed(2)} ${props.payload.isWeight ? '(% Bobot)' : 'mm'} `,
+                      `${value.toFixed(2)} ${props.payload.isWeight ? '(% Bobot)' : 'mm'}`,
                       props.payload.isWeight ? 'Bobot Kontribusi' : 'Hujan Wilayah'
                     ]}
                   />
@@ -379,7 +366,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             )}
           </div>
         </div>
-      </StaggeredReveal>
+      </div>
     </div>
   );
 }

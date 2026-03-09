@@ -131,21 +131,9 @@ export default {
 			animation: {
 				'fade-in': 'fadeIn 300ms cubic-bezier(0.4, 0.0, 0.2, 1)',
 				'slide-up': 'slideUp 400ms cubic-bezier(0.0, 0.0, 0.2, 1)',
-				stagger: 'staggerFadeIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1) backwards',
-				'pulse-subtle': 'pulseSubtle 3s ease-in-out infinite'
-			},
-			transitionDelay: {
-				'100': '100ms',
-				'200': '200ms',
-				'300': '300ms',
-				'400': '400ms',
-				'500': '500ms',
+				stagger: 'staggerFadeIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1) backwards'
 			},
 			keyframes: {
-				pulseSubtle: {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.85' }
-				},
 				fadeIn: {
 					'0%': {
 						opacity: '0'
@@ -176,7 +164,7 @@ export default {
 				}
 			},
 			fontFeatureSettings: {
-				numeric: '"tnum", "lnum"',
+				numeric: 'tnum" on, "lnum" on'
 			}
 		}
 	},

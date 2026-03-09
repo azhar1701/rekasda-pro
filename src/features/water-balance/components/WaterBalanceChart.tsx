@@ -47,12 +47,11 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
             bottom: 5
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey="month"
-            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
-            axisLine={{ stroke: '#e2e8f0' }}
-            tickLine={false}
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
+            axisLine={{ stroke: '#cbd5e1' }}
             height={40}
           />
           <YAxis
@@ -60,11 +59,10 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
               value: 'Debit (m³/s)',
               angle: -90,
               position: 'insideLeft',
-              style: { fill: '#94a3b8', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }
+              style: { fill: '#64748b', fontWeight: 600, fontSize: 11 }
             }}
-            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
-            axisLine={false}
-            tickLine={false}
+            tick={{ fill: '#64748b', fontSize: 11 }}
+            axisLine={{ stroke: '#cbd5e1' }}
             width={60}
           />
           <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} content={<CustomTooltip />} />
@@ -87,19 +85,19 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
           {/* Bar for water supply */}
           <Bar
             dataKey="Ketersediaan Air (Q80)"
-            fill="#0c3a66"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={40}
+            fill="#3b82f6"
+            radius={[8, 8, 0, 0]}
+            maxBarSize={60}
           />
 
           {/* Line for total demand */}
           <Line
             type="monotone"
             dataKey="Total Kebutuhan"
-            stroke="#f2c114"
+            stroke="#f97316"
             strokeWidth={3}
-            dot={{ fill: '#f2c114', r: 4, strokeWidth: 2, stroke: '#fff' }}
-            activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
+            dot={{ fill: '#f97316', r: 5 }}
+            activeDot={{ r: 7 }}
           />
         </ComposedChart>
       </ResponsiveContainer>

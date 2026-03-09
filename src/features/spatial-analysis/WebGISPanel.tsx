@@ -221,7 +221,7 @@ export const WebGISPanel: React.FC = () => {
                 Upload Sungai
               </Button>
 
-              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 bg-pupr-yellow border-pupr-yellow text-pupr-blue hover:bg-pupr-yellow/80 hover:scale-105 transition-all" onClick={handleLoadDemo}>
+              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 bg-pupr-yellow border-pupr-yellow text-pupr-blue hover:bg-[#d9ab11]" onClick={handleLoadDemo}>
                 <Sparkles className="w-3 h-3" />
                 Demo Ciliwung
               </Button>
@@ -237,7 +237,7 @@ export const WebGISPanel: React.FC = () => {
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <FeatureGroup>
                 {dasFeature && <GeoJSON data={dasFeature} style={{ color: '#0c3a66', weight: 3, fillOpacity: 0.1 }} />}
-                {riverFeature && <GeoJSON data={riverFeature} style={{ color: '#0284c7', weight: 4, opacity: 0.8 }} />}
+                {riverFeature && <GeoJSON data={riverFeature} style={{ color: '#0ea5e9', weight: 4, opacity: 0.8 }} />}
               </FeatureGroup>
               {stasiunList.map(s => (
                 <CircleMarker key={s.id} center={[s.koordinat_y || 0, s.koordinat_x || 0]} radius={5} pathOptions={{ color: '#f2c114', fillColor: '#f2c114', fillOpacity: 1 }}>

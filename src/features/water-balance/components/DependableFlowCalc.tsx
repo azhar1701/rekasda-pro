@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
-import { Button } from '@/components/ui/Button';
-import { CloudRain, Calendar, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/forms/Button';
 
 interface MonthlyRainfall {
   rainfall: number; // mm
@@ -104,7 +103,9 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
               <div className="space-y-2">
                 <div className="relative">
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <CloudRain className="w-3 h-3 text-pupr-blue" />
+                    <svg className="w-3 h-3 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
                   </div>
                   <input
                     type="number"
@@ -114,13 +115,15 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
                     aria-label={`Curah hujan bulan ${month}`}
                     value={monthlyData[index].rainfall}
                     onChange={e => handleDataChange(index, 'rainfall', parseFloat(e.target.value) || 0)}
-                    className="w-full pl-7 pr-8 py-1.5 text-xs border border-slate-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white font-bold tabular-nums"
+                    className="w-full pl-7 pr-8 py-1.5 text-xs border border-slate-200 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium">mm</span>
                 </div>
                 <div className="relative">
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-orange-500" />
+                    <svg className="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
                   <input
                     type="number"
@@ -130,7 +133,7 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
                     aria-label={`Hari hujan bulan ${month}`}
                     value={monthlyData[index].rainyDays}
                     onChange={e => handleDataChange(index, 'rainyDays', parseFloat(e.target.value) || 0)}
-                    className="w-full pl-7 pr-10 py-1.5 text-xs border border-slate-200 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white font-bold tabular-nums"
+                    className="w-full pl-7 pr-10 py-1.5 text-xs border border-slate-200 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none bg-white"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium">hari</span>
                 </div>
@@ -147,7 +150,7 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
           {MONTHS.map((month, index) => (
             <div key={month} className="text-center">
               <div className="text-[10px] text-pupr-blue font-bold">{month}</div>
-              <div className="font-bold text-blue-900 tabular-nums">{calculatedFlow[index]?.toFixed(2) || '0.00'}</div>
+              <div className="font-bold text-blue-900">{calculatedFlow[index]?.toFixed(2) || '0.00'}</div>
             </div>
           ))}
         </div>
@@ -155,12 +158,16 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
 
       {/* Action Button */}
       <Button
-        className="w-full"
+        fullWidth
         variant="primary"
         onClick={() => onUseData(calculatedFlow)}
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        }
       >
         Gunakan Data Ini untuk Neraca Air
-        <ChevronRight className="ml-2 w-4 h-4" />
       </Button>
     </div>
   );
