@@ -280,13 +280,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                         </div>
                         <div className="w-full bg-slate-100 rounded h-2">
                           <div
-                            className={`h - 2 rounded transition - all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
+                            className={`h-2 rounded transition-all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
                               ? 'bg-green-600'
-                              : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan')
+                              : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan') || item.name.toLowerCase().includes('pemukiman') || item.name.toLowerCase().includes('villa')
                                 ? 'bg-orange-500'
                                 : 'bg-pupr-blue'
-                              } `}
-                            style={{ width: `${Math.min(item.percentage, 100)}% ` }}
+                              }`}
+                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
                           />
                         </div>
                       </div>
