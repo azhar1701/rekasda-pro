@@ -31,6 +31,9 @@ import { useDatabaseStatus } from '@/features/history/components/DatabaseTest';
 import { APP_NAME } from '@/constants';
 import { SideDrawer } from '@/components/SideDrawer';
 import { GitMerge } from 'lucide-react';
+import { OnboardingProvider } from '@/providers/OnboardingProvider';
+import { WelcomeModal } from '@/components/ui/modals/WelcomeModal';
+import { GettingStartedChecklist, ChecklistToggle } from '@/components/ui/govtech';
 
 // Loading fallback component
 const TabFallback = () => (
@@ -155,6 +158,9 @@ const AppLayout: React.FC = () => {
     <>
       <SideDrawer />
       <ToastContainer />
+      <WelcomeModal />
+      <GettingStartedChecklist />
+      <ChecklistToggle />
       <div className="min-h-screen font-sans flex flex-col bg-gradient-to-b from-slate-50 to-white">
 
         {/* Skip to content link for keyboard users */}
@@ -374,15 +380,18 @@ const AppLayout: React.FC = () => {
                       <button
                         key={item.tab}
                         onClick={() => navigate(item.tab)}
-                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all duration-200 whitespace-nowrap ${activeTab.startsWith(item.tab)
+                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all duration-300 whitespace-nowrap relative overscroll-none group/nav ${activeTab.startsWith(item.tab)
                           ? 'bg-pupr-blue text-white shadow-md'
                           : 'text-slate-600 hover:bg-slate-100 hover:text-pupr-blue'
                           }`}
                       >
-                        <div className="flex items-center justify-center">
+                        <div className={`flex items-center justify-center transition-transform duration-300 group-hover/nav:scale-110 ${activeTab.startsWith(item.tab) ? 'scale-105' : ''}`}>
                           {item.icon}
                         </div>
                         <span className={`text-sm font-semibold`}>{item.label}</span>
+                        {activeTab.startsWith(item.tab) && (
+                          <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-pupr-yellow rounded-r-full shadow-sm animate-in fade-in slide-in-from-left-2 duration-300" />
+                        )}
                       </button>
                     ))}
                   </React.Fragment>
@@ -469,7 +478,9 @@ const AppLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AppLayout />
+      <OnboardingProvider>
+        <AppLayout />
+      </OnboardingProvider>
     </BrowserRouter>
   );
 };

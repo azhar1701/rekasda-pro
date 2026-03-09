@@ -6,6 +6,9 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ActionableEmptyState } from '@/components/ui/ActionableEmptyState';
 import { WhiteBoxFormula } from '@/components/ui/WhiteBoxFormula';
 import { toast } from '@/hooks/useToast';
+import { useOnboarding } from '@/providers/OnboardingProvider';
+import { SuccessCelebration } from '@/components/ui/feedback/SuccessCelebration';
+import { HelpTooltip } from '@/components/ui/govtech';
 import {
   calculateStatisticalParams,
   calculateDistributions,
@@ -34,6 +37,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
   const [showAllData, setShowAllData] = useState(false);
   const [hoveredTr, setHoveredTr] = useState<number | null>(null);
   const [selectedTr, setSelectedTr] = useState<number>(25);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const { completeStep } = useOnboarding();
 
   const hasValidData = useMemo(() => {
     const hasEnoughPointData = dataHujan.length >= 10;
@@ -165,6 +170,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     setSelectedKalaUlang(25);
 
     setIsCalculated(true);
+    setShowCelebration(true);
+    completeStep('frekuensi');
     toast.success('Hasil analisis frekuensi berhasil disimpan');
   };
 
@@ -240,6 +247,12 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       }
     >
       <div className="space-y-5 py-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {showCelebration && (
+          <SuccessCelebration
+            message="Analisis Frekuensi Hujan Ekstrem (SNI 2415:2016) berhasil diselesaikan!"
+            onComplete={() => setShowCelebration(false)}
+          />
+        )}
         {/* TAHAP 1: Smart Data Context - Compressed Input */}
         <div className="rounded-md border border-slate-300 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
@@ -534,7 +547,10 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900">3. Hujan Rencana (R₂₄)</h3>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-slate-700">Metode:</label>
+                  <label className="flex items-center text-xs font-medium text-slate-700">
+                    Metode:
+                    <HelpTooltip content="Sistem merekomendasikan metode terbaik berdasarkan Uji Kecocokan (Goodness-of-Fit) Chi-Square dan Kolmogorov-Smirnov." />
+                  </label>
                   <select
                     value={selectedMethod || ''}
                     onChange={(e) => setSelectedMethod(e.target.value)}

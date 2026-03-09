@@ -11,6 +11,7 @@ import {
     Info
 } from 'lucide-react';
 import { useFrequencyAnalysis } from '@/hooks/useFrequencyAnalysis';
+import { useOnboarding } from '@/providers/OnboardingProvider';
 import { StepMorfometri } from './steps/StepMorfometri';
 import { StepHietograf } from './steps/StepHietograf';
 import { StepMetodeBanjir } from './steps/StepMetodeBanjir';
@@ -64,9 +65,11 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
     const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
     const [unitHydrograph, setUnitHydrograph] = useState<any[]>([]);
     const { isComplete: freqComplete } = useFrequencyAnalysis();
+    const { completeStep } = useOnboarding();
 
     const handleStepComplete = (step: Step) => {
         setCompletedSteps(prev => new Set(prev).add(step));
+        if (step === 4) completeStep('banjir');
         if (step < 4) setActiveStep((step + 1) as Step);
     };
 

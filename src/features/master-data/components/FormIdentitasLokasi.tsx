@@ -3,6 +3,7 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Card } from '@/components/ui/Card';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
 import { Briefcase, Navigation, Map as MapIcon, Info } from 'lucide-react';
+import { useOnboarding } from '@/providers/OnboardingProvider';
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -66,9 +67,13 @@ const LocationMarker = ({ position, setPosition }: { position: L.LatLng | null, 
 
 export const FormIdentitasLokasi: React.FC = () => {
   const { identitasLokasi, setIdentitasLokasi } = useHydrologyStore();
+  const { completeStep } = useOnboarding();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === 'namaPekerjaan' && value.length > 3) {
+      completeStep('identitas');
+    }
     if (name === 'lat' || name === 'lng') {
       const parsedValue = value === '' ? null : parseFloat(value);
       setIdentitasLokasi({

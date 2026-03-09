@@ -1,8 +1,9 @@
-import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle } from 'lucide-react';
+import { useMemo } from 'react';
+import { Droplets, MapPin, BarChart3, AlertTriangle, Edit2, CheckCircle2, XCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
-import { useMemo } from 'react';
+import { StaggeredReveal } from '@/components/ui/govtech';
 
 interface MasterDataDashboardProps {
   onNavigateToSection?: (section: 'qc' | 'morfometri' | 'tutupan' | 'hujan') => void;
@@ -29,7 +30,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     const years = dataHujan.map(d => new Date(d.tanggal).getFullYear());
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
-    return `${minYear} - ${maxYear}`;
+    return `${minYear} - ${maxYear} `;
   }, [dataHujan]);
 
   const rainfallChartData = useMemo(() => {
@@ -37,7 +38,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     const thiessenResults = useHydrologyStore.getState().hasilThiessen;
     if (thiessenResults?.hujanRataRataDAS && thiessenResults.hujanRataRataDAS.length > 0) {
       return thiessenResults.hujanRataRataDAS.map((val, idx) => ({
-        tahun: `Data ${idx + 1}`,
+        tahun: `Data ${idx + 1} `,
         hujan: Number(val.toFixed(2)),
       }));
     }
@@ -46,7 +47,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     if (!curahHujanWilayah?.stasiunConfigs) return [];
     return curahHujanWilayah.stasiunConfigs
       .map((item, idx) => ({
-        tahun: item.namaStasiun || `Stasiun ${idx + 1}`,
+        tahun: item.namaStasiun || `Stasiun ${idx + 1} `,
         hujan: Number(item.bobot.toFixed(2)),
         isWeight: true
       }));
@@ -102,12 +103,12 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     <div className="space-y-4 p-6">
       <ProjectContextBanner />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <StaggeredReveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: QC Status */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-blue animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-blue">
           <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-pupr-blue/10 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-2 relative z-10">
+              <div className="w-8 h-8 rounded-full bg-pupr-blue/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <Droplets className="w-4 h-4 text-pupr-blue" />
               </div>
               <h3 className="font-bold text-slate-800 text-sm">Audit Kualitas Data</h3>
@@ -124,40 +125,40 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
           <div className="p-4">
             {qcStatus ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Konsistensi RAPS</span>
+                <div className="flex items-center justify-between group/item">
+                  <span className="text-sm text-gray-600 font-medium">Konsistensi RAPS</span>
                   {qcStatus.rapsValid ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100/50 px-2 py-1 rounded-md group-hover/item:scale-105 transition-transform duration-300">
                       <CheckCircle2 className="w-3 h-3" /> Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-100/50 px-2 py-1 rounded-md">
                       <XCircle className="w-3 h-3" /> Tidak Valid
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Outlier Grubbs</span>
+                <div className="flex items-center justify-between group/item">
+                  <span className="text-sm text-gray-600 font-medium">Outlier Grubbs</span>
                   {qcStatus.grubbsValid ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100/50 px-2 py-1 rounded-md group-hover/item:scale-105 transition-transform duration-300">
                       <CheckCircle2 className="w-3 h-3" /> Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
-                      <XCircle className="w-3 h-3" /> Outlier Terdeteksi
+                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-100/50 px-2 py-1 rounded-md">
+                      <XCircle className="w-3 h-3" /> Outlier
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Homogenitas</span>
+                <div className="flex items-center justify-between group/item">
+                  <span className="text-sm text-gray-600 font-medium">Homogenitas</span>
                   {qcStatus.homogeneityValid ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100/50 px-2 py-1 rounded-md group-hover/item:scale-105 transition-transform duration-300">
                       <CheckCircle2 className="w-3 h-3" /> Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-100/50 px-2 py-1 rounded-md">
                       <XCircle className="w-3 h-3" /> Tidak Valid
                     </span>
                   )}
@@ -165,24 +166,25 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
                 {yearRange && (
                   <div className="pt-3 border-t border-gray-100">
-                    <span className="text-xs text-slate-500 tabular-nums font-medium">Rentang Data: {yearRange}</span>
+                    <span className="text-xs text-slate-500 tabular-nums font-bold">Periode: {yearRange}</span>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 bg-pupr-blue/[0.02] rounded-md border border-dashed border-slate-200">
-                <AlertTriangle className="w-8 h-8 mb-2 text-pupr-blue/30" />
-                <p className="text-sm font-medium text-slate-500">Belum ada hasil QC</p>
+              <div className="flex flex-col items-center justify-center py-8 bg-pupr-blue/[0.02] rounded-md border border-dashed border-slate-200 relative overflow-hidden group/empty">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-pupr-blue/5 to-transparent -translate-x-[100%] animate-shimmer opacity-0 group-hover/empty:opacity-100 transition-opacity" />
+                <AlertTriangle className="w-8 h-8 mb-2 text-pupr-blue/30 relative z-10" />
+                <p className="text-sm font-medium text-slate-500 relative z-10">Belum ada hasil QC</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Card 2: Morfometri DAS */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-yellow animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-pupr-yellow">
           <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-pupr-yellow/10 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-2 relative z-10">
+              <div className="w-8 h-8 rounded-full bg-pupr-yellow/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <MapPin className="w-4 h-4 text-pupr-blue" />
               </div>
               <h3 className="font-bold text-slate-800 text-sm">Karakteristik Fisik DAS</h3>
@@ -233,10 +235,10 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
         </div>
 
         {/* Card 3: Koefisien Limpasan */}
-        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-teal-500 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
+        <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-2px] border-l-4 border-l-teal-500">
           <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-2 relative z-10">
+              <div className="w-8 h-8 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <BarChart3 className="w-4 h-4 text-teal-600" />
               </div>
               <h3 className="font-bold text-slate-800 text-sm">Koefisien Limpasan</h3>
@@ -278,13 +280,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                         </div>
                         <div className="w-full bg-slate-100 rounded h-2">
                           <div
-                            className={`h-2 rounded transition-all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
+                            className={`h - 2 rounded transition - all ${item.name.toLowerCase().includes('hutan') || item.name.toLowerCase().includes('vegetasi')
                               ? 'bg-green-600'
                               : item.name.toLowerCase().includes('kota') || item.name.toLowerCase().includes('bangunan')
                                 ? 'bg-orange-500'
                                 : 'bg-pupr-blue'
-                              }`}
-                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                              } `}
+                            style={{ width: `${Math.min(item.percentage, 100)}% ` }}
                           />
                         </div>
                       </div>
@@ -360,7 +362,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                     }}
                     labelStyle={{ color: '#1e293b', fontWeight: 600 }}
                     formatter={(value: number, _name: any, props: any) => [
-                      `${value.toFixed(2)} ${props.payload.isWeight ? '(% Bobot)' : 'mm'}`,
+                      `${value.toFixed(2)} ${props.payload.isWeight ? '(% Bobot)' : 'mm'} `,
                       props.payload.isWeight ? 'Bobot Kontribusi' : 'Hujan Wilayah'
                     ]}
                   />
@@ -377,7 +379,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
             )}
           </div>
         </div>
-      </div>
+      </StaggeredReveal>
     </div>
   );
 }
