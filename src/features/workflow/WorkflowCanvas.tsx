@@ -53,8 +53,13 @@ const baseNodes: GovTechNodeData[] = [
   { id: 'O3', type: 'govtech', position: { x: 700, y: 800 }, data: { label: 'Ekspor Laporan (PDF/Excel)', phase: 'output', moduleId: 'ekspor' } },
 ];
 
-const edgeStyle = { strokeWidth: 2, stroke: '#94a3b8' };
-const labelProps = { labelStyle: { fill: '#64748b', fontWeight: 600, fontSize: 10 }, labelBgStyle: { fill: '#ffffff', fillOpacity: 0.8 }, labelBgPadding: [4, 4] as [number, number], labelBgBorderRadius: 4 };
+const edgeStyle = { strokeWidth: 2, stroke: '#e2e8f0' };
+const labelProps = {
+  labelStyle: { fill: '#64748b', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
+  labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 },
+  labelBgPadding: [6, 4] as [number, number],
+  labelBgBorderRadius: 8
+};
 
 const initialEdges: Edge[] = [
   // Input → Pre-Processing
@@ -152,16 +157,19 @@ export function WorkflowCanvas() {
     <>
       <div className="w-full h-full bg-slate-50 relative border rounded-xl overflow-hidden shadow-sm">
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeClick={onNodeClick} nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.2 }} className="bg-pupr-surface">
-          <Background variant={BackgroundVariant.Dots} gap={24} size={2} color="#cbd5e1" />
-          <Controls showInteractive={false} className="bg-white shadow-md border rounded-md overflow-hidden" />
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#e2e8f0" />
+          <Controls showInteractive={false} className="bg-white shadow-xl border-slate-200 rounded-2xl overflow-hidden" />
           <MiniMap nodeColor={(n) => {
             const data = (n as GovTechNodeData).data;
             const phaseColors: Record<string, string> = {
-              input: '#0284c7', pre: '#d97706', engine: '#dc2626',
-              module: '#7c3aed', output: '#16a34a',
+              input: '#0c3a66',    // pupr-blue
+              pre: '#f2c114',      // pupr-yellow
+              engine: '#e11d48',   // rose-600
+              module: '#4f46e5',   // indigo-600
+              output: '#059669',   // emerald-600
             };
             return phaseColors[data?.phase || ''] || '#0c3a66';
-          }} maskColor="rgba(248, 250, 252, 0.7)" className="bg-white border rounded-md shadow-md" />
+          }} maskColor="rgba(241, 245, 249, 0.7)" className="bg-white border-slate-200 rounded-2xl shadow-xl" />
         </ReactFlow>
         <div className="absolute top-4 left-4 z-10 bg-white p-4 rounded-md shadow-sm border-l-4 border-pupr-blue pointer-events-none">
           <h2 className="text-lg font-bold text-pupr-blue">Alur Analisis Hidrologi Terpadu v1.1</h2>

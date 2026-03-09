@@ -38,66 +38,68 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
   return (
     <div className="w-full h-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart 
-          data={chartData} 
-          margin={{ 
-            top: 10, 
-            right: 10, 
-            left: 0, 
-            bottom: 5 
+        <ComposedChart
+          data={chartData}
+          margin={{
+            top: 10,
+            right: 10,
+            left: 0,
+            bottom: 5
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis 
-            dataKey="month" 
-            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
-            axisLine={{ stroke: '#cbd5e1' }}
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+          <XAxis
+            dataKey="month"
+            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+            axisLine={{ stroke: '#e2e8f0' }}
+            tickLine={false}
             height={40}
           />
-          <YAxis 
-            label={{ 
-              value: 'Debit (m³/s)', 
-              angle: -90, 
-              position: 'insideLeft', 
-              style: { fill: '#64748b', fontWeight: 600, fontSize: 11 } 
+          <YAxis
+            label={{
+              value: 'Debit (m³/s)',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fill: '#94a3b8', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' }
             }}
-            tick={{ fill: '#64748b', fontSize: 11 }}
-            axisLine={{ stroke: '#cbd5e1' }}
+            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}
+            axisLine={false}
+            tickLine={false}
             width={60}
           />
           <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} content={<CustomTooltip />} />
-          <Legend 
+          <Legend
             wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
             iconType="rect"
             iconSize={10}
           />
           <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
-          
+
           {/* Background area for deficit/surplus */}
-          <Area 
-            type="monotone" 
-            dataKey="Surplus/Defisit" 
+          <Area
+            type="monotone"
+            dataKey="Surplus/Defisit"
             fill="#10b98150"
             stroke="none"
             fillOpacity={0.3}
           />
-          
+
           {/* Bar for water supply */}
-          <Bar 
-            dataKey="Ketersediaan Air (Q80)" 
-            fill="#3b82f6" 
-            radius={[8, 8, 0, 0]}
-            maxBarSize={60}
+          <Bar
+            dataKey="Ketersediaan Air (Q80)"
+            fill="#0c3a66"
+            radius={[4, 4, 0, 0]}
+            maxBarSize={40}
           />
-          
+
           {/* Line for total demand */}
-          <Line 
-            type="monotone" 
-            dataKey="Total Kebutuhan" 
-            stroke="#f97316" 
+          <Line
+            type="monotone"
+            dataKey="Total Kebutuhan"
+            stroke="#f2c114"
             strokeWidth={3}
-            dot={{ fill: '#f97316', r: 5 }}
-            activeDot={{ r: 7 }}
+            dot={{ fill: '#f2c114', r: 4, strokeWidth: 2, stroke: '#fff' }}
+            activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
           />
         </ComposedChart>
       </ResponsiveContainer>

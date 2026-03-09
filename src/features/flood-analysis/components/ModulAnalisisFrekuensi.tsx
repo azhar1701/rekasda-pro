@@ -294,8 +294,8 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                 {/* Data Summary Card */}
                 <div className="flex items-start justify-between p-3 bg-pupr-blue text-white rounded-md border border-pupr-blue overflow-hidden shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-[#0d4578] rounded-md">
-                      <CheckCircle2 className="w-5 h-5 text-white" />
+                    <div className="p-2 bg-white/10 rounded-md">
+                      <CheckCircle2 className="w-5 h-5 text-pupr-yellow" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-white mb-1">
@@ -346,7 +346,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                   {dataInput.length > 10 && (
                     <button
                       onClick={() => setShowAllData(!showAllData)}
-                      className="w-full mt-2 px-3 py-2 text-xs font-semibold text-pupr-blue hover:text-[#0d4578] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-md transition-colors"
+                      className="w-full mt-2 px-3 py-2 text-xs font-semibold text-pupr-blue hover:bg-slate-100 border border-slate-200 rounded-md transition-colors"
                     >
                       {showAllData ? '▲ Sembunyikan' : `▼ Tampilkan Semua (${dataInput.length} data)`}
                     </button>
@@ -592,7 +592,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               )}
 
               {/* Interactive Comparison Bar */}
-              <div className="mb-6 p-5 bg-gradient-to-br from-pupr-blue to-[#0d4578] text-white rounded-xl border border-white/10 shadow-lg backdrop-blur-md relative overflow-hidden group">
+              <div className="mb-6 p-5 bg-gradient-to-br from-pupr-blue to-slate-800 text-white rounded-xl border border-white/10 shadow-lg backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-all duration-700"></div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
                   <div className="flex items-center gap-3">
@@ -669,7 +669,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
                           !(goodnessOfFit.find(g => g.method === d.method)!.chiSquare.accepted &&
                             goodnessOfFit.find(g => g.method === d.method)!.kolmogorovSmirnov.accepted);
                         return (
-                          <th key={d.method} className={`px-3 py-2 text-right font-semibold text-sm transition-colors ${isSelected ? 'bg-[#0d4578] text-white' : isFailed ? 'text-slate-300' : 'text-white'
+                          <th key={d.method} className={`px-3 py-2 text-right font-semibold text-sm transition-colors ${isSelected ? 'bg-pupr-blue text-white' : isFailed ? 'text-slate-300' : 'text-white'
                             }`}>
                             {METHOD_LABELS[d.method]}
                           </th>

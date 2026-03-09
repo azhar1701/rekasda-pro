@@ -1,12 +1,12 @@
 export const APP_NAME = 'RekaSDA';
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0-dev.normalized';
 
 export const CHART_COLORS = {
-  primary: '#0d9488',
-  secondary: '#64748b',
-  danger: '#ef4444',
-  warning: '#f97316',
-  success: '#10b981',
+  primary: '#0c3a66',    // PUPR Blue
+  secondary: '#64748b',  // Slate 500
+  danger: '#e11d48',    // Rose 600
+  warning: '#f2c114',   // PUPR Yellow
+  success: '#059669',   // Emerald 600
 } as const;
 
 export const WATER_STANDARDS = {
