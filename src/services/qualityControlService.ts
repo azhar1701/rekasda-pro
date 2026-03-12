@@ -3,7 +3,7 @@
  * Mengikuti: SNI 2415:2016 & WMO Guide No. 100
  */
 
-import { DataHujan, StasiunHidrologi, DataAnomali } from '@/types/hydrology.types';
+import { DataHujan, StasiunHidrologi } from '@/types/hydrology.types';
 
 /**
  * Mendeteksi anomali pada data timeseries harian dan menandai objek DataHujan
@@ -13,7 +13,7 @@ export function detectAnomalies(data: DataHujan[]): DataHujan[] {
   const processedData = data.map(d => ({ ...d, anomaly_type: undefined }));
   
   let consecutiveZeros = 0;
-  processedData.forEach((d, idx) => {
+  processedData.forEach((d) => {
     // 1. Deteksi suspicious zeros (Hujan 0mm berturut-turut di bulan basah > 30 hari)
     if (d.curah_hujan === 0) {
       consecutiveZeros++;
@@ -21,7 +21,7 @@ export function detectAnomalies(data: DataHujan[]): DataHujan[] {
         const month = new Date(d.tanggal).getMonth();
         const isWetMonth = [10, 11, 0, 1, 2, 3].includes(month); // Nov - Apr
         if (isWetMonth) {
-          d.anomaly_type = 'SUSPICIOUS_ZERO';
+          (d as any).anomaly_type = 'SUSPICIOUS_ZERO';
         }
       }
     } else {
@@ -30,7 +30,7 @@ export function detectAnomalies(data: DataHujan[]): DataHujan[] {
 
     // 2. Deteksi Extreme Spikes (> 500mm/hari)
     if (d.curah_hujan > 500) {
-      d.anomaly_type = 'EXTREME_SPIKE';
+      (d as any).anomaly_type = 'EXTREME_SPIKE';
     }
   });
 

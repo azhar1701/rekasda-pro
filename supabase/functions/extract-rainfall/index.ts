@@ -76,8 +76,8 @@ Deno.serve(async (req) => {
 
     const cleanBase64 = fileData.includes(",") ? fileData.split(",")[1] : fileData;
 
-    // Using standard fetch to call Gemini API
-    const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+    // Using standard fetch to call Gemini API with gemini-3-flash-preview
+    const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
     const geminiReqBody = {
       contents: [

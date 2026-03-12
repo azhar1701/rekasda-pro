@@ -8,7 +8,7 @@ import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
 import { Wand2 } from 'lucide-react';
-import { infillMissingData } from '@/lib/utils/spatialMath';
+import { detectAnomalies, infillRainfallData } from '@/services/qualityControlService';
 import { extractRainfallFromPdf } from '@/services/geminiService';
 import { toast } from '@/hooks/useToast';
 

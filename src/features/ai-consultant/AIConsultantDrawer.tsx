@@ -12,7 +12,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { consultHydrologist } from '@/services/geminiService';
+import { consultHydrologistStream } from '@/services/geminiService';
 import { useAIContext, type ActiveModule, type SuggestionChip } from '@/hooks/useAIContext';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import {
@@ -91,6 +91,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [query, setQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [streamingResponse, setStreamingResponse] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -103,7 +104,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isLoading]);
+    }, [messages, isLoading, streamingResponse]);
 
     useEffect(() => {
         if (isOpen) {
@@ -125,34 +126,45 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         setMessages((prev) => [...prev, userMsg]);
         setQuery('');
         setIsLoading(true);
+        setStreamingResponse('');
 
         try {
             const fullContext = additionalContext
                 ? `${systemContext}\n\n[MODULE CONTEXT]\n${additionalContext}`
                 : systemContext;
 
-            const response = await consultHydrologist(userMessage, fullContext);
-            const actions = parseActionableSuggestions(response);
+            let fullResponse = '';
+            await consultHydrologistStream(
+                userMessage,
+                fullContext,
+                (chunk) => {
+                    fullResponse += chunk;
+                    setStreamingResponse(fullResponse);
+                }
+            );
+
+            const actions = parseActionableSuggestions(fullResponse);
 
             const aiMsg: ChatMessage = {
                 id: `ai-${Date.now()}`,
                 role: 'assistant',
-                content: response,
+                content: fullResponse,
                 timestamp: new Date(),
                 actions: actions.length > 0 ? actions : undefined,
             };
 
             setMessages((prev) => [...prev, aiMsg]);
-        } catch (error) {
+        } catch (error: any) {
             const errorMsg: ChatMessage = {
                 id: `error-${Date.now()}`,
                 role: 'assistant',
-                content: 'Maaf, terjadi kesalahan saat menghubungi layanan AI. Silakan coba lagi.',
+                content: error.message || 'Maaf, terjadi kesalahan saat menghubungi layanan AI. Silakan coba lagi.',
                 timestamp: new Date(),
             };
             setMessages((prev) => [...prev, errorMsg]);
         } finally {
             setIsLoading(false);
+            setStreamingResponse('');
         }
     }, [query, isLoading, systemContext]);
 
@@ -305,7 +317,24 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                             </div>
                         ))}
 
-                        {isLoading && (
+                        {streamingResponse && (
+                            <div className="flex justify-start">
+                                <div className="max-w-[90%] flex gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white text-pupr-blue shadow-md border-2 border-white flex items-center justify-center shrink-0">
+                                        <Bot className="w-4 h-4" />
+                                    </div>
+                                    <div className="p-4 rounded-[1.5rem] shadow-sm bg-white border border-slate-200 rounded-tl-none ring-1 ring-black/[0.02]">
+                                        <div className="prose prose-sm max-w-none prose-slate prose-p:leading-relaxed">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                                {streamingResponse}
+                                            </ReactMarkdown>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {isLoading && !streamingResponse && (
                             <div className="flex justify-start">
                                 <div className="flex gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
