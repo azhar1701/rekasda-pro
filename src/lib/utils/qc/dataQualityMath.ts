@@ -194,11 +194,11 @@ export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
     Sk.push(cumSum / Dy);
   }
   
-  const QHitung = Math.max(...Sk.map(Math.abs));
-  const RHitung = Math.max(...Sk) - Math.min(...Sk);
+  const QHitung = Math.max(...Sk.map(Math.abs)) / Math.sqrt(n);
+  const RHitung = (Math.max(...Sk) - Math.min(...Sk)) / Math.sqrt(n);
   
-  const QKritis = interpolate(RAPS_Q_TABLE, n) / Math.sqrt(n);
-  const RKritis = interpolate(RAPS_R_TABLE, n) / Math.sqrt(n);
+  const QKritis = interpolate(RAPS_Q_TABLE, n);
+  const RKritis = interpolate(RAPS_R_TABLE, n);
   
   const isKonsisten = QHitung <= QKritis && RHitung <= RKritis;
   

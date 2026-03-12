@@ -35,7 +35,7 @@ export const StepDistribusiHujan: React.FC = () => {
   }, [hasilAnalisisFrekuensi?.selectedKalaUlang, durasiHujan, setDistribusiHujanJamJaman, setHujanEfektif]);
 
   const R24 = hasilAnalisisFrekuensi?.curahHujanRencana.find(
-    v => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
+    (v: any) => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
   )?.curahHujan || 0;
 
   const C = tutupanLahan?.koefisienPengaliranGabungan || 0.65;

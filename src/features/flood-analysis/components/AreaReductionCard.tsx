@@ -22,7 +22,7 @@ export const AreaReductionCard: React.FC = () => {
     const hujanTitik = useMemo(() => {
         if (hasilAnalisisFrekuensi?.selectedKalaUlang) {
             const match = hasilAnalisisFrekuensi.curahHujanRencana.find(
-                v => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
+                (v: any) => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
             );
             if (match) return match.curahHujan;
         }

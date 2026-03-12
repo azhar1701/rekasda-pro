@@ -86,7 +86,7 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Total Hujan Efektif</p>
                     <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-extrabold text-slate-900 tabular-nums">
-                            {hujanEfektif?.reduce((a, b) => a + b, 0).toFixed(2)}
+                            {hujanEfektif?.reduce((a: number, b: number) => a + b, 0).toFixed(2)}
                         </span>
                         <span className="text-sm font-bold text-slate-500">mm</span>
                     </div>

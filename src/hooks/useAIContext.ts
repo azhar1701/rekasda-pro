@@ -116,7 +116,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
       contextParts.push(`Distribusi Terpilih: ${hasilAnalisisFrekuensi.metodeTerpilih}. Lulus Uji: ${hasilAnalisisFrekuensi.lulusUjiKecocokan ? 'YA' : 'TIDAK'}.`);
       if (hasilAnalisisFrekuensi.selectedKalaUlang) {
         const match = hasilAnalisisFrekuensi.curahHujanRencana.find(
-          (v) => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
+          (v: any) => v.kalaUlang === hasilAnalisisFrekuensi.selectedKalaUlang
         );
         if (match) {
           contextParts.push(`Kala Ulang Terpilih: T=${match.kalaUlang} tahun → R₂₄ = ${match.curahHujan} mm.`);

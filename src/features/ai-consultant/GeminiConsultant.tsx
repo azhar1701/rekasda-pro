@@ -92,24 +92,24 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
     setStreamingResponse('');
 
     try {
+      let fullResponse = '';
       await consultHydrologistStream(
         activeQuery,
         `${systemContext}\n\n[LAST INTERACTION CONTEXT]\n${lastContext}`,
         (chunk) => {
-          setStreamingResponse(prev => prev + chunk);
+          fullResponse += chunk;
+          setStreamingResponse(fullResponse);
         },
         selectedImage || undefined
       );
 
-      setMessages(prev => {
-        const aiMsg: ChatMessage = {
-          id: `ai-${Date.now()}`,
-          role: 'assistant',
-          content: streamingResponse,
-          timestamp: new Date()
-        };
-        return [...prev, aiMsg];
-      });
+      const aiMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: fullResponse,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMsg]);
       
     } catch (error: any) {
       setMessages(prev => [...prev, {

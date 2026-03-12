@@ -587,7 +587,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                                         const ku = parseInt(val);
                                                         setSelectedKalaUlang(ku);
                                                         // Also sync to localR
-                                                        const match = hasilAnalisisFrekuensi.curahHujanRencana.find(v => v.kalaUlang === ku);
+                                                        const match = hasilAnalisisFrekuensi.curahHujanRencana.find((v: any) => v.kalaUlang === ku);
                                                         if (match) setLocalR(String(match.curahHujan));
                                                     }}
                                                 >
@@ -607,7 +607,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                                             sideOffset={4}
                                                         >
                                                             <Select.Viewport className="p-1.5">
-                                                                {hasilAnalisisFrekuensi.curahHujanRencana.map(v => (
+                                                                {hasilAnalisisFrekuensi.curahHujanRencana.map((v: any) => (
                                                                     <Select.Item
                                                                         key={v.kalaUlang}
                                                                         value={v.kalaUlang.toString()}

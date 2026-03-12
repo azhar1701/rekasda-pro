@@ -23,6 +23,7 @@ export const MasterHidrologiTab: React.FC = () => {
         isLoading,
         error,
         fetchStasiun,
+        fetchMultipleStationsData,
         addStasiun,
         addDataHujan,
         importDataHujanBatch,
@@ -179,6 +180,13 @@ export const MasterHidrologiTab: React.FC = () => {
     useEffect(() => {
         fetchStasiun();
     }, [fetchStasiun]);
+
+    // AUTO-FETCH: Ensure data is loaded if a station is restored from persistence
+    useEffect(() => {
+        if (selectedStasiun && dataHujan.length === 0) {
+            fetchMultipleStationsData([selectedStasiun.id]);
+        }
+    }, [selectedStasiun, fetchMultipleStationsData, dataHujan.length]);
 
     useEffect(() => {
         if (dataHujan.length >= 10) {

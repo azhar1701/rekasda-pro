@@ -182,7 +182,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
               {hujanEfektif?.length ?? 0} jam
             </p>
             <p className="text-xs text-pupr-blue mt-1 tabular-nums tracking-tight">
-              Total: {((hujanEfektif ?? []).reduce((a, b) => a + b, 0)).toFixed(2)} mm
+              Total: {((hujanEfektif ?? []).reduce((a: number, b: number) => a + b, 0)).toFixed(2)} mm
             </p>
           </div>
           <div className="p-3 bg-green-50 border border-green-200 rounded-md">

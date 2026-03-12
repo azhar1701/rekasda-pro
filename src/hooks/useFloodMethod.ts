@@ -31,7 +31,7 @@ export function useFloodMethod(): FloodMethodHookResult {
       return null;
     }
     const match = hasilAnalisisFrekuensi.curahHujanRencana.find(
-      (v) => v.Tr === hasilAnalisisFrekuensi.selectedKalaUlang
+      (v: any) => v.Tr === hasilAnalisisFrekuensi.selectedKalaUlang
     );
     return match ? match.R24 : null;
   }, [hasilAnalisisFrekuensi]);

@@ -36,7 +36,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     // Priority 1: Use actual historical annual average rainfall from Thiessen result
     const thiessenResults = useHydrologyStore.getState().hasilThiessen;
     if (thiessenResults?.hujanRataRataDAS && thiessenResults.hujanRataRataDAS.length > 0) {
-      return thiessenResults.hujanRataRataDAS.map((val, idx) => ({
+      return thiessenResults.hujanRataRataDAS.map((val: number, idx: number) => ({
         tahun: `Data ${idx + 1}`,
         hujan: Number(val.toFixed(2)),
       }));

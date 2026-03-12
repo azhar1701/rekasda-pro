@@ -7,7 +7,7 @@ import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-an
 import { saveFloodCalculation } from '@/services/calculationService';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
 import { calculateRationalMethod, convertKm2ToHa } from '@/lib/engine';
-import { computeDesignFloodHydrograph } from '@/lib/engine/flood/convolution';
+import { useFloodWorker } from '@/hooks/useFloodWorker';
 import { useHydrologyStore, HasilKonvolusi } from '@/stores/useHydrologyStore';
 import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
@@ -106,6 +106,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [loadMessage, setLoadMessage] = useState<string | null>(null);
   const [convolutionResult, setConvolutionResult] = useState<HasilKonvolusi | null>(null);
   const [unitHydrographData, setUnitHydrographData] = useState<any[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
   const [engineWarnings, setEngineWarnings] = useState<string[]>([]);
@@ -117,6 +118,9 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
   // Hydrology Store Integration
   const { distribusiHujanJamJaman, setHasilKonvolusi } = useHydrologyStore();
+  
+  // Web Worker Integration
+  const { isWorkerReady, calculateFloodAsync, calculateBatchFloodAsync } = useFloodWorker();
 
   // SNI 2415:2016 Workflow Validation
   const sniWorkflow = useMemo(() => {
@@ -230,15 +234,23 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       const uhOrdinates = generateNakayasuHydrograph(Q, Tp, Tg, nakayasuInputs.Alpha);
       setUnitHydrographData(uhOrdinates);
 
-      // PRODUCTION FEATURE F-04: Auto-Convolution with ABM
-      if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0) {
-        const conv = computeDesignFloodHydrograph(uhOrdinates, distribusiHujanJamJaman, 0.1);
-        setConvolutionResult(conv);
-        setHasilKonvolusi(conv);
-        setQPeak(conv.peakDischarge);
-        setTPeak(conv.timeToPeak);
-        setVolume(conv.totalVolume);
-        setHydrographData(conv.floodHydrograph);
+      // PRODUCTION FEATURE F-04: Auto-Convolution with ABM via Web Worker
+      if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0 && isWorkerReady) {
+        setIsCalculating(true);
+        calculateFloodAsync({
+          unitHydrograph: uhOrdinates,
+          abmRainfall: distribusiHujanJamJaman,
+          uhTimeStep: 0.1
+        }).then(conv => {
+          setConvolutionResult(conv);
+          setHasilKonvolusi(conv);
+          setQPeak(conv.peakDischarge);
+          setTPeak(conv.timeToPeak);
+          setVolume(conv.totalVolume);
+          setHydrographData(conv.floodHydrograph);
+        })
+        .catch(console.error)
+        .finally(() => setIsCalculating(false));
       } else {
         setConvolutionResult(null);
         setHasilKonvolusi(null);
@@ -248,7 +260,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
         setHydrographData(uhOrdinates);
       }
     }
-  }, [method, rationalInputs, nakayasuInputs, calculateRationalDischarge, distribusiHujanJamJaman, setHasilKonvolusi]);
+  }, [method, rationalInputs, nakayasuInputs, calculateRationalDischarge, distribusiHujanJamJaman, setHasilKonvolusi, isWorkerReady]);
 
   // FIX BUG-3: Stabilize dependency — use ref guard to prevent infinite re-trigger.
   // The rainfall key only changes when the user edits rainfall values or loads pilot data.
@@ -276,22 +288,38 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
       const Tp = calculateTp(Tg);
       const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
 
-      const updated = returnPeriods.map(rp => {
-        const Qp = calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03);
-
-        // PRODUCTION FEATURE F-04: Convolution per return period
-        if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0) {
+      if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0 && isWorkerReady) {
+        setIsCalculating(true);
+        const batchInputs = returnPeriods.map(rp => {
+          const Qp = calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03);
           const uhOrdinates = generateNakayasuHydrograph(Qp, Tp, Tg, nakayasuInputs.Alpha);
-          const conv = computeDesignFloodHydrograph(uhOrdinates, distribusiHujanJamJaman, 0.1);
-          return { ...rp, qPeak: conv.peakDischarge };
-        }
+          return {
+            unitHydrograph: uhOrdinates,
+            abmRainfall: distribusiHujanJamJaman,
+            uhTimeStep: 0.1
+          };
+        });
 
-        return { ...rp, qPeak: Qp };
-      });
-      setReturnPeriods(updated);
+        calculateBatchFloodAsync(batchInputs)
+          .then(results => {
+            const updated = returnPeriods.map((rp, idx) => ({
+              ...rp,
+              qPeak: results[idx].peakDischarge
+            }));
+            setReturnPeriods(updated);
+          })
+          .catch(console.error)
+          .finally(() => setIsCalculating(false));
+      } else {
+        const updated = returnPeriods.map(rp => {
+          const Qp = calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03);
+          return { ...rp, qPeak: Qp };
+        });
+        setReturnPeriods(updated);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [returnPeriods, method, rationalInputs.tc, rationalInputs.A, rationalInputs.C, nakayasuInputs.L, nakayasuInputs.A, nakayasuInputs.Alpha]);
+  }, [returnPeriods, method, rationalInputs.tc, rationalInputs.A, rationalInputs.C, nakayasuInputs.L, nakayasuInputs.A, nakayasuInputs.Alpha, isWorkerReady]);
 
   const handleSaveToDB = async () => {
     const projectName = locationData?.channelName;
@@ -1048,7 +1076,15 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
             </div>
 
             {/* Chart */}
-            <div className="bg-white rounded-md shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-md shadow-sm border border-slate-200 p-6 relative overflow-hidden">
+              {isCalculating && (
+                <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-xs font-bold text-teal-700 uppercase tracking-widest">Menghitung...</span>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">

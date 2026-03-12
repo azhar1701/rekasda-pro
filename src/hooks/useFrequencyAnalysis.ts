@@ -40,7 +40,7 @@ export const useFrequencyAnalysis = () => {
 
   const getR24 = (returnPeriod: number): number | null => {
     if (!selectedDistribution) return null;
-    const value = selectedDistribution.values.find(v => v.Tr === returnPeriod);
+    const value = selectedDistribution.values.find((v: any) => v.Tr === returnPeriod);
     return value?.R24 ?? value?.curahHujan ?? null;
   };
 
