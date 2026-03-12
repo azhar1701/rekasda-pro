@@ -13,6 +13,10 @@ export interface DataHujan {
   stasiun_id: string;
   tanggal: string; 
   curah_hujan: number; 
+  is_infilled?: boolean;
+  infilled_from?: string[]; // IDs of reference stations
+  anomaly_type?: 'SUSPICIOUS_ZERO' | 'EXTREME_SPIKE' | 'MISSING';
+  keterangan?: string | null;
   created_at?: string;
 }
 
@@ -202,6 +206,14 @@ export interface NeracaFinalRow {
   totalKebutuhan: number;
   neraca: number;
   status: 'Surplus' | 'Defisit' | 'Seimbang';
+}
+
+export interface DataAnomali {
+  index: number;
+  tanggal: string;
+  nilai: number;
+  jenis: 'SUSPICIOUS_ZERO' | 'EXTREME_SPIKE' | 'MISSING';
+  pesan: string;
 }
 
 export interface IdentitasLokasi {

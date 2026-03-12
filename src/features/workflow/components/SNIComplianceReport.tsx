@@ -1,12 +1,14 @@
 import React from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { CheckCircle2, AlertTriangle, XCircle, ShieldCheck, FileText, Download } from 'lucide-react';
+import { generateSNICompliancePDF } from '@/services/reportingService';
 
 export const SNIComplianceReport: React.FC = () => {
   const { 
     identitasLokasi, 
     morfometriDAS, 
     dataHujan, 
+    stasiunList,
     analisisFrekuensi, 
     qcResults,
     hasilBanjir
@@ -44,6 +46,20 @@ export const SNIComplianceReport: React.FC = () => {
   ];
 
   const overallScore = Math.round((auditItems.filter(i => i.status === 'PASSED').length / auditItems.length) * 100);
+
+  const handleDownload = () => {
+    generateSNICompliancePDF({
+      identitas: identitasLokasi,
+      morfometri: morfometriDAS,
+      dataHujan,
+      stasiunList,
+      analisisFrekuensi,
+      qcResults,
+      hasilBanjir,
+      complianceScore: overallScore,
+      auditItems
+    });
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -107,7 +123,10 @@ export const SNIComplianceReport: React.FC = () => {
         </div>
 
         <div className="pt-6 border-t border-slate-100 flex gap-3">
-          <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition-all">
+          <button 
+            onClick={handleDownload}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition-all"
+          >
             <Download className="w-4 h-4" />
             Download PDF Report
           </button>

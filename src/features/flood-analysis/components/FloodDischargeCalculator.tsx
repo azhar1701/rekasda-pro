@@ -14,6 +14,7 @@ import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
+import { WhiteBoxFormula } from '@/components/ui/WhiteBoxFormula';
 import { Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { RETURN_PERIOD_GUIDANCE } from '@/constants/returnPeriodGuidance';
 import { useRasionalModifikasiMutation } from '@/hooks/api/useBanjirApi';
@@ -1095,10 +1096,39 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                       </span>
                     )}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Metode: <span className="font-bold text-indigo-600">{method.replace(/_/g, ' ')}</span> |
-                    Debit Puncak: <span className="font-bold text-teal-600">{qPeak.toFixed(2)} m³/s</span>
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-xs text-slate-500">
+                      Metode: <span className="font-bold text-indigo-600">{method.replace(/_/g, ' ')}</span> |
+                      Debit Puncak: <span className="font-bold text-teal-600">{qPeak.toFixed(2)} m³/s</span>
+                    </p>
+                    {method === 'RATIONAL' && (
+                      <WhiteBoxFormula
+                        title="Metode Rasional (SNI 2415:2016)"
+                        theoretical="Q = 0.278 \times C \times I \times A"
+                        substituted={`Q = 0.278 \times ${rationalInputs.C.toFixed(2)} \times ${rationalInputs.I.toFixed(1)} \times ${rationalInputs.A.toFixed(2)}`}
+                        result={`Q = ${qPeak.toFixed(2)} \text{ m}^3/s`}
+                        variables={{ 'C': rationalInputs.C, 'I': rationalInputs.I, 'A': rationalInputs.A }}
+                      />
+                    )}
+                    {(method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') && (
+                      <WhiteBoxFormula
+                        title={`Metode ${method.replace(/_/g, ' ')} (Empiris)`}
+                        theoretical="Q = \alpha \times \beta \times q \times A"
+                        substituted={`Q = \text{API Calculated for } ${rationalInputs.A} \text{ km}^2`}
+                        result={`Q = ${qPeak.toFixed(2)} \text{ m}^3/s`}
+                        variables={{ 'A': rationalInputs.A, 'L': rationalInputs.L || 0, 'S': rationalInputs.S || 0 }}
+                      />
+                    )}
+                    {method === 'NAKAYASU' && (
+                      <WhiteBoxFormula
+                        title="HSS Nakayasu (SNI 2415:2016)"
+                        theoretical="Q_p = \frac{A \times R_o}{3.6 \times (0.3 T_p + T_{0.3})}"
+                        substituted={`Q_p = \frac{${nakayasuInputs.A} \times ${nakayasuInputs.Ro.toFixed(1)}}{3.6 \times (0.3 \times ${tPeak.toFixed(2)} + ${(nakayasuInputs.Alpha * (tPeak / 1.8)).toFixed(2)})}`}
+                        result={`Q_p = ${qPeak.toFixed(2)} \text{ m}^3/s`}
+                        variables={{ 'A': nakayasuInputs.A, 'R_o': nakayasuInputs.Ro, 'T_p': tPeak, '\alpha': nakayasuInputs.Alpha }}
+                      />
+                    )}
+                  </div>
                 </div>
                 <ComplianceBadge sniCode="SNI 2415:2016" />
               </div>

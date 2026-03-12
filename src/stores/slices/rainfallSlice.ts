@@ -60,8 +60,9 @@ export interface RainfallSlice {
   addDataHujan: (data: any) => Promise<void>;
   importDataHujanBatch: (data: any[]) => Promise<void>;
   deleteDataHujanByYear: (stasiunId: string, year: number) => Promise<void>;
-  updateDataHujanSingle: (stasiunId: string, date: string, val: number) => Promise<void>;
+  updateDataHujanSingle: (stasiunId: string, date: string, val: number, metadata?: Partial<DataHujan>) => Promise<void>;
   seedInitialStations: () => Promise<void>;
+  syncRainfallMetadata: () => Promise<void>; // New: Bulk sync metadata
   setError: (error: string | null) => void;
   resetRainfall: () => void;
 }
@@ -322,12 +323,19 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
     }
   },
   
-  updateDataHujanSingle: async (stasiunId, date, val) => {
+  updateDataHujanSingle: async (stasiunId, date, val, metadata = {}) => {
     if (!supabase) return;
     try {
+      const payload = { 
+        stasiun_id: stasiunId, 
+        tanggal: date, 
+        curah_hujan: val,
+        ...metadata
+      };
+      
       const { data, error } = await supabase
         .from('master_data_hujan')
-        .upsert({ stasiun_id: stasiunId, tanggal: date, curah_hujan: val }, { onConflict: 'stasiun_id, tanggal' })
+        .upsert(payload, { onConflict: 'stasiun_id, tanggal' })
         .select()
         .single();
       if (error) throw error;
@@ -336,6 +344,39 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       }));
     } catch (err: any) {
       toast.error(err.message);
+    }
+  },
+
+  syncRainfallMetadata: async () => {
+    const { dataHujan } = get();
+    if (!supabase || dataHujan.length === 0) return;
+    
+    set({ isLoading: true });
+    try {
+      // Sync in batches of 500 to optimize performance
+      const batchSize = 500;
+      for (let i = 0; i < dataHujan.length; i += batchSize) {
+        const batch = dataHujan.slice(i, i + batchSize).map(d => ({
+          stasiun_id: d.stasiun_id,
+          tanggal: d.tanggal,
+          curah_hujan: d.curah_hujan,
+          is_infilled: d.is_infilled || false,
+          infilled_from: d.infilled_from || null,
+          anomaly_type: d.anomaly_type || null,
+          keterangan: d.keterangan || null
+        }));
+        
+        const { error } = await supabase
+          .from('master_data_hujan')
+          .upsert(batch, { onConflict: 'stasiun_id, tanggal' });
+          
+        if (error) throw error;
+      }
+      toast.success('Metadata kualitas data berhasil disinkronkan ke cloud.');
+    } catch (err: any) {
+      toast.error(`Sinkronisasi gagal: ${err.message}`);
+    } finally {
+      set({ isLoading: false });
     }
   },
   

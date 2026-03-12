@@ -205,14 +205,24 @@ export const MasterHidrologiTab: React.FC = () => {
     }, [activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet, dataHujan, selectedStasiun]);
 
     const availableYears = React.useMemo(() => {
-        if (!displayData || displayData.length === 0) return [new Date().getFullYear()];
-        const years = new Set(displayData.map(d => parseInt(d.tanggal.split('-')[0], 10)));
-        return Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
+        const years = new Set(displayData.map(d => {
+            const y = parseInt(d.tanggal.split('-')[0], 10);
+            return y;
+        }));
+        const yearList = Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
+        
+        // Only fallback to current year if there is absolutely no data for any year
+        if (yearList.length === 0) return [new Date().getFullYear()];
+        return yearList;
     }, [displayData]);
 
     useEffect(() => {
-        if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
-            setSelectedYear(availableYears[0]);
+        // Auto-select the latest available year if current selectedYear is not in the list
+        if (availableYears.length > 0) {
+            const latestYear = availableYears[0];
+            if (!availableYears.includes(selectedYear)) {
+                setSelectedYear(latestYear);
+            }
         }
     }, [availableYears, selectedYear]);
 
@@ -275,32 +285,51 @@ export const MasterHidrologiTab: React.FC = () => {
 
 
     const handleInfillData = async () => {
-        if (!selectedStasiun) return;
+        if (!selectedStasiun || stasiunList.length < 2) {
+            toast.warning('Dibutuhkan minimal 2 stasiun untuk melakukan infilling (IDW).');
+            return;
+        }
         setIsInfilling(true);
 
         try {
-            const allData = dataHujan;
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 1. Fetch data for all stations to have reference data
+            const otherStationIds = stasiunList.map(s => s.id);
+            // Temporarily fetch all to ensure we have neighbors
+            let allReferenceData: any[] = [];
+            if (supabase) {
+                const { data, error } = await supabase
+                    .from('master_data_hujan')
+                    .select('*')
+                    .in('stasiun_id', otherStationIds);
+                if (error) throw error;
+                allReferenceData = data || [];
+            }
 
-            const filledData = dataHujan.map(item => {
+            // 2. Prepare reference objects
+            const referenceStations = stasiunList
+                .filter(s => s.id !== selectedStasiun.id)
+                .map(s => ({
+                    stasiun: s,
+                    data: allReferenceData.filter(rd => rd.stasiun_id === s.id)
+                }));
 
-                if (item.curah_hujan === null || String(item.curah_hujan).trim() === '-' || String(item.curah_hujan).trim() === '') {
-                    const infilledValue = infillMissingData(
-                        selectedStasiun,
-                        stasiunList,
-                        allData,
-                        item.tanggal,
-                        'idw'
-                    );
-                    if (infilledValue > 0) {
-                        return { ...item, curah_hujan: parseFloat(infilledValue.toFixed(1)) };
-                    }
-                }
-                return item;
-            });
+            // 3. Detect Anomalies first to know what to fill
+            const dataWithAnomalies = detectAnomalies(dataHujan);
 
+            // 4. Perform Infilling
+            const filledData = infillRainfallData(
+                selectedStasiun,
+                dataWithAnomalies,
+                referenceStations
+            );
+
+            // 5. Update local store and sync to Supabase
             updateDataHujanManual(filledData);
-            toast.success('Berhasil mengisi data kosong menggunakan metode IDW/Normal Ratio.');
+            
+            // 6. Push metadata to Supabase automatically
+            await useHydrologyStore.getState().syncRainfallMetadata();
+            
+            toast.success('Berhasil mengisi data kosong dan mensinkronkan metadata ke cloud.');
         } catch (error) {
             console.error('Error infilling data:', error);
             toast.error('Gagal mengisi data kosong.');
