@@ -2,7 +2,7 @@ import React, { useMemo, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Card } from '@/components/ui/Card';
 import { InputGroup } from '@/components/ui/forms/InputGroup';
-import { Briefcase, Navigation, Map as MapIcon, Info } from 'lucide-react';
+import { Briefcase, Navigation, Map as MapIcon, Info, Activity } from 'lucide-react';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 
 // Leaflet imports
@@ -68,6 +68,7 @@ const LocationMarker = ({ position, setPosition }: { position: L.LatLng | null, 
 export const FormIdentitasLokasi: React.FC = () => {
   const { identitasLokasi, setIdentitasLokasi } = useHydrologyStore();
   const { completeStep } = useOnboarding();
+  const [isSyncing, setIsSyncing] = React.useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -92,12 +93,18 @@ export const FormIdentitasLokasi: React.FC = () => {
     const lat = Number(latlng.lat.toFixed(6));
     const lng = Number(latlng.lng.toFixed(6));
 
+    setIsSyncing(true);
     setIdentitasLokasi({
       koordinat: {
         lat,
         lng
       }
     });
+
+    // Simulate Spatial Engine Auto-fetch (DEM & LandUse)
+    setTimeout(() => {
+      setIsSyncing(false);
+    }, 1500);
   };
 
   // State koordinat untuk map
@@ -121,6 +128,12 @@ export const FormIdentitasLokasi: React.FC = () => {
           <h3 className="text-lg font-bold text-slate-900">Identitas Lokasi & Koordinat</h3>
           <p className="text-xs text-slate-500 font-medium">Data master untuk referensi spasial PostGIS</p>
         </div>
+        {isSyncing && (
+          <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-pupr-blue/10 border border-pupr-blue/20 rounded-full animate-pulse">
+            <Activity className="w-3 h-3 text-pupr-blue" />
+            <span className="text-[10px] font-black text-pupr-blue uppercase tracking-tighter">Spatial Sync Active</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

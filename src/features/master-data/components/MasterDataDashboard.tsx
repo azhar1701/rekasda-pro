@@ -15,6 +15,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     tutupanLahan: storeTutupan,
     curahHujanWilayah: storeHujan,
     dataHujan: storeDataHujan,
+    identitasLokasi,
   } = useHydrologyStore();
 
   const qcResults = storeQCResults;
@@ -98,9 +99,54 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     return stationCount > 0 ? `${method} (${stationCount} Stasiun)` : method;
   }, [curahHujanWilayah]);
 
+  const completionStatus = useMemo(() => {
+    return {
+      identitas: !!identitasLokasi?.namaPekerjaan, // Optional
+      morfometri: (morfometriDAS?.luasDAS || 0) > 0 && (morfometriDAS?.panjangSungai || 0) > 0,
+      tutupanLahan: (tutupanLahan?.items?.length || 0) > 0 || (tutupanLahan?.koefisienPengaliranGabungan || 0) > 0,
+      hujanWilayah: (curahHujanWilayah?.hujanRataRata || 0) > 0 || (curahHujanWilayah?.stasiunConfigs?.length || 0) > 0,
+    };
+  }, [identitasLokasi, morfometriDAS, tutupanLahan, curahHujanWilayah]);
+
+  const requiredStatus = [
+    completionStatus.morfometri,
+    completionStatus.tutupanLahan,
+    completionStatus.hujanWilayah
+  ];
+
+  const completionCount = requiredStatus.filter(Boolean).length;
+  const totalSteps = requiredStatus.length;
+  const isComplete = completionCount === totalSteps;
+  const completionPercentage = (completionCount / totalSteps) * 100;
+
   return (
     <div className="space-y-4 p-6">
       <ProjectContextBanner />
+
+      {/* Professional Completion Header */}
+      <div className="bg-white border border-slate-300 shadow-sm rounded-md p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-[0.2em]">Overall Data Readiness</h2>
+          <p className="text-xs text-slate-500 mt-1">Status kelengkapan data master untuk mesin analisis hidrologi</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className={`text-xs font-bold uppercase ${isComplete ? 'text-emerald-600' : 'text-slate-600'}`}>
+              {isComplete ? 'Data Siap Analisis' : 'Data Belum Lengkap'}
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium">Progress: {completionCount} dari {totalSteps} Parameter Utama</p>
+          </div>
+          <div className="w-48 h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+            <div
+              className={`h-full transition-all duration-1000 ${isComplete ? 'bg-emerald-500' : 'bg-pupr-blue'}`}
+              style={{ width: `${completionPercentage}%` }}
+            />
+          </div>
+          <span className={`text-lg font-black ${isComplete ? 'text-emerald-600' : 'text-pupr-blue'}`}>
+            {Math.round(completionPercentage)}%
+          </span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: QC Status */}

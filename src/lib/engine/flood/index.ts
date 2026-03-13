@@ -19,12 +19,21 @@ export {
   
   // Types
   type SNI2415WorkflowResult,
+  type EngineeringMetadata,
+  type RationalOutputWithMetadata,
+  type HSSNakayasuOutputWithMetadata,
 } from './sni2415';
 
-// Re-export legacy functions for backward compatibility
+// Re-export methods from legacy flood proxy
 export {
   calculateHSSGamma1,
   calculateHSSSnyder,
+  calculateHSSSCS,
+  calculateHSSClark,
+  calculateMelchior,
+  calculateHaspers,
+  calculateWeduwen as calculateDerWeduwen,
+  calculateConvolution,
 } from '../flood';
 
 // Convolution (Superposition) — SNI 2415:2016 Pasal 6

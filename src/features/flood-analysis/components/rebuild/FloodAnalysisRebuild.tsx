@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useFrequencyAnalysis } from '@/hooks/useFrequencyAnalysis';
 import { useOnboarding } from '@/providers/OnboardingProvider';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { StepMorfometri } from './steps/StepMorfometri';
 import { StepHietograf } from './steps/StepHietograf';
 import { StepMetodeBanjir } from './steps/StepMetodeBanjir';
@@ -61,23 +62,65 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
     const [activeStep, setActiveStep] = useState<Step>(1);
     const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
 
-    // Data passed between steps
-    const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
-    const [unitHydrograph, setUnitHydrograph] = useState<any[]>([]);
+    // Data from store for accurate auto-tracking
+    const hydroState = useHydrologyStore();
+    const {
+        morfometriDAS,
+        hujanEfektif,
+        hasilBanjir,
+        hasilKonvolusi
+    } = hydroState;
+
     const { isComplete: freqComplete } = useFrequencyAnalysis();
     const { completeStep } = useOnboarding();
 
-    const handleStepComplete = (step: Step) => {
-        setCompletedSteps(prev => new Set(prev).add(step));
-        if (step === 4) completeStep('banjir');
-        if (step < 4) setActiveStep((step + 1) as Step);
-    };
+    // 100% Accurate Auto-Tracking Logic
+    React.useEffect(() => {
+        const newCompleted = new Set<Step>();
+        
+        // Step 1: Karakteristik DAS (Needs Area and Length)
+        if ((morfometriDAS?.luasDAS || 0) > 0 && (morfometriDAS?.panjangSungai || 0) > 0) {
+            newCompleted.add(1);
+        }
 
-    const onMethodSelected = (method: string, hydro: any[]) => {
+        // Step 2: Hietograf (Needs Effective Rainfall from ABM)
+        if (hujanEfektif && hujanEfektif.length > 0) {
+            newCompleted.add(2);
+        }
+
+        // Step 3: Analisis Debit (Needs a calculated Flood result or Unit Hydrograph)
+        if (hasilBanjir || (hydroState.distribusiHujanJamJaman && hydroState.distribusiHujanJamJaman.length > 0)) {
+            newCompleted.add(3);
+        }
+
+        // Step 4: Rekap & Output (Needs final convolution results)
+        if (hasilKonvolusi && (hasilKonvolusi.peakDischarge || 0) > 0) {
+            newCompleted.add(4);
+            completeStep('banjir');
+        }
+
+        // Only update if the set has actually changed to prevent render loops
+        const currentIds = Array.from(completedSteps).sort().join(',');
+        const newIds = Array.from(newCompleted).sort().join(',');
+        
+        if (currentIds !== newIds) {
+            setCompletedSteps(newCompleted);
+        }
+    }, [morfometriDAS, hujanEfektif, hasilBanjir, hasilKonvolusi, hydroState.distribusiHujanJamJaman, completeStep, completedSteps]);
+
+    // Data passed between steps
+    const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
+    const [unitHydrograph, setUnitHydrograph] = useState<any[]>([]);
+
+    const handleStepComplete = React.useCallback((step: Step) => {
+        if (step < 4) setActiveStep((step + 1) as Step);
+    }, []);
+
+    const onMethodSelected = React.useCallback((method: string, hydro: any[]) => {
         setSelectedMethod(method);
         setUnitHydrograph(hydro);
         handleStepComplete(3);
-    };
+    }, [handleStepComplete]);
 
     return (
         <ModuleLayout
@@ -130,12 +173,12 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
                         <div className="mt-6 pt-4 border-t border-slate-100">
                             <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-2">
                                 <span>OVERALL COMPLETION</span>
-                                <span>{Math.round((completedSteps.size / 4) * 100)}%</span>
+                                <span>{Math.round((completedSteps.size / STEPS.length) * 100)}%</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-green-500 transition-all duration-700"
-                                    style={{ width: `${(completedSteps.size / 4) * 100}%` }}
+                                    style={{ width: `${(completedSteps.size / STEPS.length) * 100}%` }}
                                 />
                             </div>
                         </div>
@@ -195,6 +238,7 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
                         <StepRekapVisualisasi
                             selectedMethod={selectedMethod}
                             unitHydrograph={unitHydrograph}
+                            onComplete={() => handleStepComplete(4)}
                         />
                     )}
                 </div>

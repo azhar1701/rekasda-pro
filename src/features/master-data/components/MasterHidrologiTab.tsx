@@ -464,6 +464,26 @@ Tindakan ini tidak dapat dibatalkan!`);
                         ) : (
                             stasiunList.map((stasiun) => {
                                 const isActive = selectedStasiun?.id === stasiun.id;
+                                const status = useHydrologyStore.getState().qcStatus?.[stasiun.id];
+                                
+                                // Logic for Health Badge
+                                let healthColor = 'bg-slate-100 text-slate-500';
+                                let healthLabel = 'No Audit';
+                                
+                                if (status) {
+                                    const passedCount = [status.konsisten, status.bebasOutlier, status.homogen].filter(Boolean).length;
+                                    if (passedCount === 3) {
+                                        healthColor = 'bg-emerald-500 text-white shadow-sm';
+                                        healthLabel = '🟢 Healthy';
+                                    } else if (passedCount >= 1) {
+                                        healthColor = 'bg-amber-500 text-white shadow-sm';
+                                        healthLabel = '🟡 Caution';
+                                    } else {
+                                        healthColor = 'bg-red-500 text-white shadow-sm';
+                                        healthLabel = '🔴 Unstable';
+                                    }
+                                }
+
                                 return (
                                     <div
                                         key={stasiun.id}
@@ -474,9 +494,14 @@ Tindakan ini tidak dapat dibatalkan!`);
                                             }`}
                                     >
                                         <div className="flex justify-between items-start">
-                                            <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
-                                                {stasiun.nama_stasiun}
-                                            </h4>
+                                            <div className="flex flex-col gap-1">
+                                                <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                                                    {stasiun.nama_stasiun}
+                                                </h4>
+                                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full w-fit tracking-tighter ${healthColor}`}>
+                                                    {healthLabel}
+                                                </span>
+                                            </div>
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isActive ? 1 : undefined }}>
                                                 <button
                                                     onClick={(e) => {

@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { FileText, Printer, MapPin, Activity, Calendar } from 'lucide-react';
+import { FileText, Printer, MapPin, Activity, Calendar, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import generatePDF from 'react-to-pdf';
 import {
@@ -23,8 +23,15 @@ export const ExecutiveDashboard = () => {
         hasilEmbung,
         isBanjirDirty,
         isNeracaDirty,
-        identitasLokasi
+        identitasLokasi,
+        resetAll
     } = useHydrologyStore();
+
+    const handleReset = () => {
+        if (window.confirm('⚠️ PERINGATAN: Anda yakin ingin menghapus SELURUH data perhitungan dan parameter input? Proyek akan dikembalikan ke kondisi awal.')) {
+            resetAll();
+        }
+    };
 
     const targetRef = useRef<HTMLDivElement>(null);
     const isDirty = isBanjirDirty || isNeracaDirty;
@@ -44,10 +51,16 @@ export const ExecutiveDashboard = () => {
             icon={<FileText className="w-6 h-6" />}
             iconColorClass="bg-pupr-blue text-white"
             actions={
-                <ButtonGovTech variant="pupr-accent" onClick={exportToPDF} disabled={isDirty || !hasAnyData}>
-                    <Printer />
-                    Cetak Laporan PDF
-                </ButtonGovTech>
+                <div className="flex gap-3">
+                    <ButtonGovTech variant="ghost" onClick={handleReset}>
+                        <RefreshCw />
+                        Reset Global
+                    </ButtonGovTech>
+                    <ButtonGovTech variant="pupr-accent" onClick={exportToPDF} disabled={isDirty || !hasAnyData}>
+                        <Printer />
+                        Cetak Laporan PDF
+                    </ButtonGovTech>
+                </div>
             }
         >
             {isDirty && (

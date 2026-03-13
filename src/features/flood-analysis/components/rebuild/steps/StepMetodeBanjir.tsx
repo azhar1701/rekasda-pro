@@ -9,7 +9,7 @@ import {
     calculateHSSClark,
     calculateMelchior,
     calculateHaspers,
-    calculateDerWeduwen,
+    calculateWeduwen as calculateDerWeduwen,
     calculateRational
 } from '@/lib/engine/flood';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';

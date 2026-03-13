@@ -8,13 +8,15 @@ import { BarChart3, Download, Share2, ClipboardCheck, AlertCircle } from 'lucide
 interface StepRekapVisualisasiProps {
     selectedMethod: string;
     unitHydrograph: any[];
+    onComplete?: () => void;
 }
 
-export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ selectedMethod, unitHydrograph }) => {
+export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ selectedMethod, unitHydrograph, onComplete }) => {
     const {
         hujanEfektif,
         hasilBanjirEmpiris,
         hasilBanjirHSS,
+        hasilKonvolusi,
         setHasilBanjir,
         setHasilKonvolusi
     } = useHydrologyStore();
@@ -32,9 +34,19 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
         return conv;
     }, [hujanEfektif, unitHydrograph]);
 
+    const lastSavedKey = React.useRef<string>('');
+
     // Save to store when calculated
     React.useEffect(() => {
         if (finalResults) {
+            const currentKey = `${selectedMethod}_${finalResults.Qp}_${hujanEfektif?.length}`;
+            
+            // Guard: Only update if the result is actually new
+            if (lastSavedKey.current === currentKey) {
+                if (onComplete) onComplete();
+                return;
+            }
+
             setHasilBanjir({
                 method: selectedMethod,
                 debitPuncak: finalResults.Qp,
@@ -47,8 +59,15 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
                 totalVolume: 0, // Could be calculated
                 componentHydrographs: []
             });
+
+            lastSavedKey.current = currentKey;
+
+            // Mark step 4 as complete
+            if (onComplete) {
+                onComplete();
+            }
         }
-    }, [finalResults, selectedMethod, setHasilBanjir, setHasilKonvolusi]);
+    }, [finalResults, selectedMethod, setHasilBanjir, setHasilKonvolusi, onComplete, hujanEfektif]);
 
     if (!finalResults) {
         return (

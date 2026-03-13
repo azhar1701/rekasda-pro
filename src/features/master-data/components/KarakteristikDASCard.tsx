@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Mountain, Save, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { useHydrologyStore, type MorfometriDAS } from '@/stores/useHydrologyStore';
@@ -29,6 +29,25 @@ export const KarakteristikDASCard: React.FC = () => {
 
   const safeA = typeof formData.luasDAS === 'string' ? parseFloat(formData.luasDAS) || 0 : formData.luasDAS;
   const safeL = typeof formData.panjangSungai === 'string' ? parseFloat(formData.panjangSungai) || 0 : formData.panjangSungai;
+
+  // Engineering Logical Validation (Hack's Law: L ≈ 1.4 * A^0.6)
+  const logicalCheck = useMemo(() => {
+    if (safeA <= 0 || safeL <= 0) return null;
+    const expectedL = 1.4 * Math.pow(safeA, 0.6);
+    const ratio = safeL / expectedL;
+    
+    // Threshold: Allow 50% - 200% deviation from empirical mean
+    const isLogical = ratio >= 0.5 && ratio <= 2.0;
+    
+    return {
+      expectedL: expectedL.toFixed(2),
+      ratio,
+      isLogical,
+      message: isLogical 
+        ? "Konsistensi Spasial: Valid (Sesuai Hack's Law)" 
+        : "Peringatan: Panjang sungai tidak lazim untuk luas DAS ini. Mohon verifikasi delineasi."
+    };
+  }, [safeA, safeL]);
 
   const handleSave = async () => {
     const safeData = {
@@ -149,6 +168,21 @@ export const KarakteristikDASCard: React.FC = () => {
           <div className="flex items-center gap-2 p-3 mt-4 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>Luas DAS dan Panjang Sungai harus diisi dengan nilai &gt; 0</span>
+          </div>
+        )}
+
+        {logicalCheck && isValid && (
+          <div className={`flex items-start gap-3 p-3 mt-4 rounded-md border text-xs font-medium transition-colors ${
+            logicalCheck.isLogical 
+              ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
+              : 'bg-rose-50 border-red-100 text-rose-700'
+          }`}>
+            <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${logicalCheck.isLogical ? 'text-emerald-500' : 'text-rose-500'}`} />
+            <div>
+              <p className="font-bold uppercase tracking-wider mb-1">Audit Geometri DAS</p>
+              <p>{logicalCheck.message}</p>
+              <p className="mt-1 opacity-70 italic">Empiris: L ≈ 1.4 × A^0.6 (Ekspektasi: {logicalCheck.expectedL} km)</p>
+            </div>
           </div>
         )}
 

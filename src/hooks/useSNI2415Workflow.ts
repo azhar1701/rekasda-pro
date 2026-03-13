@@ -1,35 +1,51 @@
 /**
- * Custom Hook - SNI 2415:2016 Workflow Validation
- * Untuk validasi pemilihan metode perhitungan debit banjir rencana
+ * Professional Decision Tree Hook - SNI 2415:2016 Workflow
+ * Recommends the correct hydrological method based on Area and Project Objective.
  */
 
-import { validateSNI2415Workflow, type SNI2415WorkflowResult } from '@/lib/engine/flood/sni2415';
+import { useMemo } from 'react';
+import { 
+  getEngineeringRecommendation, 
+  type ProjectObjective, 
+  type DecisionResult 
+} from '@/utils/engineeringDecisionTree';
 
 /**
- * Hook untuk validasi workflow SNI 2415:2016
+ * Professional Engineering Hook for Method Selection
  * 
- * Mengembalikan rekomendasi metode berdasarkan luas DAS:
- * - DAS ≤ 300 ha (3 km²): Metode Rasional
- * - DAS > 300 ha (3 km²): Metode HSS (wajib)
+ * This hook acts as the "Decision Brain" for the UI. It ensures that 
+ * the application follows SNI 2415:2016 standards and Indonesian 
+ * engineering practices (PUPR).
  * 
- * @param areaKm2 - Luas Daerah Aliran Sungai dalam km²
- * @returns Hasil validasi workflow dengan rekomendasi metode
- * 
- * @example
- * ```tsx
- * const MyComponent = () => {
- *   const [area, setArea] = useState(2.5);
- *   const workflow = useSNI2415Workflow(area);
- *   
- *   return (
- *     <div>
- *       {workflow.warning && <Alert>{workflow.warning}</Alert>}
- *       <p>Metode: {workflow.recommendedMethod}</p>
- *     </div>
- *   );
- * };
- * ```
+ * @param areaKm2 - The catchment area (Luas DAS) in km²
+ * @param objective - 'peak_only' (Drainage/Bridges) or 'hydrograph_routing' (Dams/Reservoirs)
+ * @returns DecisionResult containing Primary and Alternative methods
  */
-export const useSNI2415Workflow = (areaKm2: number): SNI2415WorkflowResult => {
-  return validateSNI2415Workflow(areaKm2);
+export const useEngineeringDecision = (
+  areaKm2: number | undefined | null,
+  objective: ProjectObjective = 'peak_only'
+): DecisionResult | null => {
+  return useMemo(() => {
+    if (areaKm2 === undefined || areaKm2 === null || isNaN(areaKm2) || areaKm2 <= 0) {
+      return null;
+    }
+    
+    return getEngineeringRecommendation(areaKm2, objective);
+  }, [areaKm2, objective]);
+};
+
+/**
+ * Legacy Wrapper for backward compatibility
+ * @deprecated Use useEngineeringDecision instead for professional method selection.
+ */
+export const useSNI2415Workflow = (areaKm2: number) => {
+  const decision = useEngineeringDecision(areaKm2, 'peak_only');
+  return {
+    recommendedMethod: decision?.primaryMethod.id === 'RATIONAL' ? 'rational' : 'hss',
+    isRationalValid: areaKm2 <= 3.0,
+    warning: decision?.primaryMethod.id !== 'RATIONAL' && areaKm2 > 3.0 
+      ? `Luas DAS (${areaKm2.toFixed(2)} km²) melebihi batas Metode Rasional (3 km²).` 
+      : undefined,
+    areaKm2,
+  };
 };

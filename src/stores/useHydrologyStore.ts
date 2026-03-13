@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { ProjectSlice, createProjectSlice } from './slices/projectSlice';
 import { RainfallSlice, createRainfallSlice } from './slices/rainfallSlice';
 import { AnalysisSlice, createAnalysisSlice } from './slices/analysisSlice';
+import { toast } from '@/hooks/useToast';
 
 // Re-export types for backward compatibility
 export * from '@/types/hydrology.types';
@@ -18,6 +19,9 @@ export type HydrologyStore = ProjectSlice & RainfallSlice & AnalysisSlice & {
   getTimeOfConcentration: () => number;
   getDesignRainfall: (tr: number) => number;
   getDesignDischarge: (type?: 'flood' | 'irrigation') => number;
+  
+  // Global Action
+  resetAll: () => void;
 };
 
 export const useHydrologyStore = create<HydrologyStore>()(
@@ -53,6 +57,14 @@ export const useHydrologyStore = create<HydrologyStore>()(
           const { hasilBanjir, neracaFinal } = get();
           if (type === 'flood') return hasilBanjir?.debitPuncak || 0;
           return neracaFinal?.[0]?.ketersediaan || 0;
+        },
+
+        resetAll: () => {
+          get().resetProject();
+          get().resetRainfall();
+          get().resetAnalysis();
+          set({ distribusiHujanJamJaman: [], hujanEfektif: null });
+          toast.success('Semua data proyek berhasil direset.');
         }
       };
     },

@@ -7,17 +7,28 @@ import { HujanWilayahCard } from './HujanWilayahCard';
 import { WebGISPanel } from '../../spatial-analysis/WebGISPanel';
 
 export const ParameterSpasial: React.FC = () => {
-  const { morfometriDAS, tutupanLahan, curahHujanWilayah } = useHydrologyStore();
+  const { morfometriDAS, tutupanLahan, curahHujanWilayah, identitasLokasi } = useHydrologyStore();
 
   const completionStatus = {
-    morfometri: morfometriDAS !== null,
-    tutupanLahan: tutupanLahan !== null,
-    hujanWilayah: curahHujanWilayah !== null,
+    identitas: !!identitasLokasi?.namaPekerjaan, // Optional
+    morfometri: (morfometriDAS?.luasDAS || 0) > 0 && (morfometriDAS?.panjangSungai || 0) > 0,
+    tutupanLahan: (tutupanLahan?.items?.length || 0) > 0 || (tutupanLahan?.koefisienPengaliranGabungan || 0) > 0,
+    hujanWilayah: (curahHujanWilayah?.hujanRataRata || 0) > 0 || (curahHujanWilayah?.stasiunConfigs?.length || 0) > 0,
   };
 
-  const completionCount = Object.values(completionStatus).filter(Boolean).length;
-  const isComplete = completionCount === 3;
-  const completionPercentage = (completionCount / 3) * 100;
+  const checklistItems = [
+    { id: 'identitas', label: 'Identitas Proyek (Opsional)', status: completionStatus.identitas, optional: true },
+    { id: 'morfometri', label: 'Geometri DAS', status: completionStatus.morfometri },
+    { id: 'tutupan', label: 'Tutupan Lahan', status: completionStatus.tutupanLahan },
+    { id: 'hujan', label: 'Hujan Wilayah', status: completionStatus.hujanWilayah },
+  ];
+
+  // Only count non-optional items for the primary completion score
+  const requiredItems = checklistItems.filter(item => !item.optional);
+  const completionCount = requiredItems.filter(item => item.status).length;
+  const totalSteps = requiredItems.length;
+  const isComplete = completionCount === totalSteps;
+  const completionPercentage = (completionCount / totalSteps) * 100;
 
   return (
     <div className="flex flex-col gap-6 p-1">
@@ -50,7 +61,7 @@ export const ParameterSpasial: React.FC = () => {
           <div>
             <p className={`text-xs font-extrabold uppercase tracking-widest ${isComplete ? 'text-emerald-700' : 'text-amber-700'
               }`}>
-              {isComplete ? 'Data Lengkap' : 'Data Belum Lengkap'}
+              {isComplete ? 'Data Master Lengkap' : 'Progress Data Master'}
             </p>
             <div className="flex items-center gap-3 mt-1">
               <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -62,8 +73,19 @@ export const ParameterSpasial: React.FC = () => {
               </div>
               <span className={`text-sm font-bold tabular-nums ${isComplete ? 'text-emerald-700' : 'text-amber-700'
                 }`}>
-                {completionCount}/3 <small className="font-medium opacity-70 italic text-[10px]">Selesai</small>
+                {completionCount}/{totalSteps} <small className="font-medium opacity-70 italic text-[10px]">Selesai</small>
               </span>
+            </div>
+            
+            {/* Engineering Checklist Dots */}
+            <div className="flex gap-1.5 mt-2">
+              {checklistItems.map((item) => (
+                <div 
+                  key={item.id} 
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${item.status ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`}
+                  title={`${item.label}: ${item.status ? 'Lengkap' : 'Belum Lengkap'}`}
+                />
+              ))}
             </div>
           </div>
         </div>
