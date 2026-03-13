@@ -5,7 +5,7 @@ import { useHydrologyStore, type TutupanLahan, type TutupanLahanItem } from '@/s
 import { toast } from '@/hooks/useToast';
 
 export const TutupanLahanCard: React.FC = () => {
-  const { tutupanLahan, saveTutupanLahan, morfometriDAS } = useHydrologyStore();
+  const { tutupanLahan, saveTutupanLahan, morfometriDAS, lastResetAt } = useHydrologyStore();
 
   const [items, setItems] = useState<TutupanLahanItem[]>(
     tutupanLahan?.items || [
@@ -17,9 +17,19 @@ export const TutupanLahanCard: React.FC = () => {
   useEffect(() => {
     if (tutupanLahan) {
       setItems(tutupanLahan.items);
-      setIsSaved(true);
+      // Only set isSaved if it's not empty
+      if (tutupanLahan.items.length > 0 && tutupanLahan.totalLuas > 0) {
+        setIsSaved(true);
+      }
     }
   }, [tutupanLahan]);
+
+  // Handle Global Reset
+  useEffect(() => {
+    if (lastResetAt > 0) {
+      setIsSaved(false);
+    }
+  }, [lastResetAt]);
 
   const { totalLuas, cGabungan, cnGabungan, luasError } = useMemo(() => {
     const safeItems = items.map(i => ({

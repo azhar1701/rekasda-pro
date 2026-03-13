@@ -15,18 +15,20 @@ export interface RainfallSlice {
   // State
   stasiunList: StasiunHidrologi[];
   selectedStasiun: StasiunHidrologi | null;
+  projectStationIds: string[]; // Active stations for analysis
   dataHujan: DataHujan[];
   curahHujanWilayah: CurahHujanWilayah;
   hasilThiessen: any; 
   hasilARF: any;
   analisisFrekuensi: AnalisisFrekuensi;
-  hasilAnalisisFrekuensi: any; // Legacy name
-  curahHujanRencana: any; // Can be array or string in legacy
+  hasilAnalisisFrekuensi: any; 
+  curahHujanRencana: any; 
   selectedKalaUlang: number | null;
   isQCCalculating: boolean;
   isQCOverridden: boolean;
   qcStatus: Record<string, QCStatus> | null; 
   qcResults: QualityControlResults | null;
+  stasiunAmsData: Record<string, { tahun: number, hujan: number }[]>;
   activeRainfallSource: 'aljabar' | 'thiessen' | 'isohyet' | 'titik';
   arealRainfallAlgebraic: any[];
   arealRainfallThiessen: any[];
@@ -38,6 +40,8 @@ export interface RainfallSlice {
   // Actions
   setStasiunList: (stasiun: StasiunHidrologi[]) => void;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
+  setProjectStationIds: (ids: string[]) => void;
+  toggleProjectStation: (id: string) => void;
   setDataHujan: (dataHujan: DataHujan[]) => void;
   updateDataHujanManual: (data: DataHujan[]) => void;
   setCurahHujanWilayah: (hujanWilayah: Partial<CurahHujanWilayah>) => void;
@@ -50,6 +54,7 @@ export interface RainfallSlice {
   setQCOverride: (overridden: boolean) => void;
   setQCStatus: (status: Record<string, QCStatus> | null) => void;
   setQCResults: (results: QualityControlResults | null) => void;
+  setStasiunAmsData: (data: Record<string, { tahun: number, hujan: number }[]>) => void;
   setActiveRainfallSource: (source: 'aljabar' | 'thiessen' | 'isohyet' | 'titik') => void;
   setArealRainfallData: (type: string, data: any[] | null) => void;
   fetchStasiun: () => Promise<void>;
@@ -62,7 +67,7 @@ export interface RainfallSlice {
   deleteDataHujanByYear: (stasiunId: string, year: number) => Promise<void>;
   updateDataHujanSingle: (stasiunId: string, date: string, val: number, metadata?: Partial<DataHujan>) => Promise<void>;
   seedInitialStations: () => Promise<void>;
-  syncRainfallMetadata: () => Promise<void>; // New: Bulk sync metadata
+  syncRainfallMetadata: () => Promise<void>; 
   setError: (error: string | null) => void;
   resetRainfall: () => void;
 }
@@ -85,6 +90,7 @@ const initialAnalisisFrekuensi: AnalisisFrekuensi = {
 export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
   stasiunList: [],
   selectedStasiun: null,
+  projectStationIds: [],
   dataHujan: [],
   curahHujanWilayah: initialHujanWilayah,
   hasilThiessen: null,
@@ -97,6 +103,7 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
   isQCOverridden: false,
   qcStatus: null,
   qcResults: null,
+  stasiunAmsData: {},
   activeRainfallSource: 'titik',
   arealRainfallAlgebraic: [],
   arealRainfallThiessen: [],
@@ -112,6 +119,17 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       get().fetchMultipleStationsData([selectedStasiun.id]);
     }
   },
+  
+  setProjectStationIds: (projectStationIds) => set({ projectStationIds }),
+  
+  toggleProjectStation: (id) => set((state) => {
+    const isSelected = state.projectStationIds.includes(id);
+    const newIds = isSelected 
+      ? state.projectStationIds.filter(pid => pid !== id)
+      : [...state.projectStationIds, id];
+    return { projectStationIds: newIds };
+  }),
+
   setDataHujan: (dataHujan) => set({ dataHujan }),
   
   updateDataHujanManual: (data) => {
@@ -166,6 +184,7 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
   setQCOverride: (isQCOverridden) => set({ isQCOverridden }),
   setQCStatus: (qcStatus) => set({ qcStatus }),
   setQCResults: (qcResults) => set({ qcResults }),
+  setStasiunAmsData: (stasiunAmsData) => set({ stasiunAmsData }),
   
   setActiveRainfallSource: (activeRainfallSource) => set({ activeRainfallSource }),
   
@@ -181,13 +200,31 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
 
   fetchStasiun: async () => {
     if (!supabase) return;
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
+    
+    const executeFetch = async (retries = 3): Promise<any> => {
+      try {
+        if (!supabase) throw new Error('Supabase client not initialized');
+        const { data, error } = await supabase.from('master_stasiun').select('*').order('nama_stasiun');
+        if (error) throw error;
+        return data;
+      } catch (err: any) {
+        if (retries > 0 && (err.message?.includes('fetch') || err.status === 502)) {
+          await new Promise(r => setTimeout(r, 1000));
+          return executeFetch(retries - 1);
+        }
+        throw err;
+      }
+    };
+
     try {
-      const { data, error } = await supabase.from('master_stasiun').select('*').order('nama_stasiun');
-      if (error) throw error;
+      const data = await executeFetch();
       set({ stasiunList: data || [] });
     } catch (err: any) {
-      set({ error: err.message });
+      const isPaused = err.message?.includes('fetch') || err.message?.includes('Failed to fetch');
+      const msg = isPaused ? 'Database Offline (Supabase Paused?). Pastikan project Supabase aktif.' : err.message;
+      set({ error: msg });
+      toast.error(msg);
     } finally {
       set({ isLoading: false });
     }
@@ -195,22 +232,37 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
 
   fetchMultipleStationsData: async (ids) => {
     if (!supabase || ids.length === 0) return;
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
+    
     try {
       let allData: any[] = [];
       let hasMore = true;
       let page = 0;
-      const pageSize = 1000;
+      const pageSize = 500; 
+
+      const fetchPageWithRetry = async (currentPage: number, retries = 3): Promise<any> => {
+        try {
+          if (!supabase) throw new Error('Supabase client not initialized');
+          const { data, error } = await supabase
+            .from('master_data_hujan')
+            .select('*')
+            .in('stasiun_id', ids)
+            .order('tanggal', { ascending: true })
+            .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+
+          if (error) throw error;
+          return data;
+        } catch (err: any) {
+          if (retries > 0 && (err.message?.includes('fetch') || err.status === 502)) {
+            await new Promise(r => setTimeout(r, 1500)); 
+            return fetchPageWithRetry(currentPage, retries - 1);
+          }
+          throw err;
+        }
+      };
 
       while (hasMore) {
-        const { data, error } = await supabase
-          .from('master_data_hujan')
-          .select('*')
-          .in('stasiun_id', ids)
-          .order('tanggal', { ascending: true })
-          .range(page * pageSize, (page + 1) * pageSize - 1);
-
-        if (error) throw error;
+        const data = await fetchPageWithRetry(page);
 
         if (data && data.length > 0) {
           allData = [...allData, ...data];
@@ -218,6 +270,7 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
             hasMore = false;
           } else {
             page++;
+            await new Promise(r => setTimeout(r, 100));
           }
         } else {
           hasMore = false;
@@ -225,7 +278,10 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       }
       set({ dataHujan: allData });
     } catch (err: any) {
-      set({ error: err.message });
+      const isPaused = err.message?.includes('fetch') || err.message?.includes('Failed to fetch');
+      const msg = isPaused ? 'Koneksi Cloud Terputus. Periksa internet atau status Supabase.' : err.message;
+      set({ error: msg });
+      toast.error(msg);
     } finally {
       set({ isLoading: false });
     }
@@ -265,7 +321,8 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       if (error) throw error;
       set((state) => ({
         stasiunList: state.stasiunList.filter(s => s.id !== id),
-        selectedStasiun: state.selectedStasiun?.id === id ? null : state.selectedStasiun
+        selectedStasiun: state.selectedStasiun?.id === id ? null : state.selectedStasiun,
+        projectStationIds: state.projectStationIds.filter(pid => pid !== id)
       }));
       toast.success('Stasiun berhasil dihapus.');
     } catch (err: any) {
@@ -288,17 +345,26 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
   importDataHujanBatch: async (data) => {
     if (!supabase || data.length === 0) return;
     try {
-      // Chunk imports if very large
-      const { error } = await supabase.from('master_data_hujan').upsert(data, { onConflict: 'stasiun_id, tanggal' });
+      const validData = data.filter(d => d.stasiun_id && d.tanggal);
+      if (validData.length === 0) throw new Error('Data tidak valid: stasiun_id atau tanggal kosong.');
+
+      const { error } = await supabase
+        .from('master_data_hujan')
+        .upsert(validData, { 
+          onConflict: 'stasiun_id, tanggal',
+          ignoreDuplicates: false 
+        });
+
       if (error) throw error;
       
-      // Refresh current station data
       const currentId = get().selectedStasiun?.id;
-      if (currentId) get().fetchMultipleStationsData([currentId]);
+      if (currentId && validData.some(d => d.stasiun_id === currentId)) {
+        get().fetchMultipleStationsData([currentId]);
+      }
       
-      toast.success(`${data.length} data hujan berhasil diimpor.`);
+      toast.success(`${validData.length} data hujan berhasil disinkronkan.`);
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error('Gagal impor batch: ' + err.message);
     }
   },
   
@@ -353,7 +419,6 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
     
     set({ isLoading: true });
     try {
-      // Sync in batches of 500 to optimize performance
       const batchSize = 500;
       for (let i = 0; i < dataHujan.length; i += batchSize) {
         const batch = dataHujan.slice(i, i + batchSize).map(d => ({
@@ -402,7 +467,7 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
         .from('master_stasiun')
         .insert(initialStations);
 
-      if (error && (error as any).code !== '23505') { // Ignore duplicate key
+      if (error && (error as any).code !== '23505') { 
         throw error;
       }
       await get().fetchStasiun();
@@ -416,27 +481,31 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
 
   setError: (error) => set({ error }),
 
-  resetRainfall: () => set({
-    stasiunList: [],
-    selectedStasiun: null,
-    dataHujan: [],
-    curahHujanWilayah: initialHujanWilayah,
-    hasilThiessen: null,
-    hasilARF: null,
-    analisisFrekuensi: initialAnalisisFrekuensi,
-    hasilAnalisisFrekuensi: null,
-    curahHujanRencana: [],
-    selectedKalaUlang: null,
-    isQCCalculating: false,
-    isQCOverridden: false,
-    qcStatus: null,
-    qcResults: null,
-    activeRainfallSource: 'titik',
-    arealRainfallAlgebraic: [],
-    arealRainfallThiessen: [],
-    arealRainfallIsohyet: [],
-    rentangTahun: null,
-    isLoading: false,
-    error: null
-  })
+  resetRainfall: () => {
+    set({
+      stasiunList: [],
+      selectedStasiun: null,
+      projectStationIds: [],
+      dataHujan: [],
+      curahHujanWilayah: initialHujanWilayah,
+      hasilThiessen: null,
+      hasilARF: null,
+      analisisFrekuensi: initialAnalisisFrekuensi,
+      hasilAnalisisFrekuensi: null,
+      curahHujanRencana: [],
+      selectedKalaUlang: null,
+      isQCCalculating: false,
+      isQCOverridden: false,
+      qcStatus: null,
+      qcResults: null,
+      stasiunAmsData: {},
+      activeRainfallSource: 'titik',
+      arealRainfallAlgebraic: [],
+      arealRainfallThiessen: [],
+      arealRainfallIsohyet: [],
+      rentangTahun: null,
+      isLoading: false,
+      error: null
+    });
+  }
 });

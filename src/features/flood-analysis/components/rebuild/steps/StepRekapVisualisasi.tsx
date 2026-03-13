@@ -16,7 +16,6 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
         hujanEfektif,
         hasilBanjirEmpiris,
         hasilBanjirHSS,
-        hasilKonvolusi,
         setHasilBanjir,
         setHasilKonvolusi
     } = useHydrologyStore();

@@ -25,26 +25,37 @@ async function request<TResponse>(
 ): Promise<TResponse> {
   const url = `${BASE_URL}${path}`;
 
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
 
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      detail = body?.detail ?? detail;
-    } catch {
-      // ignore parse error
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        detail = body?.detail ?? detail;
+      } catch {
+        // ignore parse error
+      }
+      throw new ApiError(res.status, detail);
     }
-    throw new ApiError(res.status, detail);
-  }
 
-  return res.json() as Promise<TResponse>;
+    return res.json() as Promise<TResponse>;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    
+    // Check if it's a connection failure
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new ApiError(503, 'Koneksi ke Python Engine Gagal. Pastikan Backend (FastAPI) sudah dijalankan pada port 8000.');
+    }
+    
+    throw error;
+  }
 }
 
 export const apiClient = {

@@ -1,13 +1,16 @@
 import React from 'react';
-import { MapPin, CheckCircle2, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import { MapPin, CheckCircle2, AlertTriangle, TrendingUp, Info, Database, Layers } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { KarakteristikDASCard } from './KarakteristikDASCard';
 import { TutupanLahanCard } from './TutupanLahanCard';
 import { HujanWilayahCard } from './HujanWilayahCard';
+import { ThiessenCalculator } from './ThiessenCalculator';
 import { WebGISPanel } from '../../spatial-analysis/WebGISPanel';
 
 export const ParameterSpasial: React.FC = () => {
-  const { morfometriDAS, tutupanLahan, curahHujanWilayah, identitasLokasi } = useHydrologyStore();
+  const { morfometriDAS, tutupanLahan, curahHujanWilayah, identitasLokasi, projectStationIds } = useHydrologyStore();
+
+  const isStationSelected = projectStationIds.length > 0;
 
   const completionStatus = {
     identitas: !!identitasLokasi?.namaPekerjaan, // Optional
@@ -39,7 +42,7 @@ export const ParameterSpasial: React.FC = () => {
             <MapPin className="w-8 h-8 text-pupr-yellow" />
           </div>
           <div>
-            <h2 className="text-2xl font-extrabold text-pupr-blue tracking-tight uppercase leading-tight">Parameter Spasial & Kewilayahan</h2>
+            <h2 className="text-2xl font-extrabold text-pupr-blue tracking-tight uppercase leading-tight">Analisis Spasial & Kewilayahan</h2>
             <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-1">
               <Info className="w-3.5 h-3.5" />
               Sistem Otomasi Delineasi & Karakterisasi Geospasial DAS
@@ -91,43 +94,61 @@ export const ParameterSpasial: React.FC = () => {
         </div>
       </div>
 
-      {/* Full Width WebGIS (The Master Input) */}
-      <div className="w-full transition-all duration-500">
-        <WebGISPanel />
+      {/* STEP 1: Mandatory Station Selection Tool */}
+      <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+        <ThiessenCalculator />
       </div>
 
-      {/* Guidance Box */}
-      <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3 shadow-sm">
-        <TrendingUp className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-600 leading-relaxed ">
-          <span className="font-bold text-pupr-blue uppercase tracking-wider text-xs block mb-1 font-extrabold">Alur Kerja Otomatis:</span>
-          Unggah atau delineasi batas DAS pada peta di atas. Sistem akan mengeksekusi perhitungan **Luas DAS**, **Interseksi Tata Guna Lahan**, dan **Poligon Thiessen** secara instan.
-          Hasil rincian teknis akan ditampilkan secara reaktif pada modul-modul di bawah ini untuk verifikasi Anda.
-        </p>
-      </div>
-
-      {/* Technical Modules Section (The Reactive Details) */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2 flex items-center gap-2">
-          <div className="w-2 h-2 bg-pupr-yellow rounded-full shadow-[0_0_8px_#f2c114]"></div>
-          Hasil Analisis Spasial & Rincian Modul
-        </h3>
-
-        <div className="flex flex-col gap-6">
-          <div className="transition-all hover:translate-y-[-2px] duration-300">
-            <KarakteristikDASCard />
+      {!isStationSelected ? (
+        <div className="p-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-4 shadow-sm">
+            <Layers className="w-8 h-8 text-slate-300" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-400 uppercase tracking-widest">Menunggu Seleksi Stasiun</h3>
+          <p className="text-sm text-slate-400 max-w-sm mt-2">
+            Gunakan tool di atas untuk memilih stasiun hujan dari database sebelum melanjutkan ke analisis morfometri dan tata guna lahan.
+          </p>
+        </div>
+      ) : (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
+          {/* Full Width WebGIS */}
+          <div className="w-full transition-all duration-500">
+            <WebGISPanel />
           </div>
 
-          <div className="transition-all hover:translate-y-[-2px] duration-300">
-            <TutupanLahanCard />
+          {/* Guidance Box */}
+          <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3 shadow-sm">
+            <TrendingUp className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-600 leading-relaxed ">
+              <span className="font-bold text-pupr-blue uppercase tracking-wider text-xs block mb-1 font-extrabold">Alur Kerja Otomatis:</span>
+              Unggah atau delineasi batas DAS pada peta di atas. Sistem akan mengeksekusi perhitungan **Luas DAS**, **Interseksi Tata Guna Lahan**, dan **Poligon Thiessen** secara instan.
+              Hasil rincian teknis akan ditampilkan secara reaktif pada modul-modul di bawah ini untuk verifikasi Anda.
+            </p>
           </div>
 
-          <div className="transition-all hover:translate-y-[-2px] duration-300">
-            <HujanWilayahCard />
+          {/* Technical Modules Section (The Reactive Details) */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2 flex items-center gap-2">
+              <div className="w-2 h-2 bg-pupr-yellow rounded-full shadow-[0_0_8px_#f2c114]"></div>
+              Hasil Analisis Spasial & Rincian Modul
+            </h3>
+
+            <div className="flex flex-col gap-6">
+              <div className="transition-all hover:translate-y-[-2px] duration-300">
+                <KarakteristikDASCard />
+              </div>
+
+              <div className="transition-all hover:translate-y-[-2px] duration-300">
+                <TutupanLahanCard />
+              </div>
+
+              <div className="transition-all hover:translate-y-[-2px] duration-300">
+                <HujanWilayahCard />
+              </div>
+            </div>
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 };

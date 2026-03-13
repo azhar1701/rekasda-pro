@@ -30,16 +30,18 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
 
     return (
         <div className="relative inline-block ml-1.5 align-middle">
-            <button
+            <span
                 onMouseEnter={() => setIsVisible(true)}
                 onMouseLeave={() => setIsVisible(false)}
                 onFocus={() => setIsVisible(true)}
                 onBlur={() => setIsVisible(false)}
-                className="text-slate-400 hover:text-pupr-blue transition-colors outline-none focus:text-pupr-blue"
+                tabIndex={0}
+                role="button"
+                className="text-slate-400 hover:text-pupr-blue transition-colors outline-none focus:text-pupr-blue cursor-help"
                 aria-label="Informasi bantuan"
             >
                 <HelpCircle className="w-3.5 h-3.5" />
-            </button>
+            </span>
 
             {isVisible && (
                 <div className={`absolute z-[100] w-64 p-3 bg-slate-800 text-white text-[11px] rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-200 pointer-events-none ${positionClasses[position]}`}>

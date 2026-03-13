@@ -19,7 +19,8 @@ import { SuccessCelebration } from '@/components/ui/feedback/SuccessCelebration'
 export const HujanWilayahCard: React.FC = () => {
   const {
     curahHujanWilayah, setCurahHujanWilayah, stasiunList, morfometriDAS,
-    fetchMultipleStationsData, setArealRainfallData, setActiveRainfallSource
+    fetchMultipleStationsData, setArealRainfallData, setActiveRainfallSource,
+    lastResetAt
   } = useHydrologyStore();
 
   const [metode, setMetode] = useState<'aljabar' | 'thiessen' | 'isohyet'>(curahHujanWilayah?.metode || 'aljabar');
@@ -30,6 +31,7 @@ export const HujanWilayahCard: React.FC = () => {
     curahHujanWilayah?.isohyetConfigs || []
   );
   const [isSaved, setIsSaved] = useState(false);
+  const isResetting = React.useRef(false);
 
   const [params, setParams] = useState<MethodParams>({
     hasCoordinates: true,
@@ -42,14 +44,44 @@ export const HujanWilayahCard: React.FC = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const { completeStep } = useOnboarding();
 
+  // Sync with store, with reset protection
   useEffect(() => {
+    if (isResetting.current) return;
+
     if (curahHujanWilayah) {
       setMetode(curahHujanWilayah.metode);
-      setConfigs(curahHujanWilayah.stasiunConfigs);
+      setConfigs(curahHujanWilayah.stasiunConfigs || []);
       setIsohyetalConfigs(curahHujanWilayah.isohyetConfigs || []);
-      setIsSaved(true);
+      
+      // Strict Engineering Check: Only mark as saved if there is actual calculated output
+      const hasData = (curahHujanWilayah.hujanRataRata || 0) > 0 && 
+                      (curahHujanWilayah.stasiunConfigs?.length || 0) > 0;
+      
+      setIsSaved(hasData);
     }
   }, [curahHujanWilayah]);
+
+  // Listen for Global Reset - Full UI Wipe
+  useEffect(() => {
+    if (lastResetAt > 0) {
+      isResetting.current = true;
+      setIsSaved(false);
+      setMetode('aljabar');
+      setConfigs([]);
+      setIsohyetalConfigs([]);
+      setParams(prev => ({
+        ...prev,
+        topography: 'flat',
+        distribution: 'uniform',
+        stationCount: 0
+      }));
+      
+      // Release the reset lock after state has settled
+      setTimeout(() => {
+        isResetting.current = false;
+      }, 100);
+    }
+  }, [lastResetAt]);
 
   useEffect(() => {
     if (stasiunList.length > 0) {
@@ -397,36 +429,45 @@ export const HujanWilayahCard: React.FC = () => {
               <HelpTooltip content="Pilih metode rata-rata spasial yang paling sesuai dengan densitas stasiun dan topografi DAS Anda." />
             </label>
             <div className="inline-flex border border-slate-300 rounded-md overflow-hidden">
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setMetode('aljabar')}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all ${metode === 'aljabar'
+                onKeyDown={(e) => e.key === 'Enter' && setMetode('aljabar')}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${metode === 'aljabar'
                   ? 'bg-pupr-blue/10 text-pupr-blue border-r border-pupr-blue'
                   : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
                   }`}
               >
                 Rata-rata Aljabar
                 <HelpTooltip content="Metode paling sederhana, disarankan jika topografi datar dan stasiun tersebar merata." />
-              </button>
-              <button
+              </div>
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setMetode('thiessen')}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all ${metode === 'thiessen'
+                onKeyDown={(e) => e.key === 'Enter' && setMetode('thiessen')}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${metode === 'thiessen'
                   ? 'bg-pupr-blue/10 text-pupr-blue border-r border-pupr-blue'
                   : 'bg-white text-slate-600 hover:bg-slate-50 border-r border-slate-300'
                   }`}
               >
                 Poligon Thiessen
                 <HelpTooltip content="Membagi bobot berdasarkan luas pengaruh area. Membutuhkan koordinat stasiun." />
-              </button>
-              <button
+              </div>
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setMetode('isohyet')}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all ${metode === 'isohyet'
+                onKeyDown={(e) => e.key === 'Enter' && setMetode('isohyet')}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${metode === 'isohyet'
                   ? 'bg-pupr-blue/10 text-pupr-blue'
                   : 'bg-white text-slate-600 hover:bg-slate-50'
                   }`}
               >
                 Garis Isohyet
                 <HelpTooltip content="Metode paling akurat untuk daerah pegunungan, menggunakan kontur hujan." />
-              </button>
+              </div>
             </div>
           </div>
 

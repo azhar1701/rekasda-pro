@@ -28,7 +28,7 @@ export const ExecutiveDashboard = () => {
     } = useHydrologyStore();
 
     const handleReset = () => {
-        if (window.confirm('⚠️ PERINGATAN: Anda yakin ingin menghapus SELURUH data perhitungan dan parameter input? Proyek akan dikembalikan ke kondisi awal.')) {
+        if (window.confirm('⚠️ KONFIRMASI RESET: Anda yakin ingin menghapus seluruh parameter input (DAS, Landuse, Hietograf) dan hasil analisis? \n\nNOTE: Database Stasiun dan Matriks Data Hujan (Master Data) TETAP TERSIMPAN.')) {
             resetAll();
         }
     };

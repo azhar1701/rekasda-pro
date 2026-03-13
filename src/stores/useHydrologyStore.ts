@@ -22,6 +22,7 @@ export type HydrologyStore = ProjectSlice & RainfallSlice & AnalysisSlice & {
   
   // Global Action
   resetAll: () => void;
+  lastResetAt: number;
 };
 
 export const useHydrologyStore = create<HydrologyStore>()(
@@ -60,12 +61,39 @@ export const useHydrologyStore = create<HydrologyStore>()(
         },
 
         resetAll: () => {
+          // 1. Reset project-specific parameters
           get().resetProject();
-          get().resetRainfall();
           get().resetAnalysis();
-          set({ distribusiHujanJamJaman: [], hujanEfektif: null });
-          toast.success('Semua data proyek berhasil direset.');
-        }
+          
+          // 2. Reset Project-specific Rainfall Config (Selection & Results)
+          // BUT: Keep stasiunList and raw dataHujan (The Master Database)
+          set({
+            curahHujanWilayah: {
+              metode: 'aljabar',
+              stasiunConfigs: [],
+              hujanRataRata: 0,
+              hujanRataRataAMS: []
+            },
+            hasilThiessen: null,
+            hasilARF: null,
+            analisisFrekuensi: {
+              parameterStatistik: null,
+              hasilDistribusi: null,
+              ujiKecocokan: null,
+              metodeTerpilih: null,
+              dataHujanInput: []
+            },
+            hasilAnalisisFrekuensi: null,
+            curahHujanRencana: [],
+            selectedKalaUlang: null,
+            distribusiHujanJamJaman: [], 
+            hujanEfektif: null,
+            lastResetAt: Date.now() 
+          });
+
+          toast.success('Project Parameters Reset. Master Data Database Preserved.');
+        },
+        lastResetAt: 0
       };
     },
     {

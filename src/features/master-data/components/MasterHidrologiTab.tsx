@@ -3,7 +3,6 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 
-import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
 import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
@@ -59,10 +58,7 @@ export const MasterHidrologiTab: React.FC = () => {
     const [isInfilling, setIsInfilling] = useState(false);
     const [showModalBulk, setShowModalBulk] = useState(false);
     const [bulkRawText, setBulkRawText] = useState('');
-    const [isQCLoading, setIsQCLoading] = useState(false);
     const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
-    const [showModalQC, setShowModalQC] = useState(false);
-    const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
     const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
     const [isProcessingOcr, setIsProcessingOcr] = useState(false);
     const ocrFileInputRef = useRef<HTMLInputElement>(null);
@@ -386,14 +382,6 @@ Tindakan ini tidak dapat dibatalkan!`);
             .sort((a, b) => b.tahun - a.tahun);
     }, [displayData]);
 
-    const handleHubungkanDistribusi = () => {
-        if (annualMaximums.length < 10) {
-            toast.warning('Minimal butuh 10 tahun data untuk Analisis Frekuensi Distribusi Statistik.');
-        } else {
-            setSelectedQCStations([selectedStasiun?.id || '']);
-            setShowModalQC(true);
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -408,33 +396,14 @@ Tindakan ini tidak dapat dibatalkan!`);
             )}
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Master Data Hidrologi</h2>
-                    <p className="text-sm text-slate-600 mt-1">Single Source of Truth untuk Data Curah Hujan</p>
+                    <h2 className="text-2xl font-bold text-slate-900">Database Master Stasiun</h2>
+                    <p className="text-sm text-slate-600 mt-1">Kelola daftar stasiun dan data hujan historis secara terpusat</p>
                 </div>
                 <div className="flex gap-3">
                     <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Download className="w-4 h-4 mr-2" />
                         Download Template
                     </Button>
-                    {selectedStasiun && (
-                        <>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".xlsx,.xls"
-                                onChange={handleFileUpload}
-                                className="hidden"
-                            />
-                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
-                                <Upload className="w-4 h-4 mr-2" />
-                                Import Excel
-                            </Button>
-                            <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
-                                <Activity className="w-4 h-4 mr-2" />
-                                Bulk Paste
-                            </Button>
-                        </>
-                    )}
                     <Button onClick={() => {
                         setEditingStasiunId(null);
                         setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
@@ -488,21 +457,21 @@ Tindakan ini tidak dapat dibatalkan!`);
                                     <div
                                         key={stasiun.id}
                                         onClick={() => selectStasiun(stasiun)}
-                                        className={`group p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${isActive
-                                            ? 'bg-pupr-blue text-white border-teal-600 shadow-sm scale-[1.02]'
+                                        className={`group p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.01] ${isActive
+                                            ? 'bg-blue-50/50 border-pupr-blue shadow-sm'
                                             : 'bg-white/80 border-slate-200 hover:border-teal-300 hover:shadow-md text-slate-700'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start">
                                             <div className="flex flex-col gap-1">
-                                                <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                                                <h4 className={`font-bold text-[15px] ${isActive ? 'text-pupr-blue' : 'text-slate-800'}`}>
                                                     {stasiun.nama_stasiun}
                                                 </h4>
                                                 <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full w-fit tracking-tighter ${healthColor}`}>
                                                     {healthLabel}
                                                 </span>
                                             </div>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isActive ? 1 : undefined }}>
+                                            <div className="flex gap-1">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -516,7 +485,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                                         });
                                                         setShowModalStasiun(true);
                                                     }}
-                                                    className={`p-1.5 rounded-md ${isActive ? 'hover:bg-white/20 text-white' : 'hover:bg-slate-100 text-slate-500'}`}
+                                                    className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400"
                                                     title="Edit Stasiun"
                                                 >
                                                     <Edit2 className="w-3.5 h-3.5" />
@@ -533,7 +502,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                                             }
                                                         }
                                                     }}
-                                                    className={`p-1.5 rounded-md ${isActive ? 'hover:bg-red-500/50 text-white' : 'hover:bg-red-50 text-red-500'}`}
+                                                    className="p-1.5 rounded-md hover:bg-red-50 text-red-500"
                                                     title="Hapus Stasiun"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
@@ -541,13 +510,13 @@ Tindakan ini tidak dapat dibatalkan!`);
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 mt-3">
-                                            <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
-                                                <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Elevasi</span>
-                                                <span className="font-semibold font-mono">{stasiun.elevasi} m</span>
+                                            <div className="text-xs px-2 py-1.5 rounded-md bg-slate-50 border border-slate-100">
+                                                <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80 text-slate-500">Elevasi</span>
+                                                <span className="font-semibold font-mono text-slate-700">{stasiun.elevasi} m</span>
                                             </div>
-                                            <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
-                                                <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Koordinat</span>
-                                                <span className="font-semibold font-mono truncate">
+                                            <div className="text-xs px-2 py-1.5 rounded-md bg-slate-50 border border-slate-100">
+                                                <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80 text-slate-500">Koordinat</span>
+                                                <span className="font-semibold font-mono truncate text-slate-700">
                                                     {stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}
                                                 </span>
                                             </div>
@@ -572,16 +541,21 @@ Tindakan ini tidak dapat dibatalkan!`);
                             {stasiunList.length === 0 && (
                                 <Button
                                     onClick={async () => {
-                                        await seedInitialStations();
-                                        toast.success('Berhasil memuat daftar stasiun pilot Citanduy.');
+                                        if (window.confirm('Muat stasiun pilot? Database akan dibersihkan terlebih dahulu untuk mencegah duplikasi.')) {
+                                            // Professional Grade Cleanup: Remove potential orphans first
+                                            if (supabase) {
+                                                await supabase.from('master_stasiun').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                                            }
+                                            await seedInitialStations();
+                                            toast.success('Daftar stasiun pilot berhasil dimuat ulang.');
+                                        }
                                     }}
                                     className="bg-teal-600 hover:bg-teal-700 text-white font-bold"
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     Muat Stasiun Pilot
                                 </Button>
-                            )}
-                        </div>
+                            )}                        </div>
                     ) : (
                         <>
                             <div className="p-5 border-b border-slate-200/50 bg-white/40 flex flex-wrap justify-between items-center gap-4">
@@ -649,10 +623,6 @@ Tindakan ini tidak dapat dibatalkan!`);
                                                                 'Tahunan'
                                                 }
                                             </h4>
-                                            <Button onClick={handleHubungkanDistribusi} size="sm" className="bg-teal-600 hover:bg-teal-700 text-white rounded-md text-xs h-8">
-                                                <Activity className="w-3 h-3 mr-1" />
-                                                Hubungkan ke Distribusi Statistik
-                                            </Button>
                                         </div>
                                         <div className="p-0 overflow-x-auto">
                                             <table className="w-full text-sm">
@@ -1013,155 +983,6 @@ Tindakan ini tidak dapat dibatalkan!`);
                                     </Button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {showModalQC && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-md shadow-sm max-w-2xl w-full p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-800">Seleksi Stasiun untuk QC & Distribusi</h3>
-                                <p className="text-sm text-slate-500 mt-1">Pilih stasiun yang akan digunakan dalam analisis frekuensi</p>
-                            </div>
-                            <button onClick={() => setShowModalQC(false)} className="text-slate-400 hover:text-slate-600">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 mb-6">
-                            {stasiunList.map((stasiun) => {
-                                const isSelected = selectedQCStations.includes(stasiun.id);
-                                return (
-                                    <div
-                                        key={stasiun.id}
-                                        onClick={() => {
-                                            if (isSelected) {
-                                                setSelectedQCStations(prev => prev.filter(id => id !== stasiun.id));
-                                            } else {
-                                                setSelectedQCStations(prev => [...prev, stasiun.id]);
-                                            }
-                                        }}
-                                        className={`flex items-center justify-between p-4 rounded-md border-2 cursor-pointer transition-all ${isSelected ? 'border-pupr-blue bg-blue-50' : 'border-slate-100 hover:border-slate-200'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-pupr-blue border-pupr-blue' : 'border-slate-300'
-                                                }`}>
-                                                {isSelected && <Activity className="w-3 h-3 text-white" />}
-                                            </div>
-                                            <div>
-                                                <span className="font-bold text-slate-800">{stasiun.nama_stasiun}</span>
-                                                <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                                                    {stasiun.koordinat_y?.toFixed(3)}, {stasiun.koordinat_x?.toFixed(3)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="text-xs font-bold text-slate-400">
-                                            {stasiun.elevasi} m
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => setShowModalQC(false)}
-                                variant="outline"
-                                className="flex-1 rounded-md"
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                disabled={isQCLoading}
-                                onClick={async () => {
-                                    if (selectedQCStations.length === 0) {
-                                        toast.warning('Pilih minimal 1 stasiun untuk melanjutkan.');
-                                        return;
-                                    }
-
-                                    setIsQCLoading(true);
-                                    try {
-                                        useHydrologyStore.getState().setQCStatus(null);
-                                        useHydrologyStore.getState().setQCResults(null);
-
-                                        const newQcStatus: Record<string, any> = {};
-                                        const newQcResults: Record<string, any> = {};
-
-                                        for (const stasiunId of selectedQCStations) {
-                                            let allData: any[] = [];
-                                            let hasMore = true;
-                                            let page = 0;
-                                            const pageSize = 1000;
-
-                                            while (hasMore && supabase) {
-                                                const { data, error } = await supabase
-                                                    .from('master_data_hujan')
-                                                    .select('*')
-                                                    .eq('stasiun_id', stasiunId)
-                                                    .order('tanggal', { ascending: true })
-                                                    .range(page * pageSize, (page + 1) * pageSize - 1);
-
-                                                if (error) throw error;
-
-                                                if (data && data.length > 0) {
-                                                    allData = [...allData, ...data];
-                                                    if (data.length < pageSize) hasMore = false;
-                                                    else page++;
-                                                } else {
-                                                    hasMore = false;
-                                                }
-                                            }
-
-                                            if (allData.length > 0) {
-                                                const maxByYear: Record<number, number> = {};
-                                                allData.forEach(row => {
-                                                    const y = parseInt(row.tanggal.split('-')[0], 10);
-                                                    const val = typeof row.curah_hujan === 'number' ? row.curah_hujan : parseFloat(row.curah_hujan) || 0;
-                                                    if (!maxByYear[y] || val > maxByYear[y]) {
-                                                        maxByYear[y] = val;
-                                                    }
-                                                });
-
-                                                const annualMax = Object.entries(maxByYear)
-                                                    .map(([year, value]) => ({ tahun: parseInt(year, 10), hujan: value }))
-                                                    .sort((a, b) => a.tahun - b.tahun);
-
-                                                if (annualMax.length >= 10) {
-                                                    const result = runFullQC(annualMax);
-                                                    newQcStatus[stasiunId] = {
-                                                        konsisten: result.isKonsisten,
-                                                        bebasOutlier: result.isBebasOutlier,
-                                                        homogen: result.isHomogen,
-                                                    };
-                                                    newQcResults[stasiunId] = result;
-                                                } else {
-                                                    console.warn(`Stasiun ${stasiunId} memiliki kurang dari 10 tahun data.`);
-                                                }
-                                            }
-                                        }
-
-                                        if (Object.keys(newQcStatus).length > 0) {
-                                            useHydrologyStore.getState().setQCStatus(newQcStatus);
-                                            useHydrologyStore.getState().setQCResults(newQcResults);
-                                            toast.success(`${Object.keys(newQcStatus).length} stasiun berhasil dianalisis dan ditampilkan pada Dashboard Quality Control.`);
-                                        } else {
-                                            toast.warning('Tidak ada stasiun yang memenuhi syarat minimal 10 tahun data.');
-                                        }
-                                        setShowModalQC(false);
-                                    } catch (err) {
-                                        console.error('Error calculating QC:', err);
-                                        toast.error('Terjadi kesalahan saat melakukan analisis Quality Control.');
-                                    } finally {
-                                        setIsQCLoading(false);
-                                    }
-                                }}
-                                className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700"
-                            >
-                                {isQCLoading ? 'Memproses...' : 'Lanjutkan ke Distribusi'}
-                            </Button>
                         </div>
                     </div>
                 </div>

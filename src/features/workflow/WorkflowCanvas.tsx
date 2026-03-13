@@ -99,31 +99,31 @@ export function WorkflowCanvas() {
   const computeStatus = (moduleId: string): string => {
     switch (moduleId) {
       // Inputs
-      case 'identitas': return hydroState.identitasLokasi?.namaPekerjaan ? 'Selesai' : 'Siap Diisi';
-      case 'hujan': return hydroState.dataHujan?.length > 0 ? 'Selesai' : 'Siap Diisi';
-      case 'spasial': return hydroState.morfometriDAS ? 'Selesai' : 'Menunggu Data';
-      case 'tutupan': return hydroState.tutupanLahan ? 'Selesai' : 'Menunggu Data';
+      case 'identitas': return hydroState.identitasLokasi?.namaPekerjaan ? 'Selesai' : 'Opsional';
+      case 'hujan': return (hydroState.dataHujan?.length > 0 || (hydroState.curahHujanWilayah?.stasiunConfigs?.length || 0) > 0) ? 'Selesai' : 'Siap Diisi';
+      case 'spasial': return (hydroState.morfometriDAS?.luasDAS > 0 && hydroState.morfometriDAS?.panjangSungai > 0) ? 'Selesai' : 'Menunggu Data';
+      case 'tutupan': return (hydroState.tutupanLahan?.items?.length > 0 || hydroState.tutupanLahan?.koefisienPengaliranGabungan > 0) ? 'Selesai' : 'Menunggu Data';
 
       // Pre-Processing
-      case 'qc': return hydroState.qcResults || hydroState.isQCOverridden ? 'Selesai' : (hydroState.dataHujan?.length > 0 ? 'Siap Diuji' : 'Menunggu Data');
-      case 'thiessen': return hydroState.hasilThiessen ? 'Selesai' : (hydroState.stasiunList?.length > 0 ? 'Siap Dihitung' : 'Menunggu Data');
-      case 'satelit': return 'Menunggu Data'; // Usually optional/manual flow
+      case 'qc': return (hydroState.qcResults || hydroState.isQCOverridden) ? 'Selesai' : (hydroState.dataHujan?.length > 0 ? 'Siap Diuji' : 'Menunggu Data');
+      case 'thiessen': return (hydroState.hasilThiessen || hydroState.curahHujanWilayah?.hujanRataRata > 0) ? 'Selesai' : (hydroState.stasiunList?.length > 0 ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'satelit': return 'Tersedia (Opsional)';
 
       // Engine
-      case 'frekuensi': return hydroState.hasilAnalisisFrekuensi ? 'Selesai' : (hydroState.hasilThiessen ? 'Siap Dihitung' : 'Menunggu Data');
-      case 'arf': return hydroState.hasilARF ? 'Selesai' : (hydroState.hasilAnalisisFrekuensi && hydroState.morfometriDAS ? 'Siap Dihitung' : 'Menunggu Data');
-      case 'distribusi': return hydroState.distribusiHujanJamJaman && hydroState.hujanEfektif ? 'Selesai' : (hydroState.hasilARF && hydroState.landCoverParams ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'frekuensi': return hydroState.hasilAnalisisFrekuensi ? 'Selesai' : (hydroState.curahHujanWilayah?.hujanRataRata > 0 ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'arf': return hydroState.hasilARF ? 'Selesai' : (hydroState.hasilAnalisisFrekuensi && hydroState.morfometriDAS?.luasDAS > 0 ? 'Siap Dihitung' : 'Menunggu Data');
+      case 'distribusi': return (hydroState.distribusiHujanJamJaman?.length > 0 && hydroState.hujanEfektif?.length > 0) ? 'Selesai' : (hydroState.hasilARF && hydroState.tutupanLahan?.koefisienPengaliranGabungan > 0 ? 'Siap Dihitung' : 'Menunggu Data');
 
       // Modules
-      case 'banjir': return hydroState.hasilBanjir ? 'Selesai' : (hydroState.hujanEfektif && hydroState.morfometriDAS ? 'Siap Disimulasi' : 'Menunggu Data');
-      case 'neraca': return hydroState.hasilMock ? 'Selesai' : (hydroState.hasilThiessen ? 'Siap Disimulasi' : 'Menunggu Data');
+      case 'banjir': return hydroState.hasilBanjir ? 'Selesai' : (hydroState.hujanEfektif?.length > 0 && hydroState.morfometriDAS?.luasDAS > 0 ? 'Siap Disimulasi' : 'Menunggu Data');
+      case 'neraca': return hydroState.hasilMock ? 'Selesai' : (hydroState.curahHujanWilayah?.hujanRataRata > 0 ? 'Siap Disimulasi' : 'Menunggu Data');
       case 'embung': return hydroState.hasilEmbung ? 'Selesai' : (hydroState.hasilBanjir ? 'Siap Didesain' : 'Menunggu Data');
-      case 'saluran': return 'Tersedia'; // Independent usually
+      case 'saluran': return 'Siap Diuji';
 
       // Outputs
-      case 'dashboard': return hydroState.hasilBanjir || hydroState.hasilMock ? 'Tersedia' : 'Menunggu Data';
+      case 'dashboard': return (hydroState.hasilBanjir || hydroState.hasilMock) ? 'Tersedia' : 'Menunggu Data';
       case 'ai': return 'Tersedia';
-      case 'ekspor': return hydroState.hasilBanjir || hydroState.hasilMock ? 'Tersedia' : 'Menunggu Data';
+      case 'ekspor': return (hydroState.hasilBanjir || hydroState.hasilMock) ? 'Tersedia' : 'Menunggu Data';
 
       default: return 'Siap Diisi';
     }

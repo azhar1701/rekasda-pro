@@ -1,180 +1,89 @@
-# SNI 2415:2016 Workflow Decision Tree
+# Professional Engineering Workflow - SNI 2415:2016
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    INPUT: Luas DAS (A)                          │
-│                  Catchment Area in km²                          │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-                    ┌────────────────┐
-                    │  A ≤ 3 km²?    │
-                    │  (≤ 300 ha)    │
-                    └────┬───────┬───┘
-                         │       │
-                    YES  │       │  NO
-                         │       │
-         ┌───────────────┘       └───────────────┐
-         ▼                                       ▼
-┌─────────────────────┐               ┌─────────────────────┐
-│  METODE RASIONAL    │               │   METODE HSS        │
-│  ✅ DIPERBOLEHKAN   │               │   ⚠️ WAJIB          │
-├─────────────────────┤               ├─────────────────────┤
-│ Formula:            │               │ Pilihan:            │
-│ Q = 0.278×C×I×A     │               │ • HSS Nakayasu      │
-│                     │               │ • HSS Gamma I       │
-│ Input:              │               │ • HSS Snyder        │
-│ • C (0-1)           │               │                     │
-│ • I (mm/jam)        │               │ Nakayasu Input:     │
-│ • A (km²)           │               │ • Ro (mm)           │
-│                     │               │ • Tg (jam)          │
-│ Output:             │               │ • Tr (jam)          │
-│ • Q (m³/s)          │               │ • α (1.5-3.0)       │
-│                     │               │ • A (km²)           │
-│ Batasan:            │               │ • L (km)            │
-│ • DAS homogen       │               │                     │
-│ • Tc < 6 jam        │               │ Output:             │
-│ • A ≤ 300 ha        │               │ • Qp (m³/s)         │
-│                     │               │ • Hidrograf         │
-└─────────────────────┘               └─────────────────────┘
-         │                                       │
-         └───────────────┬───────────────────────┘
-                         ▼
-              ┌──────────────────────┐
-              │  DEBIT BANJIR        │
-              │  RENCANA (Q)         │
-              │  Peak Discharge      │
-              └──────────────────────┘
+This diagram represents the expert decision logic implemented in RekaSDA v1.1, combining SNI 2415:2016 standards with Indonesian professional engineering heuristics (PUPR/Sosrodarsono).
+
+## 1. Master Decision Tree
+
+```mermaid
+graph TD
+    Start([INPUT: Area A km²]) --> Objective{Project Objective?}
+    
+    Objective -- "Kapasitas Saluran/Jembatan (Peak Only)" --> AreaPeak{Catchment Area?}
+    Objective -- "Embung/Bendungan/Routing (Hydrograph)" --> HSS[Metode HSS Sintetik]
+    
+    AreaPeak -- "A ≤ 3 km²" --> Rational[Metode Rasional Standar]
+    AreaPeak -- "3 < A ≤ 100 km²" --> Weduwen[Metode Der Weduwen / Haspers]
+    AreaPeak -- "A > 100 km²" --> Melchior[Metode Melchior]
+    
+    Rational --> SNI1[✅ SNI 2415:2016 Pasal 5.2]
+    Weduwen --> Empiric[⭐ Best Practice Indonesia]
+    Melchior --> Empiric
+    
+    HSS --> Nakayasu[HSS Nakayasu]
+    HSS --> Gamma[HSS Gamma I]
+    HSS --> Snyder[HSS Snyder]
+    
+    Nakayasu --> SNI2[✅ SNI 2415:2016 Pasal 6.3]
+    Gamma --> Harto[⭐ Best Practice Java Watersheds]
+    Snyder --> SNI3[✅ SNI 2415:2016 Pasal 6.2]
+    
+    SNI1 --> Result([DEBIT BANJIR RENCANA Qp])
+    Empiric --> Result
+    SNI2 --> ResultH([HIDROGRAF BANJIR RENCANA])
+    SNI3 --> ResultH
+    Harto --> ResultH
 ```
 
-## Validation Flow
+## 2. Technical Validation Logic (Zero-Hallucination Guard)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  validateSNI2415Workflow(areaKm2)                               │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-                    ┌────────────────┐
-                    │ areaKm2 ≤ 3.0? │
-                    └────┬───────┬───┘
-                         │       │
-                    YES  │       │  NO
-                         │       │
-         ┌───────────────┘       └───────────────┐
-         ▼                                       ▼
-┌─────────────────────┐               ┌─────────────────────┐
-│ Return:             │               │ Return:             │
-│ {                   │               │ {                   │
-│   recommendedMethod:│               │   recommendedMethod:│
-│     'rational',     │               │     'hss',          │
-│   isRationalValid:  │               │   isRationalValid:  │
-│     true,           │               │     false,          │
-│   areaKm2: X        │               │   warning: "...",   │
-│ }                   │               │   areaKm2: X        │
-│                     │               │ }                   │
-└─────────────────────┘               └─────────────────────┘
-         │                                       │
-         ▼                                       ▼
-┌─────────────────────┐               ┌─────────────────────┐
-│ UI: Show Rational   │               │ UI: Show Warning    │
-│     Method Form     │               │     Alert           │
-│                     │               │                     │
-│ ✅ Proceed with     │               │ ⚠️ Force HSS        │
-│    calculation      │               │    Method           │
-└─────────────────────┘               └─────────────────────┘
+The system enforces logical continuity between spatial inputs and mathematical outputs.
+
+### A. Geometri DAS Audit (Hack's Law)
+Before calculation, the system verifies the physical realism of the watershed:
+*   **Formula**: $L \approx 1.4 \times A^{0.6}$
+*   **Deviation Guard**: If $L$ deviates $> 200\%$ or $< 50\%$ from the empirical mean, a **Spatially Inconsistent** warning is flagged.
+
+### B. SNI Method Enforcement
+| Condition | Constraint | System Action |
+| :--- | :--- | :--- |
+| **Rational Method** | Area $A > 3$ km² | **FLAG WARNING**: "Non-compliant with SNI 2415:2016 Pasal 5.2" |
+| **Nakayasu** | Parameter $\alpha$ | **EXPOSE CALIBRATION**: Default 2.0, Range [1.5, 3.0] |
+| **Rainfall Intensity** | Missing $I$ | **AUTO-FALLBACK**: Mononobe Transformation via $R_{24}$ & $t_c$ |
+
+## 3. Data Integration Flow
+
+```mermaid
+sequenceDiagram
+    participant U as Engineer (UI)
+    participant S as Spatial Engine
+    participant E as Hydrology Engine (SNI)
+    participant R as Audit Report
+    
+    U->>S: Drop Marker / Delineate DAS
+    S-->>U: Auto-calculate Area (A) & Length (L)
+    U->>E: Input Land Use & Rainfall
+    E->>E: Logical Validation (Hack's Law)
+    E->>E: Execute SNI 2415 Formulas
+    E-->>R: Attach Engineering Metadata (SNI Clauses)
+    R-->>U: 100% Verified Technical Result
 ```
 
-## Error Handling Flow
-
+## 4. Engineering Metadata Schema
+Every result exported by the system includes an audit trail:
+```json
+{
+  "value": 15.42,
+  "unit": "m3/s",
+  "metadata": {
+    "standard": "SNI 2415:2016",
+    "clause": "Pasal 6.3",
+    "method": "HSS Nakayasu",
+    "logic_checks": ["Hack's Law: Valid", "Area Limits: OK"],
+    "notes": "Alpha=2.0, Tg calculated via L=15km"
+  }
+}
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  calculateRationalDischarge({ C, I, A })                        │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-                    ┌────────────────┐
-                    │ Zod Validation │
-                    └────┬───────┬───┘
-                         │       │
-                    PASS │       │ FAIL
-                         │       │
-         ┌───────────────┘       └───────────────┐
-         ▼                                       ▼
-┌─────────────────────┐               ┌─────────────────────┐
-│ Calculate:          │               │ Throw ZodError:     │
-│ Q = 0.278×C×I×A     │               │                     │
-│                     │               │ Possible errors:    │
-│ Return:             │               │ • C not in [0,1]    │
-│ { Q: number }       │               │ • I out of range    │
-│                     │               │ • A > 3 km² ⚠️      │
-└─────────────────────┘               └─────────────────────┘
-         │                                       │
-         ▼                                       ▼
-┌─────────────────────┐               ┌─────────────────────┐
-│ Success             │               │ UI: Display Error   │
-│ Display Result      │               │ "Luas DAS melebihi  │
-│                     │               │  batas SNI..."      │
-└─────────────────────┘               └─────────────────────┘
-```
-
-## React Hook Integration
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Component: FloodAnalysisForm                                   │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
-                    ┌────────────────┐
-                    │ useState(area) │
-                    └────────┬───────┘
-                             │
-                             ▼
-              ┌──────────────────────────┐
-              │ useSNI2415Workflow(area) │
-              └──────────┬───────────────┘
-                         │
-                         ▼
-                ┌────────────────┐
-                │ useMemo(() =>  │
-                │   validate...  │
-                │ , [area])      │
-                └────┬───────────┘
-                     │
-                     ▼
-            ┌────────────────────┐
-            │ Return workflow    │
-            │ object             │
-            └────┬───────────────┘
-                 │
-                 ▼
-        ┌────────────────────────┐
-        │ Render UI based on:    │
-        │ • workflow.warning     │
-        │ • workflow.isValid     │
-        │ • workflow.recommended │
-        └────────────────────────┘
-```
-
-## SNI 2415:2016 Compliance Matrix
-
-| Area (km²) | Area (ha) | Rational | HSS | SNI Status |
-|------------|-----------|----------|-----|------------|
-| 0.5        | 50        | ✅       | ✅  | Compliant  |
-| 1.0        | 100       | ✅       | ✅  | Compliant  |
-| 2.0        | 200       | ✅       | ✅  | Compliant  |
-| 3.0        | 300       | ✅       | ✅  | Boundary   |
-| 3.01       | 301       | ❌       | ✅  | HSS Only   |
-| 5.0        | 500       | ❌       | ✅  | HSS Only   |
-| 10.0       | 1000      | ❌       | ✅  | HSS Only   |
-| 100.0      | 10000     | ❌       | ✅  | HSS Only   |
-
-Legend:
-- ✅ = Allowed by SNI
-- ❌ = Not allowed by SNI (will throw error)
 
 ---
-
-**Reference**: SNI 2415:2016 Pasal 5.2 & 6.3  
-**Implementation**: `src/lib/engine/flood/sni2415.ts`
+**Standard Implementation**: `src/utils/engineeringDecisionTree.ts`  
+**Reference**: SNI 2415:2016, Sosrodarsono (1993)

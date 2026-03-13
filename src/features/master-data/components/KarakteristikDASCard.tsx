@@ -5,7 +5,7 @@ import { useHydrologyStore, type MorfometriDAS } from '@/stores/useHydrologyStor
 import { toast } from '@/hooks/useToast';
 
 export const KarakteristikDASCard: React.FC = () => {
-  const { morfometriDAS, saveMorfometriDAS } = useHydrologyStore();
+  const { morfometriDAS, saveMorfometriDAS, lastResetAt } = useHydrologyStore();
 
   const [formData, setFormData] = useState<MorfometriDAS>({
     luasDAS: morfometriDAS?.luasDAS || 0,
@@ -18,9 +18,19 @@ export const KarakteristikDASCard: React.FC = () => {
   useEffect(() => {
     if (morfometriDAS) {
       setFormData(morfometriDAS);
-      setIsSaved(true);
+      // Only set isSaved if we actually have data
+      if (morfometriDAS.luasDAS > 0) {
+        setIsSaved(true);
+      }
     }
   }, [morfometriDAS]);
+
+  // Handle Global Reset
+  useEffect(() => {
+    if (lastResetAt > 0) {
+      setIsSaved(false);
+    }
+  }, [lastResetAt]);
 
   const handleChange = (field: keyof MorfometriDAS, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value as unknown as number }));
@@ -50,7 +60,7 @@ export const KarakteristikDASCard: React.FC = () => {
   }, [safeA, safeL]);
 
   const handleSave = async () => {
-    const safeData = {
+    const safeData: MorfometriDAS = {
       luasDAS: safeA,
       panjangSungai: safeL,
       kemiringanSungai: typeof formData.kemiringanSungai === 'string' ? parseFloat(formData.kemiringanSungai) || 0 : formData.kemiringanSungai,
@@ -61,8 +71,9 @@ export const KarakteristikDASCard: React.FC = () => {
       return;
     }
     try {
-      await saveMorfometriDAS(safeData);
+      saveMorfometriDAS(safeData);
       setIsSaved(true);
+      toast.success('Parameter DAS berhasil disimpan.');
     } catch (error) {
       console.error('Failed to save Morfometri DAS:', error);
       toast.error('Gagal menyimpan data Morfometri DAS.');

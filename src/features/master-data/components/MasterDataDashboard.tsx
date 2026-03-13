@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
@@ -16,7 +16,15 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     curahHujanWilayah: storeHujan,
     dataHujan: storeDataHujan,
     identitasLokasi,
+    projectStationIds,
+    resetAll,
   } = useHydrologyStore();
+
+  const handleReset = () => {
+    if (window.confirm('⚠️ KONFIRMASI RESET: Anda yakin ingin menghapus seluruh parameter proyek (DAS, Landuse, Hujan Wilayah) dan hasil analisis? \n\nNOTE: Database Stasiun dan Matriks Data Hujan TETAP TERSIMPAN.')) {
+      resetAll();
+    }
+  };
 
   const qcResults = storeQCResults;
   const morfometriDAS = storeMorfometri;
@@ -75,7 +83,6 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
   const qcStatus = useMemo(() => {
     if (!qcResults) return null;
 
-    // qcResults is now Record<string, QualityControlResults>
     const entries = Object.values(qcResults);
     if (entries.length === 0) return null;
 
@@ -104,9 +111,9 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
       identitas: !!identitasLokasi?.namaPekerjaan, // Optional
       morfometri: (morfometriDAS?.luasDAS || 0) > 0 && (morfometriDAS?.panjangSungai || 0) > 0,
       tutupanLahan: (tutupanLahan?.items?.length || 0) > 0 || (tutupanLahan?.koefisienPengaliranGabungan || 0) > 0,
-      hujanWilayah: (curahHujanWilayah?.hujanRataRata || 0) > 0 || (curahHujanWilayah?.stasiunConfigs?.length || 0) > 0,
+      hujanWilayah: (projectStationIds?.length || 0) > 0,
     };
-  }, [identitasLokasi, morfometriDAS, tutupanLahan, curahHujanWilayah]);
+  }, [identitasLokasi, morfometriDAS, tutupanLahan, projectStationIds]);
 
   const requiredStatus = [
     completionStatus.morfometri,
@@ -125,9 +132,20 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
 
       {/* Professional Completion Header */}
       <div className="bg-white border border-slate-300 shadow-sm rounded-md p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-[0.2em]">Overall Data Readiness</h2>
-          <p className="text-xs text-slate-500 mt-1">Status kelengkapan data master untuk mesin analisis hidrologi</p>
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-slate-100 rounded-md group relative">
+            <RefreshCw 
+              className="w-5 h-5 text-slate-400 hover:text-rose-500 cursor-pointer transition-colors" 
+              onClick={handleReset}
+            />
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+              Reset Seluruh Data
+            </div>
+          </div>
+          <div>
+            <h2 className="text-sm font-extrabold text-slate-400 uppercase tracking-[0.2em]">Overall Data Readiness</h2>
+            <p className="text-xs text-slate-500 mt-1">Status kelengkapan data master untuk mesin analisis hidrologi</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
@@ -145,6 +163,15 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
           <span className={`text-lg font-black ${isComplete ? 'text-emerald-600' : 'text-pupr-blue'}`}>
             {Math.round(completionPercentage)}%
           </span>
+          <div className="h-8 w-[1px] bg-slate-200 mx-2" />
+          <button 
+            onClick={handleReset}
+            className="flex items-center gap-2 px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-md transition-all border border-rose-100 hover:border-rose-600 group shadow-sm"
+            title="Hapus semua data dan mulai dari awal"
+          >
+            <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider">Reset Project</span>
+          </button>
         </div>
       </div>
 
@@ -157,7 +184,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
               <h3 className="font-semibold text-slate-800 text-sm">Status Kualitas Data</h3>
             </div>
             <button
-              onClick={() => onNavigateToSection?.('qc')}
+              onClick={() => onNavigateToSection?.('hujan')}
               className="text-slate-400 hover:text-pupr-blue transition-colors"
               aria-label="Edit Quality Control"
             >
