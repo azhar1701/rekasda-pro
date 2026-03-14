@@ -76,11 +76,11 @@
   --font-bold: 700;
 
   /* === COLORS (Synced with tailwind.config.js) === */
-  --color-primary: #2563EB;
-  --color-accent: #06B6D4;
-  --color-neutral: #F1F5F9;
+  --color-primary: #0c3a66;
+  --color-accent: #f2c114;
+  --color-neutral: #f1f5f9;
   --color-success: #10B981;
-  --color-error: #EF4444;
+  --color-error: #DC2626;
   --color-warning: #F59E0B;
   --color-pupr-blue: #0c3a66;
   --color-pupr-yellow: #f2c114;
@@ -97,8 +97,8 @@
 
   /* === SHADOWS === */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   /* === COMPONENT HEIGHTS === */
   --input-height: 2.75rem;
@@ -117,10 +117,10 @@
   --motion-medium: 300ms;
   --motion-slow: 500ms;
 
-  --easing-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
-  --easing-enter: cubic-bezier(0.0, 0.0, 0.2, 1);
-  --easing-exit: cubic-bezier(0.4, 0.0, 1, 1);
-  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-enter: cubic-bezier(0, 0, 0.2, 1);
+  --easing-exit: cubic-bezier(0.4, 0, 1, 1);
+  --easing-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -131,7 +131,7 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 /* ========================================
@@ -142,7 +142,7 @@ body {
   .glass, .glass-strong, .glass-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    /* Removed backdrop-blur and transparencies for flat theme */
+    box-shadow: var(--shadow-sm);
   }
 
   /* Tabular Numbers - WAJIB untuk semua angka */

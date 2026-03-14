@@ -27,10 +27,10 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
  xmlns="http://www.w3.org/2000/svg"
  >
  <defs>
- <linearGradient id="dropletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
- <stop offset="0%" stopColor="#2563eb" />
- <stop offset="100%" stopColor="#06b6d4" />
- </linearGradient>
+  <linearGradient id="dropletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stopColor="#0c3a66" />
+    <stop offset="100%" stopColor="#f2c114" />
+  </linearGradient>
  </defs>
  
  {/* Contour Lines forming Droplet */}
@@ -70,13 +70,14 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
  <circle cx="16" cy="17" r="1.5" fill="#06b6d4" />
  </svg>
 
- {/* Brand Text */}
- {showText && (
- <div className={sizes[size].text}>
- <span className="font-bold text-slate-900 dark:text-slate-100">Reka</span>
- <span className="font-normal text-slate-500">SDA</span>
- </div>
- )}
+  {/* Brand Text */}
+  {showText && (
+  <div className={sizes[size].text}>
+  <span className="font-bold text-white">Reka</span>
+  <span className="font-normal text-slate-300">SDA</span>
+  </div>
+  )}
+
  </div>
  );
 };

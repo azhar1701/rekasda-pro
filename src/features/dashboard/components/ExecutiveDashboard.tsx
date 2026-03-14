@@ -2,18 +2,18 @@ import { useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { FileText, Printer, MapPin, Activity, Calendar, RefreshCw } from 'lucide-react';
+import { FileText, Printer, MapPin, Activity, Calendar, RefreshCw, Droplets } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import generatePDF from 'react-to-pdf';
 import { CHART_COLORS } from '@/lib/constants/chartColors';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import {
- ButtonGovTech,
- CardGovTech,
- StaggeredReveal,
- InfoProperty,
- MetricCard,
- ActionableEmptyState
+  StaggeredReveal,
+  InfoProperty,
+  ActionableEmptyState
 } from '@/components/ui/govtech';
+import { Metric } from '@/components/ui/Metric';
 
 export const ExecutiveDashboard = () => {
  const {
@@ -53,16 +53,16 @@ export const ExecutiveDashboard = () => {
  iconColorClass="bg-pupr-blue text-white"
  sniCode="SNI 2415:2016 & Pd T-07-2004-A"
  actions={
- <div className="flex gap-3">
- <ButtonGovTech variant="ghost" onClick={handleReset}>
- <RefreshCw />
- Reset Global
- </ButtonGovTech>
- <ButtonGovTech variant="pupr-accent" onClick={exportToPDF} disabled={isDirty || !hasAnyData}>
- <Printer />
- Cetak Laporan PDF
- </ButtonGovTech>
- </div>
+      <div className="flex gap-3">
+        <Button variant="ghost" onClick={handleReset}>
+          <RefreshCw />
+          Reset Global
+        </Button>
+        <Button variant="pupr-accent" onClick={exportToPDF} disabled={isDirty || !hasAnyData}>
+          <Printer />
+          Cetak Laporan PDF
+        </Button>
+      </div>
  }
  >
  {isDirty && (
@@ -91,8 +91,8 @@ export const ExecutiveDashboard = () => {
  {/* Project Identity Cards */}
  <StaggeredReveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Project Info */}
-        <CardGovTech title="Identitas Proyek" accentColor="pupr">
- <div className="space-y-4">
+        <Card title="Identitas Proyek" accent="pupr">
+          <div className="space-y-4">
  <InfoProperty
  label="Nama Proyek"
  value={identitasLokasi?.namaPekerjaan}
@@ -115,25 +115,29 @@ export const ExecutiveDashboard = () => {
  iconColorClass="text-teal-600"
  />
  </div>
- </CardGovTech>
+  </Card>
 
- {/* Card 2: Flood Analysis */}
- <MetricCard
- title="Analisis Banjir"
- value={hasilBanjir?.debitPuncak || '0'}
- unit="m³/s · Debit Puncak"
- variant="blue"
- showShimmer={true}
- />
+  {/* Card 2: Flood Analysis */}
+  <Metric
+  label="Analisis Banjir"
+  value={hasilBanjir?.debitPuncak || '0'}
+  unit="m³/s · Debit Puncak"
+  variant="blue"
+  density="executive"
+  icon={<Activity className="w-8 h-8" />}
+  />
 
- {/* Card 3: Embung Feasibility */}
- <MetricCard
- title="Reduksi Banjir"
- value={hasilEmbung?.reduksiPuncak || 0}
- unit="% · Efektivitas"
- variant="teal"
- subtitle={`Umur Sedimen: ${hasilEmbung?.umurSedimen || 0} Tahun`}
- />
+  {/* Card 3: Embung Feasibility */}
+  <Metric
+  label="Reduksi Banjir"
+  value={hasilEmbung?.reduksiPuncak || 0}
+  unit="% · Efektivitas"
+  variant="emerald"
+  density="executive"
+  subtitle={`Umur Sedimen: ${hasilEmbung?.umurSedimen || 0} Tahun`}
+  icon={<Droplets className="w-8 h-8" />}
+  />
+
  </StaggeredReveal>
 
  {/* Water Balance Chart */}
@@ -141,10 +145,10 @@ export const ExecutiveDashboard = () => {
  className="w-full"
  baseDelay={300}
  >
- <CardGovTech
- title="Neraca Air Tahunan"
- subtitle="Ketersediaan vs Kebutuhan Air Irigasi"
- headerAction={
+  <Card
+    title="Neraca Air Tahunan"
+    subtitle="Ketersediaan vs Kebutuhan Air Irigasi"
+    headerAction={
  hasilNeraca?.bulanKritis && (
  <div className="flex items-center gap-2 px-3 py-1.5 bg-pupr-yellow/20 border border-pupr-yellow rounded-sm">
  <Calendar className="w-4 h-4 text-pupr-text" />
@@ -178,7 +182,7 @@ export const ExecutiveDashboard = () => {
  />
  )}
  </div>
- </CardGovTech>
+  </Card>
  </StaggeredReveal>
  </div>
  )}

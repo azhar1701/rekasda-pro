@@ -1,7 +1,8 @@
 import React from 'react';
 import { AllCalculationsData } from '@/services/allCalculationsService';
 import { TableGovTech } from '@/components/ui/TableGovTech';
-import { Waves, Droplets, CloudRain, Calendar, Layers, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Waves, Droplets, CloudRain, Calendar, Layers, CheckCircle2, AlertTriangle, ShieldCheck, Activity } from 'lucide-react';
+import { Metric } from '@/components/ui/Metric';
 
 interface Props {
  isOpen: boolean;
@@ -32,31 +33,27 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
  const renderManningDetail = () => {
  const results = data.data.results;
  if (!results) return null;
- return (
- <div className="space-y-6">
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
- <div className="bg-white dark:bg-slate-900 rounded-sm p-5 border border-slate-200 dark:border-slate-700">
- <div className="w-8 h-8 rounded-sm bg-pupr-surface flex items-center justify-center mb-3">
- <Waves className="w-4 h-4 text-pupr-blue" />
- </div>
- <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Debit Rancangan (Q)</span>
- <div className="flex items-baseline gap-2">
- <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums">{results.Discharge}</p>
- <span className="text-sm font-bold text-slate-500">m³/s</span>
- </div>
- </div>
+  return (
+  <div className="space-y-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <Metric
+  label="Debit Rancangan (Q)"
+  value={results.Discharge}
+  unit="m³/s"
+  variant="blue"
+  density="detailed"
+  icon={<Waves className="w-6 h-6" />}
+  />
+  <Metric
+  label="Kecepatan Aliran (V)"
+  value={results.Velocity}
+  unit="m/s"
+  variant="slate"
+  density="detailed"
+  icon={<Activity className="w-6 h-6" />}
+  />
+  </div>
 
- <div className="bg-white dark:bg-slate-900 rounded-sm p-5 border border-slate-200 dark:border-slate-700">
- <div className="w-8 h-8 rounded-sm bg-indigo-50 flex items-center justify-center mb-3">
- <Layers className="w-4 h-4 text-indigo-600" />
- </div>
- <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Kecepatan Aliran (V)</span>
- <div className="flex items-baseline gap-2">
- <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums">{results.Velocity}</p>
- <span className="text-sm font-bold text-slate-500">m/s</span>
- </div>
- </div>
- </div>
 
  <div className={`rounded-sm p-5 border ${results.SafetyStatus === 'Aman' ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
  <div className="flex items-center justify-between">
@@ -128,22 +125,25 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
  </div>
  </div>
 
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
- <div className="bg-white dark:bg-slate-900 rounded-sm p-5 border border-slate-200 dark:border-slate-700">
- <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Debit Puncak (Q)</span>
- <div className="flex items-baseline gap-2">
- <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums">{results.qPeak?.toFixed(2)}</p>
- <span className="text-sm font-bold text-slate-500">m³/s</span>
- </div>
- </div>
- <div className="bg-white dark:bg-slate-900 rounded-sm p-5 border border-slate-200 dark:border-slate-700">
- <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Waktu Puncak (tc)</span>
- <div className="flex items-baseline gap-2">
- <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums">{results.tPeak?.toFixed(2)}</p>
- <span className="text-sm font-bold text-slate-500">jam</span>
- </div>
- </div>
- </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <Metric
+  label="Debit Puncak (Q)"
+  value={results.qPeak}
+  unit="m³/s"
+  variant="blue"
+  density="detailed"
+  icon={<CloudRain className="w-6 h-6" />}
+  />
+  <Metric
+  label="Waktu Puncak (tc)"
+  value={results.tPeak}
+  unit="jam"
+  variant="slate"
+  density="detailed"
+  icon={<Activity className="w-6 h-6" />}
+  />
+  </div>
+
 
  {results.returnPeriods && results.returnPeriods.length > 0 && (
  <div className="bg-white dark:bg-slate-900 rounded-sm overflow-hidden border border-slate-200 dark:border-slate-700 ">
@@ -179,24 +179,25 @@ export const AllDataDetailModal: React.FC<Props> = ({ isOpen, data, onClose }) =
  
  return (
  <div className="space-y-6">
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
- <div className="bg-white dark:bg-slate-900 rounded-sm p-5 border border-slate-200 dark:border-slate-700">
- <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Total Ketersediaan</span>
- <div className="flex items-baseline gap-2">
- <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums">{totalSupply.toFixed(1)}</p>
- <span className="text-sm font-bold text-slate-500">m³/s</span>
- </div>
- </div>
- <div className={`rounded-sm p-5 border ${netBalance >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
- <span className={`text-xs font-bold uppercase tracking-wide block mb-1 ${netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>Status Neraca Tahunan</span>
- <div className="flex items-baseline gap-2">
- <p className={`text-3xl font-extrabold tracking-tight tabular-nums ${netBalance >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
- {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
- </p>
- <span className={`text-sm font-bold ${netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>m³/s</span>
- </div>
- </div>
- </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <Metric
+  label="Total Ketersediaan"
+  value={totalSupply}
+  unit="m³/s"
+  variant="blue"
+  density="detailed"
+  icon={<Droplets className="w-6 h-6" />}
+  />
+  <Metric
+  label="Status Neraca Tahunan"
+  value={netBalance}
+  unit="m³/s"
+  variant={netBalance >= 0 ? 'emerald' : 'rose'}
+  density="detailed"
+  icon={<Activity className="w-6 h-6" />}
+  />
+  </div>
+
 
  <div className="grid grid-cols-3 gap-3">
  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4 rounded-sm text-center">

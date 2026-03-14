@@ -19,8 +19,8 @@ import { Collapsible } from '@/components/ui/Collapsible';
 // getCurrentLocation removed as it is not used directly here
 
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { StatCard } from '@/components/ui/StatCard';
-import { Waves, RefreshCw } from 'lucide-react';
+import { Metric } from '@/components/ui/Metric';
+import { Waves, RefreshCw, Activity } from 'lucide-react';
 
 interface Props {
  onSave: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
@@ -350,19 +350,24 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-sm animate-pulse bg-slate-200 rounded-sm"></div>
  </div>
  )}
- <StatCard
- label="Kapasitas Debit (Q Cap)"
- value={Number(manningResults?.Discharge || 0).toFixed(3)}
- unit="m³/s"
- valueColorClass="text-pupr-blue"
- className="bg-pupr-surface/50 border-pupr-border"
- />
- <StatCard
- label="Kecepatan Aliran"
- value={Number(manningResults?.Velocity || 0).toFixed(3)}
- unit="m/s"
- valueColorClass="text-slate-800 dark:text-slate-200"
- />
+  <Metric
+  label="Kapasitas Debit (Q Cap)"
+  value={Number(manningResults?.Discharge || 0)}
+  unit="m³/s"
+  variant="blue"
+  density="detailed"
+  className="bg-pupr-surface/50 border-pupr-border"
+  icon={<Waves className="w-6 h-6" />}
+  />
+  <Metric
+  label="Kecepatan Aliran"
+  value={Number(manningResults?.Velocity || 0)}
+  unit="m/s"
+  variant="slate"
+  density="detailed"
+  icon={<Activity className="w-6 h-6" />}
+  />
+
  </div>
  
  {/* Evaluasi Kapasitas vs Debit Banjir Rencana */}

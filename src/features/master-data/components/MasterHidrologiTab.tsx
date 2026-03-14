@@ -489,9 +489,9 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
 
- <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[850px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm mt-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-300 dark:divide-slate-700 rounded-none">
- <div className="lg:col-span-3 flex flex-col overflow-y-auto max-h-[1400px] bg-slate-50 dark:bg-slate-900">
- <div className="p-4 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex justify-between items-center sticky top-0 z-10">
+ <div className="flex flex-col lg:flex-row gap-8 mt-8 items-start">
+ <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
+ <div className="flex justify-between items-center px-2">
  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
  <MapPin className="w-5 h-5 text-pupr-blue" />
  Daftar Stasiun
@@ -499,7 +499,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-sm">{stasiunList.length} Total</span>
  </div>
 
- <div className="flex-1 overflow-y-auto p-4 space-y-3">
+ <div className="flex flex-col gap-1">
  {isLoading && stasiunList.length === 0 ? (
  <div className="flex justify-center items-center h-40">
  <div className="animate-pulse bg-slate-200 rounded-sm h-8 w-8 border-b-2 border-teal-600"></div>
@@ -531,9 +531,10 @@ Tindakan ini tidak dapat dibatalkan!`);
  return (
  <div
  key={stasiun.id}
- className={`group p-4 rounded-sm border transition-all duration-75 transform ] ${isActive
- ? 'bg-pupr-surface/50 border-pupr-blue '
- : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-teal-300 hover: text-slate-700 dark:text-slate-300'
+ onClick={() => selectStasiun(stasiun)}
+ className={`group p-4 rounded-sm cursor-pointer transition-colors ${isActive
+ ? 'bg-pupr-surface/50 text-pupr-blue'
+ : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
  }`}
  >
  <div className="flex justify-between items-start">
@@ -603,27 +604,16 @@ Tindakan ini tidak dapat dibatalkan!`);
  </button>
  </div>
  </div>
- <div className="grid grid-cols-2 gap-2 mt-3">
- {health && health.periodStart ? (
- <div className="col-span-2 text-[10px] bg-slate-50 dark:bg-slate-800 p-2 rounded border border-slate-100 mb-1">
- <div className="flex justify-between font-bold text-slate-500">
- <span>PERIODE DATA</span>
- <span>GAP: {health.missingPercentage}%</span>
+ <div className="mt-3 flex flex-col gap-1.5">
+ {health && health.periodStart && (
+ <div className="flex justify-between items-center text-[10px]">
+ <span className="text-slate-500 font-medium">Periode: <span className="font-bold text-slate-700 dark:text-slate-300">{health.periodStart} — {health.periodEnd}</span></span>
+ <span className="text-slate-500 font-medium">Gap: <span className="font-bold text-slate-700 dark:text-slate-300">{health.missingPercentage}%</span></span>
  </div>
- <div className="text-slate-700 dark:text-slate-300 font-black mt-0.5">
- {health.periodStart} — {health.periodEnd} ({((health.periodEnd!) - (health.periodStart || 0)) + 1} Tahun)
- </div>
- </div>
- ) : null}
- <div className="text-xs px-2 py-1.5 rounded-sm bg-slate-50 dark:bg-slate-800 border border-slate-100">
- <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80 text-slate-500">Elevasi</span>
- <span className="font-semibold font-mono text-slate-700 dark:text-slate-300">{stasiun.elevasi} m</span>
- </div>
- <div className="text-xs px-2 py-1.5 rounded-sm bg-slate-50 dark:bg-slate-800 border border-slate-100">
- <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80 text-slate-500">Koordinat</span>
- <span className="font-semibold font-mono truncate text-slate-700 dark:text-slate-300">
- {stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}
- </span>
+ )}
+ <div className="flex justify-between items-center text-[10px]">
+ <span className="text-slate-500 font-medium">Elevasi: <span className="font-bold text-slate-700 dark:text-slate-300">{stasiun.elevasi} m</span></span>
+ <span className="text-slate-500 font-medium">Koordinat: <span className="font-bold text-slate-700 dark:text-slate-300">{stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}</span></span>
  </div>
  </div>
  </div>
@@ -633,7 +623,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
 
- <div className="lg:col-span-9 flex flex-col bg-white dark:bg-slate-900 rounded-none">
+ <div className="w-full lg:w-2/3 xl:w-3/4 flex flex-col gap-6 lg:sticky lg:top-6">
  {!selectedStasiun ? (
  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
  <div className="w-24 h-24 mb-6 bg-white dark:bg-slate-900 border border-teal-100 rounded-sm flex items-center justify-center">
@@ -663,7 +653,8 @@ Tindakan ini tidak dapat dibatalkan!`);
  )} </div>
  ) : (
  <>
- <div className="p-5 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 flex flex-wrap justify-between items-center gap-4">
+ <div className="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm">
+ <div className="p-5 border-b border-slate-200 dark:border-slate-700/50 flex flex-wrap justify-between items-center gap-4">
  <div>
  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
  <CloudRain className="w-5 h-5 text-pupr-blue" />
@@ -752,9 +743,10 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  )}
  </div>
+ </div>
 
  {dataHujan.length >= 10 && (
- <div className="p-4 border-t border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900">
+ <div className="p-4 border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 rounded-sm">
  <DataQualityDashboard />
  </div>
  )}

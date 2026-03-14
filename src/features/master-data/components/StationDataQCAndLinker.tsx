@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useHydrologyStore, QualityControlResults } from '../../../stores/useHydrologyStore';
 import { performQualityControl } from '../../../services/qualityControlService';
-import { CardGovTech, CardGovTechContent } from '../../../components/ui/CardGovTech';
+import { Card } from '../../../components/ui/Card';
 import { TableGovTech } from '../../../components/ui/TableGovTech';
-import { ButtonGovTech } from '../../../components/ui/ButtonGovTech';
+import { Button } from '../../../components/ui/Button';
 
 interface AnnualMaxData {
  year: number;
@@ -89,19 +89,19 @@ export const StationDataQCAndLinker: React.FC = () => {
 
  const stationTableData = stasiunList.map(station => ({
  ...station,
- action: (
- <ButtonGovTech 
- size="sm" 
- variant={selectedStationId === station.id ? 'pupr-accent' : 'secondary'}
- onClick={() => {
- setSelectedStationId(station.id);
- setQcResults(null);
- setIsExported(false);
- }}
- >
- {selectedStationId === station.id ? 'Terpilih' : 'Pilih'}
- </ButtonGovTech>
- )
+  action: (
+    <Button 
+      size="sm" 
+      variant={selectedStationId === station.id ? 'pupr-accent' : 'secondary'}
+      onClick={() => {
+        setSelectedStationId(station.id);
+        setQcResults(null);
+        setIsExported(false);
+      }}
+    >
+      {selectedStationId === station.id ? 'Terpilih' : 'Pilih'}
+    </Button>
+  )
  }));
 
  const rainfallColumns = [
@@ -118,12 +118,11 @@ export const StationDataQCAndLinker: React.FC = () => {
 
  return (
  <div className="space-y-6">
- <CardGovTech 
- title="Pilih Stasiun Hujan" 
- subtitle="Pilih stasiun untuk melihat seri data hujan maksimum tahunan"
- >
- <CardGovTechContent>
- {stasiunList.length > 0 ? (
+  <Card 
+    title="Pilih Stasiun Hujan" 
+    subtitle="Pilih stasiun untuk melihat seri data hujan maksimum tahunan"
+  >
+    {stasiunList.length > 0 ? (
  <TableGovTech 
  columns={stationColumns} 
  data={stationTableData} 
@@ -133,16 +132,14 @@ export const StationDataQCAndLinker: React.FC = () => {
  Belum ada data stasiun. Silakan tambahkan stasiun terlebih dahulu.
  </div>
  )}
- </CardGovTechContent>
- </CardGovTech>
+  </Card>
 
  {selectedStation && (
- <CardGovTech 
- title={`Data Hujan Maksimum Tahunan: ${selectedStation.nama_stasiun}`}
- subtitle={`${annualMaxSeries.length} tahun data tersedia`}
- >
- <CardGovTechContent>
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <Card 
+    title={`Data Hujan Maksimum Tahunan: ${selectedStation.nama_stasiun}`}
+    subtitle={`${annualMaxSeries.length} tahun data tersedia`}
+  >
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
  <div className="lg:col-span-2">
  {annualMaxSeries.length > 0 ? (
  <TableGovTech 
@@ -162,13 +159,13 @@ export const StationDataQCAndLinker: React.FC = () => {
  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
  Lakukan uji kualitas data (Konsistensi, Homogenitas, Outlier) sebelum analisis frekuensi.
  </p>
- <ButtonGovTech 
- fullWidth 
- onClick={handleRunQC}
- disabled={annualMaxSeries.length < 3}
- >
- Jalankan Uji QC
- </ButtonGovTech>
+          <Button 
+            fullWidth 
+            onClick={handleRunQC}
+            disabled={annualMaxSeries.length < 3}
+          >
+            Jalankan Uji QC
+          </Button>
  
  {annualMaxSeries.length < 3 && (
  <p className="text-xs text-red-500 mt-2">
@@ -203,21 +200,20 @@ export const StationDataQCAndLinker: React.FC = () => {
  </li>
  </ul>
  
- <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
- <ButtonGovTech 
- fullWidth 
- variant={isExported ? 'secondary' : 'pupr-accent'}
- onClick={handleExportToDistribution}
- >
- {isExported ? 'Telah Diekspor' : 'Gunakan untuk Analisis Frekuensi'}
- </ButtonGovTech>
- </div>
+        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
+          <Button 
+            fullWidth 
+            variant={isExported ? 'secondary' : 'pupr-accent'}
+            onClick={handleExportToDistribution}
+          >
+            {isExported ? 'Telah Diekspor' : 'Gunakan untuk Analisis Frekuensi'}
+          </Button>
+        </div>
  </div>
  )}
  </div>
  </div>
- </CardGovTechContent>
- </CardGovTech>
+  </Card>
  )}
  </div>
  );

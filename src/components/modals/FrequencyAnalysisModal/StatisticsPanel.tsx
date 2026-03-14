@@ -1,6 +1,6 @@
 import React from 'react';
 import { RainfallDataPoint, DistributionMethod } from '../FrequencyAnalysisModal';
-import { StatCard } from './StatCard';
+import { Metric } from '@/components/ui/Metric';
 import { ValidationStatusBox } from './ValidationStatusBox';
 import { MethodSelector } from './MethodSelector';
 
@@ -24,12 +24,13 @@ export const StatisticsPanel: React.FC<StatisticsPanelProps> = ({
  <div className="space-y-4">
  <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Parameter Statistik</h3>
 
- <div className="grid grid-cols-2 gap-3">
- <StatCard label="Jumlah Data" value={data.length.toString()} />
- <StatCard label="Rata-rata" value={statistics?.mean?.toFixed(2) || '0.00'} />
- <StatCard label="Std Deviasi" value={statistics?.stdDev?.toFixed(2) || '0.00'} />
- <StatCard label="Skewness (Cs)" value={statistics?.skewness?.toFixed(3) || '0.000'} />
- </div>
+  <div className="grid grid-cols-2 gap-3">
+  <Metric label="Jumlah Data" value={data.length} density="compact" variant="slate" />
+  <Metric label="Rata-rata" value={statistics?.mean || 0} density="compact" variant="slate" />
+  <Metric label="Std Deviasi" value={statistics?.stdDev || 0} density="compact" variant="slate" />
+  <Metric label="Skewness (Cs)" value={statistics?.skewness || 0} density="compact" variant="slate" />
+  </div>
+
 
  <ValidationStatusBox goodnessOfFit={goodnessOfFit} />
 

@@ -34,27 +34,33 @@ export default {
 					border: '#e2e8f0',    // Border tegas
 					text: '#1e293b'       // Teks kontras tinggi
 				},
-				// Base/Neutral - Blue-gray spectrum (Eye-comfort)
+				// Base/Neutral - Slate-based scale tinted toward PUPR blue (#0c3a66)
 				neutral: {
-					'50': '#F0F9FF',
-					'100': '#E0F2FE',
-					'200': '#BAE6FD',
-					'300': '#7DD3FC',
-					'400': '#38BDF8',
-					'500': '#0EA5E9',
-					'600': '#0284C7',
-					'700': '#0369A1',
-					'800': '#075985',
-					'900': '#0C4A6E'
+					'50': '#f8fafc',
+					'100': '#f1f5f9',
+					'200': '#e2e8f0',
+					'300': '#cbd5e1',
+					'400': '#94a3b8',
+					'500': '#64748b',
+					'600': '#475569',
+					'700': '#334155',
+					'800': '#1e293b',
+					'900': '#0f172a',
+					'950': '#020617'
 				},
-				// Primary - Biru profesional
+				// Primary - Biru profesional (PUPR Blue)
 				primary: {
-					'50': '#EFF6FF',
-					'100': '#DBEAFE',
-					'500': '#3B82F6',
-					'600': '#2563EB',
-					'700': '#1D4ED8',
-					DEFAULT: '#2563EB',
+					'50': '#f0f4f8',
+					'100': '#d9e2ec',
+					'200': '#bcccdc',
+					'300': '#9fb3c8',
+					'400': '#829ab1',
+					'500': '#627d98',
+					'600': '#486581',
+					'700': '#334e68',
+					'800': '#243b53',
+					'900': '#0c3a66', // PUPR Blue
+					DEFAULT: '#0c3a66',
 					foreground: '#FFFFFF'
 				},
 				// Semantic
@@ -74,31 +80,35 @@ export default {
 					dark: '#D97706'
 				},
 				// System
-				background: '#F0F9FF',
-				foreground: '#075985',
+				background: '#f8fafc',
+				foreground: '#0f172a',
 				card: {
 					DEFAULT: '#FFFFFF',
-					foreground: '#075985'
+					foreground: '#0f172a'
 				},
 				secondary: {
-					DEFAULT: '#E0F2FE',
-					foreground: '#075985'
+					DEFAULT: '#f1f5f9',
+					foreground: '#0f172a'
 				},
 				muted: {
-					DEFAULT: '#E0F2FE',
-					foreground: '#0EA5E9'
+					DEFAULT: '#f1f5f9',
+					foreground: '#64748b'
+				},
+				accent: {
+					DEFAULT: '#f2c114', // PUPR Yellow
+					foreground: '#0c3a66'
 				},
 				destructive: {
 					DEFAULT: '#DC2626',
 					foreground: '#FFFFFF'
 				},
-				border: '#BAE6FD',
-				input: '#BAE6FD',
-				ring: '#2563EB',
+				border: '#e2e8f0',
+				input: '#e2e8f0',
+				ring: '#0c3a66',
 				chart: {
-					'1': '#2563EB',
+					'1': '#0c3a66',
 					'2': '#10B981',
-					'3': '#F59E0B',
+					'3': '#f2c114',
 					'4': '#8B5CF6',
 					'5': '#EC4899'
 				}
@@ -114,13 +124,13 @@ export default {
 				xl: '1rem'
 			},
 			boxShadow: {
-				sm: 'none',
-				DEFAULT: 'none',
-				md: 'none',
-				lg: 'none',
-				xl: 'none',
-				'2xl': 'none',
-				soft: 'none',
+				sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+				DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+				md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+				lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+				xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+				'2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+				soft: '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
 				card: 'none',
 				inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)'
 			},
@@ -130,10 +140,10 @@ export default {
 				slow: '500ms'
 			},
 			transitionTimingFunction: {
-				smooth: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
-				enter: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
-				exit: 'cubic-bezier(0.4, 0.0, 1, 1)',
-				spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+				smooth: 'cubic-bezier(0.4, 0, 0.2, 1)',
+				enter: 'cubic-bezier(0, 0, 0.2, 1)',
+				exit: 'cubic-bezier(0.4, 0, 1, 1)',
+				'ease-out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)'
 			},
 			animation: {
 				'fade-in': 'fadeIn 300ms cubic-bezier(0.4, 0.0, 0.2, 1)',

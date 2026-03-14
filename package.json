@@ -17,7 +17,9 @@
     "audit:check": "npm audit --audit-level=high",
     "audit:fix": "npm audit fix --audit-level=high",
     "docker:dev": "docker compose up --watch rekasda-pro-dev",
-    "docker:prod": "docker compose up --watch rekasda-pro-ui"
+    "docker:prod": "docker compose up --watch rekasda-pro-ui",
+    "commit:auto": "powershell -ExecutionPolicy Bypass -File scripts/auto-commit-push.ps1",
+    "commit:auto:bat": "scripts/auto-commit-push.bat"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

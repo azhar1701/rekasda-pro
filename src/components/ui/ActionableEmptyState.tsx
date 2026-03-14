@@ -1,6 +1,6 @@
 import React from 'react';
 import { FolderOpen, ArrowRight } from 'lucide-react';
-import { ButtonGovTech } from './ButtonGovTech';
+import { Button } from './Button';
 
 interface ActionableEmptyStateProps {
  title?: string;
@@ -38,15 +38,14 @@ export const ActionableEmptyState: React.FC<ActionableEmptyStateProps> = ({
  {description}
  </p>
 
- <ButtonGovTech
- onClick={handleAction}
- variant="pupr-primary"
- fullWidth
- className=""
- >
- <span>{actionLabel}</span>
- <ArrowRight className="w-4 h-4 ml-2" />
- </ButtonGovTech>
+      <Button
+        onClick={handleAction}
+        variant="pupr-primary"
+        fullWidth
+      >
+        <span>{actionLabel}</span>
+        <ArrowRight className="w-4 h-4 ml-2" />
+      </Button>
 
  <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
  <p className="text-xs text-slate-500 font-medium">
