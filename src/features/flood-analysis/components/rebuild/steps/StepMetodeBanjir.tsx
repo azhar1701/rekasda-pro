@@ -215,66 +215,66 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
  <div className="space-y-4">
  <div className="p-4 bg-pupr-surface/50 rounded-sm border-l-4 border-l-blue-400">
  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Parameter Alpha</label>
- <input type="range" min="1" max="4" step="0.1" value={alpha} onChange={(e) => setAlpha(parseFloat(e.target.value))} className="w-full h-1.5 bg-blue-100 rounded-sm appearance-none cursor-pointer accent-blue-600" />
+ <input type="range" min="1.0" max="4.0" step="0.1" value={alpha} onChange={(e) => setAlpha(parseFloat(e.target.value))} className="w-full h-1.5 bg-blue-100 rounded-sm appearance-none cursor-pointer accent-blue-600" />
  <div className="flex justify-between mt-1"><span className="text-[10px] font-bold text-slate-500">1.0</span><span className="text-xs font-extrabold text-pupr-blue">{alpha}</span><span className="text-[10px] font-bold text-slate-500">4.0</span></div>
  <p className="text-[9px] text-slate-500 mt-2">Alpha 2.0 (Standard), 1.5 (Tajam), 3.0 (Tumpul).</p>
  </div>
  </div>
  )}
 
- {selectedMethod === 'snyder' && (
- <div className="grid grid-cols-2 gap-4">
- <div className="p-4 bg-amber-50/50 rounded-sm border-l-4 border-l-amber-400">
- <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Koefisien Ct</label>
- <input type="number" value={ct} onChange={(e) => setCt(parseFloat(e.target.value))} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-bold" step="0.01" />
- </div>
- <div className="p-4 bg-amber-50/50 rounded-sm border-l-4 border-l-amber-400">
- <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Koefisien Cp</label>
- <input type="number" value={cp} onChange={(e) => setCp(parseFloat(e.target.value))} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-bold" step="0.01" />
- </div>
- </div>
- )}
+  {selectedMethod === 'snyder' && (
+  <div className="grid grid-cols-2 gap-4">
+  <div className="p-4 bg-amber-50/50 rounded-sm border-l-4 border-l-amber-400">
+  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Koefisien Ct</label>
+  <input type="number" min="0.3" max="6.5" value={ct} onChange={(e) => setCt(parseFloat(e.target.value))} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-bold" step="0.1" />
+  </div>
+  <div className="p-4 bg-amber-50/50 rounded-sm border-l-4 border-l-amber-400">
+  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Koefisien Cp</label>
+  <input type="number" min="0.15" max="0.85" value={cp} onChange={(e) => setCp(parseFloat(e.target.value))} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-bold" step="0.01" />
+  </div>
+  </div>
+  )}
 
- {selectedMethod === 'gama1' && (
- <div className="space-y-3">
- <div className="p-4 bg-emerald-50/50 rounded-sm border-l-4 border-l-emerald-400">
- <p className="text-[9px] font-bold text-emerald-600 uppercase mb-3">Parameter Morfometri Sri Harto</p>
- <div className="grid grid-cols-2 gap-3">
- <div>
- <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">SF (Faktor Sumber)</label>
- <input type="number" value={sf} onChange={(e) => setSf(parseFloat(e.target.value))} className="w-full min-h-[44px] px-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold" step="0.01" />
- </div>
- <div>
- <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">SIM (Simetri)</label>
- <input type="number" value={sim} onChange={(e) => setSim(parseFloat(e.target.value))} className="w-full min-h-[44px] px-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold" step="0.01" />
- </div>
- </div>
- {isAdvanced && (
- <div className="grid grid-cols-3 gap-2 mt-3 animate-in fade-in slide-in-from-top-1">
- <div>
- <label className="block text-[8px] font-bold text-slate-500 uppercase mb-1">JN</label>
- <input type="number" value={jn} onChange={(e) => setJn(parseFloat(e.target.value))} className="w-full px-1 py-1 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold" />
- </div>
- <div>
- <label className="block text-[8px] font-bold text-slate-500 uppercase mb-1">SN</label>
- <input type="number" value={sn} onChange={(e) => setSn(parseFloat(e.target.value))} className="w-full px-1 py-1 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold" step="0.01" />
- </div>
- <div>
- <label className="block text-[8px] font-bold text-slate-500 uppercase mb-1">RUA</label>
- <input type="number" value={rua} onChange={(e) => setRua(parseFloat(e.target.value))} className="w-full px-1 py-1 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold" step="0.01" />
- </div>
- </div>
- )}
- </div>
- </div>
- )}
+  {selectedMethod === 'gama1' && (
+  <div className="space-y-3">
+  <div className="p-4 bg-emerald-50/50 rounded-sm border-l-4 border-l-emerald-400">
+  <p className="text-[9px] font-bold text-emerald-600 uppercase mb-3">Parameter Morfometri Sri Harto</p>
+  <div className="grid grid-cols-2 gap-3">
+  <div>
+  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">SF (Faktor Sumber)</label>
+  <input type="number" min="0" value={sf} onChange={(e) => setSf(parseFloat(e.target.value))} className="w-full min-h-[44px] px-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold" step="0.1" />
+  </div>
+  <div>
+  <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">SIM (Simetri)</label>
+  <input type="number" min="0" value={sim} onChange={(e) => setSim(parseFloat(e.target.value))} className="w-full min-h-[44px] px-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold" step="0.01" />
+  </div>
+  </div>
+  {isAdvanced && (
+  <div className="grid grid-cols-3 gap-2 mt-3 animate-in fade-in slide-in-from-top-1">
+  <div>
+  <label className="block text-[8px] font-bold text-slate-500 uppercase mb-1">JN</label>
+  <input type="number" min="0" value={jn} onChange={(e) => setJn(parseFloat(e.target.value))} className="w-full px-1 py-1 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold" step="1" />
+  </div>
+  <div>
+  <label className="block text-[8px] font-bold text-slate-500 uppercase mb-1">SN</label>
+  <input type="number" min="0" value={sn} onChange={(e) => setSn(parseFloat(e.target.value))} className="w-full px-1 py-1 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold" step="0.01" />
+  </div>
+  <div>
+  <label className="block text-[8px] font-bold text-slate-500 uppercase mb-1">RUA</label>
+  <input type="number" min="0" value={rua} onChange={(e) => setRua(parseFloat(e.target.value))} className="w-full px-1 py-1 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold" step="0.01" />
+  </div>
+  </div>
+  )}
+  </div>
+  </div>
+  )}
 
- {selectedMethod === 'clark' && (
- <div className="p-4 bg-purple-50/50 rounded-sm border-l-4 border-l-purple-400">
- <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Storage Coefficient (R)</label>
- <input type="number" value={storageR} onChange={(e) => setStorageR(parseFloat(e.target.value))} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-bold" step="0.1" />
- </div>
- )}
+  {selectedMethod === 'clark' && (
+  <div className="p-4 bg-purple-50/50 rounded-sm border-l-4 border-l-purple-400">
+  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Storage Coefficient (R)</label>
+  <input type="number" min="0" value={storageR} onChange={(e) => setStorageR(parseFloat(e.target.value))} className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded text-sm font-bold" step="0.1" />
+  </div>
+  )}
 
  {selectedMethod === 'scs' && (
  <div className="p-4 bg-indigo-50/50 rounded-sm border-l-4 border-l-indigo-400">

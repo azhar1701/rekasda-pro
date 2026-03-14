@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Dialog } from '@headlessui/react';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -10,7 +10,8 @@ interface DependableFlowModalProps {
 }
 
 export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen, onClose, onApply }) => {
- const [area, setArea] = useState<number>(100);
+  const baseId = useId();
+  const [area, setArea] = useState<number>(100);
  const [runoffCoeff, setRunoffCoeff] = useState<number>(0.5);
  const [monthlyRain, setMonthlyRain] = useState<{ rain: number; days: number }[]>(
  Array(12).fill({ rain: 0, days: 0 }).map(() => ({ rain: 0, days: 0 }))
@@ -61,34 +62,36 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
 
  {/* Top Section: Global Parameters */}
  <div className="grid grid-cols-2 gap-6 mb-6 bg-slate-50 dark:bg-slate-800 rounded-sm p-5 border border-slate-200 dark:border-slate-700">
- <div>
- <label className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 block">Luas DAS (Daerah Aliran Sungai)</label>
- <div className="relative">
- <input
- type="number"
- value={area}
- onChange={e => setArea(parseFloat(e.target.value) || 0)}
- className="w-full h-12 px-4 pr-16 text-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
- />
- <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">km²</span>
- </div>
- </div>
+    <div>
+      <label htmlFor={`${baseId}-area`} className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 block">Luas DAS (Daerah Aliran Sungai)</label>
+      <div className="relative">
+        <input
+          id={`${baseId}-area`}
+          type="number"
+          value={area}
+          onChange={e => setArea(parseFloat(e.target.value) || 0)}
+          className="w-full h-12 px-4 pr-16 text-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">km²</span>
+      </div>
+    </div>
 
- <div>
- <label className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 block">Koefisien Limpasan (C)</label>
- <div className="relative">
- <input
- type="number"
- step="0.01"
- min="0"
- max="1"
- value={runoffCoeff}
- onChange={e => setRunoffCoeff(parseFloat(e.target.value) || 0)}
- className="w-full h-12 px-4 pr-16 text-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
- />
- <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">0-1</span>
- </div>
- </div>
+    <div>
+      <label htmlFor={`${baseId}-coeff`} className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 block">Koefisien Limpasan (C)</label>
+      <div className="relative">
+        <input
+          id={`${baseId}-coeff`}
+          type="number"
+          step="0.01"
+          min="0"
+          max="1"
+          value={runoffCoeff}
+          onChange={e => setRunoffCoeff(parseFloat(e.target.value) || 0)}
+          className="w-full h-12 px-4 pr-16 text-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">0-1</span>
+      </div>
+    </div>
  </div>
 
  {/* Grid Section: Monthly Input */}
@@ -104,30 +107,38 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
  <div key={month} className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-sm p-4 border border-slate-200 dark:border-slate-700 ">
  <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase mb-3 block text-center">{month}</label>
 
- <div className="space-y-3">
- <div className="relative">
- <input
- type="number"
- step="0.1"
- value={monthlyRain[index].rain}
- onChange={e => handleRainChange(index, 'rain', parseFloat(e.target.value) || 0)}
- placeholder="0"
- className="w-full h-11 px-3 pr-12 text-base bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
- />
- <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">mm</span>
- </div>
+            <div className="space-y-3">
+              <div>
+                <label htmlFor={`${baseId}-rain-${index}`} className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Curah Hujan</label>
+                <div className="relative">
+                  <input
+                    id={`${baseId}-rain-${index}`}
+                    type="number"
+                    step="0.1"
+                    value={monthlyRain[index].rain}
+                    onChange={e => handleRainChange(index, 'rain', parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                    className="w-full h-11 px-3 pr-12 text-base bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">mm</span>
+                </div>
+              </div>
 
- <div className="relative">
- <input
- type="number"
- value={monthlyRain[index].days}
- onChange={e => handleRainChange(index, 'days', parseFloat(e.target.value) || 0)}
- placeholder="0"
- className="w-full h-11 px-3 pr-12 text-base bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
- />
- <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">hari</span>
- </div>
- </div>
+              <div>
+                <label htmlFor={`${baseId}-days-${index}`} className="text-[10px] font-semibold text-slate-500 uppercase mb-1 block">Hari Hujan</label>
+                <div className="relative">
+                  <input
+                    id={`${baseId}-days-${index}`}
+                    type="number"
+                    value={monthlyRain[index].days}
+                    onChange={e => handleRainChange(index, 'days', parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                    className="w-full h-11 px-3 pr-12 text-base bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">hari</span>
+                </div>
+              </div>
+            </div>
  </div>
  ))}
  </div>

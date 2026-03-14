@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
  statusBadge.isLoading ? 'animate-pulse' : ''
  }`}
  />
- <span className="text-xs font-medium text-white">
+ <span className="text-xs font-medium text-white truncate max-w-[100px] sm:max-w-[200px]">
  {statusBadge.label}
  </span>
  </div>

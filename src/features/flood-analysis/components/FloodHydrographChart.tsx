@@ -1,15 +1,17 @@
 import React, { useMemo } from 'react';
 import {
- AreaChart,
- Area,
- XAxis,
- YAxis,
- CartesianGrid,
- Tooltip,
- ResponsiveContainer,
- ReferenceDot,
- ReferenceLine,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceDot,
+  ReferenceLine,
 } from 'recharts';
+import { CHART_COLORS } from '@/lib/constants/chartColors';
+
 
 interface HydrographDataPoint {
  time: number;
@@ -134,89 +136,90 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
  </linearGradient>
  </defs>
 
- {/* Grid */}
- <CartesianGrid
- strokeDasharray="3 3"
- stroke="#e2e8f0"
- vertical={false}
- />
+        {/* Grid */}
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke={CHART_COLORS.gridLine}
+          vertical={false}
+        />
 
- {/* X Axis */}
- <XAxis
- dataKey="time"
- label={{
- value: 'Waktu (jam)',
- position: 'bottom',
- offset: 0,
- style: { fontSize: '11px', fontWeight: 700, fill: '#64748b' },
- }}
- tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
- axisLine={{ stroke: '#e2e8f0' }}
- tickLine={false}
- type="number"
- domain={['auto', 'auto']}
- />
+        {/* X Axis */}
+        <XAxis
+          dataKey="time"
+          label={{
+            value: 'Waktu (jam)',
+            position: 'bottom',
+            offset: 0,
+            style: { fontSize: '11px', fontWeight: 700, fill: CHART_COLORS.axisLine },
+          }}
+          tick={{ fontSize: 10, fill: CHART_COLORS.axisLine, fontWeight: 600 }}
+          axisLine={{ stroke: CHART_COLORS.gridLine }}
+          tickLine={false}
+          type="number"
+          domain={['auto', 'auto']}
+        />
 
- {/* Y Axis */}
- <YAxis
- label={{
- value: 'Debit (m³/s)',
- angle: -90,
- position: 'insideLeft',
- offset: 15,
- style: { fontSize: '11px', fontWeight: 700, fill: '#64748b' },
- }}
- tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
- axisLine={{ stroke: '#e2e8f0' }}
- tickLine={false}
- />
+        {/* Y Axis */}
+        <YAxis
+          label={{
+            value: 'Debit (m³/s)',
+            angle: -90,
+            position: 'insideLeft',
+            offset: 15,
+            style: { fontSize: '11px', fontWeight: 700, fill: CHART_COLORS.axisLine },
+          }}
+          tick={{ fontSize: 10, fill: CHART_COLORS.axisLine, fontWeight: 600 }}
+          axisLine={{ stroke: CHART_COLORS.gridLine }}
+          tickLine={false}
+        />
 
- {/* Secondary Area (Unit Hydrograph) */}
- {secondaryData && (
- <Area
- data={secondaryData}
- name="Unit Hydrograph"
- type="monotone"
- dataKey="discharge"
- stroke="#94a3b8"
- strokeWidth={2}
- strokeDasharray="4 4"
- fill="none"
- isAnimationActive={false}
- dot={false}
- />
- )}
+        {/* Secondary Area (Unit Hydrograph) */}
+        {secondaryData && (
+          <Area
+            data={secondaryData}
+            name="Unit Hydrograph"
+            type="monotone"
+            dataKey="discharge"
+            stroke={CHART_COLORS.baseflow}
+            strokeWidth={2}
+            strokeDasharray="4 4"
+            fill="none"
+            isAnimationActive={false}
+            dot={false}
+          />
+        )}
 
- {/* Area - Main hydrograph (DFH) */}
- <Area
- name={secondaryData ? 'Design Flood Hydrograph' : 'Hydrograph'}
- type="monotone"
- dataKey="discharge"
- stroke={primaryColor}
- strokeWidth={3}
- fill={`url(#${gradientId})`}
- isAnimationActive={true}
- animationDuration={1000}
- dot={false}
- />
+        {/* Area - Main hydrograph (DFH) */}
+        <Area
+          name={secondaryData ? 'Design Flood Hydrograph' : 'Hydrograph'}
+          type="monotone"
+          dataKey="discharge"
+          stroke={primaryColor}
+          strokeWidth={3}
+          fill={`url(#${gradientId})`}
+          isAnimationActive={true}
+          animationDuration={1000}
+          dot={false}
+        />
 
- {/* Reference line at peak discharge */}
- {qPeak > 0 && (
- <ReferenceLine
- y={qPeak}
- stroke="#f97316"
- strokeDasharray="5 5"
- opacity={0.4}
- label={{
- value: `Qp: ${qPeak.toFixed(2)}`,
- position: 'insideRight',
- fill: '#f97316',
- fontSize: 10,
- fontWeight: 700,
- offset: -10,
- }}
- />
- )}
+        {/* Reference line at peak discharge */}
+        {qPeak > 0 && (
+          <ReferenceLine
+            y={qPeak}
+            stroke={CHART_COLORS.demand}
+            strokeDasharray="5 5"
+            opacity={0.4}
+            label={{
+              value: `Qp: ${qPeak.toFixed(2)}`,
+              position: 'insideRight',
+              fill: CHART_COLORS.demand,
+              fontSize: 10,
+              fontWeight: 700,
+              offset: -10,
+            }}
+          />
+        )}
+
 
  {/* Peak point indicator */}
  {peakPoint && (

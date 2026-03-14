@@ -219,16 +219,16 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
  hint="Kemiringan memanjang saluran (0.0001 - 0.1 typical)"
  error={errors.slope}
  >
- <Input
- type="number"
- step="0.0001"
- min="0"
- max="1"
- value={inputs.slope || ''}
- onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('slope', parseFloat(e.target.value) || 0)}
- disabled={disabled}
- placeholder="0.001"
- />
+  <Input
+  type="number"
+  step="0.0001"
+  min="0.0001"
+  max="1"
+  value={inputs.slope || ''}
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('slope', parseFloat(e.target.value) || 0)}
+  disabled={disabled}
+  placeholder="0.001"
+  />
  </FormField>
 
  {/* Manning Coefficient */}
@@ -239,18 +239,18 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
  hint="Nilai tipis 0.015-0.035 untuk saluran alami"
  error={errors.roughness}
  >
- <Input
- type="number"
- step="0.001"
- min="0"
- max="0.15"
- value={inputs.roughness || ''}
- onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
- onChange('roughness', parseFloat(e.target.value) || 0)
- }
- disabled={disabled}
- placeholder="0.025"
- />
+  <Input
+  type="number"
+  step="0.001"
+  min="0.001"
+  max="0.15"
+  value={inputs.roughness || ''}
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+  onChange('roughness', parseFloat(e.target.value) || 0)
+  }
+  disabled={disabled}
+  placeholder="0.025"
+  />
  </FormField>
 
  {/* Warning Messages */}

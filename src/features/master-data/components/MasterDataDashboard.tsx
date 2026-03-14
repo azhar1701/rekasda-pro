@@ -1,8 +1,9 @@
-import { Edit2, RefreshCw, BarChart3 } from 'lucide-react';
+import { Edit2, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { useMemo } from 'react';
+import { CHART_COLORS } from '@/lib/constants/chartColors';
 
 interface MasterDataDashboardProps {
  onNavigateToSection?: (section: 'qc' | 'morfometri' | 'tutupan' | 'hujan') => void;
@@ -95,10 +96,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  };
  }, [identitasLokasi, storeMorfometri, storeTutupan, projectStationIds]);
 
- const requiredStatus = [completionStatus.morfometri, completionStatus.tutupanLahan, completionStatus.hujanWilayah];
- const completionPercentage = (requiredStatus.filter(Boolean).length / requiredStatus.length) * 100;
+  const requiredStatus = [completionStatus.morfometri, completionStatus.tutupanLahan, completionStatus.hujanWilayah];
+  const completionPercentage = (requiredStatus.filter(Boolean).length / requiredStatus.length) * 100;
 
- return (
+  const completionColorClass = completionPercentage < 33 ? 'text-rose-500' : completionPercentage < 66 ? 'text-amber-500' : 'text-emerald-500';
+  const completionBgClass = completionPercentage < 33 ? 'bg-rose-500' : completionPercentage < 66 ? 'bg-amber-500' : 'bg-emerald-500';
+
+  return (
  <div className="space-y-8 p-1">
  <ProjectContextBanner />
 
@@ -111,15 +115,15 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  
  <div className="flex items-center gap-6">
  <div className="flex flex-col items-end">
- <div className="flex items-center gap-3">
- <span className="text-4xl font-light tabular-nums text-pupr-blue">{Math.round(completionPercentage)}%</span>
- <div className="w-32 h-1 bg-slate-100 rounded-sm overflow-hidden">
- <div 
- className="h-full bg-pupr-blue transition-all duration-75" 
- style={{ width: `${completionPercentage}%` }}
- />
- </div>
- </div>
+  <div className="flex items-center gap-3">
+  <span className={`text-4xl font-light tabular-nums ${completionColorClass}`}>{Math.round(completionPercentage)}%</span>
+  <div className="w-32 h-1 bg-slate-100 rounded-sm overflow-hidden">
+  <div 
+  className={`h-full transition-all duration-75 ${completionBgClass}`} 
+  style={{ width: `${completionPercentage}%` }}
+  />
+  </div>
+  </div>
  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Technical Readiness</span>
  </div>
  
@@ -155,10 +159,10 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  ].map(test => (
  <div key={test.label} className="flex items-center justify-between border-b border-slate-50 pb-2">
  <span className="text-sm text-slate-600 dark:text-slate-400">{test.label}</span>
- {test.status ? 
- <span className="text-[10px] font-bold text-slate-500 uppercase">Valid</span> : 
- <span className="text-[10px] font-bold text-red-500 uppercase">Fails</span>
- }
+  {test.status ? 
+  <span className="text-[10px] font-bold text-emerald-500 uppercase">Valid</span> : 
+  <span className="text-[10px] font-bold text-red-500 uppercase">Fails</span>
+  }
  </div>
  ))}
  {yearRange && <p className="text-[10px] text-slate-500 italic">Data Period: {yearRange}</p>}
@@ -299,7 +303,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <span className="text-[8px] font-bold text-slate-500 uppercase">{props.payload.isWeight ? 'Weight' : 'Areal'}</span>
  ]}
  />
- <Bar dataKey="hujan" fill="#0c3a66" radius={[2, 2, 0, 0]} barSize={24} opacity={0.8} />
+ <Bar dataKey="hujan" fill={CHART_COLORS.primary} radius={[2, 2, 0, 0]} barSize={24} opacity={0.8} />
  </BarChart>
  </ResponsiveContainer>
  </div>

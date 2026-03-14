@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, CheckCircle2, AlertTriangle, TrendingUp, Info, Layers } from 'lucide-react';
+import { MapPin, CheckCircle2, AlertTriangle, Info, Layers } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { KarakteristikDASCard } from './KarakteristikDASCard';
 import { TutupanLahanCard } from './TutupanLahanCard';
@@ -111,42 +111,16 @@ export const ParameterSpasial: React.FC = () => {
  </div>
  ) : (
  <div className="animate-in fade-in slide-in-from-bottom-4 duration-75 space-y-6">
- {/* Full Width WebGIS */}
- <div className="w-full transition-all duration-75">
- <WebGISPanel />
- </div>
-
- {/* Guidance Box */}
- <div className="p-4 bg-pupr-blue/[0.03] border border-pupr-blue/10 rounded-sm flex items-start gap-3 ">
- <TrendingUp className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
- <p className="text-sm text-pupr-text leading-relaxed">
- <span className="font-black text-pupr-blue uppercase tracking-widest text-[10px] block mb-1">Alur Kerja Otomatis:</span>
- Unggah atau delineasi batas DAS pada peta di atas. Sistem akan mengeksekusi perhitungan **Luas DAS**, **Interseksi Tata Guna Lahan**, dan **Poligon Thiessen** secara instan.
- Hasil rincian teknis akan ditampilkan secara reaktif pada modul-modul di bawah ini untuk verifikasi Anda.
- </p>
- </div>
-
- {/* Technical Modules Section (The Reactive Details) */}
- <div className="space-y-4">
- <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-[0.2em] ml-1 mb-2 flex items-center gap-2">
- <div className="w-2 h-2 bg-pupr-yellow rounded-sm shadow-[0_0_8px_#f2c114]"></div>
- Hasil Analisis Spasial & Rincian Modul
- </h3>
-
- <div className="flex flex-col gap-6">
- <div className="transition-all hover:translate-y-[-2px] duration-75">
- <KarakteristikDASCard />
- </div>
-
- <div className="transition-all hover:translate-y-[-2px] duration-75">
- <TutupanLahanCard />
- </div>
-
- <div className="transition-all hover:translate-y-[-2px] duration-75">
- <HujanWilayahCard />
- </div>
- </div>
- </div>
+      {/* Full Width WebGIS -> Now passing the 3 cards inside so it stacks in the 7-col right side */}
+      <div className="w-full transition-all duration-75">
+        <WebGISPanel>
+          <div className="space-y-6 pt-2">
+            <KarakteristikDASCard />
+            <TutupanLahanCard />
+            <HujanWilayahCard />
+          </div>
+        </WebGISPanel>
+      </div>
  </div>
  )}
  </div>

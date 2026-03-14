@@ -82,135 +82,135 @@ export const KarakteristikDASCard: React.FC = () => {
 
  const isValid = safeA > 0 && safeL > 0;
 
- return (
- <Card className="border border-slate-300 dark:border-slate-600 rounded-sm overflow-hidden">
- <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3">
- <div className="flex items-center gap-3">
- <div className="p-2 bg-pupr-blue rounded">
- <Mountain className="w-5 h-5 text-pupr-blue" />
- </div>
- <div>
- <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Karakteristik DAS (Morfometri)</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Parameter geometri daerah aliran sungai</p>
- </div>
- </div>
- </div>
+  return (
+    <Card className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+      <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-pupr-blue rounded-lg">
+            <Mountain className="w-5 h-5 text-pupr-yellow" />
+          </div>
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Karakteristik DAS (Morfometri)</h3>
+            <p className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Parameter geometri daerah aliran sungai</p>
+          </div>
+        </div>
+      </div>
 
- <div className="p-4">
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <div>
- <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
- Luas DAS (A)
- </label>
- <div className="relative">
- <input
- type="number"
- value={formData.luasDAS === 0 ? 0 : (formData.luasDAS ?? '')}
- onChange={(e) => handleChange('luasDAS', e.target.value)}
- className="w-full px-3 py-2 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
- placeholder="0.00"
- step="0.01"
- />
- <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
- <span className="text-sm text-slate-500 font-medium">km²</span>
- </div>
- </div>
- </div>
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Luas DAS (A)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={formData.luasDAS === 0 ? 0 : (formData.luasDAS ?? '')}
+                onChange={(e) => handleChange('luasDAS', e.target.value)}
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                placeholder="0.00"
+                step="0.01"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">km²</span>
+              </div>
+            </div>
+          </div>
 
- <div>
- <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
- Panjang Sungai (L)
- </label>
- <div className="relative">
- <input
- type="number"
- value={formData.panjangSungai === 0 ? 0 : (formData.panjangSungai ?? '')}
- onChange={(e) => handleChange('panjangSungai', e.target.value)}
- className="w-full px-3 py-2 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
- placeholder="0.00"
- step="0.01"
- />
- <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
- <span className="text-sm text-slate-500 font-medium">km</span>
- </div>
- </div>
- </div>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Panjang Sungai (L)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={formData.panjangSungai === 0 ? 0 : (formData.panjangSungai ?? '')}
+                onChange={(e) => handleChange('panjangSungai', e.target.value)}
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                placeholder="0.00"
+                step="0.01"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">km</span>
+              </div>
+            </div>
+          </div>
 
- <div>
- <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
- Kemiringan Sungai (S)
- </label>
- <div className="relative">
- <input
- type="number"
- value={formData.kemiringanSungai === 0 ? 0 : (formData.kemiringanSungai ?? '')}
- onChange={(e) => handleChange('kemiringanSungai', e.target.value)}
- className="w-full px-3 py-2 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
- placeholder="0.0000"
- step="0.0001"
- />
- <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
- <span className="text-sm text-slate-500 font-medium">m/m</span>
- </div>
- </div>
- </div>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Kemiringan Sungai (S)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={formData.kemiringanSungai === 0 ? 0 : (formData.kemiringanSungai ?? '')}
+                onChange={(e) => handleChange('kemiringanSungai', e.target.value)}
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                placeholder="0.0000"
+                step="0.0001"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">m/m</span>
+              </div>
+            </div>
+          </div>
 
- <div>
- <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
- Elevasi Rata-rata
- </label>
- <div className="relative">
- <input
- type="number"
- value={formData.elevasi === 0 ? 0 : (formData.elevasi ?? '')}
- onChange={(e) => handleChange('elevasi', e.target.value)}
- className="w-full px-3 py-2 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
- placeholder="0"
- step="1"
- />
- <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
- <span className="text-sm text-slate-500 font-medium">m</span>
- </div>
- </div>
- </div>
- </div>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Elevasi Rata-rata
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={formData.elevasi === 0 ? 0 : (formData.elevasi ?? '')}
+                onChange={(e) => handleChange('elevasi', e.target.value)}
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                placeholder="0"
+                step="1"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">m</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
- {!isValid && (
- <div className="flex items-center gap-2 p-3 mt-4 bg-amber-50 border border-amber-200 rounded-sm text-sm text-amber-800">
- <AlertCircle className="w-4 h-4 flex-shrink-0" />
- <span>Luas DAS dan Panjang Sungai harus diisi dengan nilai &gt; 0</span>
- </div>
- )}
+        {!isValid && (
+          <div className="flex items-center gap-3 p-4 mt-6 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
+            <span className="font-semibold">Luas DAS dan Panjang Sungai harus diisi dengan nilai &gt; 0</span>
+          </div>
+        )}
 
- {logicalCheck && isValid && (
- <div className={`flex items-start gap-3 p-3 mt-4 rounded-sm border text-xs font-medium transition-colors ${
- logicalCheck.isLogical 
- ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
- : 'bg-rose-50 border-red-100 text-rose-700'
- }`}>
- <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${logicalCheck.isLogical ? 'text-emerald-500' : 'text-rose-500'}`} />
- <div>
- <p className="font-bold uppercase tracking-wider mb-1">Audit Geometri DAS</p>
- <p>{logicalCheck.message}</p>
- <p className="mt-1 opacity-70 italic">Empiris: L ≈ 1.4 × A^0.6 (Ekspektasi: {logicalCheck.expectedL} km)</p>
- </div>
- </div>
- )}
+        {logicalCheck && isValid && (
+          <div className={`flex items-start gap-3 p-4 mt-6 rounded-lg border text-xs font-medium transition-colors ${
+            logicalCheck.isLogical 
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${logicalCheck.isLogical ? 'text-emerald-600' : 'text-red-600'}`} />
+            <div>
+              <p className="font-bold uppercase tracking-wider mb-1 text-[10px]">Audit Geometri DAS</p>
+              <p className="text-sm font-semibold">{logicalCheck.message}</p>
+              <p className="mt-1 opacity-80 italic font-mono text-[10px]">Empiris: L ≈ 1.4 × A^0.6 (Ekspektasi: {logicalCheck.expectedL} km)</p>
+            </div>
+          </div>
+        )}
 
- <button
- onClick={handleSave}
- disabled={!isValid}
- className={`w-full mt-4 px-4 py-2.5 font-semibold rounded-sm transition-all flex items-center justify-center gap-2 ${!isValid
- ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
- : isSaved
- ? 'bg-green-600 hover:bg-green-700 text-white'
- : 'bg-pupr-blue hover:bg-pupr-blue text-white'
- }`}
- >
- <Save className="w-4 h-4" />
- {isSaved ? 'Tersimpan ✓' : 'Simpan Parameter DAS'}
- </button>
- </div>
- </Card>
- );
+        <button
+          onClick={handleSave}
+          disabled={!isValid}
+          className={`w-full h-11 mt-6 font-bold uppercase tracking-wider text-xs rounded-lg transition-all flex items-center justify-center gap-2 ${!isValid
+            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400'
+            : isSaved
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+            : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-sm'
+          }`}
+        >
+          <Save className="w-4 h-4" />
+          {isSaved ? 'Tersimpan ✓' : 'Simpan Parameter DAS'}
+        </button>
+      </div>
+    </Card>
+  );
 };

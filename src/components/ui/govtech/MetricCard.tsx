@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CardGovTech } from '../CardGovTech';
 
 interface MetricCardProps {
@@ -20,35 +20,43 @@ export const MetricCard: React.FC<MetricCardProps> = ({
  variant = 'blue',
  showShimmer = false
 }) => {
- const [displayValue, setDisplayValue] = useState<number | string>(typeof value === 'number' ? 0 : value);
+  const [displayValue, setDisplayValue] = useState<number | string>(typeof value === 'number' ? 0 : value);
+  const rafRef = useRef<number>(0);
 
- useEffect(() => {
- if (typeof value === 'number') {
- let start = 0;
- const end = value;
- const duration = 1500;
- const startTime = performance.now();
+  useEffect(() => {
+    if (typeof value !== 'number') {
+      setDisplayValue(value);
+      return;
+    }
 
- const animate = (currentTime: number) => {
- const elapsed = currentTime - startTime;
- const progress = Math.min(elapsed / duration, 1);
+    // Respect reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      setDisplayValue(value);
+      return;
+    }
 
- // Ease out expo
- const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+    const end = value;
+    const duration = 1500;
+    const startTime = performance.now();
 
- const current = Math.floor(start + (end - start) * easeProgress);
- setDisplayValue(current);
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.floor(end * easeProgress);
+      setDisplayValue(current);
 
- if (progress < 1) {
- requestAnimationFrame(animate);
- }
- };
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
 
- requestAnimationFrame(animate);
- } else {
- setDisplayValue(value);
- }
- }, [value]);
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [value]);
 
  const textColorClass = {
  blue: 'text-pupr-blue',

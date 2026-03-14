@@ -1,6 +1,7 @@
 import React from 'react';
 import { ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { WaterBalanceResult } from '@/services/waterBalanceEngine';
+import { CHART_COLORS } from '@/lib/constants/chartColors';
 
 interface Props {
  data: WaterBalanceResult[];
@@ -46,60 +47,61 @@ export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
  left: 0,
  bottom: 5
  }}
- >
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis
- dataKey="month"
- tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
- axisLine={{ stroke: '#cbd5e1' }}
- height={40}
- />
- <YAxis
- label={{
- value: 'Debit (m³/s)',
- angle: -90,
- position: 'insideLeft',
- style: { fill: '#64748b', fontWeight: 600, fontSize: 11 }
- }}
- tick={{ fill: '#64748b', fontSize: 11 }}
- axisLine={{ stroke: '#cbd5e1' }}
- width={60}
- />
- <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} content={<CustomTooltip />} />
- <Legend
- wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
- iconType="rect"
- iconSize={10}
- />
- <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+    >
+      <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.gridLine} />
+      <XAxis
+        dataKey="month"
+        tick={{ fill: CHART_COLORS.axisLine, fontSize: 11, fontWeight: 600 }}
+        axisLine={{ stroke: CHART_COLORS.referenceLine }}
+        height={40}
+      />
+      <YAxis
+        label={{
+          value: 'Debit (m³/s)',
+          angle: -90,
+          position: 'insideLeft',
+          style: { fill: CHART_COLORS.axisLine, fontWeight: 600, fontSize: 11 }
+        }}
+        tick={{ fill: CHART_COLORS.axisLine, fontSize: 11 }}
+        axisLine={{ stroke: CHART_COLORS.referenceLine }}
+        width={60}
+      />
+      <Tooltip itemStyle={{ fontVariantNumeric: "tabular-nums" }} content={<CustomTooltip />} />
+      <Legend
+        wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
+        iconType="rect"
+        iconSize={10}
+      />
+      <ReferenceLine y={0} stroke={CHART_COLORS.axisLine} strokeDasharray="3 3" />
 
- {/* Background area for deficit/surplus */}
- <Area
- type="monotone"
- dataKey="Surplus/Defisit"
- fill="#10b98150"
- stroke="none"
- fillOpacity={0.3}
- />
+      {/* Background area for deficit/surplus */}
+      <Area
+        type="monotone"
+        dataKey="Surplus/Defisit"
+        fill={`${CHART_COLORS.surplus}50`}
+        stroke="none"
+        fillOpacity={0.3}
+      />
 
- {/* Bar for water supply */}
- <Bar
- dataKey="Ketersediaan Air (Q80)"
- fill="#3b82f6"
- radius={[8, 8, 0, 0]}
- maxBarSize={60}
- />
+      {/* Bar for water supply */}
+      <Bar
+        dataKey="Ketersediaan Air (Q80)"
+        fill={CHART_COLORS.rainfall}
+        radius={[8, 8, 0, 0]}
+        maxBarSize={60}
+      />
 
- {/* Line for total demand */}
- <Line
- type="monotone"
- dataKey="Total Kebutuhan"
- stroke="#f97316"
- strokeWidth={3}
- dot={{ fill: '#f97316', r: 5 }}
- activeDot={{ r: 7 }}
- />
- </ComposedChart>
+      {/* Line for total demand */}
+      <Line
+        type="monotone"
+        dataKey="Total Kebutuhan"
+        stroke={CHART_COLORS.demand}
+        strokeWidth={3}
+        dot={{ fill: CHART_COLORS.demand, r: 5 }}
+        activeDot={{ r: 7 }}
+      />
+    </ComposedChart>
+
  </ResponsiveContainer>
  </div>
  );

@@ -5,6 +5,7 @@ import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { FileText, Printer, MapPin, Activity, Calendar, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import generatePDF from 'react-to-pdf';
+import { CHART_COLORS } from '@/lib/constants/chartColors';
 import {
  ButtonGovTech,
  CardGovTech,
@@ -89,8 +90,8 @@ export const ExecutiveDashboard = () => {
  >
  {/* Project Identity Cards */}
  <StaggeredReveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
- {/* Card 1: Project Info */}
- <CardGovTech title="Identitas Proyek">
+        {/* Card 1: Project Info */}
+        <CardGovTech title="Identitas Proyek" accentColor="pupr">
  <div className="space-y-4">
  <InfoProperty
  label="Nama Proyek"
@@ -165,8 +166,8 @@ export const ExecutiveDashboard = () => {
  contentStyle={{ borderRadius: '6px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontWeight: 600 }}
  />
  <ReferenceLine y={0} stroke="currentColor" strokeDasharray="3 3" strokeWidth={2} />
- <Bar dataKey="ketersediaan" name="Ketersediaan (Q80)" fill="#0c3a66" radius={[4, 4, 0, 0]} barSize={24} />
- <Bar dataKey="kebutuhan" name="Kebutuhan Irigasi" fill="#DC2626" radius={[4, 4, 0, 0]} barSize={24} />
+<Bar dataKey="ketersediaan" name="Ketersediaan (Q80)" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} barSize={24} />
+<Bar dataKey="kebutuhan" name="Kebutuhan Irigasi" fill={CHART_COLORS.danger} radius={[4, 4, 0, 0]} barSize={24} />
  </BarChart>
  </ResponsiveContainer>
  </div>

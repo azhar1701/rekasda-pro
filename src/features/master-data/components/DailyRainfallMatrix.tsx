@@ -159,20 +159,31 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
 
  const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`;
  
- return (
- <td 
- key={monthIndex} 
- title={getCellTooltip(cell)}
- className={cn(
- "py-1 border-r border-b border-slate-100 tabular-nums transition-all select-none",
- getCellClass(cell),
- onCellClick && "cursor-pointer hover:brightness-90 ] "
- )}
- onClick={() => onCellClick?.(dateStr, cell?.curah_hujan || null)}
- >
- {cell !== null ? cell.curah_hujan.toFixed(1) : '-'}
- </td>
- );
+  return (
+  <td 
+  key={monthIndex} 
+  title={getCellTooltip(cell)}
+  className={cn(
+  "py-1 border-r border-b border-slate-100 tabular-nums transition-all select-none",
+  getCellClass(cell),
+  onCellClick && "cursor-pointer hover:brightness-90"
+  )}
+  onClick={() => onCellClick?.(dateStr, cell?.curah_hujan || null)}
+  {...(onCellClick ? {
+  role: "button" as const,
+  tabIndex: 0,
+  onKeyDown: (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+  e.preventDefault();
+  onCellClick(dateStr, cell?.curah_hujan || null);
+  }
+  },
+  'aria-label': `${dateStr}: ${cell !== null ? `${cell.curah_hujan.toFixed(1)} mm` : 'tidak ada data'}`,
+  } : {})}
+  >
+  {cell !== null ? cell.curah_hujan.toFixed(1) : '-'}
+  </td>
+  );
  })}
  </>
  )}

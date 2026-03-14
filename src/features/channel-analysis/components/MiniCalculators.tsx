@@ -20,26 +20,28 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
  <div>
  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Panjang Alur (L)</label>
  <div className="relative">
- <input
- type="number"
- step="0.1"
- value={L}
- onChange={e => setL(parseFloat(e.target.value) || 0)}
- className="w-full bg-white dark:bg-slate-900 border border-blue-300 text-sm font-bold rounded-sm p-3 pr-12"
- />
+  <input
+  type="number"
+  step="0.01"
+  min="0.001"
+  value={L}
+  onChange={e => setL(parseFloat(e.target.value) || 0)}
+  className="w-full bg-white dark:bg-slate-900 border border-blue-300 text-sm font-bold rounded-sm p-3 pr-12"
+  />
  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">km</span>
  </div>
  </div>
  <div>
  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Kemiringan (S)</label>
  <div className="relative">
- <input
- type="number"
- step="0.001"
- value={S}
- onChange={e => setS(parseFloat(e.target.value) || 0)}
- className="w-full bg-white dark:bg-slate-900 border border-blue-300 text-sm font-bold rounded-sm p-3 pr-16"
- />
+  <input
+  type="number"
+  step="0.0001"
+  min="0.0001"
+  value={S}
+  onChange={e => setS(parseFloat(e.target.value) || 0)}
+  className="w-full bg-white dark:bg-slate-900 border border-blue-300 text-sm font-bold rounded-sm p-3 pr-16"
+  />
  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">m/m</span>
  </div>
  </div>
@@ -74,12 +76,14 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
  <div>
  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Hujan Harian (R₂₄)</label>
  <div className="relative">
- <input
- type="number"
- value={R24}
- onChange={e => setR24(parseFloat(e.target.value) || 0)}
- className="w-full bg-white dark:bg-slate-900 border border-emerald-300 text-sm font-bold rounded-sm p-3 pr-12"
- />
+  <input
+  type="number"
+  step="0.1"
+  min="0"
+  value={R24}
+  onChange={e => setR24(parseFloat(e.target.value) || 0)}
+  className="w-full bg-white dark:bg-slate-900 border border-emerald-300 text-sm font-bold rounded-sm p-3 pr-12"
+  />
  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">mm</span>
  </div>
  </div>
@@ -215,17 +219,19 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  />
  </td>
  <td className="py-2 px-3 tabular-nums tracking-tight">
- <input
- type="number"
- value={row.rainfall}
- onChange={e => {
- const updated = [...rainfallData];
- updated[idx].rainfall = e.target.value;
- setRainfallData(updated);
- }}
- placeholder="100"
- className="w-full min-h-[44px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm rounded px-3 py-2.5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 tabular-nums"
- />
+  <input
+  type="number"
+  step="0.1"
+  min="0"
+  value={row.rainfall}
+  onChange={e => {
+  const updated = [...rainfallData];
+  updated[idx].rainfall = e.target.value;
+  setRainfallData(updated);
+  }}
+  placeholder="100"
+  className="w-full min-h-[44px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm rounded px-3 py-2.5 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 tabular-nums"
+  />
  </td>
  <td className="py-2 px-2 tabular-nums tracking-tight">
  <button
@@ -449,12 +455,14 @@ export const EffectiveRainfallCalculator: React.FC<{ C: number; onApply: (Ro: nu
  <div>
  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Hujan Rencana (Rplan)</label>
  <div className="relative">
- <input
- type="number"
- value={Rplan}
- onChange={e => setRplan(parseFloat(e.target.value) || 0)}
- className="w-full bg-white dark:bg-slate-900 border border-purple-300 text-sm font-bold rounded-sm p-3 pr-12"
- />
+  <input
+  type="number"
+  step="0.1"
+  min="0"
+  value={Rplan}
+  onChange={e => setRplan(parseFloat(e.target.value) || 0)}
+  className="w-full bg-white dark:bg-slate-900 border border-purple-300 text-sm font-bold rounded-sm p-3 pr-12"
+  />
  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">mm</span>
  </div>
  </div>

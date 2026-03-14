@@ -16,7 +16,7 @@ import {
 import { formatNumber } from '@/lib/utils/formatting';
 import { CHART_COLORS } from '@/lib/constants';
 import { exportChartAsImage } from '@/lib/utils/chartExport';
-import { Download, Activity } from 'lucide-react';
+import { Download } from 'lucide-react';
 import type { HydrographDataPoint } from '../types/flood.types';
 
 interface HydrographChartProps {

@@ -327,7 +327,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
  ),
  project: (
  <div className="max-w-[200px] truncate" title={item.project_name}>
- <span className="font-semibold text-slate-800 dark:text-slate-200">{item.project_name}</span>
+ <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">{item.project_name}</span>
  </div>
  ),
  value: (

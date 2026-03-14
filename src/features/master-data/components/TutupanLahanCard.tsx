@@ -97,142 +97,142 @@ export const TutupanLahanCard: React.FC = () => {
  }
  };
 
- return (
- <Card className="border border-slate-300 dark:border-slate-600 rounded-sm overflow-hidden">
- <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 flex items-center justify-between">
- <div className="flex items-center gap-3">
- <div className="p-2 bg-pupr-blue rounded">
- <Trees className="w-5 h-5 text-pupr-blue" />
- </div>
- <div>
- <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Analisis Tutupan Lahan</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Koefisien pengaliran dan curve number</p>
- </div>
- </div>
- <button
- onClick={handleAddRow}
- className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 hover:border-pupr-blue hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-sm transition-colors"
- >
- <Plus className="w-4 h-4" />
- Tambah
- </button>
- </div>
+  return (
+    <Card className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+      <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-pupr-blue rounded-lg">
+            <Trees className="w-5 h-5 text-pupr-yellow" />
+          </div>
+          <div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Analisis Tutupan Lahan</h3>
+            <p className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Koefisien pengaliran dan curve number</p>
+          </div>
+        </div>
+        <button
+          onClick={handleAddRow}
+          className="flex items-center gap-1.5 px-4 h-11 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:border-pupr-blue hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] uppercase tracking-wider font-bold rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Tambah
+        </button>
+      </div>
 
- <div className="p-4">
- <div className="overflow-x-auto mb-4">
- <table className="w-full text-sm">
- <thead className="bg-slate-100 border-b border-slate-300 dark:border-slate-600">
- <tr>
- <th className="px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-300">Jenis Tutupan Lahan</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">Luas (km²)</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">Koef. C</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">CN</th>
- <th className="px-3 py-2 text-center font-semibold text-slate-700 dark:text-slate-300">Aksi</th>
- </tr>
- </thead>
- <tbody>
- {items.map((item) => (
- <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 dark:bg-slate-800">
- <td className="px-3 py-2 tabular-nums tracking-tight">
- <input
- type="text"
- value={item.jenis}
- onChange={(e) => handleChange(item.id, 'jenis', e.target.value)}
- className="w-full py-1 px-2 text-sm border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue"
- placeholder="Contoh: Hutan"
- />
- </td>
- <td className="px-3 py-2 tabular-nums tracking-tight">
- <input
- type="number"
- value={item.luas === 0 ? 0 : (item.luas ?? '')}
- onChange={(e) => handleChange(item.id, 'luas', e.target.value)}
- className="w-full py-1 px-2 text-sm text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
- placeholder="0.00"
- step="0.01"
- />
- </td>
- <td className="px-3 py-2 tabular-nums tracking-tight">
- <input
- type="number"
- value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
- onChange={(e) => handleChange(item.id, 'nilaiC', e.target.value)}
- className="w-full py-1 px-2 text-sm text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
- placeholder="0.00"
- step="0.01"
- min="0"
- max="1"
- />
- </td>
- <td className="px-3 py-2 tabular-nums tracking-tight">
- <input
- type="number"
- value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
- onChange={(e) => handleChange(item.id, 'nilaiCN', e.target.value)}
- className="w-full py-1 px-2 text-sm text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
- placeholder="0"
- step="1"
- min="0"
- max="100"
- />
- </td>
- <td className="px-3 py-2 text-center tabular-nums tracking-tight">
- <button
- onClick={() => handleRemoveRow(item.id)}
- disabled={items.length === 1}
- className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-30 disabled:cursor-not-allowed"
- >
- <Trash2 className="w-4 h-4" />
- </button>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
+      <div className="p-6">
+        <div className="overflow-x-auto mb-6 bg-white rounded-lg border border-slate-200">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider text-[10px]">Jenis Tutupan Lahan</th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Luas (km²)</th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Koef. C</th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">CN</th>
+                <th className="px-4 py-3 text-center font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {items.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors even:bg-slate-50/50">
+                  <td className="px-4 py-3 tabular-nums tracking-tight">
+                    <input
+                      type="text"
+                      value={item.jenis}
+                      onChange={(e) => handleChange(item.id, 'jenis', e.target.value)}
+                      className="w-full h-11 px-3 text-xs border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue font-semibold"
+                      placeholder="Contoh: Hutan"
+                    />
+                  </td>
+                  <td className="px-4 py-3 tabular-nums tracking-tight">
+                    <input
+                      type="number"
+                      value={item.luas === 0 ? 0 : (item.luas ?? '')}
+                      onChange={(e) => handleChange(item.id, 'luas', e.target.value)}
+                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                      placeholder="0.00"
+                      step="0.01"
+                    />
+                  </td>
+                  <td className="px-4 py-3 tabular-nums tracking-tight">
+                    <input
+                      type="number"
+                      value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
+                      onChange={(e) => handleChange(item.id, 'nilaiC', e.target.value)}
+                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      max="1"
+                    />
+                  </td>
+                  <td className="px-4 py-3 tabular-nums tracking-tight">
+                    <input
+                      type="number"
+                      value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
+                      onChange={(e) => handleChange(item.id, 'nilaiCN', e.target.value)}
+                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                      placeholder="0"
+                      step="1"
+                      min="0"
+                      max="100"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-center tabular-nums tracking-tight">
+                    <button
+                      onClick={() => handleRemoveRow(item.id)}
+                      disabled={items.length === 1}
+                      className="w-11 h-11 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
- <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-3">
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Total Luas Tutupan</p>
- <p className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums">{totalLuas.toFixed(2)} <span className="text-sm font-normal text-slate-500">km²</span></p>
- </div>
- <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-3">
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">C Gabungan (Weighted)</p>
- <p className="text-lg font-bold text-pupr-blue tabular-nums">{cGabungan.toFixed(3)}</p>
- </div>
- <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-3">
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">CN Gabungan (Weighted)</p>
- <p className="text-lg font-bold text-pupr-blue tabular-nums">{cnGabungan.toFixed(1)}</p>
- </div>
- </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Luas Tutupan</p>
+            <p className="text-2xl font-light text-slate-900 dark:text-slate-100 tabular-nums">{totalLuas.toFixed(2)} <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">km²</span></p>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">C Gabungan (Weighted)</p>
+            <p className="text-2xl font-light text-pupr-blue tabular-nums">{cGabungan.toFixed(3)}</p>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">CN Gabungan (Weighted)</p>
+            <p className="text-2xl font-light text-pupr-blue tabular-nums">{cnGabungan.toFixed(1)}</p>
+          </div>
+        </div>
 
- {hasError && (
- <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-sm flex items-start gap-2">
- <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
- <div className="flex-1">
- <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas DAS</p>
- <p className="text-xs text-red-700 mt-1">
- Total luas tutupan lahan ({totalLuas.toFixed(2)} km²) tidak sama dengan Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
- Selisih: <strong>{luasError.toFixed(2)} km²</strong>
- </p>
- </div>
- </div>
- )}
+        {hasError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-[10px] font-bold text-red-900 uppercase tracking-wider">Peringatan: Selisih Luas DAS</p>
+              <p className="text-xs text-red-700 mt-1 font-semibold">
+                Total luas tutupan lahan ({totalLuas.toFixed(2)} km²) tidak sama dengan Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
+                Selisih: <strong>{luasError.toFixed(2)} km²</strong>
+              </p>
+            </div>
+          </div>
+        )}
 
- <button
- onClick={handleSave}
- disabled={hasError}
- className={`w-full px-4 py-2.5 font-semibold rounded-sm transition-all flex items-center justify-center gap-2 ${hasError
- ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
- : isSaved
- ? 'bg-green-600 hover:bg-green-700 text-white'
- : 'bg-pupr-blue hover:bg-pupr-blue text-white'
- }`}
- >
- {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
- {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Tutupan Lahan'}
- </button>
- </div>
- </Card>
- );
+        <button
+          onClick={handleSave}
+          disabled={hasError}
+          className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${hasError
+            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400'
+            : isSaved
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+            : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-sm'
+          }`}
+        >
+          {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+          {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Tutupan Lahan'}
+        </button>
+      </div>
+    </Card>
+  );
 };

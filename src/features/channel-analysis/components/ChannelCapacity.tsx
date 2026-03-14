@@ -144,13 +144,14 @@ export default function ChannelCapacity() {
  Lebar Dasar (b)
  </label>
  <div className="flex items-center gap-2">
- <input
- type="number"
- step="0.1"
- value={params.b}
- onChange={(e) => updateParam('b', e.target.value)}
- className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
- />
+  <input
+  type="number"
+  step="0.01"
+  min="0"
+  value={params.b}
+  onChange={(e) => updateParam('b', e.target.value)}
+  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+  />
  <span className="text-sm text-slate-500 w-8">m</span>
  </div>
  </div>
@@ -160,13 +161,14 @@ export default function ChannelCapacity() {
  Tinggi Jagaan (h)
  </label>
  <div className="flex items-center gap-2">
- <input
- type="number"
- step="0.1"
- value={params.h}
- onChange={(e) => updateParam('h', e.target.value)}
- className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
- />
+  <input
+  type="number"
+  step="0.01"
+  min="0"
+  value={params.h}
+  onChange={(e) => updateParam('h', e.target.value)}
+  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+  />
  <span className="text-sm text-slate-500 w-8">m</span>
  </div>
  </div>
@@ -176,13 +178,14 @@ export default function ChannelCapacity() {
  Kemiringan Tebing (m)
  </label>
  <div className="flex items-center gap-2">
- <input
- type="number"
- step="0.1"
- value={params.m}
- onChange={(e) => updateParam('m', e.target.value)}
- className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
- />
+  <input
+  type="number"
+  step="0.1"
+  min="0"
+  value={params.m}
+  onChange={(e) => updateParam('m', e.target.value)}
+  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+  />
  <span className="text-sm text-slate-500 w-8">-</span>
  </div>
  </div>
@@ -201,13 +204,14 @@ export default function ChannelCapacity() {
  Kemiringan Saluran (S)
  </label>
  <div className="flex items-center gap-2">
- <input
- type="number"
- step="0.0001"
- value={params.S}
- onChange={(e) => updateParam('S', e.target.value)}
- className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
- />
+  <input
+  type="number"
+  step="0.0001"
+  min="0.0001"
+  value={params.S}
+  onChange={(e) => updateParam('S', e.target.value)}
+  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+  />
  <span className="text-sm text-slate-500 w-8">-</span>
  </div>
  </div>
@@ -217,13 +221,15 @@ export default function ChannelCapacity() {
  Kekasaran Manning (n)
  </label>
  <div className="flex items-center gap-2">
- <input
- type="number"
- step="0.001"
- value={params.n}
- onChange={(e) => updateParam('n', e.target.value)}
- className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
- />
+  <input
+  type="number"
+  step="0.001"
+  min="0.001"
+  max="0.15"
+  value={params.n}
+  onChange={(e) => updateParam('n', e.target.value)}
+  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+  />
  <span className="text-sm text-slate-500 w-8">-</span>
  </div>
  </div>

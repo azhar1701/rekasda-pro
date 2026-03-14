@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Lock, RotateCcw } from 'lucide-react';
 
 interface ColorCodedInputProps {
@@ -22,21 +22,23 @@ export const ColorCodedInput: React.FC<ColorCodedInputProps> = ({
  onReset,
  formula
 }) => {
- return (
- <div className="space-y-1">
- <label className="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1">
+  const inputId = useId();
+  return (
+  <div className="space-y-1">
+  <label htmlFor={inputId} className="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1">
  {label}
  {formula && <span className="text-slate-500 font-normal">({formula})</span>}
  </label>
  
  <div className="relative flex items-center gap-2">
  <div className="relative flex-1">
- <input
- type="number"
- value={value}
- onChange={(e) => onChange?.(parseFloat(e.target.value))}
- readOnly={isReadOnly}
- step="0.001"
+  <input
+  id={inputId}
+  type="number"
+  value={value}
+  onChange={(e) => onChange?.(parseFloat(e.target.value))}
+  readOnly={isReadOnly}
+  step="0.001"
  className={`w-full px-3 py-2 rounded-sm font-mono text-sm transition-all ${
  isReadOnly
  ? 'bg-slate-50 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed'

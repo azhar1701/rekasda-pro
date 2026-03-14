@@ -122,38 +122,50 @@ const AppLayout: React.FC = () => {
  setReportModalOpen(true);
  };
 
- // ── Navbar: Grouped by workflow phase ──
- const navGroups = [
- // Grup 1: Input
- {
- items: [
- { tab: Tab.WORKFLOW, label: 'Alur Kerja', icon: <GitMerge strokeWidth={2.5} className="w-5 h-5" /> },
- { tab: Tab.MASTER, label: 'Data Master', icon: <Database strokeWidth={2.5} className="w-5 h-5" /> },
- ],
- },
- // Grup 2: Analisis
- {
- items: [
- { tab: Tab.FREKUENSI, label: 'Frekuensi', icon: <TrendingUp strokeWidth={2.5} className="w-5 h-5" /> },
- { tab: Tab.BANJIR, label: 'Banjir', icon: <CloudRain strokeWidth={2.5} className="w-5 h-5" /> },
- { tab: Tab.NERACA, label: 'Neraca', icon: <Scale strokeWidth={2.5} className="w-5 h-5" /> },
- ],
- },
- // Grup 3: Desain Infrastruktur
- {
- items: [
- { tab: Tab.EMBUNG, label: 'Embung', icon: <Droplets strokeWidth={2.5} className="w-5 h-5" /> },
- { tab: Tab.SALURAN, label: 'Saluran', icon: <Waves strokeWidth={2.5} className="w-5 h-5" /> },
- ],
- },
- // Grup 4: Output
- {
- items: [
- { tab: Tab.HISTORY, label: 'Riwayat', icon: <History strokeWidth={2.5} className="w-5 h-5" /> },
- { tab: Tab.EXEC, label: 'Laporan', icon: <FileText strokeWidth={2.5} className="w-5 h-5" /> },
- ],
- },
- ];
+  // ── Navbar: Grouped by workflow phase ──
+  const navGroups = [
+    // Grup 1: Input
+    {
+      activeClass: 'bg-indigo-600 text-white',
+      hoverClass: 'text-slate-600 dark:text-slate-400 hover:bg-indigo-50 hover:text-indigo-700 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300',
+      mobileActiveClass: 'text-indigo-700 bg-indigo-50 dark:text-indigo-300 dark:bg-indigo-900/40',
+      items: [
+        { tab: Tab.WORKFLOW, label: 'Alur Kerja', icon: <GitMerge strokeWidth={2.5} className="w-5 h-5" /> },
+        { tab: Tab.MASTER, label: 'Data Master', icon: <Database strokeWidth={2.5} className="w-5 h-5" /> },
+      ],
+    },
+    // Grup 2: Analisis
+    {
+      activeClass: 'bg-amber-600 text-white',
+      hoverClass: 'text-slate-600 dark:text-slate-400 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-900/30 dark:hover:text-amber-300',
+      mobileActiveClass: 'text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-900/40',
+      items: [
+        { tab: Tab.FREKUENSI, label: 'Frekuensi', icon: <TrendingUp strokeWidth={2.5} className="w-5 h-5" /> },
+        { tab: Tab.BANJIR, label: 'Banjir', icon: <CloudRain strokeWidth={2.5} className="w-5 h-5" /> },
+        { tab: Tab.NERACA, label: 'Neraca', icon: <Scale strokeWidth={2.5} className="w-5 h-5" /> },
+      ],
+    },
+    // Grup 3: Desain Infrastruktur
+    {
+      activeClass: 'bg-emerald-600 text-white',
+      hoverClass: 'text-slate-600 dark:text-slate-400 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300',
+      mobileActiveClass: 'text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-900/40',
+      items: [
+        { tab: Tab.EMBUNG, label: 'Embung', icon: <Droplets strokeWidth={2.5} className="w-5 h-5" /> },
+        { tab: Tab.SALURAN, label: 'Saluran', icon: <Waves strokeWidth={2.5} className="w-5 h-5" /> },
+      ],
+    },
+    // Grup 4: Output
+    {
+      activeClass: 'bg-rose-600 text-white',
+      hoverClass: 'text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-900/30 dark:hover:text-rose-300',
+      mobileActiveClass: 'text-rose-700 bg-rose-50 dark:text-rose-300 dark:bg-rose-900/40',
+      items: [
+        { tab: Tab.HISTORY, label: 'Riwayat', icon: <History strokeWidth={2.5} className="w-5 h-5" /> },
+        { tab: Tab.EXEC, label: 'Laporan', icon: <FileText strokeWidth={2.5} className="w-5 h-5" /> },
+      ],
+    },
+  ];
 
  return (
  <>
@@ -180,7 +192,7 @@ const AppLayout: React.FC = () => {
  <React.Suspense fallback={<TabFallback />}>
  <Routes>
  <Route path="/" element={<Navigate to={Tab.MASTER} replace />} />
- <Route path={Tab.WORKFLOW} element={<div className="h-[800px] w-full"><WorkflowCanvas /></div>} />
+ <Route path={Tab.WORKFLOW} element={<div className="h-[min(800px,calc(100vh-12rem))] w-full"><WorkflowCanvas /></div>} />
  <Route path={Tab.SALURAN} element={<ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />} />
  <Route path={Tab.BANJIR} element={<FloodAnalysisTab onConsultAI={() => {
  setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');
@@ -368,14 +380,14 @@ const AppLayout: React.FC = () => {
  <div className="w-px h-8 bg-slate-200 mx-2 shrink-0" />
  )}
  {group.items.map((item) => (
- <button
- key={item.tab}
- onClick={() => navigate(item.tab)}
- className={`flex items-center gap-2.5 px-4 py-2.5 rounded-sm transition-all duration-200 whitespace-nowrap ${activeTab.startsWith(item.tab)
- ? 'bg-[#0c3a66] text-white '
- : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 hover:text-[#0c3a66]'
- }`}
- >
+                  <button
+                    key={item.tab}
+                    onClick={() => navigate(item.tab)}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-sm transition-all duration-200 whitespace-nowrap ${activeTab.startsWith(item.tab)
+                      ? group.activeClass
+                      : group.hoverClass
+                      }`}
+                  >
  <div className="flex items-center justify-center">
  {item.icon}
  </div>
@@ -415,18 +427,18 @@ const AppLayout: React.FC = () => {
  {navGroups.map((group, groupIndex) => (
  <React.Fragment key={groupIndex}>
  {group.items.map((item) => (
- <button
- key={item.tab}
- onClick={() => navigate(item.tab)}
- className={`flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-sm transition-all duration-200 ${activeTab.startsWith(item.tab)
- ? 'text-pupr-blue bg-pupr-surface/80 '
- : 'text-slate-500 hover:bg-slate-50 dark:bg-slate-800'
- }`}
- >
+                    <button
+                      key={item.tab}
+                      onClick={() => navigate(item.tab)}
+                      className={`flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-sm transition-all duration-200 ${activeTab.startsWith(item.tab)
+                        ? group.mobileActiveClass
+                        : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
+                    >
  <div className={`flex items-center justify-center transition-transform duration-200 ${activeTab.startsWith(item.tab) ? 'scale-110' : 'scale-100'}`}>
  {React.cloneElement(item.icon as React.ReactElement, { className: 'w-[18px] h-[18px] sm:w-5 sm:h-5' })}
  </div>
- <span className={`text-[9px] sm:text-[10px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${activeTab.startsWith(item.tab) ? 'font-bold' : 'font-medium'
+ <span className={`text-[11px] sm:text-[11px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${activeTab.startsWith(item.tab) ? 'font-bold' : 'font-medium'
  }`}>{item.label}</span>
  </button>
  ))}
@@ -444,7 +456,7 @@ const AppLayout: React.FC = () => {
  <div className={`flex items-center justify-center transition-transform duration-200 ${isAIDrawerOpen ? 'scale-110' : 'scale-100'}`}>
  <Sparkles strokeWidth={2.5} className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
  </div>
- <span className={`text-[9px] sm:text-[10px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${isAIDrawerOpen ? 'font-bold' : 'font-medium'
+ <span className={`text-[11px] sm:text-[11px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${isAIDrawerOpen ? 'font-bold' : 'font-medium'
  }`}>AI</span>
  {isAIDrawerOpen && (
  <div className="absolute top-1 right-2 w-1.5 h-1.5 bg-yellow-400 rounded-sm animate-pulse border border-white" />

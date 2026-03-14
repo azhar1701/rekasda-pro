@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Link2, Info } from 'lucide-react';
 
 interface IntegratedInputProps {
@@ -18,10 +18,11 @@ export const IntegratedInput: React.FC<IntegratedInputProps> = ({
  tooltip,
  onNavigate
 }) => {
- return (
- <div className="space-y-1.5">
- <div className="flex items-center justify-between">
- <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+  const inputId = useId();
+  return (
+  <div className="space-y-1.5">
+  <div className="flex items-center justify-between">
+  <label htmlFor={inputId} className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
  {label}
  {tooltip && (
  <span
@@ -39,10 +40,11 @@ export const IntegratedInput: React.FC<IntegratedInputProps> = ({
  </div>
  
  <div className="relative">
- <input
- type="text"
- value={value}
- readOnly
+  <input
+  id={inputId}
+  type="text"
+  value={value}
+  readOnly
  className="min-h-[44px] w-full rounded-sm px-3 py-2.5 pr-14 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 cursor-not-allowed select-none"
  />
  {unit && (

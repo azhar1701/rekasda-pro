@@ -1,5 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { CHART_COLORS } from '@/lib/constants/chartColors';
 
 interface IDFChartProps {
  curahHujanRencana: Array<{ kalaUlang: number; curahHujan: number }>;
@@ -8,13 +9,14 @@ interface IDFChartProps {
 }
 
 const COLORS: Record<number, string> = {
- 2: '#94a3b8',
- 5: '#64748b',
- 10: '#475569',
- 25: '#0c3a66',
- 50: '#f59e0b',
- 100: '#dc2626'
+  2: CHART_COLORS.baseflow,
+  5: CHART_COLORS.axisLine,
+  10: '#475569',
+  25: CHART_COLORS.discharge,
+  50: CHART_COLORS.tertiary,
+  100: CHART_COLORS.peakFlow
 };
+
 
 const CustomTooltip = ({ active, payload }: any) => {
  if (!active || !payload || payload.length === 0) return null;
@@ -72,40 +74,41 @@ export const IDFChart: React.FC<IDFChartProps> = ({ curahHujanRencana = [], sele
  return points;
  }, [curahHujanRencana, maxDuration]);
 
- return (
- <ResponsiveContainer width="100%" height={300}>
- <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
- <XAxis 
- dataKey="duration" 
- tick={{ fontSize: 12, fill: '#64748b' }} 
- tickLine={false}
- label={{ value: 'Durasi (jam)', position: 'insideBottom', offset: -5, style: { fontSize: 12, fill: '#475569' } }}
- />
- <YAxis 
- tick={{ fontSize: 12, fill: '#64748b' }} 
- tickLine={false} 
- axisLine={false}
- label={{ value: 'Intensitas (mm/jam)', angle: -90, position: 'insideLeft', style: { fontSize: 12, fill: '#475569' } }}
- />
- <Tooltip content={<CustomTooltip />} />
- <Legend 
- wrapperStyle={{ fontSize: 12, paddingTop: 10 }}
- iconType="line"
- />
- {curahHujanRencana.map(({ kalaUlang }) => (
- <Line 
- key={kalaUlang}
- type="monotone" 
- dataKey={`Q${kalaUlang}`}
- stroke={COLORS[kalaUlang] || '#64748b'}
- strokeWidth={selectedKalaUlang === kalaUlang ? 3 : 2}
- name={`Q${kalaUlang}`}
- dot={false}
- activeDot={{ r: 4 }}
- />
- ))}
- </LineChart>
- </ResponsiveContainer>
- );
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.gridLine} />
+        <XAxis 
+          dataKey="duration" 
+          tick={{ fontSize: 12, fill: CHART_COLORS.axisLine }} 
+          tickLine={false}
+          label={{ value: 'Durasi (jam)', position: 'insideBottom', offset: -5, style: { fontSize: 12, fill: '#475569' } }}
+        />
+        <YAxis 
+          tick={{ fontSize: 12, fill: CHART_COLORS.axisLine }} 
+          tickLine={false} 
+          axisLine={false}
+          label={{ value: 'Intensitas (mm/jam)', angle: -90, position: 'insideLeft', style: { fontSize: 12, fill: '#475569' } }}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend 
+          wrapperStyle={{ fontSize: 12, paddingTop: 10 }}
+          iconType="line"
+        />
+        {curahHujanRencana.map(({ kalaUlang }) => (
+          <Line 
+            key={kalaUlang}
+            type="monotone" 
+            dataKey={`Q${kalaUlang}`}
+            stroke={COLORS[kalaUlang] || CHART_COLORS.axisLine}
+            strokeWidth={selectedKalaUlang === kalaUlang ? 3 : 2}
+            name={`Q${kalaUlang}`}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+        ))}
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
 };

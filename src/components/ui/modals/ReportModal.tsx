@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Dialog } from '@headlessui/react';
 import { Button } from '@/components/ui/forms/Button';
 import { CalculationResult, GeoLocationData } from '@/types/common.types';
@@ -12,7 +12,8 @@ interface Props {
 }
 
 export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmSave }) => {
- const [photo, setPhoto] = useState<string | null>(null);
+  const notesId = useId();
+  const [photo, setPhoto] = useState<string | null>(null);
  const [location, setLocation] = useState<GeoLocationData | null>(null);
  const [loadingGeo, setLoadingGeo] = useState(false);
  const [notes, setNotes] = useState('');
@@ -125,9 +126,9 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
  </button>
  </div>
 
- <div>
- <label className="block font-extrabold text-[10px] text-gray-400 uppercase tracking-widest mb-2">Dokumentasi Visual</label>
- {photo ? (
+  <div>
+    <span className="block font-extrabold text-[10px] text-gray-400 uppercase tracking-widest mb-2">Dokumentasi Visual</span>
+    {photo ? (
  <div className="relative h-48 w-full bg-gray-100 rounded-sm overflow-hidden border border-gray-200 group">
  <img src={photo} alt="Site" className="w-full h-full object-cover" />
  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -145,16 +146,17 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
  )}
  </div>
 
- <div>
- <label className="block font-extrabold text-[10px] text-gray-400 uppercase tracking-widest mb-2">Tambahkan Catatan Khusus</label>
- <textarea
- className="w-full bg-gray-50 border-2 border-gray-100 rounded-sm p-4 text-sm font-medium focus:border-safety-blue outline-none transition-all "
- rows={3}
- placeholder="Misal: Kondisi sedimen tinggi, perlu normalisasi segera..."
- value={notes}
- onChange={(e) => setNotes(e.target.value)}
- ></textarea>
- </div>
+  <div>
+    <label htmlFor={notesId} className="block font-extrabold text-[10px] text-gray-400 uppercase tracking-widest mb-2">Tambahkan Catatan Khusus</label>
+    <textarea
+      id={notesId}
+      className="w-full bg-gray-50 border-2 border-gray-100 rounded-sm p-4 text-sm font-medium focus:border-safety-blue outline-none transition-all "
+      rows={3}
+      placeholder="Misal: Kondisi sedimen tinggi, perlu normalisasi segera..."
+      value={notes}
+      onChange={(e) => setNotes(e.target.value)}
+    ></textarea>
+  </div>
  </div>
 
  <div className="p-6 border-t border-gray-100 bg-white dark:bg-slate-900 shrink-0">

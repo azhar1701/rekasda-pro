@@ -264,7 +264,7 @@ body {
 
   /* Modal Animations */
   .modal-enter {
-    animation: modalEnter var(--motion-medium) var(--easing-spring);
+    animation: modalEnter var(--motion-medium) var(--easing-enter);
   }
 
   @keyframes modalEnter {
@@ -471,19 +471,6 @@ body {
 
 .delay-200 {
   animation-delay: 200ms;
-}
-
-/* SVG Transitions */
-svg * {
-  transition-property: all;
-  transition-timing-function: ease-out;
-}
-
-svg path,
-svg circle,
-svg line,
-svg text {
-  transition-duration: 500ms;
 }
 
 /* Scrollbar Hide Utility (for horizontal-scroll navs) */

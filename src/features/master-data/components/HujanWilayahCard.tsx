@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
- CloudRain,
- Save,
- CheckCircle,
- AlertCircle
+  CloudRain,
+  Save,
+  CheckCircle,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { AssistantContainer } from '@/components/ui/govtech';
 import { Card } from '@/components/ui/Card';
@@ -314,361 +315,359 @@ export const HujanWilayahCard: React.FC = () => {
  }
  };
 
- return (
- <div className="space-y-4">
- {showCelebration && (
- <SuccessCelebration
- message="Data Hujan Wilayah berhasil dihitung dan disinkronkan!"
- onComplete={() => setShowCelebration(false)}
- />
- )}
- <Card className="border border-slate-300 dark:border-slate-600 rounded-sm-sm overflow-hidden border-l-4 border-l-pupr-blue">
- <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3">
- <div className="flex items-center gap-3">
- <div className="p-2 bg-pupr-blue rounded-sm-sm">
- <CloudRain className="w-5 h-5 text-pupr-blue" />
- </div>
- <div>
- <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Curah Hujan Wilayah</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Metode rata-rata spasial</p>
- </div>
- </div>
- </div>
+  return (
+    <div className="space-y-6">
+      {showCelebration && (
+        <SuccessCelebration
+          message="Data Hujan Wilayah berhasil dihitung dan disinkronkan!"
+          onComplete={() => setShowCelebration(false)}
+        />
+      )}
+      <Card className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm border-l-4 border-l-pupr-blue">
+        <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-pupr-blue rounded-lg">
+              <CloudRain className="w-5 h-5 text-pupr-yellow" />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curah Hujan Wilayah</h3>
+              <p className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Metode rata-rata spasial</p>
+            </div>
+          </div>
+        </div>
 
- <div className="p-4">
- <AssistantContainer title="Rekomendasi Metode Berbasis Lokasi (AI Assistant)">
- <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
- <div className="space-y-2">
- <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Ketersediaan Koordinat</label>
- <div className="flex gap-4 mt-1">
- <label className="flex items-center gap-2 cursor-pointer">
- <input
- type="radio"
- checked={params.hasCoordinates}
- onChange={() => setParams({ ...params, hasCoordinates: true })}
- className="w-3.5 h-3.5 text-pupr-blue"
- />
- <span className="text-sm text-slate-700 dark:text-slate-300">Tersedia</span>
- </label>
- <label className="flex items-center gap-2 cursor-pointer">
- <input
- type="radio"
- checked={!params.hasCoordinates}
- onChange={() => setParams({ ...params, hasCoordinates: false })}
- className="w-3.5 h-3.5 text-pupr-blue"
- />
- <span className="text-sm text-slate-700 dark:text-slate-300">Tidak Ada</span>
- </label>
- </div>
- </div>
+        <div className="p-6">
+          <AssistantContainer title="Rekomendasi Metode Berbasis Lokasi (AI Assistant)">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ketersediaan Koordinat</label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      checked={params.hasCoordinates}
+                      onChange={() => setParams({ ...params, hasCoordinates: true })}
+                      className="w-4 h-4 text-pupr-blue border-slate-300 focus:ring-pupr-blue"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">Tersedia</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      checked={!params.hasCoordinates}
+                      onChange={() => setParams({ ...params, hasCoordinates: false })}
+                      className="w-4 h-4 text-pupr-blue border-slate-300 focus:ring-pupr-blue"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">Tidak Ada</span>
+                  </label>
+                </div>
+              </div>
 
- <div className="space-y-2">
- <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Kondisi Topografi</label>
- <div className="flex gap-4 mt-1">
- <label className="flex items-center gap-2 cursor-pointer">
- <input
- type="radio"
- checked={params.topography === 'flat'}
- onChange={() => setParams({ ...params, topography: 'flat' })}
- className="w-3.5 h-3.5 text-pupr-blue"
- />
- <span className="text-sm text-slate-700 dark:text-slate-300">Relatif Datar</span>
- </label>
- <label className="flex items-center gap-2 cursor-pointer">
- <input
- type="radio"
- checked={params.topography === 'varied'}
- onChange={() => setParams({ ...params, topography: 'varied' })}
- className="w-3.5 h-3.5 text-pupr-blue"
- />
- <span className="text-sm text-slate-700 dark:text-slate-300">Pegunungan / Bervariasi</span>
- </label>
- </div>
- </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kondisi Topografi</label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      checked={params.topography === 'flat'}
+                      onChange={() => setParams({ ...params, topography: 'flat' })}
+                      className="w-4 h-4 text-pupr-blue border-slate-300 focus:ring-pupr-blue"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">Relatif Datar</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      checked={params.topography === 'varied'}
+                      onChange={() => setParams({ ...params, topography: 'varied' })}
+                      className="w-4 h-4 text-pupr-blue border-slate-300 focus:ring-pupr-blue"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">Pegunungan</span>
+                  </label>
+                </div>
+              </div>
 
- <div className="space-y-2">
- <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Jumlah Stasiun</label>
- <div className="flex items-center gap-2">
- <input
- type="number"
- value={params.stationCount}
- onChange={(e) => setParams({ ...params, stationCount: parseInt(e.target.value) || 0 })}
- className="w-20 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-1 focus:ring-pupr-blue tabular-nums"
- />
- <span className="text-xs text-slate-500 italic">(Terdeteksi: {stasiunList.length})</span>
- </div>
- </div>
- </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jumlah Stasiun</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={params.stationCount}
+                    onChange={(e) => setParams({ ...params, stationCount: parseInt(e.target.value) || 0 })}
+                    className="w-24 h-11 px-3 text-sm font-semibold border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 tabular-nums text-center"
+                  />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">(Terdeteksi: {stasiunList.length})</span>
+                </div>
+              </div>
+            </div>
 
- <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 p-3 rounded-sm-sm">
- <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">Analisis Hasil</h4>
- <p className="text-sm font-bold text-pupr-blue">{recommendation?.method}</p>
- <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{recommendation?.reason}</p>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 p-4 rounded-xl mt-6 shadow-sm">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Rekomendasi Metode AI</h4>
+              <p className="text-lg font-light text-pupr-blue tracking-tight">{recommendation?.method}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 font-medium">{recommendation?.reason}</p>
 
- <button
- onClick={() => {
- if (recommendation) {
- let methodValue: 'aljabar' | 'thiessen' | 'isohyet' = 'aljabar';
- if (recommendation.method === 'Metode Poligon Thiessen') methodValue = 'thiessen';
- if (recommendation.method === 'Metode Isohyet') methodValue = 'isohyet';
- setMetode(methodValue);
- toast.success(`Metode ${methodValue} diterapkan`);
- }
- }}
- className="mt-3 px-3 py-1.5 bg-pupr-blue text-white text-xs font-bold rounded-sm hover:bg-[#092b4d] transition-all flex items-center gap-2"
- >
- <CheckCircle className="w-3.5 h-3.5" />
- Gunakan Rekomendasi
- </button>
- </div>
- </AssistantContainer>
+              <button
+                onClick={() => {
+                  if (recommendation) {
+                    let methodValue: 'aljabar' | 'thiessen' | 'isohyet' = 'aljabar';
+                    if (recommendation.method === 'Metode Poligon Thiessen') methodValue = 'thiessen';
+                    if (recommendation.method === 'Metode Isohyet') methodValue = 'isohyet';
+                    setMetode(methodValue);
+                    toast.success(`Metode ${methodValue} diterapkan`);
+                  }
+                }}
+                className="mt-4 h-11 px-6 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs uppercase tracking-wider font-bold rounded-lg transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Terapkan Rekomendasi
+              </button>
+            </div>
+          </AssistantContainer>
 
- <div className="mb-4">
- <label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
- Metode Perhitungan
- <HelpTooltip content="Pilih metode rata-rata spasial yang paling sesuai dengan densitas stasiun dan topografi DAS Anda." />
- </label>
- <div className="inline-flex border border-slate-300 dark:border-slate-600 rounded-sm-sm overflow-hidden">
- <div
- role="button"
- tabIndex={0}
- onClick={() => setMetode('aljabar')}
- onKeyDown={(e) => e.key === 'Enter' && setMetode('aljabar')}
- className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${metode === 'aljabar'
- ? 'bg-pupr-blue text-white border-r border-pupr-blue'
- : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800 border-r border-slate-300 dark:border-slate-600'
- }`}
- >
- Rata-rata Aljabar
- <HelpTooltip content="Metode paling sederhana, disarankan jika topografi datar dan stasiun tersebar merata." />
- </div>
- <div
- role="button"
- tabIndex={0}
- onClick={() => setMetode('thiessen')}
- onKeyDown={(e) => e.key === 'Enter' && setMetode('thiessen')}
- className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${metode === 'thiessen'
- ? 'bg-pupr-blue text-pupr-blue border-r border-pupr-blue'
- : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800 border-r border-slate-300 dark:border-slate-600'
- }`}
- >
- Poligon Thiessen
- <HelpTooltip content="Membagi bobot berdasarkan luas pengaruh area. Membutuhkan koordinat stasiun." />
- </div>
- <div
- role="button"
- tabIndex={0}
- onClick={() => setMetode('isohyet')}
- onKeyDown={(e) => e.key === 'Enter' && setMetode('isohyet')}
- className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${metode === 'isohyet'
- ? 'bg-pupr-blue text-pupr-blue'
- : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800'
- }`}
- >
- Garis Isohyet
- <HelpTooltip content="Metode paling akurat untuk daerah pegunungan, menggunakan kontur hujan." />
- </div>
- </div>
- </div>
+          <div className="mb-6 mt-8">
+            <label className="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+              Pilihan Metode Perhitungan
+              <HelpTooltip content="Pilih metode rata-rata spasial yang paling sesuai dengan densitas stasiun dan topografi DAS Anda." />
+            </label>
+            <div className="flex flex-col sm:flex-row border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setMetode('aljabar')}
+                onKeyDown={(e) => e.key === 'Enter' && setMetode('aljabar')}
+                className={`flex-1 flex items-center justify-center gap-2 h-11 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${metode === 'aljabar'
+                  ? 'bg-pupr-blue text-white'
+                  : 'bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200'
+                }`}
+              >
+                Rata-rata Aljabar
+              </div>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setMetode('thiessen')}
+                onKeyDown={(e) => e.key === 'Enter' && setMetode('thiessen')}
+                className={`flex-1 flex items-center justify-center gap-2 h-11 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${metode === 'thiessen'
+                  ? 'bg-pupr-blue text-white'
+                  : 'bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200'
+                }`}
+              >
+                Poligon Thiessen
+              </div>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setMetode('isohyet')}
+                onKeyDown={(e) => e.key === 'Enter' && setMetode('isohyet')}
+                className={`flex-1 flex items-center justify-center gap-2 h-11 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${metode === 'isohyet'
+                  ? 'bg-pupr-blue text-white'
+                  : 'bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Garis Isohyet
+              </div>
+            </div>
+          </div>
 
- {
- metode === 'thiessen' && (
- <>
- {stasiunList.length === 0 ? (
- <div className="p-4 bg-amber-50 border border-amber-200 rounded-sm-sm flex items-center gap-2">
- <AlertCircle className="w-5 h-5 text-amber-600" />
- <p className="text-sm text-amber-800">Belum ada stasiun hujan. Tambahkan stasiun terlebih dahulu.</p>
- </div>
- ) : (
- <>
- <div className="overflow-x-auto mb-4 border border-slate-200 dark:border-slate-700 rounded-sm-sm">
- <table className="w-full text-sm">
- <thead className="bg-pupr-blue/[0.02] border-b border-slate-200 dark:border-slate-700">
- <tr>
- <th className="px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-300">Stasiun</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">Luas Pengaruh (km²)</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">Bobot (%)</th>
- </tr>
- </thead>
- <tbody>
- {configsWithBobot.map((config) => (
- <tr key={config.stasiunId} className="border-b border-slate-100 hover:bg-slate-50 dark:bg-slate-800">
- <td className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{config.namaStasiun}</td>
- <td className="px-3 py-2 tabular-nums tracking-tight">
- <input
- type="number"
- value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
- onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
- className="w-full h-9 px-2 text-sm text-right border border-slate-300 dark:border-slate-600 rounded-sm-sm focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
- placeholder="0.00"
- step="0.01"
- />
- </td>
- <td className="px-3 py-2 text-right tabular-nums tracking-tight">
- <span className="inline-flex items-center px-2 py-1 bg-slate-100 text-slate-700 dark:text-slate-300 rounded-sm font-semibold text-xs tabular-nums">
- {config.bobot.toFixed(2)}%
- </span>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
+          {
+            metode === 'thiessen' && (
+              <>
+                {stasiunList.length === 0 ? (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                    <p className="text-xs font-semibold text-amber-800">Belum ada stasiun hujan. Tambahkan stasiun terlebih dahulu.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto mb-6 bg-white rounded-lg border border-slate-200">
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider text-[10px]">Stasiun</th>
+                            <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Luas Pengaruh (km²)</th>
+                            <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Bobot (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {configsWithBobot.map((config) => (
+                            <tr key={config.stasiunId} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors even:bg-slate-50/50">
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 tracking-tight uppercase text-[10px]">{config.namaStasiun}</td>
+                              <td className="px-4 py-3 tabular-nums tracking-tight">
+                                <input
+                                  type="number"
+                                  value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
+                                  onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
+                                  className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                                  placeholder="0.00"
+                                  step="0.01"
+                                />
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums tracking-tight">
+                                <span className="inline-flex items-center justify-center px-3 h-11 bg-slate-100 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs tabular-nums w-20">
+                                  {config.bobot.toFixed(2)}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
- <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm-sm p-3 mb-4">
- <div className="flex justify-between items-center">
- <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Luas Pengaruh:</span>
- <span className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums">{totalLuasPengaruh.toFixed(2)} km²</span>
- </div>
- {morfometriDAS && (
- <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
- <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Luas DAS:</span>
- <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{morfometriDAS.luasDAS.toFixed(2)} km²</span>
- </div>
- )}
- </div>
+                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 mb-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Luas Pengaruh:</span>
+                        <span className="text-xl font-light text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{totalLuasPengaruh.toFixed(2)} <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">km²</span></span>
+                      </div>
+                      {morfometriDAS && (
+                        <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Luas DAS Aktual:</span>
+                          <span className="text-xl font-light text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{morfometriDAS.luasDAS.toFixed(2)} <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">km²</span></span>
+                        </div>
+                      )}
+                    </div>
 
- {hasError && (
- <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-sm-sm flex items-start gap-2">
- <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
- <div className="flex-1">
- <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas Pengaruh</p>
- <p className="text-xs text-red-700 mt-1">
- Total luas pengaruh ({totalLuasPengaruh.toFixed(2)} km²) harus sama dengan Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
- Selisih: <strong>{bobotError.toFixed(2)} km²</strong>
- </p>
- </div>
- </div>
- )}
- </>
- )}
- </>
- )
- }
+                    {hasError && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] font-bold text-red-900 uppercase tracking-wider">Peringatan: Selisih Luas Pengaruh</p>
+                          <p className="text-xs text-red-700 mt-1 font-semibold">
+                            Total luas pengaruh ({totalLuasPengaruh.toFixed(2)} km²) harus sama dengan Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
+                            Selisih: <strong>{bobotError.toFixed(2)} km²</strong>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )
+          }
 
- {
- metode === 'isohyet' && (
- <div className="space-y-4 mb-6">
- <div className="flex items-center justify-between">
- <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 ">Data Luas Antar Garis Isohyet</h4>
- <Button
- onClick={() => setIsohyetalConfigs([...isohyetalConfigs, { id: crypto.randomUUID(), label: `Area ${isohyetalConfigs.length + 1}`, curahHujanRataRata: 0, luasAntarGaris: 0, bobot: 0 }])}
- variant="outline"
- className="px-3 py-1 text-xs border-pupr-blue text-pupr-blue"
- >
- + Tambah Area
- </Button>
- </div>
+          {
+            metode === 'isohyet' && (
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Data Luas Antar Garis Isohyet</h4>
+                  <Button
+                    onClick={() => setIsohyetalConfigs([...isohyetalConfigs, { id: crypto.randomUUID(), label: `Area ${isohyetalConfigs.length + 1}`, curahHujanRataRata: 0, luasAntarGaris: 0, bobot: 0 }])}
+                    variant="outline"
+                    className="h-11 px-4 text-[10px] uppercase tracking-wider font-bold rounded-lg border-pupr-blue text-pupr-blue"
+                  >
+                    + Tambah Area
+                  </Button>
+                </div>
 
- <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-sm-sm">
- <table className="w-full text-sm border-collapse">
- <thead className="bg-pupr-blue/[0.02] border-b border-slate-200 dark:border-slate-700">
- <tr>
- <th className="px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-300">Label Area</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">AMS Hujan (mm)</th>
- <th className="px-3 py-2 text-right font-semibold text-slate-700 dark:text-slate-300">Luas (km²)</th>
- <th className="px-3 py-2 text-center text-slate-700 dark:text-slate-300">Aksi</th>
- </tr>
- </thead>
- <tbody>
- {isohyetalConfigs.map((config, idx) => (
- <tr key={config.id} className="border-b border-slate-100 hover:bg-slate-50 dark:bg-slate-800 transition-colors">
- <td className="px-2 py-2">
- <input
- value={config.label}
- onChange={(e) => {
- const newConfigs = [...isohyetalConfigs];
- newConfigs[idx].label = e.target.value;
- setIsohyetalConfigs(newConfigs);
- setIsSaved(false);
- }}
- className="w-full h-8 px-2 text-xs border border-slate-200 dark:border-slate-700 rounded-sm focus:ring-1 focus:ring-pupr-blue"
- />
- </td>
- <td className="px-2 py-2">
- <textarea
- value={config.annualMax ? config.annualMax.join(', ') : config.curahHujanRataRata}
- onChange={(e) => {
- const val = e.target.value;
- const nums = val.split(/[, \n]+/).map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
- const newConfigs = [...isohyetalConfigs];
- newConfigs[idx].annualMax = nums;
- if (nums.length > 0) newConfigs[idx].curahHujanRataRata = nums[0];
- setIsohyetalConfigs(newConfigs);
- setIsSaved(false);
- }}
- rows={1}
- className="w-full px-2 py-1 text-xs text-right border border-slate-200 dark:border-slate-700 rounded-sm focus:ring-1 focus:ring-pupr-blue font-mono"
- placeholder="60, 70, 80..."
- />
- </td>
- <td className="px-2 py-2">
- <input
- type="number"
- value={config.luasAntarGaris === 0 ? '' : config.luasAntarGaris}
- onChange={(e) => {
- const newConfigs = [...isohyetalConfigs];
- newConfigs[idx].luasAntarGaris = e.target.value as any;
- setIsohyetalConfigs(newConfigs);
- setIsSaved(false);
- }}
- className="w-full h-8 px-2 text-xs text-right border border-slate-200 dark:border-slate-700 rounded-sm focus:ring-1 focus:ring-pupr-blue"
- placeholder="0.00"
- />
- </td>
- <td className="px-2 py-2 text-center">
- <button
- onClick={() => {
- setIsohyetalConfigs(isohyetalConfigs.filter((_, i) => i !== idx));
- setIsSaved(false);
- }}
- className="text-red-500 hover:text-red-700 font-bold p-1"
- >
- ×
- </button>
- </td>
- </tr>
- ))}
- {isohyetalConfigs.length === 0 && (
- <tr>
- <td colSpan={4} className="px-3 py-4 text-center text-slate-500 italic text-xs">
- Belum ada data area isohyet. Tambahkan data area melalui peta atau input manual.
- </td>
- </tr>
- )}
- </tbody>
- </table>
- </div>
- </div>
- )
- }
+                <div className="overflow-x-auto bg-white rounded-lg border border-slate-200">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider text-[10px]">Label Area</th>
+                        <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">AMS Hujan (mm)</th>
+                        <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Luas (km²)</th>
+                        <th className="px-4 py-3 text-center font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {isohyetalConfigs.map((config, idx) => (
+                        <tr key={config.id} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors even:bg-slate-50/50">
+                          <td className="px-4 py-3">
+                            <input
+                              value={config.label}
+                              onChange={(e) => {
+                                const newConfigs = [...isohyetalConfigs];
+                                newConfigs[idx].label = e.target.value;
+                                setIsohyetalConfigs(newConfigs);
+                                setIsSaved(false);
+                              }}
+                              className="w-full h-11 px-3 text-xs border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 font-semibold"
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <textarea
+                              value={config.annualMax ? config.annualMax.join(', ') : config.curahHujanRataRata}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const nums = val.split(/[, \n]+/).map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                                const newConfigs = [...isohyetalConfigs];
+                                newConfigs[idx].annualMax = nums;
+                                if (nums.length > 0) newConfigs[idx].curahHujanRataRata = nums[0];
+                                setIsohyetalConfigs(newConfigs);
+                                setIsSaved(false);
+                              }}
+                              rows={1}
+                              className="w-full min-h-[44px] px-3 py-2 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 font-mono font-semibold"
+                              placeholder="60, 70, 80..."
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number"
+                              value={config.luasAntarGaris === 0 ? '' : config.luasAntarGaris}
+                              onChange={(e) => {
+                                const newConfigs = [...isohyetalConfigs];
+                                newConfigs[idx].luasAntarGaris = e.target.value as any;
+                                setIsohyetalConfigs(newConfigs);
+                                setIsSaved(false);
+                              }}
+                              className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 font-semibold tabular-nums"
+                              placeholder="0.00"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() => {
+                                setIsohyetalConfigs(isohyetalConfigs.filter((_, i) => i !== idx));
+                                setIsSaved(false);
+                              }}
+                              className="w-11 h-11 inline-flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg font-bold transition-colors"
+                            >
+                              ×
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {isohyetalConfigs.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-6 text-center text-slate-500 font-semibold text-xs bg-slate-50">
+                            Belum ada data area isohyet. Tambahkan data area melalui peta atau input manual.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          }
 
- {
- metode === 'aljabar' && (
- <div className="mb-4 p-3 bg-pupr-surface border-l-4 border-pupr-blue rounded-sm-sm">
- <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
- <strong className="text-pupr-blue">Rata-rata Aljabar:</strong> Semua stasiun memiliki bobot yang sama.
- Hujan wilayah dihitung dengan rata-rata aritmatik dari semua stasiun pengamatan yang tersedia.
- </p>
- </div>
- )
- }
+          {
+            metode === 'aljabar' && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 items-start">
+                <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <p className="text-xs font-semibold text-blue-800 leading-relaxed">
+                  Semua stasiun memiliki bobot yang sama.
+                  Hujan wilayah dihitung dengan rata-rata aritmatik dari semua stasiun pengamatan yang tersedia.
+                </p>
+              </div>
+            )
+          }
 
- <button
- onClick={handleSave}
- disabled={hasError}
- className={`w-full px-4 py-2.5 font-semibold rounded-sm-sm transition-all flex items-center justify-center gap-2 ${hasError
- ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
- : isSaved
- ? 'bg-green-600 hover:bg-green-700 text-white '
- : 'bg-pupr-blue hover:bg-pupr-blue text-white '
- }`}
- >
- {isSaved ? <CheckCircle className="w-4 h-4 animate-in fade-in scale-in-90 duration-75" /> : <Save className="w-4 h-4" />}
- {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi'}
- </button>
- </div >
- </Card >
- </div >
- );
+          <button
+            onClick={handleSave}
+            disabled={hasError}
+            className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${hasError
+              ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400'
+              : isSaved
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+              : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-sm'
+            }`}
+          >
+            {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi'}
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
 };
