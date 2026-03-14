@@ -1,275 +1,245 @@
+<div align="center">
+
 # 💧 RekaSDA Pro
 
 **Professional Water Resources Engineering Platform**
 
-Modern web application for hydrological analysis compliant with Indonesian National Standards (SNI).
+*Modern web application for hydrological analysis compliant with Indonesian National Standards (SNI).*
 
-[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://typescriptlang.org)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-DB_&_Auth-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI_Powered-8E75B2?logo=google&logoColor=white)](https://ai.google.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [🎯 Overview](#-overview)
+- [✨ Core Features](#-core-features)
+- [🏛️ SNI Compliance](#️-sni-compliance)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🚀 Getting Started](#-getting-started)
+- [💻 Development & Scripts](#-development--scripts)
+- [🗺️ Roadmap](#️-roadmap)
+- [🤝 Contributing](#-contributing)
+- [📄 License & Support](#-license--support)
 
 ---
 
 ## 🎯 Overview
 
-RekaSDA Pro eliminates manual calculation errors and accelerates hydrological workflows for Indonesian civil engineers with:
+**RekaSDA Pro** eliminates manual calculation errors and accelerates hydrological workflows for Indonesian civil engineers. Built with a modern, reactive tech stack and integrated with AI capabilities, it offers production-grade accuracy, real-time spatial mapping, and fully SNI-compliant methodologies.
 
-- ✅ SNI-compliant calculations
-- ✅ Production-grade accuracy
-- ✅ Mobile-first design
-- ✅ AI-powered insights
-- ✅ Interactive mapping
+**Key Benefits:**
+- **Zero Magic Numbers:** Strict adherence to parameters defined in `src/lib/constants/sni.ts`.
+- **High Performance:** Heavy mathematical calculations run asynchronously via Web Workers to keep the UI smooth.
+- **Enterprise UI/UX:** High-density, professional GovTech standard interfaces for complex data matrices.
+- **Single Source of Truth (SSOT):** Robust state management funneling from Supabase down to the calculation engines.
 
 ---
 
-## 🌊 Features
+## ✨ Core Features
 
-### Flood Analysis
-Calculate design flood discharge using:
-- Rational Method (watersheds <5000 ha)
-- HSS Nakayasu (unit hydrograph)
-- Frequency Analysis (Log Pearson III & Gumbel)
-- Return periods: Q2, Q5, Q10, Q25, Q50, Q100
+### 🌊 Flood Analysis
+Calculate design flood discharge using multiple established methodologies:
+- **Rational Method** (optimized for watersheds $\le$ 300 ha)
+- **HSS Nakayasu** (Unit hydrograph with standard $\alpha = 2.0$)
+- **Frequency Analysis** (Log Pearson III, Gumbel, Normal, Log-Normal)
+- **Return Periods:** Q2, Q5, Q10, Q25, Q50, Q100
 
-**Standard**: SNI 2415:2016
+### 📏 Channel Analysis (Hydraulics)
+Calculate hydraulic capacity and ensure safety parameters for open channels:
+- **Manning's Equation** integration
+- **Geometric Analysis:** Trapezoidal, rectangular, circular
+- **Safety Measures:** Flow regime classification and freeboard safety checks
 
-### Channel Analysis
-Hydraulic capacity for open channels:
-- Manning's Equation
-- Geometric analysis (trapezoidal, rectangular, circular)
-- Flow regime classification
-- Freeboard safety check
+### ⚖️ Water Balance (Neraca Air)
+Comprehensive supply vs. demand analysis for regional planning:
+- 12-month monthly balance tracking
+- Dependable flow determination (Q80)
+- Domestic and irrigation demand calculation
+- Environmental flow baseline (10% rule)
 
-**Standard**: SNI 03-3424-1994
-
-### Water Balance
-Supply vs. demand analysis:
-- Monthly balance (12-month)
-- Dependable flow (Q80)
-- Domestic & irrigation demand
-- Environmental flow (10% rule)
-- Critical month identification
-
-**Standards**: SNI 19-6728.1-2002, SNI 6738:2015
-
-### AI Consultant
-Gemini-powered virtual assistant:
-- Context-aware analysis
+### 🤖 AI Engineering Consultant
+Integrated Google Gemini assistant designed for Civil Engineering:
+- Context-aware design recommendations
 - SNI compliance verification
-- Design recommendations
-- Natural language Q&A
+- Natural language querying of project parameters
 
-### Interactive Mapping
-Spatial visualization:
-- Leaflet + OpenStreetMap
-- Color-coded markers (Blue: Channel, Red: Flood, Green: Water Balance)
-- Click-to-view details
-- List/Map toggle
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 16+ ([Download](https://nodejs.org/))
-- npm 8+
-- Git
-
-### Installation
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/rekasda-pro.git
-cd rekasda-pro
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env.example .env.local
-```
-
-Edit `.env.local`:
-```env
-# Supabase (Required)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-
-# Google Gemini AI (Optional)
-VITE_API_KEY=your-gemini-api-key
-```
-
-```bash
-# Start development server
-npm run dev
-```
-### Edge Functions (Optional)
-
-If you're using the AI-powered rainfall extraction feature, deploy the Supabase Edge Function:
-
-```bash
-# Login to Supabase CLI
-supabase login
-
-# Link your project (if not already linked)
-supabase link --project-ref your-project-ref
-
-# Set the Gemini API Key secret
-supabase secrets set GEMINI_API_KEY=your_api_key
-
-# Deploy the function
-supabase functions deploy extract-rainfall
-```
-
-
-Open [http://localhost:3000](http://localhost:3000)
-
-### Build for Production
-
-```bash
-npm run build
-npm run preview
-```
-
----
-
-## 🛠️ Tech Stack
-
-**Frontend**
-- React 18.3 + TypeScript 5.9
-- Vite 7.3
-- Tailwind CSS 3.4
-- Lucide React
-
-**Visualization**
-- Recharts 2.10
-- Leaflet 1.9
-
-**Backend**
-- Supabase (PostgreSQL + Auth)
-- Zod 3.23
-
-**AI**
-- Google Gemini API
-
----
-
-## 📁 Project Structure
-
-```
-rekasda-pro/
-├── public/              # Static assets
-├── src/
-│   ├── features/        # Feature modules
-│   │   ├── channel-analysis/
-│   │   ├── flood-analysis/
-│   │   ├── water-balance/
-│   │   ├── history/
-│   │   └── ai-consultant/
-│   ├── components/      # Reusable UI
-│   ├── lib/            # Core libraries
-│   ├── services/       # API & business logic
-│   ├── hooks/          # Custom hooks
-│   └── types/          # TypeScript definitions
-├── docs/               # Documentation
-└── database/           # SQL schemas
-```
+### 🗺️ Interactive Spatial Mapping
+Built-in GIS capabilities:
+- **Leaflet + OpenStreetMap** integration
+- Visual categorization (Blue: Channel, Red: Flood, Green: Water Balance)
+- Spatial data tracking via PostGIS in Supabase
 
 ---
 
 ## 🏛️ SNI Compliance
 
-| Standard | Application |
+RekaSDA Pro strictly adheres to the following Indonesian National Standards:
+
+| Standard | Scope of Application |
 |----------|-------------|
-| SNI 2415:2016 | Flood discharge calculations |
-| SNI 6738:2015 | Dependable flow analysis |
-| SNI 19-6728.1-2002 | Water balance methodology |
-| SNI 03-7065-2005 | Domestic water demand |
-| SNI 03-3424-1994 | Open channel hydraulics |
+| **SNI 2415:2016** | Flood discharge calculation procedures |
+| **SNI 6738:2015** | Dependable flow analysis methodology |
+| **SNI 19-6728.1-2002** | Water balance calculation methodology |
+| **SNI 03-7065-2005** | Domestic water demand projection |
+| **SNI 03-3424-1994** | Open channel hydraulic planning |
 
 ---
 
-## 🧪 Testing
+## 🛠️ Technology Stack
 
-```bash
-# Type checking
-npm run typecheck
+### Frontend Architecture
+- **Framework:** React 18.3 + TypeScript 5.9
+- **Build Tool:** Vite 7.3
+- **Styling:** Tailwind CSS 3.4, `clsx`, `tailwind-merge`
+- **State Management:** Zustand, TanStack React Query
+- **Routing:** React Router v6
 
-# Linting
-npm run lint
+### Data & Visualization
+- **Charts:** Recharts 2.10
+- **Mapping:** Leaflet 1.9, React-Leaflet, Turf.js
+- **Math/Formulas:** KaTeX, React-KaTeX
+
+### Backend & Infrastructure
+- **BaaS:** Supabase (PostgreSQL, PostGIS, Auth, Storage)
+- **Edge Functions:** Deno-based Supabase Functions
+- **AI Integration:** `@google/generative-ai`
+
+---
+
+## 🏗️ System Architecture
+
+```text
+rekasda-pro/
+├── src/
+│   ├── components/      # Reusable GovTech UI components
+│   ├── features/        # Domain-driven modules (flood, channel, etc.)
+│   ├── lib/
+│   │   ├── constants/   # SNI Constants (sni.ts - The SSOT)
+│   │   └── utils/       # Hydrology math engines & formulas
+│   ├── services/        # Supabase, Gemini AI, and external APIs
+│   ├── stores/          # Zustand global stores
+│   ├── types/           # Strict TypeScript interfaces
+│   └── workers/         # Web Workers for heavy mathematical logic
+├── scripts/
+│   └── automation/      # Maintenance, parsing, and DB utility scripts
+├── docs/                # Technical documentation and workflow visuals
+├── supabase/
+│   ├── functions/       # Serverless Edge Functions
+│   └── migrations/      # SQL schema and PostGIS setup
+└── package.json
 ```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js `v18.0.0` or higher
+- npm `v9.0.0` or higher
+- Git
+- Docker (optional, for local Supabase deployment)
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/your-org/rekasda-pro.git
+cd rekasda-pro
+npm install
+```
+
+### 2. Environment Configuration
+Duplicate the example environment file:
+```bash
+cp .env.example .env.local
+```
+Update `.env.local` with your credentials:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_API_KEY=your-gemini-api-key  # Optional: For AI Consultant
+```
+
+### 3. Database Setup
+Apply migrations to your Supabase instance:
+```bash
+supabase login
+supabase link --project-ref your-project-ref
+supabase db push
+```
+
+### 4. Start Development Server
+```bash
+npm run dev
+```
+The application will be available at `http://localhost:3000`.
+
+---
+
+## 💻 Development & Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Starts the Vite development server. |
+| `npm run build` | Compiles TypeScript and builds for production. |
+| `npm run preview` | Previews the production build locally. |
+| `npm run lint` | Runs ESLint to catch formatting and logic issues. |
+| `npm run typecheck`| Runs TypeScript compiler without emitting files. |
+| `npm run test` | Runs the Vitest test suite (hydrology engines). |
+| `npm run test:ui` | Runs Vitest with the visual UI dashboard. |
+
+*Note: Heavy algorithms should always be verified by running `npm run test` to ensure SNI calculation accuracy.*
 
 ---
 
 ## 🗺️ Roadmap
 
-**v1.1 (Q1 2025)**
-- PDF report generation
-- Excel export with formulas
-- Multi-user collaboration
+**v1.1.0 (Current Focus)**
+- Enhanced interactive mapping with PostGIS
+- Supabase Edge Function integration for rainfall extraction
+- PDF report generation (`jspdf`, `exceljs`)
 
-**v1.2 (Q2 2025)**
-- Real-time sensor integration
-- Advanced GIS features
-- Mobile native apps
+**v1.2.0**
+- Real-time IoT sensor integration
+- Multi-user collaborative workspaces
+- Offline PWA support with advanced caching
 
-**v2.0 (Q3 2025)**
-- Multi-language support
-- Machine learning predictions
-- Government integration
+**v2.0.0**
+- Government SSO integration
+- Advanced machine learning predictions
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+We welcome contributions to improve RekaSDA Pro. Please adhere to the following workflow:
 
-**Guidelines**:
-- Follow existing code style
-- Write meaningful commits
-- Update documentation
-- Ensure SNI compliance
+1. **Fork & Branch:** Create a feature branch (`git checkout -b feature/your-feature`).
+2. **Commit Standard:** Write meaningful commit messages.
+3. **No Magic Numbers:** All hydrological constants MUST reference `src/lib/constants/sni.ts`.
+4. **Test:** Ensure all hydrology tests pass (`npm run test`).
+5. **Push & PR:** Push to your fork and submit a Pull Request.
 
 ---
 
-## 📄 License
+## 📄 License & Support
 
-MIT License - see [LICENSE](LICENSE) file
+**License:** This project is licensed under the [MIT License](LICENSE).
 
-**Third-Party**:
-- React: MIT
-- Leaflet: BSD 2-Clause
-- Supabase: Apache 2.0
-- Tailwind CSS: MIT
-
----
-
-## 📞 Support
-
-- 📖 [Documentation](docs/)
-- 🐛 [Issues](https://github.com/yourusername/rekasda-pro/issues)
-- 💬 [Discussions](https://github.com/yourusername/rekasda-pro/discussions)
-- 📧 support@rekasda.pro
+**Support & Resources:**
+- 📖 [Technical Documentation](docs/)
+- 🐛 [Issue Tracker](https://github.com/your-org/rekasda-pro/issues)
+- 📧 For commercial support, contact: support@rekasda.pro
 
 ---
-
-## 🌟 Acknowledgments
-
-- **Badan Standardisasi Nasional (BSN)** - SNI standards
-- **Kementerian PUPR** - Technical guidance
-- **Indonesian Water Resources Engineers** - Field testing
-- **Open Source Community** - Amazing tools
-
----
-
 <div align="center">
-
-**Built with ❤️ for Indonesian Water Resources Engineers**
-
-[⬆ Back to Top](#-rekasda-pro)
-
+  <b>Built with ❤️ for Indonesian Water Resources Engineers</b>
 </div>
