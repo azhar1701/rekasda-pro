@@ -1,66 +1,60 @@
 import React from 'react';
+import { HelpTooltip } from '@/components/ui/govtech/HelpTooltip';
+import { cn } from '@/lib/utils';
 
 interface KPICardProps {
-  label: string;
-  value: string | number;
-  unit?: string;
-  icon?: React.ReactNode;
-  color?: 'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'slate';
-  tooltip?: string;
+ label: string;
+ value: string | number;
+ unit?: string;
+ color?: 'pupr-blue' | 'pupr-yellow' | 'emerald' | 'rose' | 'amber' | 'slate';
+ tooltip?: string;
+ className?: string;
 }
 
-const colorClasses = {
-  blue: 'bg-blue-100 text-blue-600',
-  green: 'bg-emerald-100 text-emerald-600',
-  purple: 'bg-purple-100 text-purple-600',
-  orange: 'bg-orange-100 text-orange-600',
-  teal: 'bg-teal-100 text-teal-600',
-  slate: 'bg-slate-100 text-slate-600'
-};
-
 const valueColorClasses = {
-  blue: 'text-blue-600',
-  green: 'text-emerald-600',
-  purple: 'text-purple-600',
-  orange: 'text-orange-600',
-  teal: 'text-teal-600',
-  slate: 'text-slate-600'
+ 'pupr-blue': 'text-pupr-blue',
+ 'pupr-yellow': 'text-slate-900 dark:text-slate-100',
+ 'emerald': 'text-emerald-700',
+ 'rose': 'text-rose-700',
+ 'amber': 'text-amber-700',
+ 'slate': 'text-slate-800 dark:text-slate-200'
 };
 
 export const KPICard: React.FC<KPICardProps> = ({ 
-  label, 
-  value, 
-  unit, 
-  icon, 
-  color = 'blue',
-  tooltip 
+ label, 
+ value, 
+ unit, 
+ color = 'pupr-blue',
+ tooltip,
+ className
 }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 group relative">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-          {label}
-          {tooltip && (
-            <>
-              <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
-                {tooltip}
-              </div>
-            </>
-          )}
-        </span>
-        {icon && (
-          <div className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
-            {icon}
-          </div>
-        )}
-      </div>
-      <div className={`text-3xl font-bold ${valueColorClasses[color]} font-mono`}>
-        {typeof value === 'number' ? value.toFixed(2) : value}
-      </div>
-      {unit && <div className="text-xs text-slate-500 font-medium mt-1">{unit}</div>}
-    </div>
-  );
+ return (
+ <div className={cn(
+ "bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 py-4 px-1 group transition-all hover:bg-slate-50 dark:bg-slate-800",
+ className
+ )}>
+ <div className="flex items-center gap-1.5 mb-1.5">
+ <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+ {label}
+ </span>
+ {tooltip && (
+ <HelpTooltip content={tooltip} title={label} className="ml-0 opacity-40 group-hover:opacity-100 transition-opacity" />
+ )}
+ </div>
+ 
+ <div className="flex items-baseline gap-2">
+ <div className={cn(
+ "text-3xl font-medium tabular-nums tracking-tight",
+ valueColorClasses[color]
+ )}>
+ {typeof value === 'number' ? value.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
+ </div>
+ {unit && (
+ <span className="text-xs font-medium text-slate-500">
+ {unit}
+ </span>
+ )}
+ </div>
+ </div>
+ );
 };

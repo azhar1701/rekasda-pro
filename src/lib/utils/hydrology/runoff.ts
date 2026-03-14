@@ -18,8 +18,8 @@
  * @returns Intensitas Curah Hujan (I) dalam satuan mm/jam
  */
 export function calculateMononobeIntensity(R24: number, timeOfConcentration: number): number {
-  if (timeOfConcentration <= 0) return 0;
-  return (R24 / 24.0) * Math.pow(24.0 / timeOfConcentration, 2.0 / 3.0);
+ if (timeOfConcentration <= 0) return 0;
+ return (R24 / 24.0) * Math.pow(24.0 / timeOfConcentration, 2.0 / 3.0);
 }
 
 /**
@@ -37,7 +37,7 @@ export function calculateMononobeIntensity(R24: number, timeOfConcentration: num
  * @returns Debit Puncak / Limpasan (Q) dalam m³/detik [cms]
  */
 export function calculateRationalPeak(runoffCoef: number, intensity: number, areaKm2: number): number {
-  return 0.278 * runoffCoef * intensity * areaKm2;
+ return 0.278 * runoffCoef * intensity * areaKm2;
 }
 
 // ─── BLUEPRINT: HIDROGRAF SATUAN SINTETIK (HSS) ───
@@ -46,18 +46,18 @@ export function calculateRationalPeak(runoffCoef: number, intensity: number, are
  * Interface Struktur Data Parameter Input Morfometri DAS untuk HSS
  */
 export interface BasinParameters {
-  area: number;                // A (Luas DAS, km2)
-  mainRiverLength: number;     // L (Panjang sungai utama, km)
-  channelSlope: number;        // S (Kemiringan dasar sungai / Gradient)
-  Lca?: number;                // Jarak ke titik berat DAS (km) - Untuk Snyder
+ area: number; // A (Luas DAS, km2)
+ mainRiverLength: number; // L (Panjang sungai utama, km)
+ channelSlope: number; // S (Kemiringan dasar sungai / Gradient)
+ Lca?: number; // Jarak ke titik berat DAS (km) - Untuk Snyder
 }
 
 /**
  * Tipe Bentuk Ordinat Dasar (Waktu & Debit Relatif)
  */
 export interface OrdinateResult {
-  timeIndex: number;          // T (Jam)
-  dischargeRelative: number;  // Debit m3/dtk per mm hujan efektif (m3/s/mm)
+ timeIndex: number; // T (Jam)
+ dischargeRelative: number; // Debit m3/dtk per mm hujan efektif (m3/s/mm)
 }
 
 /**
@@ -67,18 +67,18 @@ export interface OrdinateResult {
  * metode pengembalian standar `getPeakDischarge` dan `getHydrographOrdinates`.
  */
 export interface SyntheticUnitHydrograph {
-  readonly methodName: string; // Misal: "Gama I", "Nakayasu", "Snyder"
-  
-  /**
-   * Mengembalikan Q peak spesifik m3/dtk per mm hujan berdasarkan morfologi DAS lokal.
-   * Harus didefinisikan secara unik oleh tiap metode (contoh Nakayasu: A*Ro / (3.6) * ...)
-   */
-  getPeakDischarge(basin: BasinParameters): number;
-  
-  /**
-   * Menghitung kurva lengkung naik dan turun (Rising Limb / Recession Limb).
-   */
-  getHydrographOrdinates(basin: BasinParameters, timeStepHours: number): OrdinateResult[];
+ readonly methodName: string; // Misal: "Gama I", "Nakayasu", "Snyder"
+ 
+ /**
+ * Mengembalikan Q peak spesifik m3/dtk per mm hujan berdasarkan morfologi DAS lokal.
+ * Harus didefinisikan secara unik oleh tiap metode (contoh Nakayasu: A*Ro / (3.6) * ...)
+ */
+ getPeakDischarge(basin: BasinParameters): number;
+ 
+ /**
+ * Menghitung kurva lengkung naik dan turun (Rising Limb / Recession Limb).
+ */
+ getHydrographOrdinates(basin: BasinParameters, timeStepHours: number): OrdinateResult[];
 }
 
 // ─── METODE HUJAN EFEKTIF (EFFECTIVE RAINFALL) ───
@@ -88,7 +88,7 @@ export interface SyntheticUnitHydrograph {
  * P_eff = P * C
  */
 export function calculateEffectiveRainfallByC(P: number, C: number): number {
-  return P * C;
+ return P * C;
 }
 
 /**
@@ -96,15 +96,15 @@ export function calculateEffectiveRainfallByC(P: number, C: number): number {
  * P_eff = (P - 0.2S)^2 / (P + 0.8S)
  */
 export function calculateEffectiveRainfallByCN(totalRainfallMm: number, CN: number): number {
-  if (CN <= 0 || CN >= 100) return 0;
+ if (CN <= 0 || CN >= 100) return 0;
 
-  // Varian metrik langsung (mm) — tanpa konversi inci
-  const S_mm = (25400 / CN) - 254;
-  const Ia = 0.2 * S_mm; // Initial Abstraction
+ // Varian metrik langsung (mm) — tanpa konversi inci
+ const S_mm = (25400 / CN) - 254;
+ const Ia = 0.2 * S_mm; // Initial Abstraction
 
-  if (totalRainfallMm <= Ia) return 0;
+ if (totalRainfallMm <= Ia) return 0;
 
-  return Math.pow(totalRainfallMm - Ia, 2) / (totalRainfallMm + 0.8 * S_mm);
+ return Math.pow(totalRainfallMm - Ia, 2) / (totalRainfallMm + 0.8 * S_mm);
 }
 
 /**
@@ -112,6 +112,6 @@ export function calculateEffectiveRainfallByCN(totalRainfallMm: number, CN: numb
  * P_eff = P - (Phi * t)
  */
 export function calculateEffectiveRainfallByPhi(P: number, phiMmPerHour: number, durationHours: number): number {
-  const loss = phiMmPerHour * durationHours;
-  return Math.max(0, P - loss);
+ const loss = phiMmPerHour * durationHours;
+ return Math.max(0, P - loss);
 }

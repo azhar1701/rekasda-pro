@@ -13,430 +13,430 @@ import { useRoutingMutation } from '@/hooks/api/useEmbungApi';
 
 // Default Data for Initialization
 const DEFAULT_HYDROGRAPH = [
-    { time: 0, inflow: 0 },
-    { time: 1, inflow: 15 },
-    { time: 2, inflow: 45 },
-    { time: 3, inflow: 120 },
-    { time: 4, inflow: 85 },
-    { time: 5, inflow: 50 },
-    { time: 6, inflow: 25 },
-    { time: 7, inflow: 10 },
-    { time: 8, inflow: 0 },
+ { time: 0, inflow: 0 },
+ { time: 1, inflow: 15 },
+ { time: 2, inflow: 45 },
+ { time: 3, inflow: 120 },
+ { time: 4, inflow: 85 },
+ { time: 5, inflow: 50 },
+ { time: 6, inflow: 25 },
+ { time: 7, inflow: 10 },
+ { time: 8, inflow: 0 },
 ];
 
 // Mock Curves for demonstration (Usually loaded from project database)
 const MOCK_STAGE_STORAGE = {
-    elevation: [100, 101, 102, 103, 104, 105],
-    storage: [0, 50000, 120000, 210000, 320000, 450000],
-    area: [0, 10000, 22000, 35000, 50000, 67000]
+ elevation: [100, 101, 102, 103, 104, 105],
+ storage: [0, 50000, 120000, 210000, 320000, 450000],
+ area: [0, 10000, 22000, 35000, 50000, 67000]
 };
 const MOCK_STAGE_DISCHARGE = {
-    elevation: [100, 101, 102, 103, 104, 105],
-    storage: [0, 50000, 120000, 210000, 320000, 450000],  // required by StageCurve
-    discharge: [0, 5, 15, 35, 65, 110]
+ elevation: [100, 101, 102, 103, 104, 105],
+ storage: [0, 50000, 120000, 210000, 320000, 450000], // required by StageCurve
+ discharge: [0, 5, 15, 35, 65, 110]
 };
 
 
 interface RoutingAnalysisTabProps {
-    onConsultAI?: (data: any, result: any) => void;
+ onConsultAI?: (data: any, result: any) => void;
 }
 
 export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsultAI }) => {
-    const { hasilBanjir, isBanjirDirty, setHasilEmbung, hasilEmbung } = useHydrologyStore();
-    const isAutoFilled = Boolean(hasilBanjir?.hidrograf?.length);
+ const { hasilBanjir, isBanjirDirty, setHasilEmbung, hasilEmbung } = useHydrologyStore();
+ const isAutoFilled = Boolean(hasilBanjir?.hidrograf?.length);
 
-    // Form State
-    const [hydrograph, setHydrograph] = useState(DEFAULT_HYDROGRAPH);
+ // Form State
+ const [hydrograph, setHydrograph] = useState(DEFAULT_HYDROGRAPH);
 
-    // Run Once to sync autofill
-    useEffect(() => {
-        if (isAutoFilled && hasilBanjir) {
-            setHydrograph(hasilBanjir.hidrograf.map(h => ({ time: h.time, inflow: h.inflow })));
-            setResultData(null);
-            setSummary(null);
-        }
-    }, [isAutoFilled, hasilBanjir]);
+ // Run Once to sync autofill
+ useEffect(() => {
+ if (isAutoFilled && hasilBanjir) {
+ setHydrograph(hasilBanjir.hidrograf.map(h => ({ time: h.time, inflow: h.inflow })));
+ setResultData(null);
+ setSummary(null);
+ }
+ }, [isAutoFilled, hasilBanjir]);
 
-    // Result State
-    const [resultData, setResultData] = useState<any[] | null>(null);
-    const [summary, setSummary] = useState<{ peakInflow: number, peakOutflow: number, attenuation: number } | null>(null);
+ // Result State
+ const [resultData, setResultData] = useState<any[] | null>(null);
+ const [summary, setSummary] = useState<{ peakInflow: number, peakOutflow: number, attenuation: number } | null>(null);
 
-    const handleInflowChange = (index: number, val: string) => {
-        const newHydro = [...hydrograph];
-        newHydro[index].inflow = parseFloat(val) || 0;
-        setHydrograph(newHydro);
-        setResultData(null); // Reset result on change
-        setSummary(null);
-    };
+ const handleInflowChange = (index: number, val: string) => {
+ const newHydro = [...hydrograph];
+ newHydro[index].inflow = parseFloat(val) || 0;
+ setHydrograph(newHydro);
+ setResultData(null); // Reset result on change
+ setSummary(null);
+ };
 
-    const handleAddTime = () => {
-        const lastTime = hydrograph.length > 0 ? hydrograph[hydrograph.length - 1].time : -1;
-        setHydrograph([...hydrograph, { time: lastTime + 1, inflow: 0 }]);
-    };
+ const handleAddTime = () => {
+ const lastTime = hydrograph.length > 0 ? hydrograph[hydrograph.length - 1].time : -1;
+ setHydrograph([...hydrograph, { time: lastTime + 1, inflow: 0 }]);
+ };
 
-    const routingMutation = useRoutingMutation();
-    const isCalculating = routingMutation.isPending;
+ const routingMutation = useRoutingMutation();
+ const isCalculating = routingMutation.isPending;
 
-    const handleCalculate = async () => {
-        setResultData(null);
-        setSummary(null);
+ const handleCalculate = async () => {
+ setResultData(null);
+ setSummary(null);
 
-        // Preference: Try local pure calculation first for "Pure Hydrology" integration
-        try {
-            const dtSeconds = 3600; // 1 jam
-            const inflowArray = hydrograph.map(h => h.inflow);
+ // Preference: Try local pure calculation first for "Pure Hydrology" integration
+ try {
+ const dtSeconds = 3600; // 1 jam
+ const inflowArray = hydrograph.map(h => h.inflow);
 
-            const characteristicCurve: ReservoirCharacteristicCurve = {
-                elevations: MOCK_STAGE_STORAGE.elevation,
-                storages: MOCK_STAGE_STORAGE.storage,
-                outflows: MOCK_STAGE_DISCHARGE.discharge
-            };
+ const characteristicCurve: ReservoirCharacteristicCurve = {
+ elevations: MOCK_STAGE_STORAGE.elevation,
+ storages: MOCK_STAGE_STORAGE.storage,
+ outflows: MOCK_STAGE_DISCHARGE.discharge
+ };
 
-            const routingResult = modifiedPulsRouting(
-                inflowArray,
-                dtSeconds,
-                characteristicCurve,
-                MOCK_STAGE_STORAGE.elevation[0] // Initial elevation at spillway crest
-            );
+ const routingResult = modifiedPulsRouting(
+ inflowArray,
+ dtSeconds,
+ characteristicCurve,
+ MOCK_STAGE_STORAGE.elevation[0] // Initial elevation at spillway crest
+ );
 
-            const chartData = routingResult.map((step) => ({
-                time: step.timeIndex, // in hours
-                inflow: Number(step.inflow.toFixed(2)),
-                outflow: Number(step.outflow.toFixed(2)),
-                elevation: Number(step.elevation.toFixed(2))
-            }));
+ const chartData = routingResult.map((step) => ({
+ time: step.timeIndex, // in hours
+ inflow: Number(step.inflow.toFixed(2)),
+ outflow: Number(step.outflow.toFixed(2)),
+ elevation: Number(step.elevation.toFixed(2))
+ }));
 
-            setResultData(chartData);
+ setResultData(chartData);
 
-            const peakInflow = Math.max(...inflowArray);
-            const peakOutflow = Math.max(...routingResult.map(r => r.outflow));
-            const attenuation = peakInflow > 0 ? ((peakInflow - peakOutflow) / peakInflow) * 100 : 0;
+ const peakInflow = Math.max(...inflowArray);
+ const peakOutflow = Math.max(...routingResult.map(r => r.outflow));
+ const attenuation = peakInflow > 0 ? ((peakInflow - peakOutflow) / peakInflow) * 100 : 0;
 
-            const s = {
-                peakInflow: Number(peakInflow.toFixed(2)),
-                peakOutflow: Number(peakOutflow.toFixed(2)),
-                attenuation: Number(attenuation.toFixed(1))
-            };
+ const s = {
+ peakInflow: Number(peakInflow.toFixed(2)),
+ peakOutflow: Number(peakOutflow.toFixed(2)),
+ attenuation: Number(attenuation.toFixed(1))
+ };
 
-            setSummary(s);
-            setHasilEmbung({
-                isAman: s.peakOutflow <= s.peakInflow,
-                reduksiPuncak: s.attenuation,
-                umurSedimen: hasilEmbung?.umurSedimen || 0
-            });
+ setSummary(s);
+ setHasilEmbung({
+ isAman: s.peakOutflow <= s.peakInflow,
+ reduksiPuncak: s.attenuation,
+ umurSedimen: hasilEmbung?.umurSedimen || 0
+ });
 
-            toast.success('Simulasi Penelusuran Banjir (Pure Local Engine) berhasil.');
-        } catch (error: any) {
-            console.error('Local routing failed, trying mutation...', error);
-            // Fallback to mutation if local fails (optional, based on requirement)
-            try {
-                const inflowInput = hydrograph.map(h => ({
-                    time: h.time * 3600,
-                    discharge: h.inflow
-                }));
+ toast.success('Simulasi Penelusuran Banjir (Pure Local Engine) berhasil.');
+ } catch (error: any) {
+ console.error('Local routing failed, trying mutation...', error);
+ // Fallback to mutation if local fails (optional, based on requirement)
+ try {
+ const inflowInput = hydrograph.map(h => ({
+ time: h.time * 3600,
+ discharge: h.inflow
+ }));
 
-                const routingResult = await routingMutation.mutateAsync({
-                    inflowHydrograph: inflowInput,
-                    stageStorageCurve: MOCK_STAGE_STORAGE,
-                    stageDischargeCurve: MOCK_STAGE_DISCHARGE,
-                    deltaT: 3600,
-                    initialElevation: 100
-                });
+ const routingResult = await routingMutation.mutateAsync({
+ inflowHydrograph: inflowInput,
+ stageStorageCurve: MOCK_STAGE_STORAGE,
+ stageDischargeCurve: MOCK_STAGE_DISCHARGE,
+ deltaT: 3600,
+ initialElevation: 100
+ });
 
-                const chartData = routingResult.steps.map((step: any) => ({
-                    time: step.time / 3600,
-                    inflow: Number(step.inflowAvg.toFixed(2)),
-                    outflow: Number(step.outflow.toFixed(2)),
-                    elevation: Number(step.elevation.toFixed(2))
-                }));
+ const chartData = routingResult.steps.map((step: any) => ({
+ time: step.time / 3600,
+ inflow: Number(step.inflowAvg.toFixed(2)),
+ outflow: Number(step.outflow.toFixed(2)),
+ elevation: Number(step.elevation.toFixed(2))
+ }));
 
-                setResultData(chartData);
+ setResultData(chartData);
 
-                const s = {
-                    peakInflow: Number(routingResult.peakInflow.toFixed(2)),
-                    peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
-                    attenuation: Number((routingResult.attenuationRatio).toFixed(1))
-                };
+ const s = {
+ peakInflow: Number(routingResult.peakInflow.toFixed(2)),
+ peakOutflow: Number(routingResult.peakOutflow.toFixed(2)),
+ attenuation: Number((routingResult.attenuationRatio).toFixed(1))
+ };
 
-                setSummary(s);
-                toast.success('Simulasi Penelusuran Banjir REST API berhasil.');
-            } catch (innerError: any) {
-                toast.error(`Gagal: ${innerError.message}`);
-            }
-        }
-    };
+ setSummary(s);
+ toast.success('Simulasi Penelusuran Banjir REST API berhasil.');
+ } catch (innerError: any) {
+ toast.error(`Gagal: ${innerError.message}`);
+ }
+ }
+ };
 
-    return (
-        <div className="flex flex-col h-full gap-5">
-            {/* Project Banner (SSOT) */}
-            <ProjectContextBanner />
+ return (
+ <div className="flex flex-col h-full gap-5">
+ {/* Project Banner (SSOT) */}
+ <ProjectContextBanner />
 
-            {/* Header Info */}
-            <div className="flex items-start justify-between bg-blue-50/50 p-4 rounded-md border border-blue-100">
-                <div className="flex gap-3">
-                    <Info className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
-                    <div>
-                        <h3 className="text-sm font-semibold text-blue-900">Penelusuran Banjir (Flood Routing)</h3>
-                        <p className="text-sm text-blue-700/80 mt-1">
-                            Metode Level-Pool (Modified Puls) untuk menyimulasikan perjalanan hidrograf banjir melewati waduk. Evaluasi kemampuan embung dalam meredam puncak banjir (attenuation).
-                        </p>
-                        <p className="text-xs text-pupr-blue mt-2 font-medium bg-blue-100/50 inline-block px-2 py-1 rounded">
-                            *Catatan: Kurva Kapasitas & Lengkung Debit menggunakan profil embung yang terdaftar.
-                        </p>
-                    </div>
-                </div>
-            </div>
+ {/* Header Info */}
+ <div className="flex items-start justify-between bg-pupr-surface/50 p-4 rounded-sm border border-pupr-border">
+ <div className="flex gap-3">
+ <Info className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
+ <div>
+ <h3 className="text-sm font-semibold text-blue-900">Penelusuran Banjir (Flood Routing)</h3>
+ <p className="text-sm text-pupr-blue/80 mt-1">
+ Metode Level-Pool (Modified Puls) untuk menyimulasikan perjalanan hidrograf banjir melewati waduk. Evaluasi kemampuan embung dalam meredam puncak banjir (attenuation).
+ </p>
+ <p className="text-xs text-pupr-blue mt-2 font-medium bg-blue-100/50 inline-block px-2 py-1 rounded">
+ *Catatan: Kurva Kapasitas & Lengkung Debit menggunakan profil embung yang terdaftar.
+ </p>
+ </div>
+ </div>
+ </div>
 
-            {/* Layout Asimetris (Span 5 | Span 7) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+ {/* Layout Asimetris (Span 5 | Span 7) */}
+ <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
 
-                {/* KIRI: Input Form (Span 5) */}
-                <div className="lg:col-span-5 flex flex-col gap-4 min-h-0">
-                    <Card className="flex flex-col h-full shadow-sm border-slate-200">
-                        <CardHeader className="py-4 px-5 border-b border-slate-100 bg-slate-50/50">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="text-lg text-slate-800">Hidrograf Masuk (Inflow)</CardTitle>
-                                    <CardDescription className="text-xs">Debit setiap jam (m³/s)</CardDescription>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        onClick={handleCalculate}
-                                        disabled={isCalculating || Boolean(isAutoFilled && isBanjirDirty)}
-                                        className={`shadow-sm transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-pupr-blue hover:bg-teal-700 text-white'}`}
-                                    >
-                                        {isCalculating ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-md animate-pulse bg-slate-200 rounded-md" />
-                                                <span>Menghitung...</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <Calculator className="w-4 h-4 mr-2" />
-                                                Simulasi Routing
-                                            </>
-                                        )}
-                                    </Button>
-                                    {summary && onConsultAI && (
-                                        <Button
-                                            size="sm"
-                                            onClick={() => onConsultAI({ hydrograph }, { resultData, summary })}
-                                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 shadow-sm transition-all group"
-                                        >
-                                            <Sparkles className="w-4 h-4 mr-2 text-pupr-blue group-hover:scale-110 transition-transform" />
-                                            Analisis AI
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </CardHeader>
+ {/* KIRI: Input Form (Span 5) */}
+ <div className="lg:col-span-5 flex flex-col gap-4 min-h-0">
+ <Card className="flex flex-col h-full border-slate-200 dark:border-slate-700">
+ <CardHeader className="py-4 px-5 border-b border-slate-100 bg-slate-50 dark:bg-slate-800">
+ <div className="flex items-center justify-between">
+ <div>
+ <CardTitle className="text-lg text-slate-800 dark:text-slate-200">Hidrograf Masuk (Inflow)</CardTitle>
+ <CardDescription className="text-xs">Debit setiap jam (m³/s)</CardDescription>
+ </div>
+ <div className="flex items-center gap-2">
+ <Button
+ size="sm"
+ onClick={handleCalculate}
+ disabled={isCalculating || Boolean(isAutoFilled && isBanjirDirty)}
+ className={` transition-all ${isAutoFilled && isBanjirDirty ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-pupr-blue hover:bg-teal-700 text-white'}`}
+ >
+ {isCalculating ? (
+ <div className="flex items-center gap-2">
+ <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-sm animate-pulse bg-slate-200 rounded-sm" />
+ <span>Menghitung...</span>
+ </div>
+ ) : (
+ <>
+ <Calculator className="w-4 h-4 mr-2" />
+ Simulasi Routing
+ </>
+ )}
+ </Button>
+ {summary && onConsultAI && (
+ <Button
+ size="sm"
+ onClick={() => onConsultAI({ hydrograph }, { resultData, summary })}
+ className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 transition-all group"
+ >
+ <Sparkles className="w-4 h-4 mr-2 text-pupr-blue group- transition-transform" />
+ Analisis AI
+ </Button>
+ )}
+ </div>
+ </div>
+ </CardHeader>
 
-                        <CardContent className="flex-1 overflow-auto p-0 z-0 border border-slate-200 rounded-b-xl border-t-0 bg-white flex flex-col">
-                            {isAutoFilled ? (
-                                <div className="p-4 bg-teal-50/50 border-b border-teal-100 shrink-0">
-                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-md border border-teal-200 shadow-sm">
-                                        <CheckCircle className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-bold text-teal-800">Auto-fill Aktif</p>
-                                            <p className="text-xs text-pupr-blue mt-0.5 leading-relaxed">
-                                                Data Hidrograf Inflow tersinkronisasi otomatis dari Modul Banjir.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-4 bg-amber-50/50 border-b border-amber-100 shrink-0">
-                                    <div className="flex items-start gap-3 bg-white/60 backdrop-blur-sm p-3 rounded-md border border-amber-200 shadow-sm">
-                                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-bold text-amber-800">Data Inflow Belum Tersedia</p>
-                                            <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
-                                                Silakan lakukan perhitungan di Modul Banjir terlebih dahulu atau input manual di bawah ini.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+ <CardContent className="flex-1 overflow-auto p-0 z-0 border border-slate-200 dark:border-slate-700 rounded-b-xl border-t-0 bg-white dark:bg-slate-900 flex flex-col">
+ {isAutoFilled ? (
+ <div className="p-4 bg-teal-50/50 border-b border-teal-100 shrink-0">
+ <div className="flex items-start gap-3 bg-white dark:bg-slate-900 p-3 rounded-sm border border-teal-200 ">
+ <CheckCircle className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
+ <div>
+ <p className="text-sm font-bold text-teal-800">Auto-fill Aktif</p>
+ <p className="text-xs text-pupr-blue mt-0.5 leading-relaxed">
+ Data Hidrograf Inflow tersinkronisasi otomatis dari Modul Banjir.
+ </p>
+ </div>
+ </div>
+ </div>
+ ) : (
+ <div className="p-4 bg-amber-50/50 border-b border-amber-100 shrink-0">
+ <div className="flex items-start gap-3 bg-white dark:bg-slate-900 p-3 rounded-sm border border-amber-200 ">
+ <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+ <div>
+ <p className="text-sm font-bold text-amber-800">Data Inflow Belum Tersedia</p>
+ <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
+ Silakan lakukan perhitungan di Modul Banjir terlebih dahulu atau input manual di bawah ini.
+ </p>
+ </div>
+ </div>
+ </div>
+ )}
 
-                            <div className="w-full flex-1 overflow-auto custom-scrollbar">
-                                <div className="flex w-full sticky top-0 z-10 bg-slate-50 border-y border-slate-200 text-xs font-semibold text-slate-600 shadow-sm">
-                                    <div className="flex-none w-24 py-3 px-4 text-left">Waktu (Jam)</div>
-                                    <div className="flex-1 py-3 px-4 text-right">Debit Inflow (m³/s)</div>
-                                </div>
+ <div className="w-full flex-1 overflow-auto custom-scrollbar">
+ <div className="flex w-full sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 ">
+ <div className="flex-none w-24 py-3 px-4 text-left">Waktu (Jam)</div>
+ <div className="flex-1 py-3 px-4 text-right">Debit Inflow (m³/s)</div>
+ </div>
 
-                                <div className="w-full">
-                                    {hydrograph.map((row, idx) => (
-                                        <div key={idx} className="flex w-full items-center border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                                            <div className="flex-none w-24 py-2.5 px-4 font-medium text-slate-600">
-                                                t = {row.time}
-                                            </div>
-                                            <div className="flex-1 py-2 px-4 text-right">
-                                                {isAutoFilled ? (
-                                                    <span className="text-sm font-bold text-slate-700 pr-3">{row.inflow}</span>
-                                                ) : (
-                                                    <Input
-                                                        type="number"
-                                                        value={row.inflow}
-                                                        onChange={(e) => handleInflowChange(idx, e.target.value)}
-                                                        className="h-8 text-right text-sm font-medium focus-visible:ring-1 focus-visible:ring-teal-500 shadow-none border-slate-200"
-                                                    />
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {!isAutoFilled && (
-                                        <button
-                                            onClick={handleAddTime}
-                                            className="w-full py-3 text-xs font-medium text-pupr-blue hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
-                                        >
-                                            + Tambah Baris Waktu
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+ <div className="w-full">
+ {hydrograph.map((row, idx) => (
+ <div key={idx} className="flex w-full items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:bg-slate-800 transition-colors">
+ <div className="flex-none w-24 py-2.5 px-4 font-medium text-slate-600 dark:text-slate-400">
+ t = {row.time}
+ </div>
+ <div className="flex-1 py-2 px-4 text-right">
+ {isAutoFilled ? (
+ <span className="text-sm font-bold text-slate-700 dark:text-slate-300 pr-3">{row.inflow}</span>
+ ) : (
+ <Input
+ type="number"
+ value={row.inflow}
+ onChange={(e) => handleInflowChange(idx, e.target.value)}
+ className="h-8 text-right text-sm font-medium focus-visible:ring-1 focus-visible:ring-teal-500 border-slate-200 dark:border-slate-700"
+ />
+ )}
+ </div>
+ </div>
+ ))}
+ {!isAutoFilled && (
+ <button
+ onClick={handleAddTime}
+ className="w-full py-3 text-xs font-medium text-pupr-blue hover:bg-teal-50 transition-colors border-t border-dashed border-teal-200"
+ >
+ + Tambah Baris Waktu
+ </button>
+ )}
+ </div>
+ </div>
+ </CardContent>
+ </Card>
+ </div>
 
-                {/* KANAN: Visualisasi (Span 7) */}
-                <div className="lg:col-span-7 flex flex-col gap-4 min-h-0">
-                    <DependencyWarningBanner module="banjir" />
+ {/* KANAN: Visualisasi (Span 7) */}
+ <div className="lg:col-span-7 flex flex-col gap-4 min-h-0">
+ <DependencyWarningBanner module="banjir" />
 
-                    {/* 3 Summary Cards */}
-                    <div className="grid grid-cols-3 gap-4 shrink-0">
-                        {/* Puncak Inflow */}
-                        <Card className="shadow-sm border-slate-200 bg-white">
-                            <CardContent className="p-4">
-                                <p className="text-slate-500 text-xs font-medium mb-1 uppercase tracking-wider">Puncak Inflow</p>
-                                <div className="flex items-baseline gap-1.5">
-                                    <h2 className="text-2xl font-bold text-slate-800">
-                                        {summary ? summary.peakInflow : "-"}
-                                    </h2>
-                                    <span className="text-slate-400 text-xs font-medium">m³/s</span>
-                                </div>
-                            </CardContent>
-                        </Card>
+ {/* 3 Summary Cards */}
+ <div className="grid grid-cols-3 gap-4 shrink-0">
+ {/* Puncak Inflow */}
+ <Card className=" border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+ <CardContent className="p-4">
+ <p className="text-slate-500 text-xs font-medium mb-1 uppercase tracking-wider">Puncak Inflow</p>
+ <div className="flex items-baseline gap-1.5">
+ <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+ {summary ? summary.peakInflow : "-"}
+ </h2>
+ <span className="text-slate-500 text-xs font-medium">m³/s</span>
+ </div>
+ </CardContent>
+ </Card>
 
-                        {/* Puncak Outflow */}
-                        <Card className="shadow-sm border-slate-200 bg-teal-50/50 border-teal-100">
-                            <CardContent className="p-4">
-                                <p className="text-teal-700/80 text-xs font-medium mb-1 uppercase tracking-wider">Puncak Outflow</p>
-                                <div className="flex items-baseline gap-1.5">
-                                    <h2 className="text-2xl font-bold text-teal-700">
-                                        {summary ? summary.peakOutflow : "-"}
-                                    </h2>
-                                    <span className="text-pupr-blue text-xs font-medium">m³/s</span>
-                                </div>
-                            </CardContent>
-                        </Card>
+ {/* Puncak Outflow */}
+ <Card className=" border-slate-200 dark:border-slate-700 bg-teal-50/50 border-teal-100">
+ <CardContent className="p-4">
+ <p className="text-teal-700/80 text-xs font-medium mb-1 uppercase tracking-wider">Puncak Outflow</p>
+ <div className="flex items-baseline gap-1.5">
+ <h2 className="text-2xl font-bold text-teal-700">
+ {summary ? summary.peakOutflow : "-"}
+ </h2>
+ <span className="text-pupr-blue text-xs font-medium">m³/s</span>
+ </div>
+ </CardContent>
+ </Card>
 
-                        {/* Reduksi / Attenuation */}
-                        <Card className="shadow-sm border-slate-200 bg-indigo-50/50 border-indigo-100 relative overflow-hidden">
-                            <ArrowDownRight className="absolute -right-3 -bottom-3 w-16 h-16 text-indigo-200/50 opacity-50" />
-                            <CardContent className="p-4 relative z-10">
-                                <p className="text-indigo-700/80 text-xs font-medium mb-1 uppercase tracking-wider">Reduksi Puncak</p>
-                                <div className="flex items-baseline gap-1.5">
-                                    <h2 className="text-2xl font-bold text-indigo-700">
-                                        {summary ? summary.attenuation : "-"}
-                                    </h2>
-                                    <span className="text-pupr-blue text-xs font-medium">%</span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+ {/* Reduksi / Attenuation */}
+ <Card className=" border-slate-200 dark:border-slate-700 bg-indigo-50/50 border-indigo-100 relative overflow-hidden">
+ <ArrowDownRight className="absolute -right-3 -bottom-3 w-16 h-16 text-indigo-200/50 opacity-50" />
+ <CardContent className="p-4 relative z-10">
+ <p className="text-indigo-700/80 text-xs font-medium mb-1 uppercase tracking-wider">Reduksi Puncak</p>
+ <div className="flex items-baseline gap-1.5">
+ <h2 className="text-2xl font-bold text-indigo-700">
+ {summary ? summary.attenuation : "-"}
+ </h2>
+ <span className="text-pupr-blue text-xs font-medium">%</span>
+ </div>
+ </CardContent>
+ </Card>
+ </div>
 
-                    {/* Main Chart */}
-                    <Card className="flex-1 shadow-sm border-slate-200 flex flex-col min-h-[350px]">
-                        <CardHeader className="py-4 px-5 border-b border-slate-100 flex flex-row items-center justify-between shrink-0 bg-white/50 backdrop-blur-sm z-10">
-                            <div className="flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-pupr-blue" />
-                                <CardTitle className="text-slate-800 text-base">Grafik Routing (Inflow vs Outflow)</CardTitle>
-                            </div>
-                            {resultData && (
-                                <Button variant="outline" size="icon" className="h-8 w-8 text-slate-500">
-                                    <Download className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </CardHeader>
+ {/* Main Chart */}
+ <Card className="flex-1 border-slate-200 dark:border-slate-700 flex flex-col min-h-[350px]">
+ <CardHeader className="py-4 px-5 border-b border-slate-100 flex flex-row items-center justify-between shrink-0 bg-white dark:bg-slate-900 z-10">
+ <div className="flex items-center gap-2">
+ <Activity className="w-5 h-5 text-pupr-blue" />
+ <CardTitle className="text-slate-800 dark:text-slate-200 text-base">Grafik Routing (Inflow vs Outflow)</CardTitle>
+ </div>
+ {resultData && (
+ <Button variant="outline" size="icon" className="h-8 w-8 text-slate-500">
+ <Download className="h-4 w-4" />
+ </Button>
+ )}
+ </CardHeader>
 
-                        <CardContent className="flex-1 p-6 relative">
-                            {/* Loading Overlay */}
-                            {isCalculating && (
-                                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded-b-xl">
-                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-teal-500 rounded-md animate-pulse bg-slate-200 rounded-md mb-3" />
-                                    <p className="text-slate-600 font-medium text-sm animate-pulse">Menghitung rute banjir...</p>
-                                </div>
-                            )}
+ <CardContent className="flex-1 p-6 relative">
+ {/* Loading Overlay */}
+ {isCalculating && (
+ <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-b-xl">
+ <div className="w-10 h-10 border-4 border-slate-200 dark:border-slate-700 border-t-teal-500 rounded-sm animate-pulse bg-slate-200 rounded-sm mb-3" />
+ <p className="text-slate-600 dark:text-slate-400 font-medium text-sm animate-pulse">Menghitung rute banjir...</p>
+ </div>
+ )}
 
-                            {!resultData && !isCalculating ? (
-                                <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
-                                    <Activity className="w-12 h-12 opacity-20" />
-                                    <p className="text-sm font-medium">Masukkan hidrograf inflow dan klik Simulasi Routing</p>
-                                </div>
-                            ) : (
-                                <div className="w-full h-full min-h-[250px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <ComposedChart data={resultData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
-                                                </linearGradient>
-                                                <linearGradient id="colorOutflow" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.2} />
-                                                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                                            <XAxis
-                                                dataKey="time"
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fill: '#64748B', fontSize: 12 }}
-                                                dy={10}
-                                                name="Waktu (Jam)"
-                                            />
-                                            <YAxis
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fill: '#64748B', fontSize: 12 }}
-                                            />
-                                            <Tooltip
-                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                                labelFormatter={(val) => `Waktu: t=${val} jam`}
-                                                formatter={(val: number) => [val + ' m³/s']}
-                                            />
-                                            <Legend verticalAlign="top" height={36} iconType="circle" />
+ {!resultData && !isCalculating ? (
+ <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-3">
+ <Activity className="w-12 h-12 opacity-20" />
+ <p className="text-sm font-medium">Masukkan hidrograf inflow dan klik Simulasi Routing</p>
+ </div>
+ ) : (
+ <div className="w-full h-full min-h-[250px]">
+ <ResponsiveContainer width="100%" height="100%">
+ <ComposedChart data={resultData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+ <defs>
+ <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
+ <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3} />
+ <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
+ </linearGradient>
+ <linearGradient id="colorOutflow" x1="0" y1="0" x2="0" y2="1">
+ <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.2} />
+ <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+ </linearGradient>
+ </defs>
+ <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+ <XAxis
+ dataKey="time"
+ axisLine={false}
+ tickLine={false}
+ tick={{ fill: '#64748B', fontSize: 12 }}
+ dy={10}
+ name="Waktu (Jam)"
+ />
+ <YAxis
+ axisLine={false}
+ tickLine={false}
+ tick={{ fill: '#64748B', fontSize: 12 }}
+ />
+ <Tooltip
+ contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+ labelFormatter={(val) => `Waktu: t=${val} jam`}
+ formatter={(val: number) => [val + ' m³/s']}
+ />
+ <Legend verticalAlign="top" height={36} iconType="circle" />
 
-                                            <Area
-                                                type="monotone"
-                                                dataKey="inflow"
-                                                name="Inflow (Masuk)"
-                                                fill="url(#colorInflow)"
-                                                stroke="#64748b"
-                                                strokeWidth={2}
-                                                strokeDasharray="5 5"
-                                            />
+ <Area
+ type="monotone"
+ dataKey="inflow"
+ name="Inflow (Masuk)"
+ fill="url(#colorInflow)"
+ stroke="#64748b"
+ strokeWidth={2}
+ strokeDasharray="5 5"
+ />
 
-                                            <Area
-                                                type="monotone"
-                                                dataKey="outflow"
-                                                name="Outflow (Keluar)"
-                                                fill="url(#colorOutflow)"
-                                                stroke="#0ea5e9"
-                                                strokeWidth={3}
-                                                activeDot={{ r: 6, fill: "#0ea5e9", stroke: "#fff", strokeWidth: 2 }}
-                                            />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </div>
-    );
+ <Area
+ type="monotone"
+ dataKey="outflow"
+ name="Outflow (Keluar)"
+ fill="url(#colorOutflow)"
+ stroke="#0ea5e9"
+ strokeWidth={3}
+ activeDot={{ r: 6, fill: "#0ea5e9", stroke: "#fff", strokeWidth: 2 }}
+ />
+ </ComposedChart>
+ </ResponsiveContainer>
+ </div>
+ )}
+ </CardContent>
+ </Card>
+ </div>
+ </div>
+ </div>
+ );
 };
 

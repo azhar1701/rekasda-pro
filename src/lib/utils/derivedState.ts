@@ -11,8 +11,8 @@
  * @returns Time of concentration (hours)
  */
 export function calculateTimeOfConcentration(L: number, S: number): number {
-  if (L <= 0 || S <= 0) return 0;
-  return 0.0195 * Math.pow(L * 1000, 0.77) * Math.pow(S, -0.385) / 60; // Convert to hours
+ if (L <= 0 || S <= 0) return 0;
+ return 0.0195 * Math.pow(L * 1000, 0.77) * Math.pow(S, -0.385) / 60; // Convert to hours
 }
 
 /**
@@ -23,7 +23,7 @@ export function calculateTimeOfConcentration(L: number, S: number): number {
  * @returns Volume (m³)
  */
 export function rainfallToVolume(rainfall: number, area: number): number {
-  return rainfall * area * 1000;
+ return rainfall * area * 1000;
 }
 
 /**
@@ -32,11 +32,11 @@ export function rainfallToVolume(rainfall: number, area: number): number {
  * @returns Weighted average
  */
 export function calculateWeightedAverage(
-  items: Array<{ luas: number; value: number }>
+ items: Array<{ luas: number; value: number }>
 ): number {
-  const totalLuas = items.reduce((sum, item) => sum + item.luas, 0);
-  if (totalLuas === 0) return 0;
-  return items.reduce((sum, item) => sum + (item.value * item.luas), 0) / totalLuas;
+ const totalLuas = items.reduce((sum, item) => sum + item.luas, 0);
+ if (totalLuas === 0) return 0;
+ return items.reduce((sum, item) => sum + (item.value * item.luas), 0) / totalLuas;
 }
 
 /**
@@ -47,11 +47,11 @@ export function calculateWeightedAverage(
  * @returns Design discharge (m³/s)
  */
 export function getDesignDischarge(
-  type: 'flood' | 'irrigation',
-  floodPeak: number | null,
-  dependableFlow: number | null
+ type: 'flood' | 'irrigation',
+ floodPeak: number | null,
+ dependableFlow: number | null
 ): number | null {
-  if (type === 'flood') return floodPeak;
-  if (type === 'irrigation') return dependableFlow;
-  return null;
+ if (type === 'flood') return floodPeak;
+ if (type === 'irrigation') return dependableFlow;
+ return null;
 }

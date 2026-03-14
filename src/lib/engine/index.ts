@@ -4,29 +4,29 @@ export * from './dependableFlow';
 export * from './validation';
 export * from './statistics';
 export {
-  calculateRationalDischarge as calculateRationalMethod,
-  calculateTc,
-  validateRationalInput as validateRationalMethod,
-  convertKm2ToHa,
-  convertHaToKm2,
-  RationalInputSchema,
-  TcInputSchema
+ calculateRationalDischarge as calculateRationalMethod,
+ calculateTc,
+ validateRationalInput as validateRationalMethod,
+ convertKm2ToHa,
+ convertHaToKm2,
+ RationalInputSchema,
+ TcInputSchema
 } from './rationalMethod';
 export type {
-  RationalMethodInput,
-  RationalMethodOutput,
-  TcInput
+ RationalMethodInput,
+ RationalMethodOutput,
+ TcInput
 } from './rationalMethod';
 export {
-  calculateHaspersOsugi,
-  calculateDerWeduwen,
-  calculateMelchior,
-  calculateDesignFloodIndo,
-  compareAllMethods,
-  ModifiedRationalInputSchema,
+ calculateHaspersOsugi,
+ calculateDerWeduwen,
+ calculateMelchior,
+ calculateDesignFloodIndo,
+ compareAllMethods,
+ ModifiedRationalInputSchema,
 } from './flood/modifiedRationalIndo';
 export type {
-  ModifiedRationalInput,
-  ModifiedRationalResult,
-  DesignFloodResult,
+ ModifiedRationalInput,
+ ModifiedRationalResult,
+ DesignFloodResult,
 } from './flood/modifiedRationalIndo';

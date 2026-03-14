@@ -7,11 +7,11 @@
  *
  * The Rational Method: Q = 0.278 * C * I * A
  * Where:
- *   Q = Peak discharge (m³/s)
- *   C = Runoff coefficient (0-1, dimensionless)
- *   I = Rainfall intensity (mm/hour)
- *   A = Catchment area (km²)
- *   0.278 = Conversion factor (for metric units)
+ * Q = Peak discharge (m³/s)
+ * C = Runoff coefficient (0-1, dimensionless)
+ * I = Rainfall intensity (mm/hour)
+ * A = Catchment area (km²)
+ * 0.278 = Conversion factor (for metric units)
  *
  * Reference:
  * - Soewarno (1995) "Hydrologi untuk Insinyur"
@@ -31,23 +31,23 @@ const RATIONAL_CONSTANT = 0.278; // Conversion factor for metric units
  * Using Kirpich Formula:
  * Tc = 0.01947 * (L^0.77) / (S^0.385)
  * Where:
- *   L = Flow length (m)
- *   S = Slope (m/m)
- *   Tc = Time in minutes
+ * L = Flow length (m)
+ * S = Slope (m/m)
+ * Tc = Time in minutes
  * 
  * @param flowLength - Distance from farthest point to outlet (m)
  * @param slope - Average catchment slope (m/m)
  * @returns Time of concentration in minutes
  */
 export function calculateTimeOfConcentration(
-  flowLength: number,
-  slope: number
+ flowLength: number,
+ slope: number
 ): number {
-  if (flowLength <= 0 || slope <= 0) return 0;
+ if (flowLength <= 0 || slope <= 0) return 0;
 
-  // Kirpich formula
-  const Tc = 0.01947 * Math.pow(flowLength, 0.77) / Math.pow(slope, 0.385);
-  return Math.max(Tc, 5); // Minimum 5 minutes
+ // Kirpich formula
+ const Tc = 0.01947 * Math.pow(flowLength, 0.77) / Math.pow(slope, 0.385);
+ return Math.max(Tc, 5); // Minimum 5 minutes
 }
 
 /**
@@ -66,15 +66,15 @@ export function calculateTimeOfConcentration(
  * @returns Rainfall intensity in mm/hour
  */
 export function calculateRainfallIntensity(
-  duration: number,
-  designRainfall: number
+ duration: number,
+ designRainfall: number
 ): number {
-  if (duration <= 0 || designRainfall <= 0) return 0;
+ if (duration <= 0 || designRainfall <= 0) return 0;
 
-  // Simplified formula: I = R24 / (1 + (t/60))
-  // More refined formula for Indonesian conditions
-  const intensityFactor = 1 + duration / 60; // Simple approach
-  return designRainfall / intensityFactor;
+ // Simplified formula: I = R24 / (1 + (t/60))
+ // More refined formula for Indonesian conditions
+ const intensityFactor = 1 + duration / 60; // Simple approach
+ return designRainfall / intensityFactor;
 }
 
 /**
@@ -92,14 +92,14 @@ export function calculateRainfallIntensity(
  * // Q ≈ 16.5 m³/s
  */
 export function calculateRationalDischarge(
-  runoffCoefficient: number,
-  rainfallIntensity: number,
-  area: number
+ runoffCoefficient: number,
+ rainfallIntensity: number,
+ area: number
 ): number {
-  if (runoffCoefficient < 0 || runoffCoefficient > 1) return 0;
-  if (rainfallIntensity <= 0 || area <= 0) return 0;
+ if (runoffCoefficient < 0 || runoffCoefficient > 1) return 0;
+ if (rainfallIntensity <= 0 || area <= 0) return 0;
 
-  return RATIONAL_CONSTANT * runoffCoefficient * rainfallIntensity * area;
+ return RATIONAL_CONSTANT * runoffCoefficient * rainfallIntensity * area;
 }
 
 /**
@@ -107,15 +107,15 @@ export function calculateRationalDischarge(
  * 
  * Pe = C * R
  * Where:
- *   Pe = Effective rainfall (mm)
- *   C = Runoff coefficient
- *   R = Total rainfall (mm)
+ * Pe = Effective rainfall (mm)
+ * C = Runoff coefficient
+ * R = Total rainfall (mm)
  */
 function calculateEffectiveRainfall(
-  runoffCoefficient: number,
-  totalRainfall: number
+ runoffCoefficient: number,
+ totalRainfall: number
 ): number {
-  return runoffCoefficient * totalRainfall;
+ return runoffCoefficient * totalRainfall;
 }
 
 /**
@@ -125,13 +125,13 @@ function calculateEffectiveRainfall(
  * Where Pe = effective rainfall, A = area
  */
 function calculateRunoffVolume(
-  effectiveRainfall: number,
-  area: number
+ effectiveRainfall: number,
+ area: number
 ): number {
-  // Convert mm rain to m³
-  // 1 mm/1000 * area in m²
-  const areaM2 = area * 1e6; // Convert km² to m²
-  return (effectiveRainfall / 1000) * areaM2;
+ // Convert mm rain to m³
+ // 1 mm/1000 * area in m²
+ const areaM2 = area * 1e6; // Convert km² to m²
+ return (effectiveRainfall / 1000) * areaM2;
 }
 
 /**
@@ -143,82 +143,82 @@ function calculateRunoffVolume(
  * Calculate peak discharge characteristics
  */
 export function calculateRational(inputs: RationalInputs) {
-  const { runoffCoefficient, area, rainfallDesign, flowLength, catchmentSlope } =
-    inputs;
+ const { runoffCoefficient, area, rainfallDesign, flowLength, catchmentSlope } =
+ inputs;
 
-  // ===== INPUT VALIDATION =====
-  if (runoffCoefficient < 0 || runoffCoefficient > 1) {
-    throw new Error('Runoff coefficient must be between 0 and 1');
-  }
-  if (area <= 0) {
-    throw new Error('Catchment area must be > 0 km²');
-  }
-  if (rainfallDesign <= 0) {
-    throw new Error('Design rainfall must be > 0 mm');
-  }
-  if (flowLength <= 0) {
-    throw new Error('Flow length must be > 0 m');
-  }
-  if (catchmentSlope <= 0 || catchmentSlope > 1) {
-    throw new Error('Slope must be between 0 and 1 m/m');
-  }
+ // ===== INPUT VALIDATION =====
+ if (runoffCoefficient < 0 || runoffCoefficient > 1) {
+ throw new Error('Runoff coefficient must be between 0 and 1');
+ }
+ if (area <= 0) {
+ throw new Error('Catchment area must be > 0 km²');
+ }
+ if (rainfallDesign <= 0) {
+ throw new Error('Design rainfall must be > 0 mm');
+ }
+ if (flowLength <= 0) {
+ throw new Error('Flow length must be > 0 m');
+ }
+ if (catchmentSlope <= 0 || catchmentSlope > 1) {
+ throw new Error('Slope must be between 0 and 1 m/m');
+ }
 
-  // ===== TIME & INTENSITY CALCULATIONS =====
-  const timeOfConcentration = calculateTimeOfConcentration(
-    flowLength,
-    catchmentSlope
-  );
+ // ===== TIME & INTENSITY CALCULATIONS =====
+ const timeOfConcentration = calculateTimeOfConcentration(
+ flowLength,
+ catchmentSlope
+ );
 
-  const rainfallIntensity = calculateRainfallIntensity(
-    timeOfConcentration,
-    rainfallDesign
-  );
+ const rainfallIntensity = calculateRainfallIntensity(
+ timeOfConcentration,
+ rainfallDesign
+ );
 
-  // ===== DISCHARGE CALCULATIONS =====
-  const peakDischarge = calculateRationalDischarge(
-    runoffCoefficient,
-    rainfallIntensity,
-    area
-  );
+ // ===== DISCHARGE CALCULATIONS =====
+ const peakDischarge = calculateRationalDischarge(
+ runoffCoefficient,
+ rainfallIntensity,
+ area
+ );
 
-  // ===== RUNOFF CALCULATIONS =====
-  const effectiveRainfall = calculateEffectiveRainfall(
-    runoffCoefficient,
-    rainfallDesign
-  );
+ // ===== RUNOFF CALCULATIONS =====
+ const effectiveRainfall = calculateEffectiveRainfall(
+ runoffCoefficient,
+ rainfallDesign
+ );
 
-  const runoffVolume = calculateRunoffVolume(effectiveRainfall, area);
+ const runoffVolume = calculateRunoffVolume(effectiveRainfall, area);
 
-  // ===== RUNOFF RATE & CHARACTERISTICS =====
-  const runoffRate = (peakDischarge / (area * 1e6)) * 1000; // mm per event
-  const specificDischarge = peakDischarge / area; // m³/s per km²
+ // ===== RUNOFF RATE & CHARACTERISTICS =====
+ const runoffRate = (peakDischarge / (area * 1e6)) * 1000; // mm per event
+ const specificDischarge = peakDischarge / area; // m³/s per km²
 
-  // ===== FLOW VERIFICATION =====
-  // Check if result is reasonable
-  let flowQuality = 'Normal';
-  if (peakDischarge < 0.1) flowQuality = 'Very small (check inputs)';
-  else if (peakDischarge > 500) flowQuality = 'Very large (verify inputs)';
+ // ===== FLOW VERIFICATION =====
+ // Check if result is reasonable
+ let flowQuality = 'Normal';
+ if (peakDischarge < 0.1) flowQuality = 'Very small (check inputs)';
+ else if (peakDischarge > 500) flowQuality = 'Very large (verify inputs)';
 
-  // ===== RETURN RESULTS =====
-  return {
-    // Time & Intensity
-    TimeOfConcentration: timeOfConcentration.toFixed(1),
-    RainfallIntensity: HydraulicFormatter.rainfall(rainfallIntensity),
-    EffectiveRainfall: HydraulicFormatter.rainfall(effectiveRainfall),
+ // ===== RETURN RESULTS =====
+ return {
+ // Time & Intensity
+ TimeOfConcentration: timeOfConcentration.toFixed(1),
+ RainfallIntensity: HydraulicFormatter.rainfall(rainfallIntensity),
+ EffectiveRainfall: HydraulicFormatter.rainfall(effectiveRainfall),
 
-    // Discharge & Volume
-    PeakDischarge: HydraulicFormatter.discharge(peakDischarge),
-    RunoffVolume: runoffVolume.toFixed(0),
-    SpecificDischarge: specificDischarge.toFixed(3),
+ // Discharge & Volume
+ PeakDischarge: HydraulicFormatter.discharge(peakDischarge),
+ RunoffVolume: runoffVolume.toFixed(0),
+ SpecificDischarge: specificDischarge.toFixed(3),
 
-    // Status & Quality
-    FlowQuality: flowQuality,
+ // Status & Quality
+ FlowQuality: flowQuality,
 
-    // Additional Parameters
-    RunoffRate: HydraulicFormatter.rainfall(runoffRate),
-    AverageCatchmentSlope: (catchmentSlope * 100).toFixed(2) + '%',
-    DesignStorm24h: HydraulicFormatter.rainfall(rainfallDesign),
-  };
+ // Additional Parameters
+ RunoffRate: HydraulicFormatter.rainfall(runoffRate),
+ AverageCatchmentSlope: (catchmentSlope * 100).toFixed(2) + '%',
+ DesignStorm24h: HydraulicFormatter.rainfall(rainfallDesign),
+ };
 }
 
 export type RationalResults = ReturnType<typeof calculateRational>;

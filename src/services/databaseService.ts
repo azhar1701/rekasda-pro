@@ -6,129 +6,129 @@ import { logger } from '../lib/utils/logger'
  * databaseService is maintained for backward compatibility during the refactoring phase.
  */
 export interface CalculationRecord {
-  id?: string
-  site_name: string
-  calculation_type: 'manning' | 'rational'
-  input_data: Record<string, unknown>
-  result_data: Record<string, unknown>
-  location?: Record<string, unknown>
-  photo_url?: string
-  notes?: string
-  created_at?: string
-  updated_at?: string
+ id?: string
+ site_name: string
+ calculation_type: 'manning' | 'rational'
+ input_data: Record<string, unknown>
+ result_data: Record<string, unknown>
+ location?: Record<string, unknown>
+ photo_url?: string
+ notes?: string
+ created_at?: string
+ updated_at?: string
 }
 
 const sanitizeForLog = (data: unknown): string => {
-  if (typeof data === 'string') {
-    return data.replace(/[\r\n\t]/g, ' ').substring(0, 100);
-  }
-  return JSON.stringify(data).replace(/[\r\n\t]/g, ' ').substring(0, 100);
+ if (typeof data === 'string') {
+ return data.replace(/[\r\n\t]/g, ' ').substring(0, 100);
+ }
+ return JSON.stringify(data).replace(/[\r\n\t]/g, ' ').substring(0, 100);
 };
 
 export const databaseService = {
-  async saveCalculation(data: Omit<CalculationRecord, 'id' | 'created_at'>) {
-    if (!isSupabaseEnabled()) {
-      logger.warn('Supabase not configured. Calculation not saved.')
-      return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
-    }
+ async saveCalculation(data: Omit<CalculationRecord, 'id' | 'created_at'>) {
+ if (!isSupabaseEnabled()) {
+ logger.warn('Supabase not configured. Calculation not saved.')
+ return { id: 'local-' + Date.now(), ...data, created_at: new Date().toISOString() }
+ }
 
-    try {
-      // Clean and prepare data
-      const cleanData = {
-        site_name: data.site_name || 'Unknown Site',
-        calculation_type: data.calculation_type,
-        input_data: data.input_data || {},
-        result_data: data.result_data || {},
-        location: data.location || null,
-        photo_url: data.photo_url || null,
-        notes: data.notes || null
-      }
+ try {
+ // Clean and prepare data
+ const cleanData = {
+ site_name: data.site_name || 'Unknown Site',
+ calculation_type: data.calculation_type,
+ input_data: data.input_data || {},
+ result_data: data.result_data || {},
+ location: data.location || null,
+ photo_url: data.photo_url || null,
+ notes: data.notes || null
+ }
 
-      logger.info('Attempting to save calculation:', sanitizeForLog(cleanData))
+ logger.info('Attempting to save calculation:', sanitizeForLog(cleanData))
 
-      const { data: result, error } = await supabase!
-        .from('calculations')
-        .insert([cleanData])
-        .select()
-      
-      if (error) {
-        logger.error('Supabase save error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        throw new Error(`Database save failed: ${error.message}`)
-      }
-      
-      if (!result || result.length === 0) {
-        throw new Error('No data returned from insert operation')
-      }
-      
-      logger.info('Successfully saved to Supabase:', sanitizeForLog(result[0]))
-      return result[0]
-    } catch (error) {
-      logger.error('Save calculation error:', error)
-      throw error
-    }
-  },
+ const { data: result, error } = await supabase!
+ .from('calculations')
+ .insert([cleanData])
+ .select()
+ 
+ if (error) {
+ logger.error('Supabase save error details:', {
+ message: error.message,
+ details: error.details,
+ hint: error.hint,
+ code: error.code
+ })
+ throw new Error(`Database save failed: ${error.message}`)
+ }
+ 
+ if (!result || result.length === 0) {
+ throw new Error('No data returned from insert operation')
+ }
+ 
+ logger.info('Successfully saved to Supabase:', sanitizeForLog(result[0]))
+ return result[0]
+ } catch (error) {
+ logger.error('Save calculation error:', error)
+ throw error
+ }
+ },
 
-  async getCalculations() {
-    if (!isSupabaseEnabled()) {
-      logger.warn('Supabase not configured. Returning empty array.')
-      return []
-    }
+ async getCalculations() {
+ if (!isSupabaseEnabled()) {
+ logger.warn('Supabase not configured. Returning empty array.')
+ return []
+ }
 
-    const { data, error } = await supabase!
-      .from('calculations')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    return data
-  },
+ const { data, error } = await supabase!
+ .from('calculations')
+ .select('*')
+ .order('created_at', { ascending: false })
+ 
+ if (error) throw error
+ return data
+ },
 
-  async deleteCalculation(id: string) {
-    if (!isSupabaseEnabled()) {
-      logger.warn('Supabase not configured. Cannot delete calculation.')
-      return
-    }
+ async deleteCalculation(id: string) {
+ if (!isSupabaseEnabled()) {
+ logger.warn('Supabase not configured. Cannot delete calculation.')
+ return
+ }
 
-    const { error } = await supabase!
-      .from('calculations')
-      .delete()
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+ const { error } = await supabase!
+ .from('calculations')
+ .delete()
+ .eq('id', id)
+ 
+ if (error) throw error
+ },
 
-  async testConnection() {
-    if (!isSupabaseEnabled()) {
-      return { connected: false, error: 'Supabase not configured' }
-    }
+ async testConnection() {
+ if (!isSupabaseEnabled()) {
+ return { connected: false, error: 'Supabase not configured' }
+ }
 
-    try {
-      // Test basic connection
-      const { data, error } = await supabase!
-        .from('calculations')
-        .select('id')
-        .limit(1)
-      
-      if (error) {
-        logger.error('Supabase connection test failed:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        return { connected: false, error: `Connection failed: ${error.message}` }
-      }
-      
-      logger.info('Connection test successful, found records:', data?.length || 0)
-      return { connected: true, error: null }
-    } catch (error) {
-      logger.error('Supabase connection error:', error)
-      return { connected: false, error: (error as Error).message }
-    }
-  }
+ try {
+ // Test basic connection
+ const { data, error } = await supabase!
+ .from('calculations')
+ .select('id')
+ .limit(1)
+ 
+ if (error) {
+ logger.error('Supabase connection test failed:', {
+ message: error.message,
+ details: error.details,
+ hint: error.hint,
+ code: error.code
+ })
+ return { connected: false, error: `Connection failed: ${error.message}` }
+ }
+ 
+ logger.info('Connection test successful, found records:', data?.length || 0)
+ return { connected: true, error: null }
+ } catch (error) {
+ logger.error('Supabase connection error:', error)
+ return { connected: false, error: (error as Error).message }
+ }
+ }
 }

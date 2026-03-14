@@ -4,352 +4,352 @@ import { Waves, Save, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { useHydrologyWorker } from '@/hooks/useHydrologyWorker';
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+ AreaChart,
+ Area,
+ XAxis,
+ YAxis,
+ CartesianGrid,
+ Tooltip,
+ ResponsiveContainer,
 } from 'recharts';
 
 interface KonvolusiStepProps {
-  hssOrdinates: number[];
-  hssHydrograph: { time: number; discharge: number }[];
-  selectedHSS: string | null;
-  onComplete: () => void;
-  isCompleted: boolean;
+ hssOrdinates: number[];
+ hssHydrograph: { time: number; discharge: number }[];
+ selectedHSS: string | null;
+ onComplete: () => void;
+ isCompleted: boolean;
 }
 
 interface HydrographPoint {
-  time: number;
-  inflow: number;
+ time: number;
+ inflow: number;
 }
 
 interface KonvolusiState {
-  hydrograph: HydrographPoint[];
-  peakDischarge: number;
-  timeToPeak: number;
+ hydrograph: HydrographPoint[];
+ peakDischarge: number;
+ timeToPeak: number;
 }
 
 const INITIAL_STATE: KonvolusiState = {
-  hydrograph: [],
-  peakDischarge: 0,
-  timeToPeak: 0,
+ hydrograph: [],
+ peakDischarge: 0,
+ timeToPeak: 0,
 };
 
 export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
-  hssOrdinates,
-  hssHydrograph,
-  selectedHSS,
-  onComplete,
-  isCompleted,
+ hssOrdinates,
+ hssHydrograph,
+ selectedHSS,
+ onComplete,
+ isCompleted,
 }) => {
-  const { setHasilBanjir, hujanEfektif } = useHydrologyStore();
+ const { setHasilBanjir, hujanEfektif } = useHydrologyStore();
 
-  // ── Worker hook — semua kalkulasi berat di background thread ──────────────
-  const { calculateConvolution, isCalculating, error: workerError, clearError } =
-    useHydrologyWorker();
+ // ── Worker hook — semua kalkulasi berat di background thread ──────────────
+ const { calculateConvolution, isCalculating, error: workerError, clearError } =
+ useHydrologyWorker();
 
-  const [result, setResult] = useState<KonvolusiState>(INITIAL_STATE);
-  const [hasCalculated, setHasCalculated] = useState(false);
+ const [result, setResult] = useState<KonvolusiState>(INITIAL_STATE);
+ const [hasCalculated, setHasCalculated] = useState(false);
 
-  const isDataReady =
-    Array.isArray(hujanEfektif) &&
-    hujanEfektif.length > 0 &&
-    hssOrdinates.length > 0;
+ const isDataReady =
+ Array.isArray(hujanEfektif) &&
+ hujanEfektif.length > 0 &&
+ hssOrdinates.length > 0;
 
-  // Reset hasil saat input berubah (step sebelumnya diubah user)
-  useEffect(() => {
-    setResult(INITIAL_STATE);
-    setHasCalculated(false);
-    clearError();
-  }, [hujanEfektif, hssOrdinates, clearError]);
+ // Reset hasil saat input berubah (step sebelumnya diubah user)
+ useEffect(() => {
+ setResult(INITIAL_STATE);
+ setHasCalculated(false);
+ clearError();
+ }, [hujanEfektif, hssOrdinates, clearError]);
 
-  // ── Trigger kalkulasi konvolusi di Worker ──────────────────────────────────
-  const handleCalculate = useCallback(async () => {
-    if (!isDataReady || isCalculating) return;
+ // ── Trigger kalkulasi konvolusi di Worker ──────────────────────────────────
+ const handleCalculate = useCallback(async () => {
+ if (!isDataReady || isCalculating) return;
 
-    try {
-      clearError();
+ try {
+ clearError();
 
-      // Kirim ke background thread — main thread TIDAK terblokir
-      const workerResult = await calculateConvolution({
-        hujanEfektif: hujanEfektif ?? [],
-        ordinatHSS: hssOrdinates,
-        baseflow: 0,
-        timeStep: 0.5,
-      });
+ // Kirim ke background thread — main thread TIDAK terblokir
+ const workerResult = await calculateConvolution({
+ hujanEfektif: hujanEfektif ?? [],
+ ordinatHSS: hssOrdinates,
+ baseflow: 0,
+ timeStep: 0.5,
+ });
 
-      // Transformasi ke format chart
-      const hydrograph: HydrographPoint[] = (workerResult.debitBanjir ?? []).map(
-        (q, i) => ({
-          time: Number((i * 0.5).toFixed(1)),
-          inflow: Number(q.toFixed(2)),
-        }),
-      );
+ // Transformasi ke format chart
+ const hydrograph: HydrographPoint[] = (workerResult.debitBanjir ?? []).map(
+ (q, i) => ({
+ time: Number((i * 0.5).toFixed(1)),
+ inflow: Number(q.toFixed(2)),
+ }),
+ );
 
-      setResult({
-        hydrograph,
-        peakDischarge: workerResult.debitPuncak,
-        timeToPeak: workerResult.waktuPuncak,
-      });
-      setHasCalculated(true);
-    } catch (err) {
-      // Error sudah diset di hook — tidak perlu setState tambahan
-      console.error('[KonvolusiStep] Worker error:', err);
-    }
-  }, [isDataReady, isCalculating, hujanEfektif, hssOrdinates, calculateConvolution, clearError]);
+ setResult({
+ hydrograph,
+ peakDischarge: workerResult.debitPuncak,
+ timeToPeak: workerResult.waktuPuncak,
+ });
+ setHasCalculated(true);
+ } catch (err) {
+ // Error sudah diset di hook — tidak perlu setState tambahan
+ console.error('[KonvolusiStep] Worker error:', err);
+ }
+ }, [isDataReady, isCalculating, hujanEfektif, hssOrdinates, calculateConvolution, clearError]);
 
-  // ── Simpan ke global store ─────────────────────────────────────────────────
-  const handleSave = useCallback(() => {
-    const { hydrograph, peakDischarge, timeToPeak } = result;
+ // ── Simpan ke global store ─────────────────────────────────────────────────
+ const handleSave = useCallback(() => {
+ const { hydrograph, peakDischarge, timeToPeak } = result;
 
-    setHasilBanjir({
-      debitPuncak: peakDischarge,
-      hidrograf: hydrograph,
-      method: selectedHSS ?? 'unknown',
-    });
+ setHasilBanjir({
+ debitPuncak: peakDischarge,
+ hidrograf: hydrograph,
+ method: selectedHSS ?? 'unknown',
+ });
 
-    useHydrologyStore.getState().setHasilKonvolusi({
-      floodHydrograph: hydrograph.map(h => ({ time: h.time, discharge: h.inflow })),
-      peakDischarge,
-      timeToPeak,
-      totalVolume: hydrograph.reduce((sum, h) => sum + h.inflow, 0) * 0.5 * 3600,
-      componentHydrographs: [],
-    });
+ useHydrologyStore.getState().setHasilKonvolusi({
+ floodHydrograph: hydrograph.map(h => ({ time: h.time, discharge: h.inflow })),
+ peakDischarge,
+ timeToPeak,
+ totalVolume: hydrograph.reduce((sum, h) => sum + h.inflow, 0) * 0.5 * 3600,
+ componentHydrographs: [],
+ });
 
-    onComplete();
-  }, [result, selectedHSS, setHasilBanjir, onComplete]);
+ onComplete();
+ }, [result, selectedHSS, setHasilBanjir, onComplete]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  const { hydrograph, peakDischarge, timeToPeak } = result;
+ // ─────────────────────────────────────────────────────────────────────────
+ const { hydrograph, peakDischarge, timeToPeak } = result;
 
-  // Merge flood hydrograph + HSS unit hydrograph into one dataset for Recharts
-  const mergedChartData = useMemo(() => {
-    const maxLen = Math.max(hydrograph.length, hssHydrograph.length);
-    return Array.from({ length: maxLen }, (_, i) => ({
-      time: hydrograph[i]?.time ?? (hssHydrograph[i]?.time ?? Number((i * 0.5).toFixed(1))),
-      inflow: hydrograph[i]?.inflow ?? null,
-      hssUnit: hssHydrograph[i]?.discharge ?? null,
-    }));
-  }, [hydrograph, hssHydrograph]);
+ // Merge flood hydrograph + HSS unit hydrograph into one dataset for Recharts
+ const mergedChartData = useMemo(() => {
+ const maxLen = Math.max(hydrograph.length, hssHydrograph.length);
+ return Array.from({ length: maxLen }, (_, i) => ({
+ time: hydrograph[i]?.time ?? (hssHydrograph[i]?.time ?? Number((i * 0.5).toFixed(1))),
+ inflow: hydrograph[i]?.inflow ?? null,
+ hssUnit: hssHydrograph[i]?.discharge ?? null,
+ }));
+ }, [hydrograph, hssHydrograph]);
 
-  return (
-    <div className="space-y-6">
+ return (
+ <div className="space-y-6">
 
-      {/* Empty State — data belum tersedia */}
-      {!isDataReady && (
-        <Card className="p-6 bg-yellow-50 border-2 border-yellow-200">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-yellow-100 rounded-md flex-shrink-0">
-              <Waves className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-yellow-900 mb-2">
-                Data Hujan Efektif Belum Tersedia
-              </h3>
-              <p className="text-sm text-yellow-800">
-                Sistem membutuhkan distribusi hujan jam-jaman untuk melakukan
-                konvolusi. Silakan selesaikan{' '}
-                <strong>Distribusi Hujan</strong> di langkah sebelumnya terlebih dahulu.
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
+ {/* Empty State — data belum tersedia */}
+ {!isDataReady && (
+ <Card className="p-6 bg-yellow-50 border-2 border-yellow-200">
+ <div className="flex items-start gap-4">
+ <div className="p-3 bg-yellow-100 rounded-sm flex-shrink-0">
+ <Waves className="w-6 h-6 text-yellow-600" />
+ </div>
+ <div className="flex-1">
+ <h3 className="text-lg font-bold text-yellow-900 mb-2">
+ Data Hujan Efektif Belum Tersedia
+ </h3>
+ <p className="text-sm text-yellow-800">
+ Sistem membutuhkan distribusi hujan jam-jaman untuk melakukan
+ konvolusi. Silakan selesaikan{' '}
+ <strong>Distribusi Hujan</strong> di langkah sebelumnya terlebih dahulu.
+ </p>
+ </div>
+ </div>
+ </Card>
+ )}
 
-      {/* Panel utama kalkulasi */}
-      <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-purple-100 rounded-md flex-shrink-0">
-            <Waves className="w-5 h-5 text-pupr-blue" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Konvolusi &amp; Hidrograf Banjir</h3>
-            <p className="text-xs text-slate-500">
-              Superposisi Hujan Efektif × HSS {selectedHSS?.toUpperCase()}
-              {' '}— Kalkulasi berjalan di background thread (non-blocking)
-            </p>
-          </div>
-        </div>
+ {/* Panel utama kalkulasi */}
+ <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+ <div className="flex items-center gap-3 mb-4">
+ <div className="p-2 bg-purple-100 rounded-sm flex-shrink-0">
+ <Waves className="w-5 h-5 text-pupr-blue" />
+ </div>
+ <div>
+ <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Konvolusi &amp; Hidrograf Banjir</h3>
+ <p className="text-xs text-slate-500">
+ Superposisi Hujan Efektif × HSS {selectedHSS?.toUpperCase()}
+ {' '}— Kalkulasi berjalan di background thread (non-blocking)
+ </p>
+ </div>
+ </div>
 
-        {/* Ringkasan data input */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-xs font-semibold text-blue-700">Hujan Efektif</p>
-            <p className="text-lg font-bold text-blue-900 tabular-nums tracking-tight">
-              {hujanEfektif?.length ?? 0} jam
-            </p>
-            <p className="text-xs text-pupr-blue mt-1 tabular-nums tracking-tight">
-              Total: {((hujanEfektif ?? []).reduce((a: number, b: number) => a + b, 0)).toFixed(2)} mm
-            </p>
-          </div>
-          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-xs font-semibold text-green-700">HSS Unit Peak</p>
-            <p className="text-lg font-bold text-green-900 tabular-nums tracking-tight">
-              {Math.max(...hssOrdinates, 0).toFixed(3)}
-            </p>
-            <p className="text-xs text-green-600 mt-1">
-              m³/s/mm
-            </p>
-          </div>
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
-            <p className="text-xs font-semibold text-purple-700">Metode HSS</p>
-            <p className="text-lg font-bold text-purple-900 tabular-nums tracking-tight">
-              {selectedHSS?.toUpperCase() ?? '-'}
-            </p>
-            <p className="text-xs text-purple-600 mt-1">
-              {hssOrdinates.length} ordinat
-            </p>
-          </div>
-        </div>
+ {/* Ringkasan data input */}
+ <div className="grid grid-cols-3 gap-4 mb-4">
+ <div className="p-3 bg-pupr-surface border border-pupr-border rounded-sm">
+ <p className="text-xs font-semibold text-pupr-blue">Hujan Efektif</p>
+ <p className="text-lg font-bold text-blue-900 tabular-nums tracking-tight">
+ {hujanEfektif?.length ?? 0} jam
+ </p>
+ <p className="text-xs text-pupr-blue mt-1 tabular-nums tracking-tight">
+ Total: {((hujanEfektif ?? []).reduce((a: number, b: number) => a + b, 0)).toFixed(2)} mm
+ </p>
+ </div>
+ <div className="p-3 bg-green-50 border border-green-200 rounded-sm">
+ <p className="text-xs font-semibold text-green-700">HSS Unit Peak</p>
+ <p className="text-lg font-bold text-green-900 tabular-nums tracking-tight">
+ {Math.max(...hssOrdinates, 0).toFixed(3)}
+ </p>
+ <p className="text-xs text-green-600 mt-1">
+ m³/s/mm
+ </p>
+ </div>
+ <div className="p-3 bg-purple-50 border border-purple-200 rounded-sm">
+ <p className="text-xs font-semibold text-purple-700">Metode HSS</p>
+ <p className="text-lg font-bold text-purple-900 tabular-nums tracking-tight">
+ {selectedHSS?.toUpperCase() ?? '-'}
+ </p>
+ <p className="text-xs text-purple-600 mt-1">
+ {hssOrdinates.length} ordinat
+ </p>
+ </div>
+ </div>
 
-        {/* Error state */}
-        {workerError && (
-          <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
-            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-red-700">{workerError}</p>
-          </div>
-        )}
+ {/* Error state */}
+ {workerError && (
+ <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-sm">
+ <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+ <p className="text-sm text-red-700">{workerError}</p>
+ </div>
+ )}
 
-        {/* Tombol hitung */}
-        <button
-          onClick={handleCalculate}
-          disabled={!isDataReady || isCalculating}
-          className="w-full px-4 py-3 bg-pupr-blue hover:bg-pupr-blue/90 active:bg-[#0b3060] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-pupr-blue focus:ring-offset-2"
-          title={!isDataReady ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
-        >
-          {isCalculating ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-pulse bg-slate-200 rounded-md" />
-              Menghitung Konvolusi…
-            </>
-          ) : (
-            <>
-              <TrendingUp className="w-5 h-5" />
-              {!isDataReady ? 'Menunggu Data Hujan…' : 'Hitung Konvolusi'}
-            </>
-          )}
-        </button>
-      </Card>
+ {/* Tombol hitung */}
+ <button
+ onClick={handleCalculate}
+ disabled={!isDataReady || isCalculating}
+ className="w-full px-4 py-3 bg-pupr-blue hover:bg-pupr-blue active:bg-[#0b3060] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-sm transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-pupr-blue focus:ring-offset-2"
+ title={!isDataReady ? 'Selesaikan Distribusi Hujan terlebih dahulu' : ''}
+ >
+ {isCalculating ? (
+ <>
+ <Loader2 className="w-5 h-5 animate-pulse bg-slate-200 rounded-sm" />
+ Menghitung Konvolusi…
+ </>
+ ) : (
+ <>
+ <TrendingUp className="w-5 h-5" />
+ {!isDataReady ? 'Menunggu Data Hujan…' : 'Hitung Konvolusi'}
+ </>
+ )}
+ </button>
+ </Card>
 
-      {/* Hasil konvolusi */}
-      {hasCalculated && hydrograph.length > 0 && (
-        <>
-          {/* KPI cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-6 bg-pupr-blue text-white rounded-md">
-              <p className="text-sm font-semibold opacity-90 mb-1">Debit Puncak (Qp)</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-extrabold tabular-nums tracking-tight">
-                  {peakDischarge.toFixed(2)}
-                </span>
-                <span className="text-lg font-bold opacity-80">m³/s</span>
-              </div>
-              <p className="text-xs opacity-75 mt-2">Metode: {selectedHSS?.toUpperCase()}</p>
-            </Card>
+ {/* Hasil konvolusi */}
+ {hasCalculated && hydrograph.length > 0 && (
+ <>
+ {/* KPI cards */}
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <Card className="p-6 bg-pupr-blue text-white rounded-sm">
+ <p className="text-sm font-semibold opacity-90 mb-1">Debit Puncak (Qp)</p>
+ <div className="flex items-baseline gap-2">
+ <span className="text-4xl font-extrabold tabular-nums tracking-tight">
+ {peakDischarge.toFixed(2)}
+ </span>
+ <span className="text-lg font-bold opacity-80">m³/s</span>
+ </div>
+ <p className="text-xs opacity-75 mt-2">Metode: {selectedHSS?.toUpperCase()}</p>
+ </Card>
 
-            <Card className="p-6 bg-slate-700 text-white rounded-md">
-              <p className="text-sm font-semibold opacity-90 mb-1">Waktu Puncak (Tp)</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-extrabold tabular-nums tracking-tight">
-                  {timeToPeak.toFixed(1)}
-                </span>
-                <span className="text-lg font-bold opacity-80">jam</span>
-              </div>
-              <p className="text-xs opacity-75 mt-2">Dari hidrograf konvolusi</p>
-            </Card>
-          </div>
+ <Card className="p-6 bg-slate-700 text-white rounded-sm">
+ <p className="text-sm font-semibold opacity-90 mb-1">Waktu Puncak (Tp)</p>
+ <div className="flex items-baseline gap-2">
+ <span className="text-4xl font-extrabold tabular-nums tracking-tight">
+ {timeToPeak.toFixed(1)}
+ </span>
+ <span className="text-lg font-bold opacity-80">jam</span>
+ </div>
+ <p className="text-xs opacity-75 mt-2">Dari hidrograf konvolusi</p>
+ </Card>
+ </div>
 
-          {/* Grafik hidrograf */}
-          <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
-            <h4 className="text-sm font-bold text-slate-900 mb-4">Hidrograf Banjir Rencana vs HSS Unit</h4>
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={mergedChartData}>
-                <defs>
-                  <linearGradient id="floodGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="time"
-                  label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5 }}
-                />
-                <YAxis
-                  yAxisId="left"
-                  label={{ value: 'Debit Banjir (m³/s)', angle: -90, position: 'insideLeft' }}
-                  tickFormatter={(v: number) => v.toLocaleString('id-ID')}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  label={{ value: 'HSS Unit (m³/s/mm)', angle: 90, position: 'insideRight' }}
-                  tickFormatter={(v: number) => v.toFixed(2)}
-                />
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value.toFixed(2)} ${name === 'inflow' ? 'm³/s' : 'm³/s/mm'}`,
-                    name === 'inflow' ? 'Debit Banjir' : 'HSS Unit',
-                  ]}
-                  labelFormatter={(label: string) => `Jam ke-${label}`}
-                />
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="inflow"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  fill="url(#floodGradient)"
-                  dot={false}
-                  name="inflow"
-                  connectNulls={false}
-                />
-                {hssHydrograph.length > 0 && (
-                  <Area
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="hssUnit"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    fill="transparent"
-                    dot={false}
-                    name="hss"
-                    connectNulls={false}
-                  />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
+ {/* Grafik hidrograf */}
+ <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+ <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4">Hidrograf Banjir Rencana vs HSS Unit</h4>
+ <ResponsiveContainer width="100%" height={400}>
+ <AreaChart data={mergedChartData}>
+ <defs>
+ <linearGradient id="floodGradient" x1="0" y1="0" x2="0" y2="1">
+ <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+ <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+ </linearGradient>
+ </defs>
+ <CartesianGrid strokeDasharray="3 3" />
+ <XAxis
+ dataKey="time"
+ label={{ value: 'Waktu (jam)', position: 'insideBottom', offset: -5 }}
+ />
+ <YAxis
+ yAxisId="left"
+ label={{ value: 'Debit Banjir (m³/s)', angle: -90, position: 'insideLeft' }}
+ tickFormatter={(v: number) => v.toLocaleString('id-ID')}
+ />
+ <YAxis
+ yAxisId="right"
+ orientation="right"
+ label={{ value: 'HSS Unit (m³/s/mm)', angle: 90, position: 'insideRight' }}
+ tickFormatter={(v: number) => v.toFixed(2)}
+ />
+ <Tooltip
+ formatter={(value: number, name: string) => [
+ `${value.toFixed(2)} ${name === 'inflow' ? 'm³/s' : 'm³/s/mm'}`,
+ name === 'inflow' ? 'Debit Banjir' : 'HSS Unit',
+ ]}
+ labelFormatter={(label: string) => `Jam ke-${label}`}
+ />
+ <Area
+ yAxisId="left"
+ type="monotone"
+ dataKey="inflow"
+ stroke="#3b82f6"
+ strokeWidth={3}
+ fill="url(#floodGradient)"
+ dot={false}
+ name="inflow"
+ connectNulls={false}
+ />
+ {hssHydrograph.length > 0 && (
+ <Area
+ yAxisId="right"
+ type="monotone"
+ dataKey="hssUnit"
+ stroke="#10b981"
+ strokeWidth={2}
+ strokeDasharray="5 5"
+ fill="transparent"
+ dot={false}
+ name="hss"
+ connectNulls={false}
+ />
+ )}
+ </AreaChart>
+ </ResponsiveContainer>
+ </Card>
 
-          {/* Tombol simpan */}
-          <Card className="p-6 bg-green-50 border border-green-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-green-900">Analisis Banjir Selesai</p>
-                <p className="text-xs text-green-700 mt-1 tabular-nums">
-                  Qp = {peakDischarge.toFixed(2)} m³/s pada t = {timeToPeak.toFixed(1)} jam
-                </p>
-              </div>
-              <button
-                onClick={handleSave}
-                disabled={isCompleted}
-                className={`px-6 py-3 rounded-md font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                  isCompleted
-                    ? 'bg-green-600 text-white cursor-default'
-                    : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
-                }`}
-              >
-                <Save className="w-5 h-5" />
-                {isCompleted ? '✓ Tersimpan' : 'Simpan ke Global Store'}
-              </button>
-            </div>
-          </Card>
-        </>
-      )}
-    </div>
-  );
+ {/* Tombol simpan */}
+ <Card className="p-6 bg-green-50 border border-green-200">
+ <div className="flex items-center justify-between">
+ <div>
+ <p className="text-sm font-semibold text-green-900">Analisis Banjir Selesai</p>
+ <p className="text-xs text-green-700 mt-1 tabular-nums">
+ Qp = {peakDischarge.toFixed(2)} m³/s pada t = {timeToPeak.toFixed(1)} jam
+ </p>
+ </div>
+ <button
+ onClick={handleSave}
+ disabled={isCompleted}
+ className={`px-6 py-3 rounded-sm font-semibold transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+ isCompleted
+ ? 'bg-green-600 text-white cursor-default'
+ : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
+ }`}
+ >
+ <Save className="w-5 h-5" />
+ {isCompleted ? '✓ Tersimpan' : 'Simpan ke Global Store'}
+ </button>
+ </div>
+ </Card>
+ </>
+ )}
+ </div>
+ );
 };

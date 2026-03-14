@@ -4,13 +4,13 @@ import { apiClient } from '@/lib/api/client';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface AbmRequest {
-  R24: number;
-  method?: 'mononobe' | 'van_breen' | 'haspers';
-  n?: number;
+ R24: number;
+ method?: 'mononobe' | 'van_breen' | 'haspers';
+ n?: number;
 }
 
 interface AbmResult {
-  [key: string]: number | string | number[];
+ [key: string]: number | string | number[];
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -20,9 +20,9 @@ interface AbmResult {
  * Endpoint: POST /api/v1/hujan/abm
  */
 export function useAbmMutation() {
-  return useMutation({
-    mutationKey: ['hujan', 'abm'],
-    mutationFn: (payload: AbmRequest) =>
-      apiClient.post<AbmResult>('/api/v1/hujan/abm', payload),
-  });
+ return useMutation({
+ mutationKey: ['hujan', 'abm'],
+ mutationFn: (payload: AbmRequest) =>
+ apiClient.post<AbmResult>('/api/v1/hujan/abm', payload),
+ });
 }

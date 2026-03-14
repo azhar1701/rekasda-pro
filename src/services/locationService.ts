@@ -1,13 +1,13 @@
 // Location data service for West Java regions
 export interface LocationData {
-  id: string;
-  provinsi: string;
-  kabupaten: string;
-  kecamatan: string;
-  desa: string;
-  latitude?: number;
-  longitude?: number;
-  kodePos?: string;
+ id: string;
+ provinsi: string;
+ kabupaten: string;
+ kecamatan: string;
+ desa: string;
+ latitude?: number;
+ longitude?: number;
+ kodePos?: string;
 }
 
 import { CSVParser } from './csvParser';
@@ -15,43 +15,43 @@ import { CSVParser } from './csvParser';
 let westJavaData: LocationData[] = [];
 
 export const locationService = {
-  async init() {
-    try {
-      westJavaData = await CSVParser.loadData();
-    } catch (error) {
-      console.error('Failed to load location data:', error);
-      westJavaData = [];
-    }
-  },
+ async init() {
+ try {
+ westJavaData = await CSVParser.loadData();
+ } catch (error) {
+ console.error('Failed to load location data:', error);
+ westJavaData = [];
+ }
+ },
 
-  getKabupaten(): string[] {
-    const kabupaten = [...new Set(westJavaData.map(item => item.kabupaten))]
-      .filter(k => k && k.trim() !== '') // Filter out empty values
-      .sort();
-    return kabupaten;
-  },
+ getKabupaten(): string[] {
+ const kabupaten = [...new Set(westJavaData.map(item => item.kabupaten))]
+ .filter(k => k && k.trim() !== '') // Filter out empty values
+ .sort();
+ return kabupaten;
+ },
 
-  getKecamatan(kabupaten: string): string[] {
-    const kecamatan = westJavaData
-      .filter(item => item.kabupaten === kabupaten)
-      .map(item => item.kecamatan)
-      .filter(k => k && k.trim() !== ''); // Filter out empty values
-    return [...new Set(kecamatan)].sort();
-  },
+ getKecamatan(kabupaten: string): string[] {
+ const kecamatan = westJavaData
+ .filter(item => item.kabupaten === kabupaten)
+ .map(item => item.kecamatan)
+ .filter(k => k && k.trim() !== ''); // Filter out empty values
+ return [...new Set(kecamatan)].sort();
+ },
 
-  getDesa(kabupaten: string, kecamatan: string): string[] {
-    const desa = westJavaData
-      .filter(item => item.kabupaten === kabupaten && item.kecamatan === kecamatan)
-      .map(item => item.desa)
-      .filter(d => d && d.trim() !== ''); // Filter out empty values
-    return [...new Set(desa)].sort();
-  },
+ getDesa(kabupaten: string, kecamatan: string): string[] {
+ const desa = westJavaData
+ .filter(item => item.kabupaten === kabupaten && item.kecamatan === kecamatan)
+ .map(item => item.desa)
+ .filter(d => d && d.trim() !== ''); // Filter out empty values
+ return [...new Set(desa)].sort();
+ },
 
-  getLocationData(kabupaten: string, kecamatan: string, desa: string): LocationData | null {
-    return westJavaData.find(item => 
-      item.kabupaten === kabupaten && 
-      item.kecamatan === kecamatan && 
-      item.desa === desa
-    ) || null;
-  }
+ getLocationData(kabupaten: string, kecamatan: string, desa: string): LocationData | null {
+ return westJavaData.find(item => 
+ item.kabupaten === kabupaten && 
+ item.kecamatan === kecamatan && 
+ item.desa === desa
+ ) || null;
+ }
 };

@@ -5,19 +5,19 @@ import { useEffect, useRef } from 'react';
  * Applies animation delay to each child element
  */
 export const useStaggerAnimation = (delay: number = 50) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+ const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+ useEffect(() => {
+ if (!containerRef.current) return;
 
-    const children = containerRef.current.children;
-    Array.from(children).forEach((child, index) => {
-      if (child instanceof HTMLElement) {
-        child.style.animationDelay = `${index * delay}ms`;
-        child.classList.add('stagger-item');
-      }
-    });
-  }, [delay]);
+ const children = containerRef.current.children;
+ Array.from(children).forEach((child, index) => {
+ if (child instanceof HTMLElement) {
+ child.style.animationDelay = `${index * delay}ms`;
+ child.classList.add('stagger-item');
+ }
+ });
+ }, [delay]);
 
-  return containerRef;
+ return containerRef;
 };

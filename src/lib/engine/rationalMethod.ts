@@ -23,34 +23,34 @@ import { SNI_VALIDATION_LIMITS } from '../constants/sni';
  * All units must be in metric system as specified
  */
 export interface RationalMethodInput {
-  /** Runoff Coefficient (Koefisien Pengaliran) - Dimensionless [0-1] */
-  C: number;
-  /** Rainfall Intensity (Intensitas Hujan) - mm/hour */
-  I: number;
-  /** Catchment Area (Luas DAS) - Hectares (Ha) */
-  A: number;
+ /** Runoff Coefficient (Koefisien Pengaliran) - Dimensionless [0-1] */
+ C: number;
+ /** Rainfall Intensity (Intensitas Hujan) - mm/hour */
+ I: number;
+ /** Catchment Area (Luas DAS) - Hectares (Ha) */
+ A: number;
 }
 
 /**
  * Time of Concentration Input Parameters
  */
 export interface TcInput {
-  /** Flow Length (Panjang Aliran) - km */
-  L: number;
-  /** Flow Velocity Coefficient (Koefisien Kecepatan) - m/s */
-  K: number;
+ /** Flow Length (Panjang Aliran) - km */
+ L: number;
+ /** Flow Velocity Coefficient (Koefisien Kecepatan) - m/s */
+ K: number;
 }
 
 /**
  * Rational Method Calculation Result
  */
 export interface RationalMethodOutput {
-  /** Peak Discharge (Debit Puncak) - m³/s */
-  Q: number;
-  /** Specific Discharge per hectare - m³/s/Ha */
-  qSpecific: number;
-  /** Validation warnings if any */
-  warnings: string[];
+ /** Peak Discharge (Debit Puncak) - m³/s */
+ Q: number;
+ /** Specific Discharge per hectare - m³/s/Ha */
+ qSpecific: number;
+ /** Validation warnings if any */
+ warnings: string[];
 }
 
 // ============================================================================
@@ -62,31 +62,31 @@ export interface RationalMethodOutput {
  * Enforces SNI 2415:2016 compliance at runtime
  */
 export const RationalInputSchema = z.object({
-  C: z
-    .number()
-    .min(SNI_VALIDATION_LIMITS.runoffCoefficient.min, 'Koefisien C harus ≥ 0')
-    .max(SNI_VALIDATION_LIMITS.runoffCoefficient.max, 'Koefisien C harus ≤ 1')
-    .refine((val) => val >= 0 && val <= 1, {
-      message: 'Koefisien pengaliran (C) harus antara 0.0 dan 1.0',
-    }),
-  I: z
-    .number()
-    .positive('Intensitas hujan harus > 0')
-    .min(SNI_VALIDATION_LIMITS.rainfallIntensity.min, 'Intensitas hujan terlalu rendah')
-    .max(SNI_VALIDATION_LIMITS.rainfallIntensity.max, 'Intensitas hujan tidak realistis (>500 mm/jam)'),
-  A: z
-    .number()
-    .positive('Luas DAS harus > 0')
-    .min(0.01, 'Luas DAS minimal 0.01 Ha')
-    .max(50000, 'Luas DAS maksimal 50,000 Ha untuk Metode Rasional'),
+ C: z
+ .number()
+ .min(SNI_VALIDATION_LIMITS.runoffCoefficient.min, 'Koefisien C harus ≥ 0')
+ .max(SNI_VALIDATION_LIMITS.runoffCoefficient.max, 'Koefisien C harus ≤ 1')
+ .refine((val) => val >= 0 && val <= 1, {
+ message: 'Koefisien pengaliran (C) harus antara 0.0 dan 1.0',
+ }),
+ I: z
+ .number()
+ .positive('Intensitas hujan harus > 0')
+ .min(SNI_VALIDATION_LIMITS.rainfallIntensity.min, 'Intensitas hujan terlalu rendah')
+ .max(SNI_VALIDATION_LIMITS.rainfallIntensity.max, 'Intensitas hujan tidak realistis (>500 mm/jam)'),
+ A: z
+ .number()
+ .positive('Luas DAS harus > 0')
+ .min(0.01, 'Luas DAS minimal 0.01 Ha')
+ .max(50000, 'Luas DAS maksimal 50,000 Ha untuk Metode Rasional'),
 });
 
 /**
  * Zod Schema for Time of Concentration Input
  */
 export const TcInputSchema = z.object({
-  L: z.number().positive('Panjang aliran harus > 0').max(100, 'Panjang aliran maksimal 100 km'),
-  K: z.number().positive('Koefisien kecepatan harus > 0').max(10, 'Koefisien kecepatan maksimal 10 m/s'),
+ L: z.number().positive('Panjang aliran harus > 0').max(100, 'Panjang aliran maksimal 100 km'),
+ K: z.number().positive('Koefisien kecepatan harus > 0').max(10, 'Koefisien kecepatan maksimal 10 m/s'),
 });
 
 // ============================================================================
@@ -116,13 +116,13 @@ export const TcInputSchema = z.object({
  * ```
  */
 export function calculateTc(input: TcInput): number {
-  const validated = TcInputSchema.parse(input);
-  
-  // Tc = L / (60 * K)
-  // Result in hours
-  const tc = validated.L / (60 * validated.K);
-  
-  return tc;
+ const validated = TcInputSchema.parse(input);
+ 
+ // Tc = L / (60 * K)
+ // Result in hours
+ const tc = validated.L / (60 * validated.K);
+ 
+ return tc;
 }
 
 /**
@@ -150,58 +150,58 @@ export function calculateTc(input: TcInput): number {
  * @example
  * ```typescript
  * const result = calculateRationalDischarge({
- *   C: 0.75,
- *   I: 100,
- *   A: 250
+ * C: 0.75,
+ * I: 100,
+ * A: 250
  * });
  * // result.Q ≈ 52.125 m³/s
  * ```
  */
 export function calculateRationalDischarge(input: RationalMethodInput): RationalMethodOutput {
-  // Validate input using Zod schema
-  const validated = RationalInputSchema.parse(input);
-  
-  const warnings: string[] = [];
-  
-  // Check catchment area suitability for Rational Method
-  // SNI 2415:2016: Rational Method is suitable for A < 5000 Ha
-  if (validated.A > 5000) {
-    warnings.push(
-      'Peringatan: Metode Rasional kurang akurat untuk DAS > 5000 Ha. ' +
-      'Disarankan menggunakan metode HSS (Hidrograf Satuan Sintetik).'
-    );
-  } else if (validated.A > 300) {
-    warnings.push(
-      'Peringatan: Metode Rasional kurang akurat untuk DAS > 300 Ha. ' +
-      'Pertimbangkan menggunakan metode HSS untuk hasil lebih akurat.'
-    );
-  }
-  
-  // Check runoff coefficient reasonableness
-  if (validated.C < 0.1) {
-    warnings.push('Koefisien C sangat rendah. Pastikan tata guna lahan sudah sesuai.');
-  } else if (validated.C > 0.9) {
-    warnings.push('Koefisien C sangat tinggi. Pastikan area sebagian besar kedap air.');
-  }
-  
-  // Check rainfall intensity reasonableness
-  if (validated.I > 200) {
-    warnings.push('Intensitas hujan sangat tinggi (>200 mm/jam). Verifikasi data hujan rencana.');
-  }
-  
-  // CRITICAL CALCULATION
-  // Q = 0.00278 × C × I × A
-  // Where A is in Hectares
-  const Q = 0.00278 * validated.C * validated.I * validated.A;
-  
-  // Calculate specific discharge (per hectare)
-  const qSpecific = Q / validated.A;
-  
-  return {
-    Q: parseFloat(Q.toFixed(3)),
-    qSpecific: parseFloat(qSpecific.toFixed(6)),
-    warnings,
-  };
+ // Validate input using Zod schema
+ const validated = RationalInputSchema.parse(input);
+ 
+ const warnings: string[] = [];
+ 
+ // Check catchment area suitability for Rational Method
+ // SNI 2415:2016: Rational Method is suitable for A < 5000 Ha
+ if (validated.A > 5000) {
+ warnings.push(
+ 'Peringatan: Metode Rasional kurang akurat untuk DAS > 5000 Ha. ' +
+ 'Disarankan menggunakan metode HSS (Hidrograf Satuan Sintetik).'
+ );
+ } else if (validated.A > 300) {
+ warnings.push(
+ 'Peringatan: Metode Rasional kurang akurat untuk DAS > 300 Ha. ' +
+ 'Pertimbangkan menggunakan metode HSS untuk hasil lebih akurat.'
+ );
+ }
+ 
+ // Check runoff coefficient reasonableness
+ if (validated.C < 0.1) {
+ warnings.push('Koefisien C sangat rendah. Pastikan tata guna lahan sudah sesuai.');
+ } else if (validated.C > 0.9) {
+ warnings.push('Koefisien C sangat tinggi. Pastikan area sebagian besar kedap air.');
+ }
+ 
+ // Check rainfall intensity reasonableness
+ if (validated.I > 200) {
+ warnings.push('Intensitas hujan sangat tinggi (>200 mm/jam). Verifikasi data hujan rencana.');
+ }
+ 
+ // CRITICAL CALCULATION
+ // Q = 0.00278 × C × I × A
+ // Where A is in Hectares
+ const Q = 0.00278 * validated.C * validated.I * validated.A;
+ 
+ // Calculate specific discharge (per hectare)
+ const qSpecific = Q / validated.A;
+ 
+ return {
+ Q: parseFloat(Q.toFixed(3)),
+ qSpecific: parseFloat(qSpecific.toFixed(6)),
+ warnings,
+ };
 }
 
 /**
@@ -217,26 +217,26 @@ export function calculateRationalDischarge(input: RationalMethodInput): Rational
  * ```typescript
  * const validation = validateRationalInput({ C: 0.75, I: 100, A: 250 });
  * if (!validation.success) {
- *   console.error(validation.errors);
+ * console.error(validation.errors);
  * }
  * ```
  */
 export function validateRationalInput(input: RationalMethodInput): {
-  success: boolean;
-  errors: string[];
+ success: boolean;
+ errors: string[];
 } {
-  try {
-    RationalInputSchema.parse(input);
-    return { success: true, errors: [] };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
-      };
-    }
-    return { success: false, errors: ['Unknown validation error'] };
-  }
+ try {
+ RationalInputSchema.parse(input);
+ return { success: true, errors: [] };
+ } catch (error) {
+ if (error instanceof z.ZodError) {
+ return {
+ success: false,
+ errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
+ };
+ }
+ return { success: false, errors: ['Unknown validation error'] };
+ }
 }
 
 /**
@@ -246,7 +246,7 @@ export function validateRationalInput(input: RationalMethodInput): {
  * @returns Area in hectares
  */
 export function convertKm2ToHa(areaKm2: number): number {
-  return areaKm2 * 100;
+ return areaKm2 * 100;
 }
 
 /**
@@ -256,5 +256,5 @@ export function convertKm2ToHa(areaKm2: number): number {
  * @returns Area in square kilometers
  */
 export function convertHaToKm2(areaHa: number): number {
-  return areaHa / 100;
+ return areaHa / 100;
 }

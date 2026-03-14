@@ -16,14 +16,14 @@ import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
 
 const DefaultIcon = L.icon({
-  iconUrl,
-  iconRetinaUrl,
-  shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  tooltipAnchor: [16, -28],
-  shadowSize: [41, 41]
+ iconUrl,
+ iconRetinaUrl,
+ shadowUrl,
+ iconSize: [25, 41],
+ iconAnchor: [12, 41],
+ popupAnchor: [1, -34],
+ tooltipAnchor: [16, -28],
+ shadowSize: [41, 41]
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -34,225 +34,225 @@ const DEFAULT_ZOOM = 5;
 
 // Komponen MapEvents untuk menangkap interaksi peta
 const LocationMarker = ({ position, setPosition }: { position: L.LatLng | null, setPosition: (p: L.LatLng) => void }) => {
-  const markerRef = useRef<L.Marker>(null);
+ const markerRef = useRef<L.Marker>(null);
 
-  const map = useMapEvents({
-    click(e) {
-      setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
-    },
-  });
+ const map = useMapEvents({
+ click(e) {
+ setPosition(e.latlng);
+ map.flyTo(e.latlng, map.getZoom());
+ },
+ });
 
-  const eventHandlers = useMemo(
-    () => ({
-      dragend() {
-        const marker = markerRef.current;
-        if (marker != null) {
-          setPosition(marker.getLatLng());
-        }
-      },
-    }),
-    [setPosition],
-  );
+ const eventHandlers = useMemo(
+ () => ({
+ dragend() {
+ const marker = markerRef.current;
+ if (marker != null) {
+ setPosition(marker.getLatLng());
+ }
+ },
+ }),
+ [setPosition],
+ );
 
-  return position === null ? null : (
-    <Marker
-      draggable={true}
-      eventHandlers={eventHandlers}
-      position={position}
-      ref={markerRef}
-    />
-  );
+ return position === null ? null : (
+ <Marker
+ draggable={true}
+ eventHandlers={eventHandlers}
+ position={position}
+ ref={markerRef}
+ />
+ );
 };
 
 export const FormIdentitasLokasi: React.FC = () => {
-  const { identitasLokasi, setIdentitasLokasi } = useHydrologyStore();
-  const { completeStep } = useOnboarding();
-  const [isSyncing, setIsSyncing] = React.useState(false);
+ const { identitasLokasi, setIdentitasLokasi } = useHydrologyStore();
+ const { completeStep } = useOnboarding();
+ const [isSyncing, setIsSyncing] = React.useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === 'namaPekerjaan' && value.length > 3) {
-      completeStep('identitas');
-    }
-    if (name === 'lat' || name === 'lng') {
-      const parsedValue = value === '' ? null : parseFloat(value);
-      setIdentitasLokasi({
-        koordinat: {
-          ...identitasLokasi.koordinat,
-          [name]: parsedValue
-        }
-      });
-    } else {
-      setIdentitasLokasi({ [name]: value });
-    }
-  };
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const { name, value } = e.target;
+ if (name === 'namaPekerjaan' && value.length > 3) {
+ completeStep('identitas');
+ }
+ if (name === 'lat' || name === 'lng') {
+ const parsedValue = value === '' ? null : parseFloat(value);
+ setIdentitasLokasi({
+ koordinat: {
+ ...identitasLokasi.koordinat,
+ [name]: parsedValue
+ }
+ });
+ } else {
+ setIdentitasLokasi({ [name]: value });
+ }
+ };
 
-  const handleMapPositionChange = (latlng: L.LatLng) => {
-    // Membatasi desimal maksimal 6 digit (standard presisi GPS sub-meter)
-    const lat = Number(latlng.lat.toFixed(6));
-    const lng = Number(latlng.lng.toFixed(6));
+ const handleMapPositionChange = (latlng: L.LatLng) => {
+ // Membatasi desimal maksimal 6 digit (standard presisi GPS sub-meter)
+ const lat = Number(latlng.lat.toFixed(6));
+ const lng = Number(latlng.lng.toFixed(6));
 
-    setIsSyncing(true);
-    setIdentitasLokasi({
-      koordinat: {
-        lat,
-        lng
-      }
-    });
+ setIsSyncing(true);
+ setIdentitasLokasi({
+ koordinat: {
+ lat,
+ lng
+ }
+ });
 
-    // Simulate Spatial Engine Auto-fetch (DEM & LandUse)
-    setTimeout(() => {
-      setIsSyncing(false);
-    }, 1500);
-  };
+ // Simulate Spatial Engine Auto-fetch (DEM & LandUse)
+ setTimeout(() => {
+ setIsSyncing(false);
+ }, 1500);
+ };
 
-  // State koordinat untuk map
-  const mapCenter: [number, number] =
-    identitasLokasi.koordinat.lat != null && identitasLokasi.koordinat.lng != null
-      ? [identitasLokasi.koordinat.lat, identitasLokasi.koordinat.lng]
-      : DEFAULT_CENTER;
+ // State koordinat untuk map
+ const mapCenter: [number, number] =
+ identitasLokasi.koordinat.lat != null && identitasLokasi.koordinat.lng != null
+ ? [identitasLokasi.koordinat.lat, identitasLokasi.koordinat.lng]
+ : DEFAULT_CENTER;
 
-  const markerPosition =
-    identitasLokasi.koordinat.lat != null && identitasLokasi.koordinat.lng != null
-      ? new L.LatLng(identitasLokasi.koordinat.lat, identitasLokasi.koordinat.lng)
-      : null;
+ const markerPosition =
+ identitasLokasi.koordinat.lat != null && identitasLokasi.koordinat.lng != null
+ ? new L.LatLng(identitasLokasi.koordinat.lat, identitasLokasi.koordinat.lng)
+ : null;
 
-  return (
-    <Card className="p-6 bg-white shadow-md border border-slate-200 rounded-md border-l-4 border-l-pupr-blue overflow-hidden relative">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-pupr-blue/10 rounded-md">
-          <Briefcase className="w-5 h-5 text-pupr-blue" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-900">Identitas Lokasi & Koordinat</h3>
-          <p className="text-xs text-slate-500 font-medium">Data master untuk referensi spasial PostGIS</p>
-        </div>
-        {isSyncing && (
-          <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-pupr-blue/10 border border-pupr-blue/20 rounded-full animate-pulse">
-            <Activity className="w-3 h-3 text-pupr-blue" />
-            <span className="text-[10px] font-black text-pupr-blue uppercase tracking-tighter">Spatial Sync Active</span>
-          </div>
-        )}
-      </div>
+ return (
+ <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm border-l-4 border-l-pupr-blue overflow-hidden relative shadow-none">
+ <div className="flex items-center gap-3 mb-6">
+ <div className="p-2 bg-pupr-surface rounded-sm">
+ <Briefcase className="w-5 h-5 text-pupr-blue" />
+ </div>
+ <div>
+ <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Identitas Lokasi & Koordinat</h3>
+ <p className="text-xs text-slate-500 font-medium">Data master untuk referensi spasial PostGIS</p>
+ </div>
+ {isSyncing && (
+ <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-pupr-surface border border-pupr-blue/20 rounded-sm animate-pulse">
+ <Activity className="w-3 h-3 text-pupr-blue" />
+ <span className="text-[10px] font-black text-pupr-blue uppercase tracking-tighter">Spatial Sync Active</span>
+ </div>
+ )}
+ </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Kolom Kiri: Form Identitas */}
-        <div className="space-y-4">
-          <InputGroup
-            id="namaPekerjaan"
-            name="namaPekerjaan"
-            label="Nama Pekerjaan / Proyek"
-            value={identitasLokasi.namaPekerjaan}
-            onChange={handleChange}
-            placeholder="Contoh: Perencanaan Bendungan X"
-          />
-          <InputGroup
-            id="namaDAS"
-            name="namaDAS"
-            label="Nama Daerah Aliran Sungai (DAS)"
-            value={identitasLokasi.namaDAS}
-            onChange={handleChange}
-            placeholder="Contoh: DAS Citarum"
-          />
-          <InputGroup
-            id="namaSungai"
-            name="namaSungai"
-            label="Nama Sungai"
-            value={identitasLokasi.namaSungai}
-            onChange={handleChange}
-            placeholder="Contoh: Sungai Ciliwung"
-          />
+ <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+ {/* Kolom Kiri: Form Identitas */}
+ <div className="space-y-4">
+ <InputGroup
+ id="namaPekerjaan"
+ name="namaPekerjaan"
+ label="Nama Pekerjaan / Proyek"
+ value={identitasLokasi.namaPekerjaan}
+ onChange={handleChange}
+ placeholder="Contoh: Perencanaan Bendungan X"
+ />
+ <InputGroup
+ id="namaDAS"
+ name="namaDAS"
+ label="Nama Daerah Aliran Sungai (DAS)"
+ value={identitasLokasi.namaDAS}
+ onChange={handleChange}
+ placeholder="Contoh: DAS Citarum"
+ />
+ <InputGroup
+ id="namaSungai"
+ name="namaSungai"
+ label="Nama Sungai"
+ value={identitasLokasi.namaSungai}
+ onChange={handleChange}
+ placeholder="Contoh: Sungai Ciliwung"
+ />
 
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <InputGroup
-              id="provinsi"
-              name="provinsi"
-              label="Provinsi"
-              value={identitasLokasi.provinsi}
-              onChange={handleChange}
-              placeholder="Jawa Barat"
-            />
-            <InputGroup
-              id="kabupaten"
-              name="kabupaten"
-              label="Kabupaten/Kota"
-              value={identitasLokasi.kabupaten}
-              onChange={handleChange}
-              placeholder="Bogor"
-            />
-          </div>
+ <div className="grid grid-cols-2 gap-4 pt-2">
+ <InputGroup
+ id="provinsi"
+ name="provinsi"
+ label="Provinsi"
+ value={identitasLokasi.provinsi}
+ onChange={handleChange}
+ placeholder="Jawa Barat"
+ />
+ <InputGroup
+ id="kabupaten"
+ name="kabupaten"
+ label="Kabupaten/Kota"
+ value={identitasLokasi.kabupaten}
+ onChange={handleChange}
+ placeholder="Bogor"
+ />
+ </div>
 
-          <div className="p-4 bg-pupr-blue/[0.03] border border-pupr-blue/10 rounded-md mt-4">
-            <h4 className="text-xs font-bold text-pupr-blue uppercase tracking-widest flex items-center gap-2 mb-3">
-              <Navigation className="w-3.5 h-3.5" /> Koordinat Geografis (WGS84)
-            </h4>
-            <div className="grid grid-cols-2 gap-4">
-              <InputGroup
-                id="lat"
-                name="lat"
-                label="Latitude"
-                type="number"
-                step="any"
-                value={identitasLokasi.koordinat.lat ?? ''}
-                onChange={handleChange}
-                placeholder="-6.1754"
-                className="font-mono tabular-nums tracking-tighter"
-              />
-              <InputGroup
-                id="lng"
-                name="lng"
-                label="Longitude"
-                type="number"
-                step="any"
-                value={identitasLokasi.koordinat.lng ?? ''}
-                onChange={handleChange}
-                placeholder="106.8272"
-                className="font-mono tabular-nums tracking-tighter"
-              />
-            </div>
-            <div className="mt-3 flex items-start gap-2 text-[11px] text-slate-500 bg-blue-50/50 p-2 rounded border border-blue-100">
-              <Info className="w-3.5 h-3.5 text-pupr-blue flex-shrink-0 mt-0.5" />
-              <p>Mengubah angka secara manual akan menggeser marker di peta secara otomatis.</p>
-            </div>
-          </div>
-        </div>
+ <div className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-sm mt-4">
+ <h4 className="text-xs font-bold text-pupr-blue uppercase tracking-widest flex items-center gap-2 mb-3">
+ <Navigation className="w-3.5 h-3.5" /> Koordinat Geografis (WGS84)
+ </h4>
+ <div className="grid grid-cols-2 gap-4">
+ <InputGroup
+ id="lat"
+ name="lat"
+ label="Latitude"
+ type="number"
+ step="any"
+ value={identitasLokasi.koordinat.lat ?? ''}
+ onChange={handleChange}
+ placeholder="-6.1754"
+ className="font-mono tabular-nums tracking-tighter"
+ />
+ <InputGroup
+ id="lng"
+ name="lng"
+ label="Longitude"
+ type="number"
+ step="any"
+ value={identitasLokasi.koordinat.lng ?? ''}
+ onChange={handleChange}
+ placeholder="106.8272"
+ className="font-mono tabular-nums tracking-tighter"
+ />
+ </div>
+ <div className="mt-3 flex items-start gap-2 text-[11px] text-slate-500 bg-slate-100 dark:bg-slate-800 p-2 rounded-sm border border-slate-200 dark:border-slate-700">
+ <Info className="w-3.5 h-3.5 text-pupr-blue flex-shrink-0 mt-0.5" />
+ <p>Mengubah angka secara manual akan menggeser marker di peta secara otomatis.</p>
+ </div>
+ </div>
+ </div>
 
-        {/* Kolom Kanan: WebGIS Leaflet */}
-        <div className="flex flex-col h-full min-h-[400px]">
-          <h4 className="text-sm font-bold text-pupr-blue flex items-center gap-2 mb-3">
-            <MapIcon className="w-4 h-4" />
-            Peta Lokasi Interaktif
-          </h4>
+ {/* Kolom Kanan: WebGIS Leaflet */}
+ <div className="flex flex-col h-full min-h-[400px]">
+ <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-2 mb-3">
+ <MapIcon className="w-4 h-4" />
+ Peta Lokasi Interaktif
+ </h4>
 
-          {/* Kontainer Kaku Institusional */}
-          <div className="flex-1 border-2 border-pupr-blue/20 rounded-md overflow-hidden relative shadow-sm z-0">
-            <MapContainer
-              center={mapCenter}
-              zoom={markerPosition ? 12 : DEFAULT_ZOOM}
-              scrollWheelZoom={true}
-              className="h-full w-full"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <LocationMarker
-                position={markerPosition}
-                setPosition={handleMapPositionChange}
-              />
-            </MapContainer>
+ {/* Kontainer Kaku Institusional */}
+ <div className="flex-1 border border-slate-300 dark:border-slate-700 rounded-sm overflow-hidden relative z-0">
+ <MapContainer
+ center={mapCenter}
+ zoom={markerPosition ? 12 : DEFAULT_ZOOM}
+ scrollWheelZoom={true}
+ className="h-full w-full"
+ >
+ <TileLayer
+ attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+ url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+ />
+ <LocationMarker
+ position={markerPosition}
+ setPosition={handleMapPositionChange}
+ />
+ </MapContainer>
 
-            {/* Instruksi overlay di peta */}
-            <div className="absolute top-2 right-2 z-[1000] bg-white/90 backdrop-blur-sm px-3 py-1.5 border border-slate-200 rounded-md shadow-sm pointer-events-none">
-              <p className="text-[10px] font-semibold text-slate-700">
-                Klik peta atau geser marker
-              </p>
-            </div>
-          </div>
-        </div>
+ {/* Instruksi overlay di peta */}
+ <div className="absolute top-2 right-2 z-[1000] bg-white dark:bg-slate-900 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-sm shadow-none pointer-events-none">
+ <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">
+ Klik peta atau geser marker
+ </p>
+ </div>
+ </div>
+ </div>
 
-      </div>
-    </Card>
-  );
+ </div>
+ </Card>
+ );
 };

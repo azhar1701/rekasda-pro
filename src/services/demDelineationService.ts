@@ -4,8 +4,8 @@
  */
 
 export interface DelineationResult {
-  luasDAS: number;      // km²
-  panjangSungai: number; // km
+ luasDAS: number; // km²
+ panjangSungai: number; // km
 }
 
 /**
@@ -14,15 +14,15 @@ export interface DelineationResult {
  * @returns A promise that resolves with mock Area and Length after a delay.
  */
 export const processDEM = async (_file: File): Promise<DelineationResult> => {
-  // Simulate network/processing delay (1.5 - 3 seconds)
-  const delay = 1500 + Math.random() * 1500;
-  await new Promise((resolve) => setTimeout(resolve, delay));
+ // Simulate network/processing delay (1.5 - 3 seconds)
+ const delay = 1500 + Math.random() * 1500;
+ await new Promise((resolve) => setTimeout(resolve, delay));
 
-  // Return realistic mock values
-  // Area: 100 - 500 km²
-  // Length: 10 - 50 km
-  return {
-    luasDAS: parseFloat((100 + Math.random() * 400).toFixed(2)),
-    panjangSungai: parseFloat((10 + Math.random() * 40).toFixed(2)),
-  };
+ // Return realistic mock values
+ // Area: 100 - 500 km²
+ // Length: 10 - 50 km
+ return {
+ luasDAS: parseFloat((100 + Math.random() * 400).toFixed(2)),
+ panjangSungai: parseFloat((10 + Math.random() * 40).toFixed(2)),
+ };
 };

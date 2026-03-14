@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { Card } from '@/components/ui/Card';
 import {
-    Mountain,
-    CloudRain,
-    Activity,
-    CheckCircle2,
-    LayoutDashboard,
-    ChevronRight,
-    Info
-} from 'lucide-react';
-import { useFrequencyAnalysis } from '@/hooks/useFrequencyAnalysis';
+ Mountain,
+ CloudRain,
+ Activity,
+ CheckCircle2,
+ LayoutDashboard,
+ ChevronRight,
+ RefreshCw
+ } from 'lucide-react';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { StepMorfometri } from './steps/StepMorfometri';
@@ -21,228 +19,192 @@ import { StepRekapVisualisasi } from './steps/StepRekapVisualisasi';
 type Step = 1 | 2 | 3 | 4;
 
 interface StepConfig {
-    id: Step;
-    label: string;
-    icon: React.ReactNode;
-    description: string;
+ id: Step;
+ label: string;
+ icon: React.ReactNode;
+ description: string;
 }
 
 const STEPS: StepConfig[] = [
-    {
-        id: 1,
-        label: 'Karakteristik DAS',
-        icon: <Mountain className="w-5 h-5" />,
-        description: 'Morfometri & Runoff'
-    },
-    {
-        id: 2,
-        label: 'Hietograf (ABM)',
-        icon: <CloudRain className="w-5 h-5" />,
-        description: 'Distribusi Hujan'
-    },
-    {
-        id: 3,
-        label: 'Analisis Debit',
-        icon: <Activity className="w-5 h-5" />,
-        description: 'Multi-Method HSS'
-    },
-    {
-        id: 4,
-        label: 'Rekap & Output',
-        icon: <LayoutDashboard className="w-5 h-5" />,
-        description: 'Final Hydrograph'
-    }
+ {
+ id: 1,
+ label: 'Morfometri DAS',
+ icon: <Mountain className="w-4 h-4" />,
+ description: 'Parameter geometri'
+ },
+ {
+ id: 2,
+ label: 'Hietograf ABM',
+ icon: <CloudRain className="w-4 h-4" />,
+ description: 'Distribusi hujan'
+ },
+ {
+ id: 3,
+ label: 'Debit Banjir',
+ icon: <Activity className="w-4 h-4" />,
+ description: 'Simulasi HSS'
+ },
+ {
+ id: 4,
+ label: 'Rekap Analysis',
+ icon: <LayoutDashboard className="w-4 h-4" />,
+ description: 'Final output'
+ }
 ];
 
 interface FloodAnalysisRebuildProps {
-    onConsultAI?: () => void;
+ onConsultAI?: () => void;
 }
 
 export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onConsultAI }) => {
-    const [activeStep, setActiveStep] = useState<Step>(1);
-    const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
+ const [activeStep, setActiveStep] = useState<Step>(1);
+ const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
 
-    // Data from store for accurate auto-tracking
-    const hydroState = useHydrologyStore();
-    const {
-        morfometriDAS,
-        hujanEfektif,
-        hasilBanjir,
-        hasilKonvolusi
-    } = hydroState;
+ const hydroState = useHydrologyStore();
+ const { morfometriDAS, hujanEfektif, hasilBanjir, hasilKonvolusi } = hydroState;
+ const { completeStep } = useOnboarding();
 
-    const { isComplete: freqComplete } = useFrequencyAnalysis();
-    const { completeStep } = useOnboarding();
+ React.useEffect(() => {
+ const newCompleted = new Set<Step>();
+ if ((morfometriDAS?.luasDAS || 0) > 0 && (morfometriDAS?.panjangSungai || 0) > 0) newCompleted.add(1);
+ if (hujanEfektif && hujanEfektif.length > 0) newCompleted.add(2);
+ if (hasilBanjir || (hydroState.distribusiHujanJamJaman && hydroState.distribusiHujanJamJaman.length > 0)) newCompleted.add(3);
+ if (hasilKonvolusi && (hasilKonvolusi.peakDischarge || 0) > 0) {
+ newCompleted.add(4);
+ completeStep('banjir');
+ }
 
-    // 100% Accurate Auto-Tracking Logic
-    React.useEffect(() => {
-        const newCompleted = new Set<Step>();
-        
-        // Step 1: Karakteristik DAS (Needs Area and Length)
-        if ((morfometriDAS?.luasDAS || 0) > 0 && (morfometriDAS?.panjangSungai || 0) > 0) {
-            newCompleted.add(1);
-        }
+ const currentIds = Array.from(completedSteps).sort().join(',');
+ const newIds = Array.from(newCompleted).sort().join(',');
+ if (currentIds !== newIds) setCompletedSteps(newCompleted);
+ }, [morfometriDAS, hujanEfektif, hasilBanjir, hasilKonvolusi, hydroState.distribusiHujanJamJaman, completeStep, completedSteps]);
 
-        // Step 2: Hietograf (Needs Effective Rainfall from ABM)
-        if (hujanEfektif && hujanEfektif.length > 0) {
-            newCompleted.add(2);
-        }
+ const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
+ const [unitHydrograph, setUnitHydrograph] = useState<any[]>([]);
 
-        // Step 3: Analisis Debit (Needs a calculated Flood result or Unit Hydrograph)
-        if (hasilBanjir || (hydroState.distribusiHujanJamJaman && hydroState.distribusiHujanJamJaman.length > 0)) {
-            newCompleted.add(3);
-        }
+ const handleStepComplete = React.useCallback((step: Step) => {
+ if (step < 4) setActiveStep((step + 1) as Step);
+ }, []);
 
-        // Step 4: Rekap & Output (Needs final convolution results)
-        if (hasilKonvolusi && (hasilKonvolusi.peakDischarge || 0) > 0) {
-            newCompleted.add(4);
-            completeStep('banjir');
-        }
+ const onMethodSelected = React.useCallback((method: string, hydro: any[]) => {
+ setSelectedMethod(method);
+ setUnitHydrograph(hydro);
+ handleStepComplete(3);
+ }, [handleStepComplete]);
 
-        // Only update if the set has actually changed to prevent render loops
-        const currentIds = Array.from(completedSteps).sort().join(',');
-        const newIds = Array.from(newCompleted).sort().join(',');
-        
-        if (currentIds !== newIds) {
-            setCompletedSteps(newCompleted);
-        }
-    }, [morfometriDAS, hujanEfektif, hasilBanjir, hasilKonvolusi, hydroState.distribusiHujanJamJaman, completeStep, completedSteps]);
+ const completionPercentage = (completedSteps.size / STEPS.length) * 100;
 
-    // Data passed between steps
-    const [selectedMethod, setSelectedMethod] = useState<string>('nakayasu');
-    const [unitHydrograph, setUnitHydrograph] = useState<any[]>([]);
+ const handleReset = () => {
+ if (window.confirm('⚠️ KONFIRMASI RESET: Anda yakin ingin menghapus seluruh parameter input banjir?')) {
+ hydroState.resetAll();
+ }
+ };
 
-    const handleStepComplete = React.useCallback((step: Step) => {
-        if (step < 4) setActiveStep((step + 1) as Step);
-    }, []);
+ return (
+ <ModuleLayout
+ title="Flood Discharge Analysis"
+ description="Penghitungan debit puncak hidrograf standar SNI 2415:2016"
+ icon={<Activity className="w-6 h-6" />}
+ iconColorClass="bg-pupr-surface text-pupr-blue"
+ sniCode="SNI 2415:2016"
+ actions={
+ <div className="flex items-center gap-6">
+ <div className="flex flex-col items-end">
+ <div className="flex items-center gap-3">
+ <span className="text-3xl font-light tabular-nums text-pupr-blue">{Math.round(completionPercentage)}%</span>
+ <div className="w-32 h-1 bg-slate-100 rounded-sm overflow-hidden">
+ <div 
+ className="h-full bg-pupr-blue transition-all duration-75" 
+ style={{ width: `${completionPercentage}%` }}
+ />
+ </div>
+ </div>
+ <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Technical Readiness</span>
+ </div>
+ 
+ <button 
+ onClick={handleReset}
+ className="p-2.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-all border border-slate-200 dark:border-slate-700 group"
+ title="Reset Module"
+ >
+ <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-75" />
+ </button>
+ </div>
+ }
+ >
+ <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 py-4">
+ {/* Navigation Sidebar: Distilled & Quieter */}
+ <div className="lg:col-span-3 space-y-8">
+ <nav className="space-y-1">
+ <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 ml-1">Workflow</h3>
+ {STEPS.map((step) => {
+ const isActive = activeStep === step.id;
+ const isCompleted = completedSteps.has(step.id);
+ const isLocked = step.id > 1 && !completedSteps.has((step.id - 1) as Step);
 
-    const onMethodSelected = React.useCallback((method: string, hydro: any[]) => {
-        setSelectedMethod(method);
-        setUnitHydrograph(hydro);
-        handleStepComplete(3);
-    }, [handleStepComplete]);
+ return (
+ <button
+ key={step.id}
+ onClick={() => !isLocked && setActiveStep(step.id)}
+ disabled={isLocked}
+ className={`w-full text-left py-3 px-4 rounded-sm transition-all flex items-center justify-between group relative ${isActive
+ ? 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'
+ : 'text-slate-500 hover:bg-slate-50 dark:bg-slate-800'
+ } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
+ >
+ {isActive && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-pupr-blue rounded-r-full" />}
+ <div className="flex items-center gap-3">
+ <div className={isActive ? 'text-pupr-blue' : isCompleted ? 'text-emerald-500' : 'text-slate-300'}>
+ {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.icon}
+ </div>
+ <div>
+ <p className={`text-xs font-bold leading-none mb-1 ${isActive ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'}`}>{step.label}</p>
+ <p className="text-[10px] text-slate-500 font-medium">{step.description}</p>
+ </div>
+ </div>
+ {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-300" />}
+ </button>
+ );
+ })}
+ </nav>
 
-    return (
-        <ModuleLayout
-            title="Analisis Debit Banjir Rencana"
-            description="Penghitungan debit puncak dan hidrograf banjir dengan standar SNI 2415:2016"
-            icon={<Activity className="w-6 h-6" />}
-            iconColorClass="bg-pupr-blue/10 text-pupr-blue"
-        >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 py-2">
-                {/* Navigation Sidebar */}
-                <div className="lg:col-span-3 space-y-4">
-                    <Card className="p-4 border border-slate-200 shadow-sm rounded-md bg-white">
-                        <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">Workflow Progress</h3>
-                        <div className="space-y-1">
-                            {STEPS.map((step) => {
-                                const isActive = activeStep === step.id;
-                                const isCompleted = completedSteps.has(step.id);
-                                const isLocked = step.id > 1 && !completedSteps.has((step.id - 1) as Step);
+ <div className="pt-6 border-t border-slate-100">
+ <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-tighter">
+ <span>Ready for export</span>
+ <span className="text-pupr-blue">{Math.round((completedSteps.size / STEPS.length) * 100)}%</span>
+ </div>
+ <div className="h-0.5 w-full bg-slate-100 rounded-sm overflow-hidden">
+ <div
+ className="h-full bg-pupr-blue transition-all duration-75"
+ style={{ width: `${(completedSteps.size / STEPS.length) * 100}%` }}
+ />
+ </div>
+ </div>
 
-                                return (
-                                    <button
-                                        key={step.id}
-                                        onClick={() => !isLocked && setActiveStep(step.id)}
-                                        disabled={isLocked}
-                                        className={`w-full text-left p-3 rounded-md transition-all flex items-center justify-between group ${isActive
-                                            ? 'bg-pupr-blue text-white shadow-md'
-                                            : isCompleted
-                                                ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                                                : isLocked
-                                                    ? 'text-slate-300 cursor-not-allowed opacity-50'
-                                                    : 'text-slate-600 hover:bg-slate-50'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-1.5 rounded-md ${isActive ? 'bg-white/20' : isCompleted ? 'bg-green-100' : 'bg-slate-100'}`}>
-                                                {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.icon}
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold leading-none mb-1">{step.label}</p>
-                                                <p className={`text-[9px] ${isActive ? 'text-white/60' : 'text-slate-400'}`}>{step.description}</p>
-                                            </div>
-                                        </div>
-                                        {isActive && <ChevronRight className="w-4 h-4 animate-pulse" />}
-                                    </button>
-                                );
-                            })}
-                        </div>
+ {onConsultAI && (
+ <button
+ onClick={onConsultAI}
+ className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm hover:bg-slate-100 transition-all flex items-center gap-3 group"
+ >
+ <div className="p-2 bg-white dark:bg-slate-900 rounded-sm text-pupr-blue border border-slate-100">
+ <Activity className="w-4 h-4" />
+ </div>
+ <div className="text-left">
+ <p className="text-xs font-bold text-slate-900 dark:text-slate-100">AI Consultant</p>
+ <p className="text-[10px] text-slate-500 font-medium">Verify Compliance</p>
+ </div>
+ </button>
+ )}
+ </div>
 
-                        {/* Overall Progress */}
-                        <div className="mt-6 pt-4 border-t border-slate-100">
-                            <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-2">
-                                <span>OVERALL COMPLETION</span>
-                                <span>{Math.round((completedSteps.size / STEPS.length) * 100)}%</span>
-                            </div>
-                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-green-500 transition-all duration-700"
-                                    style={{ width: `${(completedSteps.size / STEPS.length) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-                    </Card>
-
-                    {!freqComplete && (
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md animate-pulse">
-                            <div className="flex items-center gap-2 mb-2 text-amber-700">
-                                <Info className="w-4 h-4" />
-                                <span className="text-[10px] font-bold uppercase">Prasyarat Belum Terpenuhi</span>
-                            </div>
-                            <p className="text-[10px] text-amber-600">Selesaikan <b>Analisis Frekuensi</b> untuk mendapatkan Hujan Rencana (R24) sebagai input utama distribusi hujan.</p>
-                        </div>
-                    )}
-
-                    {onConsultAI && (
-                        <button
-                            onClick={onConsultAI}
-                            className="w-full p-4 bg-white border border-pupr-blue/20 rounded-md shadow-sm hover:shadow-md transition-all flex items-center gap-3 group overflow-hidden relative"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-pupr-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="p-2 bg-pupr-blue/10 rounded-lg text-pupr-blue group-hover:scale-110 transition-transform">
-                                <Activity className="w-5 h-5" />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-xs font-extrabold text-slate-900 leading-none mb-1">Konsultan AI</p>
-                                <p className="text-[9px] font-bold text-pupr-blue uppercase tracking-widest">Audit Analisis</p>
-                            </div>
-                        </button>
-                    )}
-                </div>
-
-                {/* Content Area */}
-                <div className="lg:col-span-9">
-                    {activeStep === 1 && (
-                        <StepMorfometri
-                            onComplete={() => handleStepComplete(1)}
-                            isCompleted={completedSteps.has(1)}
-                        />
-                    )}
-
-                    {activeStep === 2 && (
-                        <StepHietograf
-                            onComplete={() => handleStepComplete(2)}
-                            isCompleted={completedSteps.has(2)}
-                        />
-                    )}
-
-                    {activeStep === 3 && (
-                        <StepMetodeBanjir
-                            onComplete={onMethodSelected}
-                            isCompleted={completedSteps.has(3)}
-                        />
-                    )}
-
-                    {activeStep === 4 && (
-                        <StepRekapVisualisasi
-                            selectedMethod={selectedMethod}
-                            unitHydrograph={unitHydrograph}
-                            onComplete={() => handleStepComplete(4)}
-                        />
-                    )}
-                </div>
-            </div>
-        </ModuleLayout>
-    );
+ {/* Content Area: More whitespace */}
+ <div className="lg:col-span-9 bg-white dark:bg-slate-900 min-h-[600px]">
+ {activeStep === 1 && <StepMorfometri onComplete={() => handleStepComplete(1)} isCompleted={completedSteps.has(1)} />}
+ {activeStep === 2 && <StepHietograf onComplete={() => handleStepComplete(2)} isCompleted={completedSteps.has(2)} />}
+ {activeStep === 3 && <StepMetodeBanjir onComplete={onMethodSelected} isCompleted={completedSteps.has(3)} />}
+ {activeStep === 4 && <StepRekapVisualisasi selectedMethod={selectedMethod} unitHydrograph={unitHydrograph} onComplete={() => handleStepComplete(4)} />}
+ </div>
+ </div>
+ </ModuleLayout>
+ );
 };

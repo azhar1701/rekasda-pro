@@ -9,10 +9,10 @@
 import { getEngineeringRecommendation } from './engineeringDecisionTree';
 
 export interface MethodRecommendation {
-  metode: string;
-  isRasional: boolean;
-  alasan: string;
-  status: 'ready' | 'not_ready';
+ metode: string;
+ isRasional: boolean;
+ alasan: string;
+ status: 'ready' | 'not_ready';
 }
 
 /**
@@ -22,35 +22,35 @@ export interface MethodRecommendation {
  * @returns MethodRecommendation
  */
 export function determineFloodMethod(luasDasKm2: number | null | undefined | string): MethodRecommendation {
-  // Defensive Programming: Handle invalid or missing input
-  if (luasDasKm2 === null || luasDasKm2 === undefined || luasDasKm2 === '') {
-    return {
-      metode: 'None',
-      isRasional: false,
-      alasan: 'Parameter Luas DAS (A) belum terdefinisi. Selesaikan delineasi di Modul Spasial.',
-      status: 'not_ready'
-    };
-  }
+ // Defensive Programming: Handle invalid or missing input
+ if (luasDasKm2 === null || luasDasKm2 === undefined || luasDasKm2 === '') {
+ return {
+ metode: 'None',
+ isRasional: false,
+ alasan: 'Parameter Luas DAS (A) belum terdefinisi. Selesaikan delineasi di Modul Spasial.',
+ status: 'not_ready'
+ };
+ }
 
-  const area = typeof luasDasKm2 === 'string' ? parseFloat(luasDasKm2) : luasDasKm2;
+ const area = typeof luasDasKm2 === 'string' ? parseFloat(luasDasKm2) : luasDasKm2;
 
-  if (isNaN(area) || area <= 0) {
-    return {
-      metode: 'None',
-      isRasional: false,
-      alasan: 'Nilai Luas DAS tidak valid. Harap masukkan angka positif > 0.',
-      status: 'not_ready'
-    };
-  }
+ if (isNaN(area) || area <= 0) {
+ return {
+ metode: 'None',
+ isRasional: false,
+ alasan: 'Nilai Luas DAS tidak valid. Harap masukkan angka positif > 0.',
+ status: 'not_ready'
+ };
+ }
 
-  // DELEGATE to Professional Engineering Decision Tree
-  const decision = getEngineeringRecommendation(area, 'peak_only');
-  const primary = decision.primaryMethod;
+ // DELEGATE to Professional Engineering Decision Tree
+ const decision = getEngineeringRecommendation(area, 'peak_only');
+ const primary = decision.primaryMethod;
 
-  return {
-    metode: primary.name,
-    isRasional: primary.category === 'RATIONAL',
-    alasan: `${primary.justification} Sesuai ${primary.standardReference}.`,
-    status: 'ready'
-  };
+ return {
+ metode: primary.name,
+ isRasional: primary.category === 'RATIONAL',
+ alasan: `${primary.justification} Sesuai ${primary.standardReference}.`,
+ status: 'ready'
+ };
 }

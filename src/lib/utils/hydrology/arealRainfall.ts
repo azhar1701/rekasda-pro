@@ -15,10 +15,10 @@
  * @returns Nilai rata-rata curah hujan (mm)
  */
 export function calculateAlgebraicMean(stationRainfalls: number[]): number {
-  if (!stationRainfalls || stationRainfalls.length === 0) return 0;
-  
-  const sum = stationRainfalls.reduce((acc, val) => acc + val, 0);
-  return sum / stationRainfalls.length;
+ if (!stationRainfalls || stationRainfalls.length === 0) return 0;
+ 
+ const sum = stationRainfalls.reduce((acc, val) => acc + val, 0);
+ return sum / stationRainfalls.length;
 }
 
 /**
@@ -31,22 +31,22 @@ export function calculateAlgebraicMean(stationRainfalls: number[]): number {
  * @returns Nilai curah hujan rata-rata tertimbang (mm)
  */
 export function calculateThiessenPolygon(
-  stations: Array<{ rainfall: number; area: number }>
+ stations: Array<{ rainfall: number; area: number }>
 ): number {
-  if (!stations || stations.length === 0) return 0;
+ if (!stations || stations.length === 0) return 0;
 
-  let totalArea = 0;
-  let weightedRainfallSum = 0;
+ let totalArea = 0;
+ let weightedRainfallSum = 0;
 
-  for (const station of stations) {
-    if (station.area > 0) {
-      totalArea += station.area;
-      weightedRainfallSum += (station.rainfall * station.area);
-    }
-  }
+ for (const station of stations) {
+ if (station.area > 0) {
+ totalArea += station.area;
+ weightedRainfallSum += (station.rainfall * station.area);
+ }
+ }
 
-  if (totalArea === 0) return 0;
-  return weightedRainfallSum / totalArea;
+ if (totalArea === 0) return 0;
+ return weightedRainfallSum / totalArea;
 }
 
 /**
@@ -60,20 +60,20 @@ export function calculateThiessenPolygon(
  * @returns Nilai curah hujan rata-rata tertimbang (mm)
  */
 export function calculateIsohyet(
-  isohyets: Array<{ averageRainfall: number; area: number }>
+ isohyets: Array<{ averageRainfall: number; area: number }>
 ): number {
-  if (!isohyets || isohyets.length === 0) return 0;
+ if (!isohyets || isohyets.length === 0) return 0;
 
-  let totalArea = 0;
-  let weightedRainfallSum = 0;
+ let totalArea = 0;
+ let weightedRainfallSum = 0;
 
-  for (const isohyet of isohyets) {
-    if (isohyet.area > 0) {
-      totalArea += isohyet.area;
-      weightedRainfallSum += (isohyet.averageRainfall * isohyet.area);
-    }
-  }
+ for (const isohyet of isohyets) {
+ if (isohyet.area > 0) {
+ totalArea += isohyet.area;
+ weightedRainfallSum += (isohyet.averageRainfall * isohyet.area);
+ }
+ }
 
-  if (totalArea === 0) return 0;
-  return weightedRainfallSum / totalArea;
+ if (totalArea === 0) return 0;
+ return weightedRainfallSum / totalArea;
 }

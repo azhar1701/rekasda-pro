@@ -1,11 +1,11 @@
 export interface HydrographDataPoint {
-  time: number;
-  discharge: number;
+ time: number;
+ discharge: number;
 }
 
 export interface FloodAnalysisData {
-  qPeak: number;
-  tPeak: number;
-  volume: number;
-  hydrograph: HydrographDataPoint[];
+ qPeak: number;
+ tPeak: number;
+ volume: number;
+ hydrograph: HydrographDataPoint[];
 }

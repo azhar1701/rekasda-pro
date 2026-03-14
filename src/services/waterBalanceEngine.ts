@@ -3,31 +3,31 @@
 import { z } from 'zod';
 
 export interface WaterBalanceInputs {
-  population: number;
-  agricultureArea: number; // Ha
-  domesticStandard: number; // L/capita/day
-  irrigationDemand: number; // L/s/Ha
-  monthlySupply: number[]; // 12 months Q80 (m³/s)
+ population: number;
+ agricultureArea: number; // Ha
+ domesticStandard: number; // L/capita/day
+ irrigationDemand: number; // L/s/Ha
+ monthlySupply: number[]; // 12 months Q80 (m³/s)
 }
 
 // Zod validation schema
 const WaterBalanceInputsSchema = z.object({
-  population: z.number().min(0, 'Jumlah penduduk harus ≥ 0'),
-  agricultureArea: z.number().min(0, 'Luas lahan pertanian harus ≥ 0'),
-  domesticStandard: z.number().min(0, 'Standar kebutuhan air harus ≥ 0').max(500, 'Standar kebutuhan air tidak realistis'),
-  irrigationDemand: z.number().min(0, 'Kebutuhan irigasi harus ≥ 0').max(5, 'Kebutuhan irigasi tidak realistis'),
-  monthlySupply: z.array(z.number().min(0, 'Debit bulanan harus ≥ 0')).length(12, 'Harus ada 12 data bulanan')
+ population: z.number().min(0, 'Jumlah penduduk harus ≥ 0'),
+ agricultureArea: z.number().min(0, 'Luas lahan pertanian harus ≥ 0'),
+ domesticStandard: z.number().min(0, 'Standar kebutuhan air harus ≥ 0').max(500, 'Standar kebutuhan air tidak realistis'),
+ irrigationDemand: z.number().min(0, 'Kebutuhan irigasi harus ≥ 0').max(5, 'Kebutuhan irigasi tidak realistis'),
+ monthlySupply: z.array(z.number().min(0, 'Debit bulanan harus ≥ 0')).length(12, 'Harus ada 12 data bulanan')
 });
 
 export interface WaterBalanceResult {
-  month: string;
-  supply: number; // m³/s
-  domesticDemand: number; // m³/s
-  agricultureDemand: number; // m³/s
-  environmentalFlow: number; // m³/s (UU 17/2019)
-  totalDemand: number; // m³/s
-  balance: number; // m³/s
-  status: 'Surplus' | 'Defisit' | 'Seimbang';
+ month: string;
+ supply: number; // m³/s
+ domesticDemand: number; // m³/s
+ agricultureDemand: number; // m³/s
+ environmentalFlow: number; // m³/s (UU 17/2019)
+ totalDemand: number; // m³/s
+ balance: number; // m³/s
+ status: 'Surplus' | 'Defisit' | 'Seimbang';
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -38,15 +38,15 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', '
  * 
  * @param population - Jumlah penduduk (jiwa)
  * @param standard - Standar kebutuhan (L/capita/day)
- *   - Kota Besar: 120-150 L/capita/day
- *   - Kota Sedang: 100-120 L/capita/day
- *   - Kota Kecil: 80-100 L/capita/day
- *   - Pedesaan: 60-80 L/capita/day
+ * - Kota Besar: 120-150 L/capita/day
+ * - Kota Sedang: 100-120 L/capita/day
+ * - Kota Kecil: 80-100 L/capita/day
+ * - Pedesaan: 60-80 L/capita/day
  * @returns Kebutuhan air domestik (m³/s)
  */
 export const calculateDomesticDemand = (population: number, standard: number = 100): number => {
-  // Konversi: (jiwa × L/capita/day) / (1000 L/m³ × 86400 s/day)
-  return (population * standard) / 86400000;
+ // Konversi: (jiwa × L/capita/day) / (1000 L/m³ × 86400 s/day)
+ return (population * standard) / 86400000;
 };
 
 /**
@@ -55,14 +55,14 @@ export const calculateDomesticDemand = (population: number, standard: number = 1
  * 
  * @param area - Luas lahan pertanian (Ha)
  * @param demand - Kebutuhan irigasi (L/s/Ha)
- *   - Padi: 1.0-1.5 L/s/Ha
- *   - Palawija: 0.5-0.8 L/s/Ha
- *   - Perkebunan: 0.3-0.5 L/s/Ha
+ * - Padi: 1.0-1.5 L/s/Ha
+ * - Palawija: 0.5-0.8 L/s/Ha
+ * - Perkebunan: 0.3-0.5 L/s/Ha
  * @returns Kebutuhan air pertanian (m³/s)
  */
 export const calculateAgricultureDemand = (area: number, demand: number = 1.0): number => {
-  // Konversi: (Ha × L/s/Ha) / (1000 L/m³)
-  return (area * demand) / 1000;
+ // Konversi: (Ha × L/s/Ha) / (1000 L/m³)
+ return (area * demand) / 1000;
 };
 
 /**
@@ -73,38 +73,38 @@ export const calculateAgricultureDemand = (area: number, demand: number = 1.0): 
  * @returns Array hasil neraca air 12 bulan
  */
 export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceResult[] => {
-  const validated = WaterBalanceInputsSchema.parse(inputs);
-  const domesticDemand = calculateDomesticDemand(validated.population, validated.domesticStandard);
-  const agricultureDemand = calculateAgricultureDemand(validated.agricultureArea, validated.irrigationDemand);
-  
-  return validated.monthlySupply.map((supply, index) => {
-    // Debit Lingkungan (Environmental Flow) - UU No. 17/2019 Pasal 22
-    // Minimum 10% dari debit tersedia untuk ekosistem
-    const environmentalFlow = supply * 0.10;
-    
-    // Total kebutuhan air
-    const totalDemand = domesticDemand + agricultureDemand + environmentalFlow;
-    
-    // Neraca air (surplus/defisit)
-    const balance = supply - totalDemand;
-    
-    // Status neraca
-    let status: 'Surplus' | 'Defisit' | 'Seimbang';
-    if (balance > 0.01) status = 'Surplus';
-    else if (balance < -0.01) status = 'Defisit';
-    else status = 'Seimbang';
-    
-    return {
-      month: MONTHS[index],
-      supply: parseFloat(supply.toFixed(3)),
-      domesticDemand: parseFloat(domesticDemand.toFixed(3)),
-      agricultureDemand: parseFloat(agricultureDemand.toFixed(3)),
-      environmentalFlow: parseFloat(environmentalFlow.toFixed(3)),
-      totalDemand: parseFloat(totalDemand.toFixed(3)),
-      balance: parseFloat(balance.toFixed(3)),
-      status
-    };
-  });
+ const validated = WaterBalanceInputsSchema.parse(inputs);
+ const domesticDemand = calculateDomesticDemand(validated.population, validated.domesticStandard);
+ const agricultureDemand = calculateAgricultureDemand(validated.agricultureArea, validated.irrigationDemand);
+ 
+ return validated.monthlySupply.map((supply, index) => {
+ // Debit Lingkungan (Environmental Flow) - UU No. 17/2019 Pasal 22
+ // Minimum 10% dari debit tersedia untuk ekosistem
+ const environmentalFlow = supply * 0.10;
+ 
+ // Total kebutuhan air
+ const totalDemand = domesticDemand + agricultureDemand + environmentalFlow;
+ 
+ // Neraca air (surplus/defisit)
+ const balance = supply - totalDemand;
+ 
+ // Status neraca
+ let status: 'Surplus' | 'Defisit' | 'Seimbang';
+ if (balance > 0.01) status = 'Surplus';
+ else if (balance < -0.01) status = 'Defisit';
+ else status = 'Seimbang';
+ 
+ return {
+ month: MONTHS[index],
+ supply: parseFloat(supply.toFixed(3)),
+ domesticDemand: parseFloat(domesticDemand.toFixed(3)),
+ agricultureDemand: parseFloat(agricultureDemand.toFixed(3)),
+ environmentalFlow: parseFloat(environmentalFlow.toFixed(3)),
+ totalDemand: parseFloat(totalDemand.toFixed(3)),
+ balance: parseFloat(balance.toFixed(3)),
+ status
+ };
+ });
 };
 
 /**
@@ -114,23 +114,23 @@ export const calculateWaterBalance = (inputs: WaterBalanceInputs): WaterBalanceR
  * @returns Ringkasan statistik
  */
 export const getWaterBalanceSummary = (results: WaterBalanceResult[]) => {
-  const surplusMonths = results.filter(r => r.status === 'Surplus').length;
-  const deficitMonths = results.filter(r => r.status === 'Defisit').length;
-  const totalDeficit = results.reduce((sum, r) => sum + (r.balance < 0 ? Math.abs(r.balance) : 0), 0);
-  const totalSurplus = results.reduce((sum, r) => sum + (r.balance > 0 ? r.balance : 0), 0);
-  const criticalMonth = results.reduce((min, r) => r.balance < min.balance ? r : min, results[0]);
-  
-  // Reliabilitas pasokan air (% bulan surplus)
-  const reliability = (surplusMonths / 12) * 100;
-  
-  return {
-    surplusMonths,
-    deficitMonths,
-    totalDeficit: parseFloat(totalDeficit.toFixed(3)),
-    totalSurplus: parseFloat(totalSurplus.toFixed(3)),
-    criticalMonth,
-    reliability: parseFloat(reliability.toFixed(1))
-  };
+ const surplusMonths = results.filter(r => r.status === 'Surplus').length;
+ const deficitMonths = results.filter(r => r.status === 'Defisit').length;
+ const totalDeficit = results.reduce((sum, r) => sum + (r.balance < 0 ? Math.abs(r.balance) : 0), 0);
+ const totalSurplus = results.reduce((sum, r) => sum + (r.balance > 0 ? r.balance : 0), 0);
+ const criticalMonth = results.reduce((min, r) => r.balance < min.balance ? r : min, results[0]);
+ 
+ // Reliabilitas pasokan air (% bulan surplus)
+ const reliability = (surplusMonths / 12) * 100;
+ 
+ return {
+ surplusMonths,
+ deficitMonths,
+ totalDeficit: parseFloat(totalDeficit.toFixed(3)),
+ totalSurplus: parseFloat(totalSurplus.toFixed(3)),
+ criticalMonth,
+ reliability: parseFloat(reliability.toFixed(1))
+ };
 };
 
 /**
@@ -151,32 +151,32 @@ export const getWaterBalanceSummary = (results: WaterBalanceResult[]) => {
  * @returns Kapasitas Tampungan Minimum yang diwajibkan (m3)
  */
 export function sequentPeakAlgorithm(
-  inflows: number[],
-  outflows: number[],
-  losses?: number[]
+ inflows: number[],
+ outflows: number[],
+ losses?: number[]
 ): number {
-  if (inflows.length !== outflows.length || inflows.length === 0) return 0;
+ if (inflows.length !== outflows.length || inflows.length === 0) return 0;
 
-  // Gandakan array menjadi 2 siklus (mengakomodir kemarau panjang lintas akhir tahun)
-  const cycleInflows = [...inflows, ...inflows];
-  const cycleOutflows = [...outflows, ...outflows];
-  const cycleLosses = losses ? [...losses, ...losses] : cycleInflows.map(() => 0);
+ // Gandakan array menjadi 2 siklus (mengakomodir kemarau panjang lintas akhir tahun)
+ const cycleInflows = [...inflows, ...inflows];
+ const cycleOutflows = [...outflows, ...outflows];
+ const cycleLosses = losses ? [...losses, ...losses] : cycleInflows.map(() => 0);
 
-  let currentV = 0;
-  let maxV = 0;
+ let currentV = 0;
+ let maxV = 0;
 
-  for (let i = 0; i < cycleInflows.length; i++) {
-    const Xt = cycleInflows[i] - cycleOutflows[i] - cycleLosses[i];
-    currentV = currentV - Xt;
+ for (let i = 0; i < cycleInflows.length; i++) {
+ const Xt = cycleInflows[i] - cycleOutflows[i] - cycleLosses[i];
+ currentV = currentV - Xt;
 
-    if (currentV < 0) {
-      currentV = 0; // Surplus tidak bisa kurang dari nol
-    }
+ if (currentV < 0) {
+ currentV = 0; // Surplus tidak bisa kurang dari nol
+ }
 
-    if (currentV > maxV) {
-      maxV = currentV;
-    }
-  }
+ if (currentV > maxV) {
+ maxV = currentV;
+ }
+ }
 
-  return maxV;
+ return maxV;
 }

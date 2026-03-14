@@ -3,90 +3,90 @@ import { X, Plus } from 'lucide-react';
 import { RainfallDataPoint } from '../FrequencyAnalysisModal';
 
 interface DataInputTableProps {
-  data: RainfallDataPoint[];
-  onChange: (data: RainfallDataPoint[]) => void;
-  /** Set of row indices that were manually edited (shown with amber border) */
-  editedRows?: Set<number>;
+ data: RainfallDataPoint[];
+ onChange: (data: RainfallDataPoint[]) => void;
+ /** Set of row indices that were manually edited (shown with amber border) */
+ editedRows?: Set<number>;
 }
 
 export const DataInputTable: React.FC<DataInputTableProps> = ({ data, onChange, editedRows }) => {
-  const handleAdd = () => {
-    const lastYear = data.length > 0 ? Math.max(...data.map(d => d.year)) : new Date().getFullYear();
-    onChange([...data, { year: lastYear + 1, value: 0 }]);
-  };
+ const handleAdd = () => {
+ const lastYear = data.length > 0 ? Math.max(...data.map(d => d.year)) : new Date().getFullYear();
+ onChange([...data, { year: lastYear + 1, value: 0 }]);
+ };
 
-  const handleRemove = (index: number) => {
-    onChange(data.filter((_, i) => i !== index));
-  };
+ const handleRemove = (index: number) => {
+ onChange(data.filter((_, i) => i !== index));
+ };
 
-  const handleChange = (index: number, field: keyof RainfallDataPoint, value: number) => {
-    const updated = [...data];
-    updated[index] = { ...updated[index], [field]: value };
-    onChange(updated);
-  };
+ const handleChange = (index: number, field: keyof RainfallDataPoint, value: number) => {
+ const updated = [...data];
+ updated[index] = { ...updated[index], [field]: value };
+ onChange(updated);
+ };
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-700">Data Hujan Harian Maksimum</h3>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Baris
-        </button>
-      </div>
+ return (
+ <div className="space-y-3">
+ <div className="flex items-center justify-between">
+ <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Data Hujan Harian Maksimum</h3>
+ <button
+ onClick={handleAdd}
+ className="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+ >
+ <Plus className="w-4 h-4" />
+ Tambah Baris
+ </button>
+ </div>
 
-      <div className="border border-slate-200 rounded-lg overflow-hidden max-h-[45vh] overflow-y-auto">
-        <table className="w-full">
-          <thead className="bg-slate-50 sticky top-0">
-            <tr>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Tahun</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Hujan (mm)</th>
-              <th className="w-10"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {data.map((row, index) => {
-              const isEdited = editedRows?.has(index);
-              return (
-                <tr key={index} className={`hover:bg-slate-50 ${isEdited ? 'bg-amber-50/50' : ''}`}>
-                  <td className="px-3 py-2">
-                    <input
-                      type="number"
-                      value={row.year}
-                      onChange={(e) => handleChange(index, 'year', parseInt(e.target.value) || 0)}
-                      className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 tabular-nums tracking-tight"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={row.value}
-                      onChange={(e) => handleChange(index, 'value', parseFloat(e.target.value) || 0)}
-                      className={`w-full px-2 py-1 text-sm rounded focus:outline-none focus:ring-2 tabular-nums tracking-tight ${isEdited
-                          ? 'border-2 border-amber-400 bg-amber-50 focus:ring-amber-300'
-                          : 'border border-slate-200 focus:ring-teal-500'
-                        }`}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <button
-                      onClick={() => handleRemove(index)}
-                      className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
-                      aria-label="Hapus baris"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+ <div className="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden max-h-[45vh] overflow-y-auto">
+ <table className="w-full">
+ <thead className="bg-slate-50 dark:bg-slate-800 sticky top-0">
+ <tr>
+ <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">Tahun</th>
+ <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">Hujan (mm)</th>
+ <th className="w-10"></th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-slate-100">
+ {data.map((row, index) => {
+ const isEdited = editedRows?.has(index);
+ return (
+ <tr key={index} className={`hover:bg-slate-50 dark:bg-slate-800 ${isEdited ? 'bg-amber-50/50' : ''}`}>
+ <td className="px-3 py-2">
+ <input
+ type="number"
+ value={row.year}
+ onChange={(e) => handleChange(index, 'year', parseInt(e.target.value) || 0)}
+ className="w-full px-2 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 tabular-nums tracking-tight"
+ />
+ </td>
+ <td className="px-3 py-2">
+ <input
+ type="number"
+ step="0.01"
+ value={row.value}
+ onChange={(e) => handleChange(index, 'value', parseFloat(e.target.value) || 0)}
+ className={`w-full px-2 py-1 text-sm rounded focus:outline-none focus:ring-2 tabular-nums tracking-tight ${isEdited
+ ? 'border-2 border-amber-400 bg-amber-50 focus:ring-amber-300'
+ : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+ }`}
+ />
+ </td>
+ <td className="px-3 py-2">
+ <button
+ onClick={() => handleRemove(index)}
+ className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+ aria-label="Hapus baris"
+ >
+ <X className="w-4 h-4" />
+ </button>
+ </td>
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ );
 };

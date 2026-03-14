@@ -6,25 +6,25 @@
 import { z } from 'zod';
 
 export interface RainfallIntensityInput {
-  /** Curah hujan rencana 24 jam (mm) */
-  R24: number;
-  /** Durasi hujan / waktu konsentrasi (jam) */
-  tc: number;
-  /** Metode perhitungan */
-  method: 'mononobe' | 'talbot' | 'sherman';
+ /** Curah hujan rencana 24 jam (mm) */
+ R24: number;
+ /** Durasi hujan / waktu konsentrasi (jam) */
+ tc: number;
+ /** Metode perhitungan */
+ method: 'mononobe' | 'talbot' | 'sherman';
 }
 
 export interface RainfallIntensityOutput {
-  /** Intensitas hujan (mm/jam) */
-  I: number;
-  /** Metode yang digunakan */
-  method: string;
+ /** Intensitas hujan (mm/jam) */
+ I: number;
+ /** Metode yang digunakan */
+ method: string;
 }
 
 const RainfallInputSchema = z.object({
-  R24: z.number().min(1, 'Curah hujan minimum 1 mm').max(1000, 'Curah hujan maksimum 1000 mm'),
-  tc: z.number().min(0.1, 'Durasi minimum 0.1 jam').max(24, 'Durasi maksimum 24 jam'),
-  method: z.enum(['mononobe', 'talbot', 'sherman']),
+ R24: z.number().min(1, 'Curah hujan minimum 1 mm').max(1000, 'Curah hujan maksimum 1000 mm'),
+ tc: z.number().min(0.1, 'Durasi minimum 0.1 jam').max(24, 'Durasi maksimum 24 jam'),
+ method: z.enum(['mononobe', 'talbot', 'sherman']),
 });
 
 /**
@@ -38,7 +38,7 @@ const RainfallInputSchema = z.object({
  * @returns Intensitas hujan (mm/jam)
  */
 export const calculateMononobe = (R24: number, tc: number): number => {
-  return (R24 / 24) * Math.pow(24 / tc, 2 / 3);
+ return (R24 / 24) * Math.pow(24 / tc, 2 / 3);
 };
 
 /**
@@ -53,9 +53,9 @@ export const calculateMononobe = (R24: number, tc: number): number => {
  * @returns Intensitas hujan (mm/jam)
  */
 export const calculateTalbot = (R24: number, tc: number): number => {
-  const a = 0.21;
-  const b = 0.5;
-  return (a * R24) / (tc + b);
+ const a = 0.21;
+ const b = 0.5;
+ return (a * R24) / (tc + b);
 };
 
 /**
@@ -70,10 +70,10 @@ export const calculateTalbot = (R24: number, tc: number): number => {
  * @returns Intensitas hujan (mm/jam)
  */
 export const calculateSherman = (R24: number, tc: number): number => {
-  const a = 1.67;
-  const b = 0.5;
-  const n = 0.67;
-  return (a * R24) / Math.pow(tc + b, n);
+ const a = 1.67;
+ const b = 0.5;
+ const n = 0.67;
+ return (a * R24) / Math.pow(tc + b, n);
 };
 
 /**
@@ -83,31 +83,31 @@ export const calculateSherman = (R24: number, tc: number): number => {
  * @returns Intensitas hujan
  */
 export const calculateRainfallIntensity = (input: RainfallIntensityInput): RainfallIntensityOutput => {
-  const validated = RainfallInputSchema.parse(input);
-  const { R24, tc, method } = validated;
+ const validated = RainfallInputSchema.parse(input);
+ const { R24, tc, method } = validated;
 
-  let I = 0;
-  let methodName = '';
+ let I = 0;
+ let methodName = '';
 
-  switch (method) {
-    case 'mononobe':
-      I = calculateMononobe(R24, tc);
-      methodName = 'Mononobe (SNI 2415:2016)';
-      break;
-    case 'talbot':
-      I = calculateTalbot(R24, tc);
-      methodName = 'Talbot';
-      break;
-    case 'sherman':
-      I = calculateSherman(R24, tc);
-      methodName = 'Sherman';
-      break;
-  }
+ switch (method) {
+ case 'mononobe':
+ I = calculateMononobe(R24, tc);
+ methodName = 'Mononobe (SNI 2415:2016)';
+ break;
+ case 'talbot':
+ I = calculateTalbot(R24, tc);
+ methodName = 'Talbot';
+ break;
+ case 'sherman':
+ I = calculateSherman(R24, tc);
+ methodName = 'Sherman';
+ break;
+ }
 
-  return {
-    I: parseFloat(I.toFixed(2)),
-    method: methodName,
-  };
+ return {
+ I: parseFloat(I.toFixed(2)),
+ method: methodName,
+ };
 };
 
 /**
@@ -115,18 +115,18 @@ export const calculateRainfallIntensity = (input: RainfallIntensityInput): Rainf
  * Sesuai Permen PU No. 12/2014
  */
 export interface TimeConcentrationInput {
-  /** Panjang aliran (km) */
-  L: number;
-  /** Kemiringan lahan (m/m) */
-  S: number;
-  /** Metode perhitungan */
-  method: 'kirpich' | 'bransby-williams' | 'california';
+ /** Panjang aliran (km) */
+ L: number;
+ /** Kemiringan lahan (m/m) */
+ S: number;
+ /** Metode perhitungan */
+ method: 'kirpich' | 'bransby-williams' | 'california';
 }
 
 const TcInputSchema = z.object({
-  L: z.number().min(0.01, 'Panjang minimum 0.01 km').max(1000, 'Panjang maksimum 1000 km'),
-  S: z.number().min(0.0001, 'Kemiringan minimum 0.0001').max(1, 'Kemiringan maksimum 1'),
-  method: z.enum(['kirpich', 'bransby-williams', 'california']),
+ L: z.number().min(0.01, 'Panjang minimum 0.01 km').max(1000, 'Panjang maksimum 1000 km'),
+ S: z.number().min(0.0001, 'Kemiringan minimum 0.0001').max(1, 'Kemiringan maksimum 1'),
+ method: z.enum(['kirpich', 'bransby-williams', 'california']),
 });
 
 /**
@@ -140,7 +140,7 @@ const TcInputSchema = z.object({
  * @returns Waktu konsentrasi (menit)
  */
 export const calculateKirpich = (L: number, S: number): number => {
-  return 0.0195 * Math.pow(L * 1000, 0.77) * Math.pow(S, -0.385);
+ return 0.0195 * Math.pow(L * 1000, 0.77) * Math.pow(S, -0.385);
 };
 
 /**
@@ -155,7 +155,7 @@ export const calculateKirpich = (L: number, S: number): number => {
  * @returns Waktu konsentrasi (menit)
  */
 export const calculateBransbyWilliams = (L: number, A: number, S: number): number => {
-  return (58.5 * L) / (Math.pow(A, 0.1) * Math.pow(S, 0.2));
+ return (58.5 * L) / (Math.pow(A, 0.1) * Math.pow(S, 0.2));
 };
 
 /**
@@ -169,7 +169,7 @@ export const calculateBransbyWilliams = (L: number, A: number, S: number): numbe
  * @returns Waktu konsentrasi (jam)
  */
 export const calculateCaliforniaCulvert = (L: number, H: number): number => {
-  return Math.pow((0.87 * Math.pow(L, 3)) / H, 0.385);
+ return Math.pow((0.87 * Math.pow(L, 3)) / H, 0.385);
 };
 
 /**
@@ -179,16 +179,16 @@ export const calculateCaliforniaCulvert = (L: number, H: number): number => {
  * @returns Waktu konsentrasi (menit)
  */
 export const calculateTimeConcentration = (input: TimeConcentrationInput): number => {
-  const validated = TcInputSchema.parse(input);
-  const { L, S, method } = validated;
+ const validated = TcInputSchema.parse(input);
+ const { L, S, method } = validated;
 
-  switch (method) {
-    case 'kirpich':
-      return parseFloat(calculateKirpich(L, S).toFixed(2));
-    case 'california':
-      const H = L * 1000 * S; // Estimasi beda tinggi
-      return parseFloat((calculateCaliforniaCulvert(L, H) * 60).toFixed(2));
-    default:
-      return parseFloat(calculateKirpich(L, S).toFixed(2));
-  }
+ switch (method) {
+ case 'kirpich':
+ return parseFloat(calculateKirpich(L, S).toFixed(2));
+ case 'california':
+ const H = L * 1000 * S; // Estimasi beda tinggi
+ return parseFloat((calculateCaliforniaCulvert(L, H) * 60).toFixed(2));
+ default:
+ return parseFloat(calculateKirpich(L, S).toFixed(2));
+ }
 };
