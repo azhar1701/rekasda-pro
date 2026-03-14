@@ -286,7 +286,7 @@ export function SideDrawer() {
  </span>
  <button 
  onClick={handleClose}
- className="p-1.5 hover:bg-white dark:bg-slate-900 rounded-sm transition-colors text-slate-300 hover:text-white"
+ className="p-3 -mr-2 -mt-2 hover:bg-white/10 dark:bg-slate-900 rounded-sm transition-colors text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
  aria-label="Tutup panel"
  >
  <X size={24} />
@@ -389,7 +389,7 @@ export function SideDrawer() {
  </div>
  
  {/* Footer Actions */}
- <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] flex gap-3 z-30 relative">
+ <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0 flex gap-3 z-30 relative">
  <button 
  onClick={handleClose}
  className="flex-[0.8] py-3 px-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-sm font-bold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200"

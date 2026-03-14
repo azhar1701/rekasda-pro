@@ -455,7 +455,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  <Sparkles className="w-4 h-4 mr-2" />
  Audit & Hubungkan ke Distribusi
  </Button>
- <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
+ <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
  <Download className="w-4 h-4 mr-2" />
  Download Template
  </Button>
@@ -468,11 +468,11 @@ Tindakan ini tidak dapat dibatalkan!`);
  onChange={handleFileUpload}
  className="hidden"
  />
- <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
+ <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-teal-200 text-teal-700 hover:bg-teal-50">
  <Upload className="w-4 h-4 mr-2" />
  Import Excel
  </Button>
- <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
+ <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-teal-200 text-teal-700 hover:bg-teal-50">
  <Activity className="w-4 h-4 mr-2" />
  Bulk Paste
  </Button>
@@ -489,9 +489,9 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
 
- <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
- <div className="lg:col-span-4 flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-white/60 rounded-sm ">
- <div className="p-5 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 flex justify-between items-center">
+ <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[850px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm mt-6 divide-y lg:divide-y-0 lg:divide-x divide-slate-300 dark:divide-slate-700 rounded-none">
+ <div className="lg:col-span-3 flex flex-col overflow-y-auto max-h-[1400px] bg-slate-50 dark:bg-slate-900">
+ <div className="p-4 border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex justify-between items-center sticky top-0 z-10">
  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
  <MapPin className="w-5 h-5 text-pupr-blue" />
  Daftar Stasiun
@@ -633,7 +633,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
 
- <div className="lg:col-span-8 flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-white/60 rounded-sm ">
+ <div className="lg:col-span-9 flex flex-col bg-white dark:bg-slate-900 rounded-none">
  {!selectedStasiun ? (
  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
  <div className="w-24 h-24 mb-6 bg-white dark:bg-slate-900 border border-teal-100 rounded-sm flex items-center justify-center">
@@ -708,7 +708,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
 
- <div className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-800 p-4 sm:p-6">
+ <div className="flex-1 bg-slate-50/50 dark:bg-slate-900/50 p-4 sm:p-5 relative pb-16">
  {isLoading && (
  <div className="absolute inset-0 bg-white dark:bg-slate-900 flex items-center justify-center z-10">
  <div className="animate-pulse bg-slate-200 rounded-sm h-10 w-10 border-4 border-slate-200 dark:border-slate-700 border-t-teal-600"></div>

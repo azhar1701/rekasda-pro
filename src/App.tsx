@@ -18,6 +18,8 @@ const EmbungDashboard = React.lazy(() => import('@/features/embung/components/Em
 const WorkflowCanvas = React.lazy(() => import('@/features/workflow/WorkflowCanvas').then(m => ({ default: m.WorkflowCanvas })));
 import { AllCalculationsData } from '@/services/allCalculationsService';
 import { ToastContainer } from '@/components/ui/feedback/Toast';
+import { OfflineBanner } from '@/components/ui/feedback/OfflineBanner';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { CalculationType } from '@/types/types';
 import type { CalculationResult } from '@/types/common.types';
 import type { ActiveModule } from '@/hooks/useAIContext';
@@ -55,7 +57,8 @@ enum Tab {
 }
 
 const AppLayout: React.FC = () => {
- const navigate = useNavigate();
+  const navigate = useNavigate();
+  useOfflineSync();
  const location = useLocation();
  const activeTab = location.pathname;
  const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -155,7 +158,8 @@ const AppLayout: React.FC = () => {
  return (
  <>
  <SideDrawer />
- <ToastContainer />
+  <ToastContainer />
+  <OfflineBanner />
  <div className="min-h-screen font-sans flex flex-col bg-gradient-to-b from-slate-50 to-white">
 
  {/* --- Header --- */}

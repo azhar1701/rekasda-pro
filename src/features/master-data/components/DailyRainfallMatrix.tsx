@@ -178,7 +178,7 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
  )}
  components={{
  Table: ({ style, ...props }) => <table {...props} style={{ ...style, borderCollapse: 'collapse', width: '100%' }} />,
- TableRow: (props) => <tr {...props} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors group" />
+ TableRow: (props) => <tr {...props} className="even:bg-slate-50/70 odd:bg-white dark:even:bg-slate-800/40 dark:odd:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" />
  }}
  />
  </div>

@@ -42,7 +42,7 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
  </div>
  <button
  onClick={() => setSidebarOpen(false)}
- className="lg:hidden text-neutral-700 hover:text-neutral-900"
+ className="lg:hidden p-3 -mr-3 text-neutral-700 hover:text-neutral-900 rounded focus:outline-none focus:ring-2 focus:ring-pupr-blue"
  >
  <X className="w-5 h-5" />
  </button>
@@ -70,7 +70,7 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
  <div className="flex items-center gap-4">
  <button
  onClick={() => setSidebarOpen(true)}
- className="lg:hidden text-white/80 hover:text-white"
+ className="lg:hidden p-3 -ml-3 text-white/80 hover:text-white rounded focus:outline-none focus:ring-2 focus:ring-white"
  >
  <Menu className="w-6 h-6" />
  </button>

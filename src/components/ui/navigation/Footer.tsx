@@ -3,9 +3,9 @@ import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 
 export const Footer: React.FC = () => {
  return (
- <footer aria-label="Informasi kontak dan referensi" className="hidden md:block bg-pupr-blue text-white mt-auto">
- <div className="max-w-7xl mx-auto px-6 py-8">
- <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+  <footer aria-label="Informasi kontak dan referensi" className="bg-pupr-blue text-white mt-auto border-t border-white/10">
+  <div className="max-w-7xl mx-auto px-6 py-6 md:py-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
  {/* Tentang */}
  <div>
  <h2 className="text-sm font-bold uppercase tracking-wider mb-3 text-blue-200">Tentang RekaSDA Pro</h2>

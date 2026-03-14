@@ -9,11 +9,14 @@ import {
  ResponsiveContainer,
  ReferenceDot,
  ReferenceLine,
- TooltipProps,
+  TooltipProps,
+  Brush,
 } from 'recharts';
 
 import { formatNumber } from '@/lib/utils/formatting';
 import { CHART_COLORS } from '@/lib/constants';
+import { exportChartAsImage } from '@/lib/utils/chartExport';
+import { Download, Activity } from 'lucide-react';
 import type { HydrographDataPoint } from '../types/flood.types';
 
 interface HydrographChartProps {
@@ -35,20 +38,24 @@ interface ChartMetrics {
 }
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>): JSX.Element | null => {
- if (!active || !payload || payload.length === 0) return null;
+  if (!active || !payload || payload.length === 0) return null;
 
- const data = payload[0].payload as HydrographDataPoint;
+  const data = payload[0].payload as HydrographDataPoint;
 
- return (
- <div className="bg-slate-900/85 text-white px-4 py-3 rounded-sm border border-slate-700/50">
- <p className="text-sm font-semibold text-slate-100">
- Waktu: <span className="text-teal-300">{data.time.toFixed(1)}</span> jam
- </p>
- <p className="text-sm font-semibold text-slate-100 mt-1">
- Debit: <span className="text-emerald-300">{formatNumber(data.discharge, 2)}</span> m³/s
- </p>
- </div>
- );
+  return (
+    <div className="bg-white dark:bg-slate-900 p-3 rounded-none border border-slate-200 dark:border-slate-700 shadow-xl ring-1 ring-black/5">
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-8">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Waktu</span>
+          <span className="text-xs font-bold font-mono text-slate-900 dark:text-slate-100">{data.time.toFixed(1)} jam</span>
+        </div>
+        <div className="flex items-center justify-between gap-8 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Debit</span>
+          <span className="text-sm font-bold font-mono text-pupr-blue dark:text-blue-400">{formatNumber(data.discharge, 3)} m³/s</span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const calculateChartMetrics = (data: HydrographDataPoint[], componentId: string): ChartMetrics => {
@@ -94,20 +101,31 @@ export const HydrographChart = ({
  )}
  </div>
 
- {showPeakIndicators && (
- <div className="grid grid-cols-2 gap-8 md:justify-end">
- <div className="text-center md:text-right">
- <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Q-Peak</p>
- <p className="text-3xl font-bold text-pupr-blue leading-none">{formatNumber(qPeak, 2)}</p>
- <p className="text-xs text-slate-500 font-medium mt-1">m³/s</p>
- </div>
- <div className="text-center md:text-right">
- <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">T-Peak</p>
- <p className="text-3xl font-bold text-slate-700 dark:text-slate-300 leading-none">{tPeak.toFixed(1)}</p>
- <p className="text-xs text-slate-500 font-medium mt-1">jam</p>
- </div>
- </div>
- )}
+      {showPeakIndicators && (
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 md:items-center">
+          <div className="grid grid-cols-2 gap-8 md:justify-end">
+            <div className="text-center md:text-right">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Q-Peak</p>
+              <p className="text-3xl font-bold text-pupr-blue leading-none">{formatNumber(qPeak, 2)}</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">m³/s</p>
+            </div>
+            <div className="text-center md:text-right">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">T-Peak</p>
+              <p className="text-3xl font-bold text-slate-700 dark:text-slate-300 leading-none">{tPeak.toFixed(1)}</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">jam</p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => exportChartAsImage(`chart-container-${componentId}`, `hydrograph-${title.toLowerCase().replace(/\s+/g, '-')}`)}
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-white text-white rounded-none border border-white/30 transition-all text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+            title="Ekspor Grafik"
+          >
+            <Download className="w-4 h-4" />
+            <span>Ekspor</span>
+          </button>
+        </div>
+      )}
  </div>
  </div>
 
@@ -190,10 +208,20 @@ export const HydrographChart = ({
  />
  )}
 
- <Tooltip
- content={<CustomTooltip />}
- cursor={{ stroke: primaryColor, strokeOpacity: 0.3, strokeWidth: 1 }}
- />
+  <Tooltip
+  content={<CustomTooltip />}
+  cursor={{ stroke: primaryColor, strokeOpacity: 0.3, strokeWidth: 1 }}
+  />
+  
+  <Brush 
+  dataKey="time" 
+  height={30} 
+  stroke={primaryColor}
+  fill="#f8fafc"
+  startIndex={0}
+  endIndex={data.length > 0 ? data.length - 1 : undefined}
+  className="dark:fill-slate-800"
+  />
  </AreaChart>
  </ResponsiveContainer>
  </div>

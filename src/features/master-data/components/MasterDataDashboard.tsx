@@ -1,4 +1,4 @@
-import { Edit2, RefreshCw } from 'lucide-react';
+import { Edit2, RefreshCw, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
@@ -105,14 +105,14 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  {/* Header: Flattened & Quieter */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-700 pb-8">
  <div>
- <h2 className="text-2xl font-medium text-slate-900 dark:text-slate-100 tracking-tight">Status Kesiapan Data</h2>
+ <h2 className="text-3xl font-medium text-[#1e293b] dark:text-slate-100 tracking-tight">Status Kesiapan Data</h2>
  <p className="text-sm text-slate-500 mt-1">Audit parameter hidrologi untuk pemodelan DAS</p>
  </div>
  
  <div className="flex items-center gap-6">
  <div className="flex flex-col items-end">
  <div className="flex items-center gap-3">
- <span className="text-3xl font-light tabular-nums text-pupr-blue">{Math.round(completionPercentage)}%</span>
+ <span className="text-4xl font-light tabular-nums text-pupr-blue">{Math.round(completionPercentage)}%</span>
  <div className="w-32 h-1 bg-slate-100 rounded-sm overflow-hidden">
  <div 
  className="h-full bg-pupr-blue transition-all duration-75" 
@@ -138,7 +138,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <section className="space-y-6">
  <header className="flex items-center justify-between group">
  <div className="flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-sm bg-pupr-blue"></div>
+ <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Kualitas Data</h3>
  </div>
  <button onClick={() => onNavigateToSection?.('hujan')} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded">
@@ -156,8 +156,8 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <div key={test.label} className="flex items-center justify-between border-b border-slate-50 pb-2">
  <span className="text-sm text-slate-600 dark:text-slate-400">{test.label}</span>
  {test.status ? 
- <span className="text-[10px] font-bold text-emerald-600 uppercase">Valid</span> : 
- <span className="text-[10px] font-bold text-rose-500 uppercase">Fails</span>
+ <span className="text-[10px] font-bold text-slate-500 uppercase">Valid</span> : 
+ <span className="text-[10px] font-bold text-red-500 uppercase">Fails</span>
  }
  </div>
  ))}
@@ -172,7 +172,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <section className="space-y-6">
  <header className="flex items-center justify-between group">
  <div className="flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-sm bg-pupr-blue"></div>
+ <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Geometri DAS</h3>
  </div>
  <button onClick={() => onNavigateToSection?.('morfometri')} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded">
@@ -183,19 +183,19 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  {storeMorfometri?.luasDAS ? (
  <div className="space-y-6">
  <div>
- <p className="text-3xl font-medium text-slate-900 dark:text-slate-100 tabular-nums">
+ <p className="text-5xl font-light tracking-tight text-slate-800 dark:text-slate-100 tabular-nums">
  {storeMorfometri.luasDAS.toFixed(2)}
- <span className="text-sm font-normal text-slate-500 ml-2 uppercase">km²</span>
+ <span className="text-sm font-bold text-slate-400 ml-2 uppercase">km²</span>
  </p>
  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Area (A)</p>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <p className="text-lg font-medium text-slate-700 dark:text-slate-300 tabular-nums">{(storeMorfometri.panjangSungai || 0).toFixed(2)} <span className="text-xs text-slate-500">km</span></p>
+ <p className="text-2xl font-light tracking-tight text-slate-800 dark:text-slate-300 tabular-nums">{(storeMorfometri.panjangSungai || 0).toFixed(2)} <span className="text-xs text-slate-500">km</span></p>
  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Length (L)</p>
  </div>
  <div>
- <p className="text-lg font-medium text-slate-700 dark:text-slate-300 tabular-nums">{(storeMorfometri.kemiringanSungai || 0).toFixed(4)}</p>
+ <p className="text-2xl font-light tracking-tight text-slate-800 dark:text-slate-300 tabular-nums">{(storeMorfometri.kemiringanSungai || 0).toFixed(4)}</p>
  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Slope (S)</p>
  </div>
  </div>
@@ -209,7 +209,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <section className="space-y-6">
  <header className="flex items-center justify-between group">
  <div className="flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-sm bg-pupr-blue"></div>
+ <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tata Guna Lahan</h3>
  </div>
  <button onClick={() => onNavigateToSection?.('tutupan')} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded">
@@ -220,7 +220,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  {storeTutupan?.koefisienPengaliranGabungan != null ? (
  <div className="space-y-6">
  <div>
- <p className="text-3xl font-medium text-pupr-blue tabular-nums">
+ <p className="text-5xl font-light tracking-tight text-pupr-blue tabular-nums">
  {storeTutupan.koefisienPengaliranGabungan.toFixed(3)}
  </p>
  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Composite C</p>
@@ -253,7 +253,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <section className="md:col-span-3 pt-8 border-t border-slate-100 space-y-6">
  <header className="flex items-center justify-between group">
  <div className="flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-sm bg-emerald-500"></div>
+ <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Visualisasi Hujan Wilayah</h3>
  </div>
  <div className="flex items-center gap-4">

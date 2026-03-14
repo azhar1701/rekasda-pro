@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload }: any) => {
  const duration = payload[0]?.payload?.duration || 0;
 
  return (
- <div className="bg-white dark:bg-slate-900/95 backdrop-blur border border-slate-300 dark:border-slate-600 rounded-sm p-3">
+ <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm p-3">
  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">
  Durasi: {duration} jam
  </p>

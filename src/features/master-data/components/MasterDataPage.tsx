@@ -30,20 +30,24 @@ export const MasterDataPage: React.FC = () => {
  <div className="space-y-6">
  {/* Professional Engineering Tabs */}
  <div className="border-b border-slate-300 dark:border-slate-600 overflow-x-auto scrollbar-hide">
- <div className="flex gap-0 min-w-max">
+ <div className="flex gap-0 min-w-max" role="tablist" aria-label="Navigasi Modul Master Data">
  {tabs.map((tab) => {
  const Icon = tab.icon;
  const isActive = activeTab === tab.id;
 
  return (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id)}
- className={`flex items-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-widest transition-all border-b-4 ${isActive
- ? 'text-pupr-blue border-pupr-yellow bg-slate-50 dark:bg-slate-800'
- : 'text-slate-500 border-transparent hover:text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'
- }`}
- >
+          <button
+            key={tab.id}
+            id={`tab-${tab.id}`}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={`panel-${tab.id}`}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 font-bold text-xs uppercase tracking-widest transition-all border-b-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pupr-blue focus-visible:ring-inset ${isActive
+              ? 'text-pupr-blue border-pupr-yellow bg-slate-50 dark:bg-slate-800'
+              : 'text-slate-500 border-transparent hover:text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'
+            }`}
+          >
  <Icon className="w-4 h-4" />
  <span>{tab.label}</span>
  </button>
@@ -54,34 +58,54 @@ export const MasterDataPage: React.FC = () => {
 
  {/* Tab Content with Logic Enforcement */}
  <div className="min-h-[600px] transition-all duration-75">
- {activeTab === 'dashboard' && (
- <div className="animate-in fade-in slide-in-from-right-2 duration-75">
- <MasterDataDashboard
- onNavigateToSection={(section) => {
- if (section === 'hujan') setActiveTab('data-hujan');
- else setActiveTab('parameter-spasial');
- }}
- />
- </div>
- )}
+  {activeTab === 'dashboard' && (
+  <div 
+  id="panel-dashboard"
+  role="tabpanel"
+  aria-labelledby="tab-dashboard"
+  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  >
+  <MasterDataDashboard
+  onNavigateToSection={(section) => {
+  if (section === 'hujan') setActiveTab('data-hujan');
+  else setActiveTab('parameter-spasial');
+  }}
+  />
+  </div>
+  )}
  
- {activeTab === 'identitas' && (
- <div className="animate-in fade-in slide-in-from-right-2 duration-75">
- <FormIdentitasLokasi />
- </div>
- )}
+  {activeTab === 'identitas' && (
+  <div 
+  id="panel-identitas"
+  role="tabpanel"
+  aria-labelledby="tab-identitas"
+  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  >
+  <FormIdentitasLokasi />
+  </div>
+  )}
 
- {activeTab === 'data-hujan' && (
- <div className="animate-in fade-in slide-in-from-right-2 duration-75">
- <MasterHidrologiTab />
- </div>
- )}
+  {activeTab === 'data-hujan' && (
+  <div 
+  id="panel-data-hujan"
+  role="tabpanel"
+  aria-labelledby="tab-data-hujan"
+  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  >
+  <MasterHidrologiTab />
+  </div>
+  )}
 
- {activeTab === 'parameter-spasial' && (
- <div className="animate-in fade-in slide-in-from-right-2 duration-75">
- <ParameterSpasial />
- </div>
- )}
+  {activeTab === 'parameter-spasial' && (
+  <div 
+  id="panel-parameter-spasial"
+  role="tabpanel"
+  aria-labelledby="tab-parameter-spasial"
+  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  >
+  <ParameterSpasial />
+  </div>
+  )}
  </div>
  </div>
  </ModuleLayout>
