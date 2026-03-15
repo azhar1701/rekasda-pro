@@ -198,7 +198,7 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
  <div className="overflow-x-auto border border-slate-300 dark:border-slate-600 rounded-sm bg-white dark:bg-slate-900">
  <table className="w-full text-[10px] border-collapse min-w-[800px]">
  <tbody>
- <tr className="bg-slate-50 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-400">
+ <tr className="bg-slate-50 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-500">
  <th className="py-2 px-3 text-left w-32 sticky left-0 bg-slate-100 border-r border-slate-200 dark:border-slate-700 uppercase tracking-tighter">Hujan Max (mm)</th>
  {monthlyStats.map((stat, i) => (
  <td key={i} className="py-2 px-1 text-right pr-2 tabular-nums border-r border-slate-100">
@@ -206,7 +206,7 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
  </td>
  ))}
  </tr>
- <tr className="bg-slate-50 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-400">
+ <tr className="bg-slate-50 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-500">
  <th className="py-2 px-3 text-left w-32 sticky left-0 bg-slate-100 border-r border-slate-200 dark:border-slate-700 uppercase tracking-tighter">Hari Hujan</th>
  {monthlyStats.map((stat, i) => (
  <td key={i} className="py-2 px-1 text-center tabular-nums border-r border-slate-100">

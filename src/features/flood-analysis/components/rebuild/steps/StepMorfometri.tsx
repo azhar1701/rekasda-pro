@@ -61,7 +61,7 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm">
  <div className="flex items-center gap-3 mb-5">
  <div className="p-2 bg-slate-100 rounded-sm">
- <Mountain className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+ <Mountain className="w-5 h-5 text-slate-600 dark:text-slate-500" />
  </div>
  <h3 className="font-bold text-slate-900 dark:text-slate-100">Dimensi Utama DAS</h3>
  </div>

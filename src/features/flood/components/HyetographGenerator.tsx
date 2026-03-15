@@ -196,10 +196,10 @@ export const HyetographGenerator: React.FC<Props> = ({ r24: r24Prop }) => {
  <table className="w-full text-[10px]">
  <thead className="bg-slate-50 dark:bg-slate-800 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
  <tr>
- <th className="py-1.5 px-2 text-center font-bold text-slate-600 dark:text-slate-400">Jam</th>
- <th className="py-1.5 px-2 text-right font-bold text-slate-600 dark:text-slate-400">I (mm/hr)</th>
- <th className="py-1.5 px-2 text-right font-bold text-slate-600 dark:text-slate-400">Kum. (mm)</th>
- <th className="py-1.5 px-2 text-right font-bold text-slate-600 dark:text-slate-400">Inkr. (mm)</th>
+ <th className="py-1.5 px-2 text-center font-bold text-slate-600 dark:text-slate-500">Jam</th>
+ <th className="py-1.5 px-2 text-right font-bold text-slate-600 dark:text-slate-500">I (mm/hr)</th>
+ <th className="py-1.5 px-2 text-right font-bold text-slate-600 dark:text-slate-500">Kum. (mm)</th>
+ <th className="py-1.5 px-2 text-right font-bold text-slate-600 dark:text-slate-500">Inkr. (mm)</th>
  <th className="py-1.5 px-2 text-right font-bold text-pupr-blue bg-pupr-surface/50">ABM (mm)</th>
  </tr>
  </thead>
@@ -210,9 +210,9 @@ export const HyetographGenerator: React.FC<Props> = ({ r24: r24Prop }) => {
  className={`border-b border-slate-100 ${r.jam === result.jamPuncak ? 'bg-pupr-surface/40 font-bold' : 'even:bg-slate-50 dark:bg-slate-800'}`}
  >
  <td className="py-1.5 px-2 text-center font-bold text-slate-700 dark:text-slate-300 tabular-nums tracking-tight">{r.jam}</td>
- <td className="py-1.5 px-2 text-right font-mono text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">{r.intensitas.toFixed(2)}</td>
- <td className="py-1.5 px-2 text-right font-mono text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">{r.kumulatif.toFixed(2)}</td>
- <td className="py-1.5 px-2 text-right font-mono text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">{r.inkremental.toFixed(2)}</td>
+ <td className="py-1.5 px-2 text-right font-mono text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">{r.intensitas.toFixed(2)}</td>
+ <td className="py-1.5 px-2 text-right font-mono text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">{r.kumulatif.toFixed(2)}</td>
+ <td className="py-1.5 px-2 text-right font-mono text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">{r.inkremental.toFixed(2)}</td>
  <td className={`py-1.5 px-2 text-right font-mono font-bold bg-pupr-surface/30 ${r.jam === result.jamPuncak ? 'text-pupr-blue' : 'text-pupr-blue'
  }`}>
  {r.abm.toFixed(2)}

@@ -105,7 +105,7 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
  title="Flood Discharge Analysis"
  description="Penghitungan debit puncak hidrograf standar SNI 2415:2016"
  icon={<Activity className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  sniCode="SNI 2415:2016"
  actions={
  <div className="flex items-center gap-6">
@@ -158,7 +158,7 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
  {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.icon}
  </div>
  <div>
- <p className={`text-xs font-bold leading-none mb-1 ${isActive ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'}`}>{step.label}</p>
+ <p className={`text-xs font-bold leading-none mb-1 ${isActive ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-500'}`}>{step.label}</p>
  <p className="text-[10px] text-slate-500 font-medium">{step.description}</p>
  </div>
  </div>

@@ -40,7 +40,7 @@ export const EmbungRebuildMain: React.FC = () => {
  title="Manajemen Situ & Embung"
  description="Desain & Analisis terpadu berdasarkan Standar Perencanaan Embung (Guidance Workflow)"
  icon={<Droplets className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  sniCode="Pd T-07-2004-A"
  >
  <div className="flex flex-col h-full gap-6">
@@ -60,7 +60,7 @@ export const EmbungRebuildMain: React.FC = () => {
  : 'text-slate-500 border-transparent hover:text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'
  }`}
  >
- {isCompleted ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <div className={isActive ? 'text-pupr-blue' : 'text-slate-400'}>{step.icon}</div>}
+ {isCompleted ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <div className={isActive ? 'text-pupr-blue' : 'text-slate-500'}>{step.icon}</div>}
  <span>{step.title}</span>
  </button>
  );
@@ -84,7 +84,7 @@ export const EmbungRebuildMain: React.FC = () => {
  variant="outline"
  onClick={handleBack}
  disabled={currentStepIndex === 0}
- className="text-slate-600 dark:text-slate-400"
+ className="text-slate-600 dark:text-slate-500"
  >
  <ChevronLeft className="w-4 h-4 mr-2" />
  Kembali

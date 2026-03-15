@@ -260,7 +260,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
  )}
 
  <div className="w-full flex-1 overflow-auto custom-scrollbar">
- <div className="flex w-full sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 ">
+ <div className="flex w-full sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-500 ">
  <div className="flex-none w-24 py-3 px-4 text-left">Waktu (Jam)</div>
  <div className="flex-1 py-3 px-4 text-right">Debit Inflow (m³/s)</div>
  </div>
@@ -268,7 +268,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
  <div className="w-full">
  {hydrograph.map((row, idx) => (
  <div key={idx} className="flex w-full items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:bg-slate-800 transition-colors">
- <div className="flex-none w-24 py-2.5 px-4 font-medium text-slate-600 dark:text-slate-400">
+ <div className="flex-none w-24 py-2.5 px-4 font-medium text-slate-600 dark:text-slate-500">
  t = {row.time}
  </div>
  <div className="flex-1 py-2 px-4 text-right">
@@ -365,7 +365,7 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
  {isCalculating && (
  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-b-xl">
  <div className="w-10 h-10 border-4 border-slate-200 dark:border-slate-700 border-t-teal-500 rounded-sm animate-pulse bg-slate-200 rounded-sm mb-3" />
- <p className="text-slate-600 dark:text-slate-400 font-medium text-sm animate-pulse">Menghitung rute banjir...</p>
+ <p className="text-slate-600 dark:text-slate-500 font-medium text-sm animate-pulse">Menghitung rute banjir...</p>
  </div>
  )}
 

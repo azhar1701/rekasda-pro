@@ -442,7 +442,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <div className="grid grid-cols-3 gap-2 p-2 bg-indigo-50 rounded-sm border border-indigo-200">
  <button
  onClick={() => setMethod('HASPERS')}
- className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'HASPERS' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-400 hover:text-indigo-700'
+ className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'HASPERS' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-500 hover:text-indigo-700'
  }`}
  >
  Haspers
@@ -450,7 +450,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  </button>
  <button
  onClick={() => setMethod('DER_WEDUWEN')}
- className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'DER_WEDUWEN' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-400 hover:text-indigo-700'
+ className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'DER_WEDUWEN' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-500 hover:text-indigo-700'
  }`}
  >
  Weduwen
@@ -458,7 +458,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  </button>
  <button
  onClick={() => setMethod('MELCHIOR')}
- className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'MELCHIOR' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-400 hover:text-indigo-700'
+ className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'MELCHIOR' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-500 hover:text-indigo-700'
  }`}
  >
  Melchior
@@ -556,7 +556,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide mb-4">Geometri DAS</h2>
  <div className="space-y-4">
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Luas DAS (A)
  <TooltipIcon text={TOOLTIPS.A} />
  </label>
@@ -573,7 +573,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  {(method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') && (
  <>
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Panjang Sungai (L)
  <TooltipIcon text={TOOLTIPS.L} />
  </label>
@@ -588,7 +588,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  </div>
  </div>
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Kemiringan (S)
  <TooltipIcon text="Kemiringan sungai utama (m/m)" />
  </label>
@@ -607,7 +607,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  )}
  {method === 'RATIONAL' && (
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Waktu Konsentrasi (tc)
  <TooltipIcon text={TOOLTIPS.tc} />
  </label>
@@ -680,7 +680,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide mb-4">Data Curah Hujan</h2>
  <div className="space-y-4">
  <div>
- <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-2">Sumber Data</label>
+ <label className="text-xs font-semibold text-slate-600 dark:text-slate-500 block mb-2">Sumber Data</label>
  <div className="flex gap-2 p-1 bg-slate-100 rounded-sm">
  <button
  onClick={() => setRainfallDataSource('manual')}
@@ -701,7 +701,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
  {rainfallDataSource === 'manual' ? (
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Curah Hujan Harian (R₂₄)
  <TooltipIcon text="Curah hujan maksimum harian untuk kala ulang tertentu" />
  </label>
@@ -748,7 +748,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide mb-4">Geometri DAS</h2>
  <div className="space-y-4">
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Luas DAS (A)
  <TooltipIcon text={TOOLTIPS.A} />
  </label>
@@ -763,7 +763,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  </div>
  </div>
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Panjang Sungai (L)
  <TooltipIcon text={TOOLTIPS.L} />
  </label>
@@ -800,7 +800,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  />
  </div>
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Hujan Efektif (Ro)
  <TooltipIcon text={TOOLTIPS.Ro} />
  </label>
@@ -834,7 +834,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide mb-4">Data Curah Hujan</h2>
  <div className="space-y-4">
  <div>
- <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-2">Sumber Data</label>
+ <label className="text-xs font-semibold text-slate-600 dark:text-slate-500 block mb-2">Sumber Data</label>
  <div className="flex gap-2 p-1 bg-slate-100 rounded-sm">
  <button
  onClick={() => setRainfallDataSource('manual')}
@@ -855,7 +855,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
 
  {rainfallDataSource === 'manual' ? (
  <div>
- <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
+ <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-2">
  Curah Hujan Rencana (R)
  <TooltipIcon text="Curah hujan untuk kala ulang tertentu yang akan dikonversi menjadi hujan efektif" />
  </label>
@@ -984,12 +984,12 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  </div>
  </span>
  <div className="w-10 h-10 rounded-sm bg-slate-100 flex items-center justify-center">
- <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-5 h-5 text-slate-600 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
  </svg>
  </div>
  </div>
- <div className="text-3xl font-bold text-slate-600 dark:text-slate-400 font-mono">{rationalInputs.tc.toFixed(0)}</div>
+ <div className="text-3xl font-bold text-slate-600 dark:text-slate-500 font-mono">{rationalInputs.tc.toFixed(0)}</div>
  <div className="text-xs text-slate-500 font-medium mt-1">menit</div>
  </div>
  </>
@@ -1067,12 +1067,12 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  </div>
  </span>
  <div className="w-10 h-10 rounded-sm bg-slate-100 flex items-center justify-center">
- <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-5 h-5 text-slate-600 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
  </svg>
  </div>
  </div>
- <div className="text-3xl font-bold text-slate-600 dark:text-slate-400 font-mono">{nakayasuInputs.Alpha.toFixed(1)}</div>
+ <div className="text-3xl font-bold text-slate-600 dark:text-slate-500 font-mono">{nakayasuInputs.Alpha.toFixed(1)}</div>
  <div className="text-xs text-slate-500 font-medium mt-1">α</div>
  </div>
  </>
@@ -1160,7 +1160,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  height={window.innerWidth < 768 ? 250 : 350}
  />
  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
- <p className="text-xs text-slate-600 dark:text-slate-400">
+ <p className="text-xs text-slate-600 dark:text-slate-500">
  <span className="font-semibold">Catatan:</span> Perhitungan debit banjir rencana ini mengacu pada tata cara <span className="font-semibold text-teal-600">SNI 2415:2016</span>. Pastikan parameter hujan rencana telah melalui analisis frekuensi (Log Pearson III/Gumbel) sesuai standar.
  </p>
  </div>
@@ -1171,7 +1171,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Analisis Kala Ulang</h2>
  <div className="space-y-4">
  <div className="flex justify-between items-center">
- <p className="text-sm text-slate-600 dark:text-slate-400">Hasil perhitungan debit untuk berbagai kala ulang</p>
+ <p className="text-sm text-slate-500 mt-1">Hasil perhitungan debit untuk berbagai kala ulang</p>
  {rainfallDataSource === 'manual' && (
  <button
  onClick={() => setShowFreqAnalysis(true)}
@@ -1276,7 +1276,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
  <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
  <div className="flex items-start gap-2">
  <Info className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
- <p className="text-xs text-slate-600 dark:text-slate-400">
+ <p className="text-xs text-slate-600 dark:text-slate-500">
  Perhitungan ini mengacu pada standar <span className="font-semibold text-slate-700 dark:text-slate-300">SNI 2415:2016</span> tentang Tata Cara Perhitungan Debit Banjir Rencana. Pastikan parameter hujan rencana telah melalui analisis frekuensi (Log Pearson III/Gumbel) sesuai standar.
  </p>
  </div>

@@ -390,15 +390,15 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
  {method === 'rational' && (
  <>
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Faktor Konversi</span>
+ <span className="text-slate-600 dark:text-slate-500">Faktor Konversi</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">0.00278</span>
  </div>
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">C × I × A (Ha)</span>
+ <span className="text-slate-600 dark:text-slate-500">C × I × A (Ha)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{(inputs.C * inputs.I * inputs.area * 100).toFixed(2)}</span>
  </div>
  <div className="flex justify-between text-sm border-t border-slate-200 dark:border-slate-700 pt-2">
- <span className="text-slate-600 dark:text-slate-400">Q = 0.00278 × C × I × A</span>
+ <span className="text-slate-600 dark:text-slate-500">Q = 0.00278 × C × I × A</span>
  <span className="font-bold text-pupr-blue">{result.Qp.toFixed(2)} m³/s</span>
  </div>
  </>
@@ -406,18 +406,18 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
  {method !== 'rational' && result.t !== undefined && (
  <>
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Waktu Konsentrasi (Tc)</span>
+ <span className="text-slate-600 dark:text-slate-500">Waktu Konsentrasi (Tc)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.t.toFixed(2)} jam</span>
  </div>
  {result.alpha !== undefined && (
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Koefisien α</span>
+ <span className="text-slate-600 dark:text-slate-500">Koefisien α</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.alpha.toFixed(3)}</span>
  </div>
  )}
  {result.beta !== undefined && (
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Koefisien β</span>
+ <span className="text-slate-600 dark:text-slate-500">Koefisien β</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.beta.toFixed(3)}</span>
  </div>
  )}
@@ -431,12 +431,12 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">🌧️ Data Intensitas Hujan</h3>
  <div className="space-y-2">
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Intensitas (I)</span>
+ <span className="text-slate-600 dark:text-slate-500">Intensitas (I)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{inputs.I.toFixed(1)} mm/jam</span>
  </div>
  {result.t !== undefined && (
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Waktu Konsentrasi (Tc)</span>
+ <span className="text-slate-600 dark:text-slate-500">Waktu Konsentrasi (Tc)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.t.toFixed(2)} jam</span>
  </div>
  )}
@@ -468,7 +468,7 @@ export const PeakDischargeCalculator: React.FC<PeakDischargeCalculatorProps> = (
  <div className="w-16 h-16 bg-slate-100 rounded-sm flex items-center justify-center mx-auto mb-4">
  <Calculator className="w-8 h-8 text-slate-500" />
  </div>
- <p className="text-slate-600 dark:text-slate-400 text-sm">Masukkan parameter untuk melihat hasil perhitungan</p>
+ <p className="text-slate-600 dark:text-slate-500 text-sm">Masukkan parameter untuk melihat hasil perhitungan</p>
  </div>
  )}
  </div>

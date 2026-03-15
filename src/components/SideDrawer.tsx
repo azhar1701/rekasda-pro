@@ -340,7 +340,7 @@ export function SideDrawer() {
  <FileJson size={16} />
  Metode & Algoritma
  </h3>
- <p className="text-sm font-mono text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-2.5 rounded border border-slate-100">
+ <p className="text-sm font-mono text-slate-600 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 p-2.5 rounded border border-slate-100">
  {meta.algorithm}
  </p>
  </div>
@@ -359,7 +359,7 @@ export function SideDrawer() {
  </h3>
  <ul className="space-y-3">
  {meta.inputs.map((item, i) => (
- <li key={i} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-2 rounded-sm border border-slate-100">
+ <li key={i} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 p-2 rounded-sm border border-slate-100">
  <div className="w-2 h-2 rounded-sm bg-blue-400 shrink-0" />
  <span className="font-medium">{item}</span>
  </li>
@@ -376,7 +376,7 @@ export function SideDrawer() {
  </h3>
  <ul className="space-y-3">
  {meta.outputs.map((item, i) => (
- <li key={i} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-2 rounded-sm border border-slate-100">
+ <li key={i} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 p-2 rounded-sm border border-slate-100">
  <CheckCircle2 size={18} className="text-green-500 shrink-0" />
  <span className="font-medium">{item}</span>
  </li>

@@ -70,7 +70,7 @@ export const SimpleChart: React.FC<SimpleChartProps> = ({
  title={`${item.name}: ${item.value}`}
  />
  </div>
- <span className="text-xs text-slate-600 dark:text-slate-400 truncate text-center w-full">
+ <span className="text-xs text-slate-600 dark:text-slate-500 truncate text-center w-full">
  {item.name}
  </span>
  </div>

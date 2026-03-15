@@ -92,7 +92,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
  </p>
 
  {/* Pesan formal */}
- <p className="text-sm text-slate-600 dark:text-slate-400 text-center mt-4 leading-relaxed">
+ <p className="text-sm text-slate-600 dark:text-slate-500 text-center mt-4 leading-relaxed">
  Sistem <strong className="text-pupr-blue">RekaSDA</strong> mengalami kendala teknis
  yang tidak terduga saat memproses permintaan. Silakan coba muat ulang halaman.
  Jika masalah berlanjut, catat kode insiden di atas dan hubungi administrator sistem.
@@ -123,7 +123,7 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
  <div className="mt-5">
  <button
  onClick={() => setIsDetailOpen(prev => !prev)}
- className="flex items-center justify-center gap-1.5 w-full text-xs text-slate-500 hover:text-slate-600 dark:text-slate-400 transition-colors py-1"
+ className="flex items-center justify-center gap-1.5 w-full text-xs text-slate-500 hover:text-slate-600 dark:text-slate-500 transition-colors py-1"
  aria-expanded={isDetailOpen}
  >
  {isDetailOpen

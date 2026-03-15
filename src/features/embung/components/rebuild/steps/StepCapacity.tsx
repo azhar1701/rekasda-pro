@@ -71,7 +71,7 @@ export const StepCapacity: React.FC = () => {
  <tbody>
  {data.map((row) => (
  <tr key={row.id} className="hover:bg-slate-50 dark:bg-slate-800 border-b border-slate-100 last:border-0 transition-colors">
- <td className="px-4 py-2 font-medium text-slate-600 dark:text-slate-400">{row.month}</td>
+ <td className="px-4 py-2 font-medium text-slate-600 dark:text-slate-500">{row.month}</td>
  <td className="px-2 py-2">
  <Input
  type="number"
@@ -98,7 +98,7 @@ export const StepCapacity: React.FC = () => {
  {/* Right: Result & Graph */}
  <div className="lg:col-span-7 flex flex-col gap-6">
  {/* Big Metric */}
- <Card className="bg-gradient-to-br from-pupr-blue to-teal-600 text-white border-none shadow-blue-200/50 ">
+ <Card className="bg-gradient-to-br from-pupr-blue to-teal-600 text-white border-none shadow-none ">
  <CardContent className="p-6 relative overflow-hidden">
  <Waves className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 opacity-30" />
  <div className="relative z-10">

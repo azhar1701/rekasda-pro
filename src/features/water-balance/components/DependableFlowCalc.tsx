@@ -88,7 +88,7 @@ export const DependableFlowCalc: React.FC<Props> = ({ onUseData }) => {
  {/* Monthly Data Grid */}
  <div className="relative z-10">
  <div className="flex justify-between items-center mb-3">
- <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Data Curah Hujan Bulanan</label>
+ <label className="text-xs font-bold text-slate-600 dark:text-slate-500 uppercase">Data Curah Hujan Bulanan</label>
  <button
  onClick={loadSampleData}
  className="text-xs font-bold text-pupr-blue hover:text-pupr-blue px-3 py-1 rounded-sm hover:bg-pupr-surface transition-colors"

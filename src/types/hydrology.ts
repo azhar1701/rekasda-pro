@@ -363,3 +363,38 @@ export interface ValidationResult {
  isValid: boolean;
  errors: Array<{ field: string; message: string }>;
 }
+
+/**
+ * HSS Limantara - Input Parameters
+ */
+export interface HSSLimantaraInput {
+  Ro: number;
+  A: number;
+  L: number;
+  Lc: number;
+  S: number;
+}
+
+export interface HSSLimantaraOutput {
+  Qp: number;
+  Tp: number;
+  Tb: number;
+  hydrograph: Array<{ time: number; discharge: number }>;
+}
+
+/**
+ * HSS ITB-1 - Input Parameters
+ */
+export interface HSSITB1Input {
+  Ro: number;
+  A: number;
+  L: number;
+  S: number;
+}
+
+export interface HSSITB1Output {
+  Qp: number;
+  Tp: number;
+  Tb: number;
+  hydrograph: Array<{ time: number; discharge: number }>;
+}

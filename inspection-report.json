@@ -1,0 +1,6069 @@
+[
+  {
+    "route": "/saluran",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Analisis Saluran Manning",
+    "componentSummary": {
+      "buttonCount": 35,
+      "inputCount": 6,
+      "tableCount": 0,
+      "cardCount": 24,
+      "govElementCount": 43
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Persamaan ManningPerhitungan Kapasitas Saluran Ter",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Geometri Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Trapesium",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Lingkaran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kalkulator Kemiringan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Pasangan Batu Kali (Semen) (n=0.025)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Simpan Hasil",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Analisis AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-width",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-top-width",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-total-depth",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-depth",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "slope",
+          "testId": null
+        },
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [],
+      "cards": [
+        {
+          "tag": "span",
+          "text": "SNI 03-3424-1994",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Persamaan ManningPerhitungan Kapasitas Saluran Ter",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Trapesium",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-width",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-top-width",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-total-depth",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-depth",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "slope",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Pasangan Batu Kali (Semen) (n=0.025)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Tampilan Penampang Melintangb: 2mB: 2.5mh: 1mLuas ",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Luas Basah2.1666 m²",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Keliling Basah4.0276 m",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Kecepatan Aliran0,84m/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Rincian Hasil PerhitunganJari-jari HidrolisRasio l",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Analisis AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Analisis Saluran Mann",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Persamaan ManningPerhitungan Kapasitas Saluran Ter",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Persamaan ManningPerhitungan Kapasitas Saluran Ter",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "p",
+          "text": "Perhitungan Kapasitas Saluran Terbuka",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Lihat Rumus",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Trapesium",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-width",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-top-width",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-total-depth",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "trapezoid-depth",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "slope",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kalkulator Kemiringan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Kapasitas Debit (Q Cap)1,81m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "1,81",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Simpan Hasil",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/banjir",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Flood Discharge Analysis",
+    "componentSummary": {
+      "buttonCount": 33,
+      "inputCount": 4,
+      "tableCount": 0,
+      "cardCount": 17,
+      "govElementCount": 39
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Morfometri DASParameter geometri",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Hietograf ABMDistribusi hujan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Debit BanjirSimulasi HSS",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Rekap AnalysisFinal output",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI ConsultantVerify Compliance",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Simpan Karakteristik & Lanjut →",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [],
+      "cards": [
+        {
+          "tag": "span",
+          "text": "SNI 2415:2016",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Morfometri DASParameter geometri",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI ConsultantVerify Compliance",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Dimensi Utama DASLuas DAS (A)km²Panjang Sungai Uta",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Koefisien Runoff (Composite)Koefisien C Gabungan0.",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Koefisien C Gabungan0.650Dikalibrasi berdasarkan t",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Curve Number (CN)75.0Untuk metode HSS SCS / NRCS",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Flood Discharge Analy",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "0%",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "0%",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Informasi Morfometri DASLangkah ini memastikan kar",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "p",
+          "text": "Informasi Morfometri DAS",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Simpan Karakteristik & Lanjut →",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/neraca",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Analisis Neraca Air",
+    "componentSummary": {
+      "buttonCount": 39,
+      "inputCount": 82,
+      "tableCount": 2,
+      "cardCount": 109,
+      "govElementCount": 43
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca AirSNI 6738:2015 & SNI 19-6728.1-2002Lihat ",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Parameter Masukan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Ketersediaan Air (Debit Andalan)SNI 6738:2015",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "F.J. Mock (Hujan→Aliran)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Input Manual",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kalkulator Hujan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Edit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kebutuhan Irigasi (KP-01)SNI 6728.1:2015",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Air Baku (Domestik & Industri)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Hitung Neraca Air Final",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Simpan NeracaSimpan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Analisis AIAI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [
+        {
+          "tag": "table",
+          "text": "BlnPolaKcPWLRReffEToJanPadiPalawijaBeroFebPadiPala",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "table",
+          "text": "BulanSupplyIrigasiAir BakuLingk.TotalNeracaStatus",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "cards": [
+        {
+          "tag": "span",
+          "text": "SNI 6728.1:2015",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Neraca AirSNI 6738:2015 & SNI 19-6728.1-2002Lihat ",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Input Manual",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Data Bulanan (m³/s)EditJan2.5Feb2.3Mar2Apr1.8Mei1.",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Jan2.5",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Feb2.3",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Mar2",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Apr1.8",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Mei1.5",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Jun1.2",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Jul1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Agu0.9",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Sep1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Okt1.4",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Nov1.8",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Des2.2",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "BlnPolaKcPWLRReffEToJanPadiPalawijaBeroFebPadiPala",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "select",
+          "text": "PadiPalawijaBero",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Neraca Air Final (Surplus/Defisit)Ketersediaan − (",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Total KetersediaanTotal ketersediaan air dari sumb",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Total KebutuhanTotal kebutuhan air domestik dan pe",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Status NeracaSelisih antara ketersediaan dan kebut",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Bulan KritisBulan dengan defisit air terbesarAgu0.",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Grafik Neraca Air BulananSNI 19-6728.1-2002Perband",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Analisis Neraca AirSN",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "33%",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Input Manual",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kalkulator Hujan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Edit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Hitung Neraca Air Final",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Supply",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Irigasi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Lingk.",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "19.7",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "+16.5",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "SURPLUS",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI 19-6728.1-2002",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI 19-6728.1-2002",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Simpan NeracaSimpan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI 19-6728.1-2002",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/embung",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Manajemen Situ & Embung",
+    "componentSummary": {
+      "buttonCount": 40,
+      "inputCount": 19,
+      "tableCount": 1,
+      "cardCount": 14,
+      "govElementCount": 45
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "Geometri",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kapasitas",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Routing",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Pola Operasi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Sedimentasi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Baris",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kembali",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Lanjut",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [
+        {
+          "tag": "table",
+          "text": "Elevasi (m)Volume (m³)Luas (m²)",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "cards": [
+        {
+          "tag": "span",
+          "text": "Pd T-07-2004-A",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Karakteristik Waduk (Geometri)Input hubungan antar",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Tabel Curva Kapasitas BarisElevasi (m)Volume (m³)L",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Baris",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Visualisasi Lengkung Kapasitas100102104106108Eleva",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kembali",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Manajemen Situ & Embu",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Geometri",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Lanjut",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/frekuensi",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Analisis Frekuensi Hujan Ekstrem",
+    "componentSummary": {
+      "buttonCount": 27,
+      "inputCount": 1,
+      "tableCount": 0,
+      "cardCount": 9,
+      "govElementCount": 28
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "Lengkapi di Master Data",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [],
+      "cards": [
+        {
+          "tag": "div",
+          "text": "Data Belum LengkapLengkapi Data Master terlebih da",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Analisis Frekuensi Hu",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Data Belum LengkapLengkapi Data Master terlebih da",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Lengkapi di Master Data",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/history",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Daftar Proyek",
+    "componentSummary": {
+      "buttonCount": 58,
+      "inputCount": 1,
+      "tableCount": 1,
+      "cardCount": 10,
+      "govElementCount": 83
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "Refresh",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Cari di Sekitar",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Daftar",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Peta",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [
+        {
+          "tag": "table",
+          "text": "TanggalModulNama ProyekKapasitas / DebitAksi27 Feb",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "cards": [
+        {
+          "tag": "button",
+          "text": "Refresh",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "TanggalModulNama ProyekKapasitas / DebitAksi27 Feb",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Daftar ProyekDatabase",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Daftar",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "TanggalModulNama ProyekKapasitas / DebitAksi27 Feb",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "thead",
+          "text": "TanggalModulNama ProyekKapasitas / DebitAksi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Tanggal",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Modul",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Nama Proyek",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Kapasitas / Debit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "th",
+          "text": "Aksi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "27 Feb 2026Neraca AirUntitled Project19.6m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "27 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Neraca Air",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Untitled Project",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "19.6m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "23 Feb 2026SaluranSaluran Irigasi Primer Cikapundu",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "23 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Saluran Irigasi Primer Cikapundung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "4.879m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "23 Feb 2026SaluranSaluran Drainase Urban Bandung3.",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "23 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Saluran Drainase Urban Bandung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "3.106m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "23 Feb 2026BanjirDAS Citarum Hulu - Metode Rasiona",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "23 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "DAS Citarum Hulu - Metode Rasional",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "9.73m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "23 Feb 2026BanjirDAS Cikapundung - Metode Nakayasu",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "23 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "DAS Cikapundung - Metode Nakayasu",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "107.64m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "23 Feb 2026Neraca AirSistem Irigasi Cikapundung19.",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "23 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Neraca Air",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Sistem Irigasi Cikapundung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "19.7m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "tr",
+          "text": "23 Feb 2026Neraca AirDAS Citarum - Defisit Kemarau",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "23 Feb 2026",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "Neraca Air",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "DAS Citarum - Defisit Kemarau",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "25.8m³/s",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "td",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/exec",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Executive Summary & Pelaporan",
+    "componentSummary": {
+      "buttonCount": 29,
+      "inputCount": 1,
+      "tableCount": 0,
+      "cardCount": 10,
+      "govElementCount": 29
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "Reset Global",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Cetak Laporan PDF",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mulai dari Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [],
+      "cards": [
+        {
+          "tag": "span",
+          "text": "SNI 2415:2016 & Pd T-07-2004-A",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Belum Ada Laporan TersediaDashboard ini merangkum ",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Executive Summary & P",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Cetak Laporan PDF",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Belum Ada Laporan TersediaDashboard ini merangkum ",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mulai dari Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  },
+  {
+    "route": "/ai",
+    "title": "RekaSDA Pro - Hidrologi Lapangan",
+    "mainHeading": "Pusat Konsultasi AI",
+    "componentSummary": {
+      "buttonCount": 31,
+      "inputCount": 3,
+      "tableCount": 0,
+      "cardCount": 14,
+      "govElementCount": 50
+    },
+    "rawComponents": {
+      "buttons": [
+        {
+          "tag": "button",
+          "text": "Reset Chat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit CepatKenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit CepatMengapa neraca air saya perlu diperbaru",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI Konsultan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Alur Kerja",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Data Master",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Banjir",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Neraca",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Saluran",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Riwayat",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Laporan",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "AI",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "textarea",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "tables": [],
+      "cards": [
+        {
+          "tag": "div",
+          "text": "Integritas Data0%0/7Modul TerdeteksiMorfometri DAS",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "E-Consultant RekasdaAsisten hidrologi berbasis AI ",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit CepatKenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit CepatMengapa neraca air saya perlu diperbaru",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Audit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        }
+      ],
+      "govermentElements": [
+        {
+          "tag": "body",
+          "text": "RekaSDAConnected (Online)v1.1Pusat Konsultasi AIDa",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "header",
+          "text": "RekaSDAConnected (Online)v1.1",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Morfometri DAS",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Hujan Rencana",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Analisis Frekuensi",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Hujan Wilayah (Thiessen)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Analisis Banjir (HSS)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Neraca Air (Mock)",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Desain Embung",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "SNI 2415:2016",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "SNI 6738",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Rekasda",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit CepatKenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit CepatMengapa neraca air saya perlu diperbaru",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Audit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Audit",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Konsultan AIModul Tidak Diketahui",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "SNI & Permen PUPR",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "Integritas Data0%Morfometri DASHujan RencanaAnalis",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Kenapa ada peringatan Integritas Data?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "span",
+          "text": "Mengapa neraca air saya perlu diperbarui?",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "div",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "id": "",
+          "testId": null
+        },
+        {
+          "tag": "footer",
+          "text": "Tentang RekaSDA ProPlatform analisis hidrologi pro",
+          "id": "",
+          "testId": null
+        }
+      ]
+    }
+  }
+]

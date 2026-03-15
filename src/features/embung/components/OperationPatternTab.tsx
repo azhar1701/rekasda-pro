@@ -163,7 +163,7 @@ export const OperationPatternTab: React.FC<OperationPatternTabProps> = ({ onCons
  <div className="w-full pb-2">
  {inputs.map((row, idx) => (
  <div key={row.id} className="flex w-full items-center border-b border-slate-100 last:border-0 hover:bg-slate-50 dark:bg-slate-800 transition-colors">
- <div className="w-12 py-1.5 px-3 font-medium text-xs text-slate-600 dark:text-slate-400">
+ <div className="w-12 py-1.5 px-3 font-medium text-xs text-slate-600 dark:text-slate-500">
  {row.month}
  </div>
  <div className="flex-1 py-1 px-1">

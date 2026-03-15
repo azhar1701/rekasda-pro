@@ -205,7 +205,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
  Sumber: {sourceName}
  </p>
  </div>
- <button onClick={onClose} className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all rounded-sm group">
+ <button onClick={onClose} className="p-2.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all rounded-sm group">
  <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
  </button>
  </div>
@@ -353,7 +353,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
  { display: 'Gumbel', value: 'gumbel' as DistributionMethod },
  { display: 'Normal', value: 'normal' as DistributionMethod }
  ].map((methodOption) => (
- <button key={methodOption.value} onClick={() => setMethod(methodOption.value)} className={`flex-1 px-3 py-2 text-xs font-medium rounded-sm transition-all ${method === methodOption.value ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 ' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100 hover:bg-white dark:bg-slate-900'}`}>
+ <button key={methodOption.value} onClick={() => setMethod(methodOption.value)} className={`flex-1 px-3 py-2 text-xs font-medium rounded-sm transition-all ${method === methodOption.value ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 ' : 'text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-100 hover:bg-white dark:bg-slate-900'}`}>
  {methodOption.display}
  </button>
  ))}

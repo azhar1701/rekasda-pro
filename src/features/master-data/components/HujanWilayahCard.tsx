@@ -323,10 +323,10 @@ export const HujanWilayahCard: React.FC = () => {
           onComplete={() => setShowCelebration(false)}
         />
       )}
-      <Card className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm border-l-4 border-l-pupr-blue">
+      <Card className="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden shadow-none border-l-4 border-l-pupr-blue">
         <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-pupr-blue rounded-lg">
+            <div className="p-2 bg-pupr-blue rounded-sm">
               <CloudRain className="w-5 h-5 text-pupr-yellow" />
             </div>
             <div>
@@ -394,17 +394,17 @@ export const HujanWilayahCard: React.FC = () => {
                     type="number"
                     value={params.stationCount}
                     onChange={(e) => setParams({ ...params, stationCount: parseInt(e.target.value) || 0 })}
-                    className="w-24 h-11 px-3 text-sm font-semibold border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 tabular-nums text-center"
+                    className="w-24 h-11 px-3 text-sm font-semibold border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 tabular-nums text-center"
                   />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">(Terdeteksi: {stasiunList.length})</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">(Terdeteksi: {stasiunList.length})</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 p-4 rounded-xl mt-6 shadow-sm">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Rekomendasi Metode AI</h4>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 p-4 rounded-sm mt-6 shadow-none">
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Rekomendasi Metode AI</h4>
               <p className="text-lg font-light text-pupr-blue tracking-tight">{recommendation?.method}</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 font-medium">{recommendation?.reason}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-500 mt-2 font-medium">{recommendation?.reason}</p>
 
               <button
                 onClick={() => {
@@ -416,7 +416,7 @@ export const HujanWilayahCard: React.FC = () => {
                     toast.success(`Metode ${methodValue} diterapkan`);
                   }
                 }}
-                className="mt-4 h-11 px-6 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs uppercase tracking-wider font-bold rounded-lg transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                className="mt-4 h-11 px-6 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs uppercase tracking-wider font-bold rounded-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <CheckCircle className="w-4 h-4" />
                 Terapkan Rekomendasi
@@ -429,7 +429,7 @@ export const HujanWilayahCard: React.FC = () => {
               Pilihan Metode Perhitungan
               <HelpTooltip content="Pilih metode rata-rata spasial yang paling sesuai dengan densitas stasiun dan topografi DAS Anda." />
             </label>
-            <div className="flex flex-col sm:flex-row border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden">
+            <div className="flex flex-col sm:flex-row border border-slate-300 dark:border-slate-600 rounded-sm overflow-hidden">
               <div
                 role="button"
                 tabIndex={0}
@@ -473,13 +473,13 @@ export const HujanWilayahCard: React.FC = () => {
             metode === 'thiessen' && (
               <>
                 {stasiunList.length === 0 ? (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-sm flex items-center gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                     <p className="text-xs font-semibold text-amber-800">Belum ada stasiun hujan. Tambahkan stasiun terlebih dahulu.</p>
                   </div>
                 ) : (
                   <>
-                    <div className="overflow-x-auto mb-6 bg-white rounded-lg border border-slate-200">
+                    <div className="overflow-x-auto mb-6 bg-white rounded-sm border border-slate-200">
                       <table className="w-full text-xs">
                         <thead className="bg-slate-50 border-b border-slate-200">
                           <tr>
@@ -497,13 +497,13 @@ export const HujanWilayahCard: React.FC = () => {
                                   type="number"
                                   value={config.luasPengaruh === 0 ? 0 : (config.luasPengaruh ?? '')}
                                   onChange={(e) => handleLuasChange(config.stasiunId, e.target.value)}
-                                  className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                                  className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
                                   placeholder="0.00"
                                   step="0.01"
                                 />
                               </td>
                               <td className="px-4 py-3 text-right tabular-nums tracking-tight">
-                                <span className="inline-flex items-center justify-center px-3 h-11 bg-slate-100 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs tabular-nums w-20">
+                                <span className="inline-flex items-center justify-center px-3 h-11 bg-slate-100 text-slate-700 dark:text-slate-300 rounded-sm font-bold text-xs tabular-nums w-20">
                                   {config.bobot.toFixed(2)}%
                                 </span>
                               </td>
@@ -513,21 +513,21 @@ export const HujanWilayahCard: React.FC = () => {
                       </table>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 mb-6">
+                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-5 mb-6">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Luas Pengaruh:</span>
-                        <span className="text-xl font-light text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{totalLuasPengaruh.toFixed(2)} <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">km²</span></span>
+                        <span className="text-xl font-light text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{totalLuasPengaruh.toFixed(2)} <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">km²</span></span>
                       </div>
                       {morfometriDAS && (
                         <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Luas DAS Aktual:</span>
-                          <span className="text-xl font-light text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{morfometriDAS.luasDAS.toFixed(2)} <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">km²</span></span>
+                          <span className="text-xl font-light text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{morfometriDAS.luasDAS.toFixed(2)} <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">km²</span></span>
                         </div>
                       )}
                     </div>
 
                     {hasError && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-sm flex items-start gap-3">
                         <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-[10px] font-bold text-red-900 uppercase tracking-wider">Peringatan: Selisih Luas Pengaruh</p>
@@ -552,13 +552,13 @@ export const HujanWilayahCard: React.FC = () => {
                   <Button
                     onClick={() => setIsohyetalConfigs([...isohyetalConfigs, { id: crypto.randomUUID(), label: `Area ${isohyetalConfigs.length + 1}`, curahHujanRataRata: 0, luasAntarGaris: 0, bobot: 0 }])}
                     variant="outline"
-                    className="h-11 px-4 text-[10px] uppercase tracking-wider font-bold rounded-lg border-pupr-blue text-pupr-blue"
+                    className="h-11 px-4 text-[10px] uppercase tracking-wider font-bold rounded-sm border-pupr-blue text-pupr-blue"
                   >
                     + Tambah Area
                   </Button>
                 </div>
 
-                <div className="overflow-x-auto bg-white rounded-lg border border-slate-200">
+                <div className="overflow-x-auto bg-white rounded-sm border border-slate-200">
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
@@ -580,7 +580,7 @@ export const HujanWilayahCard: React.FC = () => {
                                 setIsohyetalConfigs(newConfigs);
                                 setIsSaved(false);
                               }}
-                              className="w-full h-11 px-3 text-xs border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 font-semibold"
+                              className="w-full h-11 px-3 text-xs border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 font-semibold"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -596,7 +596,7 @@ export const HujanWilayahCard: React.FC = () => {
                                 setIsSaved(false);
                               }}
                               rows={1}
-                              className="w-full min-h-[44px] px-3 py-2 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 font-mono font-semibold"
+                              className="w-full min-h-[44px] px-3 py-2 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 font-mono font-semibold"
                               placeholder="60, 70, 80..."
                             />
                           </td>
@@ -610,7 +610,7 @@ export const HujanWilayahCard: React.FC = () => {
                                 setIsohyetalConfigs(newConfigs);
                                 setIsSaved(false);
                               }}
-                              className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 font-semibold tabular-nums"
+                              className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 font-semibold tabular-nums"
                               placeholder="0.00"
                             />
                           </td>
@@ -620,7 +620,7 @@ export const HujanWilayahCard: React.FC = () => {
                                 setIsohyetalConfigs(isohyetalConfigs.filter((_, i) => i !== idx));
                                 setIsSaved(false);
                               }}
-                              className="w-11 h-11 inline-flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg font-bold transition-colors"
+                              className="w-11 h-11 inline-flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-sm font-bold transition-colors"
                             >
                               ×
                             </button>
@@ -643,7 +643,7 @@ export const HujanWilayahCard: React.FC = () => {
 
           {
             metode === 'aljabar' && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 items-start">
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-sm flex gap-3 items-start">
                 <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <p className="text-xs font-semibold text-blue-800 leading-relaxed">
                   Semua stasiun memiliki bobot yang sama.
@@ -656,11 +656,11 @@ export const HujanWilayahCard: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={hasError}
-            className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${hasError
-              ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400'
+            className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-sm transition-all flex items-center justify-center gap-2 ${hasError
+              ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-500'
               : isSaved
-              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
-              : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-sm'
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-none'
+              : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-none'
             }`}
           >
             {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}

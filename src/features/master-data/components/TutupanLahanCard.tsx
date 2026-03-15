@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Trees, Plus, Trash2, AlertTriangle, Save, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { HelpTooltip } from '@/components/ui/govtech';
 import { useHydrologyStore, type TutupanLahan, type TutupanLahanItem } from '@/stores/useHydrologyStore';
 import { toast } from '@/hooks/useToast';
 
@@ -98,10 +99,10 @@ export const TutupanLahanCard: React.FC = () => {
  };
 
   return (
-    <Card className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+    <Card className="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden shadow-none">
       <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-pupr-blue rounded-lg">
+          <div className="p-2 bg-pupr-blue rounded-sm">
             <Trees className="w-5 h-5 text-pupr-yellow" />
           </div>
           <div>
@@ -111,7 +112,7 @@ export const TutupanLahanCard: React.FC = () => {
         </div>
         <button
           onClick={handleAddRow}
-          className="flex items-center gap-1.5 px-4 h-11 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:border-pupr-blue hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] uppercase tracking-wider font-bold rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-4 h-11 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:border-pupr-blue hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] uppercase tracking-wider font-bold rounded-sm transition-colors"
         >
           <Plus className="w-4 h-4" />
           Tambah
@@ -119,14 +120,14 @@ export const TutupanLahanCard: React.FC = () => {
       </div>
 
       <div className="p-6">
-        <div className="overflow-x-auto mb-6 bg-white rounded-lg border border-slate-200">
+        <div className="overflow-x-auto mb-6 bg-white rounded-sm border border-slate-200">
           <table className="w-full text-xs">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider text-[10px]">Jenis Tutupan Lahan</th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Luas (km²)</th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Koef. C</th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">CN</th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 xl:flex xl:items-center xl:justify-end xl:gap-1.5 uppercase tracking-wider text-[10px]">Luas (km²)</th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 xl:flex xl:items-center xl:justify-end xl:gap-1.5 uppercase tracking-wider text-[10px]">Koef. C <HelpTooltip content="Koefisien Pengaliran (C) untuk Metode Rasional (0-1)" /></th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 xl:flex xl:items-center xl:justify-end xl:gap-1.5 uppercase tracking-wider text-[10px]">CN <HelpTooltip content="Curve Number untuk Metode SCS (0-100)" /></th>
                 <th className="px-4 py-3 text-center font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aksi</th>
               </tr>
             </thead>
@@ -138,7 +139,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="text"
                       value={item.jenis}
                       onChange={(e) => handleChange(item.id, 'jenis', e.target.value)}
-                      className="w-full h-11 px-3 text-xs border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue font-semibold"
+                      className="w-full h-11 px-3 text-xs border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue font-semibold"
                       placeholder="Contoh: Hutan"
                     />
                   </td>
@@ -147,7 +148,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="number"
                       value={item.luas === 0 ? 0 : (item.luas ?? '')}
                       onChange={(e) => handleChange(item.id, 'luas', e.target.value)}
-                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
                       placeholder="0.00"
                       step="0.01"
                     />
@@ -157,7 +158,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="number"
                       value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
                       onChange={(e) => handleChange(item.id, 'nilaiC', e.target.value)}
-                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
                       placeholder="0.00"
                       step="0.01"
                       min="0"
@@ -169,7 +170,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="number"
                       value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
                       onChange={(e) => handleChange(item.id, 'nilaiCN', e.target.value)}
-                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
+                      className="w-full h-11 px-3 text-xs text-right border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums font-semibold"
                       placeholder="0"
                       step="1"
                       min="0"
@@ -180,7 +181,7 @@ export const TutupanLahanCard: React.FC = () => {
                     <button
                       onClick={() => handleRemoveRow(item.id)}
                       disabled={items.length === 1}
-                      className="w-11 h-11 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="w-11 h-11 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -192,22 +193,22 @@ export const TutupanLahanCard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Luas Tutupan</p>
-            <p className="text-2xl font-light text-slate-900 dark:text-slate-100 tabular-nums">{totalLuas.toFixed(2)} <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">km²</span></p>
+            <p className="text-2xl font-light text-slate-900 dark:text-slate-100 tabular-nums">{totalLuas.toFixed(2)} <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">km²</span></p>
           </div>
-          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">C Gabungan (Weighted)</p>
             <p className="text-2xl font-light text-pupr-blue tabular-nums">{cGabungan.toFixed(3)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">CN Gabungan (Weighted)</p>
             <p className="text-2xl font-light text-pupr-blue tabular-nums">{cnGabungan.toFixed(1)}</p>
           </div>
         </div>
 
         {hasError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-sm flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-[10px] font-bold text-red-900 uppercase tracking-wider">Peringatan: Selisih Luas DAS</p>
@@ -222,11 +223,11 @@ export const TutupanLahanCard: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={hasError}
-          className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${hasError
-            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400'
+          className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-sm transition-all flex items-center justify-center gap-2 ${hasError
+            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-500'
             : isSaved
-            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
-            : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-sm'
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-none'
+            : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-none'
           }`}
         >
           {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}

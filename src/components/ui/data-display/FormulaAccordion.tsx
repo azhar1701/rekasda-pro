@@ -107,7 +107,7 @@ export const FormulaAccordion: React.FC<FormulaAccordionProps> = ({
  bgHeaderHover: 'hover:bg-slate-50 dark:bg-slate-800',
  iconBg: 'bg-slate-600',
  textMain: 'text-slate-900 dark:text-slate-100',
- textSub: 'text-slate-600 dark:text-slate-400',
+ textSub: 'text-slate-600 dark:text-slate-500',
  textLink: 'text-slate-700 dark:text-slate-300',
  contentBg: 'bg-gradient-to-br from-slate-50 to-gray-50',
  cardBg: 'bg-white dark:bg-slate-900',

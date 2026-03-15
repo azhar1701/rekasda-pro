@@ -154,7 +154,7 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
  </span>
  )}
  </p>
- <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">{recommendation}</p>
+ <p className="text-xs text-slate-600 dark:text-slate-500 leading-relaxed max-w-2xl">{recommendation}</p>
  </div>
  </div>
  <button

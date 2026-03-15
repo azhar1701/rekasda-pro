@@ -19,7 +19,10 @@
     "docker:dev": "docker compose up --watch rekasda-pro-dev",
     "docker:prod": "docker compose up --watch rekasda-pro-ui",
     "commit:auto": "powershell -ExecutionPolicy Bypass -File scripts/auto-commit-push.ps1",
-    "commit:auto:bat": "scripts/auto-commit-push.bat"
+    "commit:auto:bat": "scripts/auto-commit-push.bat",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -69,9 +72,11 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/typography": "^0.5.19",
     "@types/file-saver": "^2.0.7",
     "@types/leaflet": "^1.9.21",
+    "@types/node": "^25.5.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/react-katex": "^3.0.4",

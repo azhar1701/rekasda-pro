@@ -205,7 +205,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
  title="Analisis Neraca Air"
  description="Evaluasi keseimbangan antara ketersediaan dan kebutuhan air bulanan"
  icon={<Droplet className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  sniCode="SNI 6728.1:2015"
  actions={
  <div className="flex items-center gap-6">
@@ -600,13 +600,13 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
  <table className="w-full text-xs">
  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
  <tr>
- <th className="text-left py-2.5 px-3 font-bold text-slate-600 dark:text-slate-400">Bulan</th>
+ <th className="text-left py-2.5 px-3 font-bold text-slate-600 dark:text-slate-500">Bulan</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">P (mm)</th>
  <th className="text-right py-2.5 px-3 font-bold text-orange-600">ETo (mm)</th>
  <th className="text-right py-2.5 px-3 font-bold text-cyan-600">WS (mm)</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">BF (mm)</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">DRO (mm)</th>
- <th className="text-right py-2.5 px-3 font-bold text-slate-600 dark:text-slate-400">TRO (mm)</th>
+ <th className="text-right py-2.5 px-3 font-bold text-slate-600 dark:text-slate-500">TRO (mm)</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue bg-pupr-surface/80">Q (m³/s)</th>
  </tr>
  </thead>
@@ -653,14 +653,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
  <table className="w-full text-xs">
  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
  <tr>
- <th className="text-left py-2.5 px-3 font-bold text-slate-600 dark:text-slate-400">Bulan</th>
+ <th className="text-left py-2.5 px-3 font-bold text-slate-600 dark:text-slate-500">Bulan</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Supply</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Irigasi</th>
  <th className="text-right py-2.5 px-3 font-bold text-orange-600">Air Baku</th>
  <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Lingk.</th>
- <th className="text-right py-2.5 px-3 font-bold text-slate-600 dark:text-slate-400">Total</th>
+ <th className="text-right py-2.5 px-3 font-bold text-slate-600 dark:text-slate-500">Total</th>
  <th className="text-right py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200 bg-slate-100/80">Neraca</th>
- <th className="text-center py-2.5 px-3 font-bold text-slate-600 dark:text-slate-400">Status</th>
+ <th className="text-center py-2.5 px-3 font-bold text-slate-600 dark:text-slate-500">Status</th>
  </tr>
  </thead>
  <tbody>
@@ -680,7 +680,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
  <td className="py-2 px-3 text-center tabular-nums tracking-tight">
  <span className={`inline-block px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
  r.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
- 'bg-slate-100 text-slate-600 dark:text-slate-400'
+ 'bg-slate-100 text-slate-600 dark:text-slate-500'
  }`}>
  {r.status}
  </span>
@@ -840,7 +840,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
  <WaterBalanceChart data={results} />
  </div>
  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/60">
- <p className="text-xs text-slate-600 dark:text-slate-400">
+ <p className="text-xs text-slate-600 dark:text-slate-500">
  <span className="font-semibold">Catatan:</span> Perhitungan mengikuti standar <span className="font-semibold text-pupr-blue">SNI 19-6728.1-2002</span> tentang Penyusunan Neraca Sumber Daya Air pada Wilayah Sungai.
  </p>
  </div>
@@ -865,7 +865,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Input Data Debit Bulanan</h3>
  <p className="text-xs text-slate-500 mt-1">Ketersediaan Air (m³/s)</p>
  </div>
- <button onClick={() => setIsInputModalOpen(false)} className="text-slate-500 hover:text-slate-600 dark:text-slate-400">
+ <button onClick={() => setIsInputModalOpen(false)} className="text-slate-500 hover:text-slate-600 dark:text-slate-500">
  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
  </svg>

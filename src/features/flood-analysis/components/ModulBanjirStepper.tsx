@@ -83,7 +83,7 @@ export const ModulBanjirStepper: React.FC = () => {
  title="Debit Banjir Rencana"
  description="Workflow Terintegrasi: Distribusi → HSS → Konvolusi"
  icon={<CloudRain className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  >
  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 py-2">
  {/* Stepper Navigation */}
@@ -109,7 +109,7 @@ export const ModulBanjirStepper: React.FC = () => {
  ? 'border-l-4 border-green-600 bg-green-50 text-green-900'
  : isLocked
  ? 'border-l-4 border-transparent bg-slate-50 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
- : 'border-l-4 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800'
+ : 'border-l-4 border-transparent text-slate-600 dark:text-slate-500 hover:bg-slate-50 dark:bg-slate-800'
  }`}
  >
  <div className="flex items-start gap-3">
@@ -141,7 +141,7 @@ export const ModulBanjirStepper: React.FC = () => {
  {/* Progress Summary */}
  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
  <div className="flex items-center justify-between text-xs">
- <span className="text-slate-600 dark:text-slate-400 font-semibold">Progress</span>
+ <span className="text-slate-600 dark:text-slate-500 font-semibold">Progress</span>
  <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">{completedSteps.size}/3</span>
  </div>
  <div className="mt-2 h-2 bg-slate-100 rounded-sm overflow-hidden">

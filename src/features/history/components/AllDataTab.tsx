@@ -341,7 +341,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
  <button onClick={() => handleShowOnMap(item)} className="p-1.5 text-pupr-blue hover:bg-pupr-surface hover:text-pupr-blue rounded-sm transition-colors" title="Lihat di Peta">
  <MapPin className="w-4 h-4" />
  </button>
- <button onClick={() => onViewDetail?.(item)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-200 rounded-sm transition-colors" title="Lihat Detail">
+ <button onClick={() => onViewDetail?.(item)} className="p-1.5 text-slate-600 dark:text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-200 rounded-sm transition-colors" title="Lihat Detail">
  <Eye className="w-4 h-4" />
  </button>
  <button onClick={() => onConsultAI?.(item)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-sm transition-colors" title="Konsultasi AI">
@@ -359,7 +359,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
  title="Daftar Proyek"
  description="Database riwayat perhitungan RekaSDA"
  icon={<Database className="w-6 h-6" />}
- iconColorClass="bg-indigo-50 text-pupr-blue"
+ 
  >
  <div className="space-y-6 pb-6 page-enter relative z-10">
 
@@ -424,15 +424,15 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
  <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
  <div className="flex gap-3 text-[10px] sm:text-xs">
- <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+ <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-500">
  <span className="w-2.5 h-2.5 rounded-sm bg-[#2563eb]"></span>
  Saluran Manning
  </span>
- <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+ <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-500">
  <span className="w-2.5 h-2.5 rounded-sm bg-[#dc2626]"></span>
  Banjir Rasional
  </span>
- <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+ <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-500">
  <span className="w-2.5 h-2.5 rounded-sm bg-[#059669]"></span>
  Neraca Air
  </span>

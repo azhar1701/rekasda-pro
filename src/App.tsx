@@ -69,7 +69,8 @@ const AppLayout: React.FC = () => {
  const [lastContext, setLastContext] = useState<string>('');
  const [aiInitialQuery, setAiInitialQuery] = useState<string>('');
  const [aiTriggerCount, setAiTriggerCount] = useState<number>(0);
- const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
+  const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
+  const [isMobileOverflowOpen, setIsMobileOverflowOpen] = useState(false);
  const { saveCalculation } = useDatabase();
  const { status: dbStatus, message: dbMessage, getStatusColor } = useDatabaseStatus();
 
@@ -152,7 +153,7 @@ const AppLayout: React.FC = () => {
   ];
 
   const activeClass = 'bg-pupr-blue text-white';
-  const hoverClass = 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800';
+  const hoverClass = 'text-slate-600 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800';
   const mobileActiveClass = 'text-pupr-blue bg-pupr-surface dark:text-blue-300 dark:bg-blue-900/40';
 
 
@@ -176,12 +177,12 @@ const AppLayout: React.FC = () => {
  />
 
  {/* --- Main Content --- */}
- <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 pb-28 md:pb-8 md:pt-24">
- <div className="transition-opacity duration-75">
+ <main className="flex-1 w-full flex flex-col py-6 md:py-8 pb-28 md:pb-8 md:pt-24">
+ <div className="transition-opacity flex-1 flex flex-col duration-75">
  <React.Suspense fallback={<TabFallback />}>
  <Routes>
  <Route path="/" element={<Navigate to={Tab.MASTER} replace />} />
- <Route path={Tab.WORKFLOW} element={<div className="h-[min(800px,calc(100vh-12rem))] w-full"><WorkflowCanvas /></div>} />
+ <Route path={Tab.WORKFLOW} element={<WorkflowCanvas />} />
  <Route path={Tab.SALURAN} element={<ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />} />
  <Route path={Tab.BANJIR} element={<FloodAnalysisTab onConsultAI={() => {
  setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');
@@ -361,7 +362,7 @@ const AppLayout: React.FC = () => {
  <nav className="fixed bottom-0 left-0 right-0 md:top-20 md:bottom-auto z-50">
  {/* Desktop Navigation - Horizontal below header */}
  <div className="hidden md:block bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 ">
- <div className="max-w-7xl mx-auto px-6">
+ <div className="max-w-[1440px] mx-auto px-6 lg:px-8">
  <div className="flex items-center justify-start gap-1 overflow-x-auto scrollbar-hide py-2">
  {navGroups.map((group, groupIndex) => (
  <React.Fragment key={groupIndex}>
@@ -409,49 +410,95 @@ const AppLayout: React.FC = () => {
  </div>
  </div>
  </div>
-
- {/* Mobile Navigation - Bottom Bar */}
- <div className="md:hidden bg-white dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
- <div className="px-1 py-1.5 safe-area-inset-bottom">
- <div className="flex items-center justify-between gap-0.5 w-full">
- {navGroups.map((group, groupIndex) => (
- <React.Fragment key={groupIndex}>
- {group.items.map((item) => (
-                     <button
-                       key={item.tab}
-                       onClick={() => navigate(item.tab)}
-                       className={`flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-sm transition-all duration-200 ${activeTab.startsWith(item.tab)
-                         ? mobileActiveClass
-                         : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
-                         }`}
-                     >
-
- <div className={`flex items-center justify-center transition-transform duration-200 ${activeTab.startsWith(item.tab) ? 'scale-110' : 'scale-100'}`}>
- {React.cloneElement(item.icon as React.ReactElement, { className: 'w-[18px] h-[18px] sm:w-5 sm:h-5' })}
- </div>
- <span className={`text-[11px] sm:text-[11px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${activeTab.startsWith(item.tab) ? 'font-bold' : 'font-medium'
- }`}>{item.label}</span>
+ {/* Mobile Navigation - Bottom Bar (5 primary + overflow) */}
+ <div className="md:hidden bg-white dark:bg-slate-900/95 border-t-2 border-slate-200 dark:border-slate-700 shadow-none">
+ {/* Overflow Panel (slides up from bottom nav) */}
+ {isMobileOverflowOpen && (
+ <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3 animate-in slide-in-from-bottom-2 duration-150">
+ <div className="grid grid-cols-3 gap-2">
+ {[
+ { tab: Tab.WORKFLOW, label: 'Alur Kerja', icon: <GitMerge strokeWidth={2.5} className="w-5 h-5" /> },
+ { tab: Tab.FREKUENSI, label: 'Frekuensi', icon: <TrendingUp strokeWidth={2.5} className="w-5 h-5" /> },
+ { tab: Tab.EMBUNG, label: 'Embung', icon: <Droplets strokeWidth={2.5} className="w-5 h-5" /> },
+ { tab: Tab.SALURAN, label: 'Saluran', icon: <Waves strokeWidth={2.5} className="w-5 h-5" /> },
+ { tab: Tab.HISTORY, label: 'Riwayat', icon: <History strokeWidth={2.5} className="w-5 h-5" /> },
+ { tab: Tab.EXEC, label: 'Laporan', icon: <FileText strokeWidth={2.5} className="w-5 h-5" /> },
+ ].map((item) => (
+ <button
+ key={item.tab}
+ onClick={() => { navigate(item.tab); setIsMobileOverflowOpen(false); }}
+ className={`flex items-center gap-2.5 px-3 py-3 rounded-sm transition-all ${activeTab.startsWith(item.tab)
+ ? 'bg-pupr-blue text-white font-bold'
+ : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium'
+ }`}
+ >
+ {item.icon}
+ <span className="text-xs">{item.label}</span>
  </button>
  ))}
- </React.Fragment>
- ))}
-
- {/* AI Consultant Mobile */}
+ </div>
+ </div>
+ )}
+ <div className="px-2 py-1.5 safe-area-inset-bottom">
+ <div className="flex items-center justify-between gap-1 w-full">
+ {/* 1. Data Master */}
  <button
- onClick={() => setIsAIDrawerOpen((prev) => !prev)}
- className={`relative flex flex-col items-center justify-center w-full min-w-0 min-h-[50px] rounded-sm transition-all duration-200 ${isAIDrawerOpen
- ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200 '
+ onClick={() => { navigate(Tab.MASTER); setIsMobileOverflowOpen(false); }}
+ className={`flex flex-col items-center justify-center flex-1 min-h-[52px] rounded-sm transition-all ${activeTab.startsWith(Tab.MASTER)
+ ? mobileActiveClass
+ : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+ }`}
+ >
+ <Database strokeWidth={2.5} className="w-5 h-5" />
+ <span className={`text-[11px] mt-1 ${activeTab.startsWith(Tab.MASTER) ? 'font-bold' : 'font-medium'}`}>Master</span>
+ </button>
+
+ {/* 2. Banjir */}
+ <button
+ onClick={() => { navigate(Tab.BANJIR); setIsMobileOverflowOpen(false); }}
+ className={`flex flex-col items-center justify-center flex-1 min-h-[52px] rounded-sm transition-all ${activeTab.startsWith(Tab.BANJIR)
+ ? mobileActiveClass
+ : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+ }`}
+ >
+ <CloudRain strokeWidth={2.5} className="w-5 h-5" />
+ <span className={`text-[11px] mt-1 ${activeTab.startsWith(Tab.BANJIR) ? 'font-bold' : 'font-medium'}`}>Banjir</span>
+ </button>
+
+ {/* 3. Neraca */}
+ <button
+ onClick={() => { navigate(Tab.NERACA); setIsMobileOverflowOpen(false); }}
+ className={`flex flex-col items-center justify-center flex-1 min-h-[52px] rounded-sm transition-all ${activeTab.startsWith(Tab.NERACA)
+ ? mobileActiveClass
+ : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+ }`}
+ >
+ <Scale strokeWidth={2.5} className="w-5 h-5" />
+ <span className={`text-[11px] mt-1 ${activeTab.startsWith(Tab.NERACA) ? 'font-bold' : 'font-medium'}`}>Neraca</span>
+ </button>
+
+ {/* 4. AI Consultant */}
+ <button
+ onClick={() => { setIsAIDrawerOpen((prev) => !prev); setIsMobileOverflowOpen(false); }}
+ className={`relative flex flex-col items-center justify-center flex-1 min-h-[52px] rounded-sm transition-all ${isAIDrawerOpen
+ ? 'text-indigo-600 bg-indigo-50 ring-1 ring-indigo-200'
  : 'text-indigo-400 hover:bg-indigo-50/50'
  }`}
  >
- <div className={`flex items-center justify-center transition-transform duration-200 ${isAIDrawerOpen ? 'scale-110' : 'scale-100'}`}>
- <Sparkles strokeWidth={2.5} className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
- </div>
- <span className={`text-[11px] sm:text-[11px] mt-1 truncate w-full text-center px-0.5 transition-all duration-200 ${isAIDrawerOpen ? 'font-bold' : 'font-medium'
- }`}>AI</span>
- {isAIDrawerOpen && (
- <div className="absolute top-1 right-2 w-1.5 h-1.5 bg-yellow-400 rounded-sm animate-pulse border border-white" />
- )}
+ <Sparkles strokeWidth={2.5} className="w-5 h-5" />
+ <span className={`text-[11px] mt-1 ${isAIDrawerOpen ? 'font-bold' : 'font-medium'}`}>AI</span>
+ </button>
+
+ {/* 5. Lainnya (overflow) */}
+ <button
+ onClick={() => setIsMobileOverflowOpen((prev) => !prev)}
+ className={`flex flex-col items-center justify-center flex-1 min-h-[52px] rounded-sm transition-all ${isMobileOverflowOpen
+ ? 'text-pupr-blue bg-pupr-surface font-bold'
+ : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+ }`}
+ >
+ <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${isMobileOverflowOpen ? 'rotate-45' : ''}`}><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+ <span className={`text-[11px] mt-1 ${isMobileOverflowOpen ? 'font-bold' : 'font-medium'}`}>Lainnya</span>
  </button>
  </div>
  </div>

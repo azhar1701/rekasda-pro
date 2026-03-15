@@ -123,7 +123,7 @@ export const DataHujanInputCard: React.FC = () => {
  </div>
  <div>
  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">15 Tahun Data Hujan Maksimum</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400">
+ <p className="text-xs text-slate-600 dark:text-slate-500">
  Sumber: {selectedStasiun?.nama_stasiun || 'Stasiun Stasiun Cikampak'}
  </p>
  </div>
@@ -191,7 +191,7 @@ export const DataHujanInputCard: React.FC = () => {
  return (
  <div key={item.id} className={`border rounded-sm p-3 ${isOutlier ? 'border-red-300 bg-red-50' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}`}>
  <div className="flex items-center justify-between mb-1">
- <div className="text-xs text-slate-600 dark:text-slate-400">Tahun {idx + 1}</div>
+ <div className="text-xs text-slate-600 dark:text-slate-500">Tahun {idx + 1}</div>
  {isOutlier && (
  <span title="Outlier (>300 mm)">
  <AlertCircle className="w-3.5 h-3.5 text-red-500" />

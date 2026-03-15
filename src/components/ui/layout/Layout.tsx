@@ -69,7 +69,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
  {crumb.label}
  </a>
  ) : (
- <span className="text-slate-600 dark:text-slate-400">{crumb.label}</span>
+ <span className="text-slate-600 dark:text-slate-500">{crumb.label}</span>
  )}
  </React.Fragment>
  ))}
@@ -94,7 +94,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
  )}
  </div>
  {(subtitle || description) && (
- <p className="text-slate-600 dark:text-slate-400">{subtitle || description}</p>
+ <p className="text-slate-600 dark:text-slate-500">{subtitle || description}</p>
  )}
  </div>
  </div>
@@ -168,7 +168,7 @@ export const Section: React.FC<SectionProps> = ({
  {(title || subtitle) && (
  <div className="mb-6">
  {title && <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">{title}</h2>}
- {subtitle && <p className="text-slate-600 dark:text-slate-400">{subtitle}</p>}
+ {subtitle && <p className="text-slate-600 dark:text-slate-500">{subtitle}</p>}
  </div>
  )}
  {children}

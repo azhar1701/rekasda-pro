@@ -1,4 +1,5 @@
 import { Handle, Position, NodeProps, Node } from '@xyflow/react';
+import { HelpTooltip } from '@/components/ui/govtech';
 
 // Tipe data yang diharapkan dalam custom node
 export type GovTechNodeData = Node<{
@@ -6,6 +7,7 @@ export type GovTechNodeData = Node<{
  status?: string;
  moduleId?: string;
  phase?: 'input' | 'pre' | 'engine' | 'module' | 'output';
+  tooltip?: string;
 }, 'govtech'>;
 
 export function GovTechNode({ data, isConnectable }: NodeProps<GovTechNodeData>) {
@@ -36,8 +38,9 @@ export function GovTechNode({ data, isConnectable }: NodeProps<GovTechNodeData>)
 
  {/* Body Area */}
  <div className="p-3 flex flex-col gap-2">
- <div className="font-semibold text-sm text-pupr-text leading-tight text-center">
+ <div className="font-semibold text-sm text-pupr-text leading-tight text-center flex items-center justify-center gap-1.5">
  {data.label}
+ {data.tooltip && <HelpTooltip content={data.tooltip} />}
  </div>
  
  {/* Status Indicator */}

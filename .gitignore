@@ -141,3 +141,10 @@ backend/.venv/
 # Deployment
 scripts/deployment/backup/
 .sisyphus/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

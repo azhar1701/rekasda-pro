@@ -156,7 +156,7 @@ export const StationDataQCAndLinker: React.FC = () => {
  <div className="space-y-4">
  <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-sm border border-slate-200 dark:border-slate-700">
  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">Quality Control (QC)</h3>
- <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+ <p className="text-sm text-slate-600 dark:text-slate-500 mb-4">
  Lakukan uji kualitas data (Konsistensi, Homogenitas, Outlier) sebelum analisis frekuensi.
  </p>
           <Button 

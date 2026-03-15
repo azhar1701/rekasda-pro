@@ -17,6 +17,8 @@ import '@xyflow/react/dist/style.css';
 import { GovTechNode, GovTechNodeData } from '../../components/GovTechNode';
 import { useWorkflowStore } from '../../stores/useWorkflowStore';
 import { useHydrologyStore } from '../../stores/useHydrologyStore';
+import { ModuleLayout } from '../../components/layout/ModuleLayout';
+import { Network } from 'lucide-react';
 
 
 const nodeTypes = {
@@ -25,30 +27,30 @@ const nodeTypes = {
 
 // Base Node Definition (Static Coordinates & Labels)
 const baseNodes: GovTechNodeData[] = [
- // ── PHASE 1: INPUT (y=0) ──
- { id: 'I1', type: 'govtech', position: { x: 0, y: 0 }, data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas' } },
+ // -- PHASE 1: INPUT (y=0) --
+ { id: 'I1', type: 'govtech', position: { x: 0, y: 0 }, data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas', tooltip: 'Langkah 1: Tentukan nama pekerjaan dan lokasi ordinat proyek.' } },
  { id: 'I2', type: 'govtech', position: { x: 280, y: 0 }, data: { label: 'Data Hujan (Manual/Excel/OCR)', phase: 'input', moduleId: 'hujan' } },
  { id: 'I3', type: 'govtech', position: { x: 560, y: 0 }, data: { label: 'Karakteristik & Spasial DAS', phase: 'input', moduleId: 'spasial' } },
  { id: 'I4', type: 'govtech', position: { x: 840, y: 0 }, data: { label: 'Tutupan Lahan (Parameter C)', phase: 'input', moduleId: 'tutupan' } },
 
- // ── PHASE 2: PRE-PROCESSING (y=200) ──
+ // -- PHASE 2: PRE-PROCESSING (y=200) --
  { id: 'P1', type: 'govtech', position: { x: 140, y: 200 }, data: { label: 'Quality Control', phase: 'pre', moduleId: 'qc' } },
- { id: 'P2', type: 'govtech', position: { x: 420, y: 200 }, data: { label: 'Curah Hujan Wilayah (Thiessen)', phase: 'pre', moduleId: 'thiessen' } },
+ { id: 'P2', type: 'govtech', position: { x: 420, y: 200 }, data: { label: 'Curah Hujan Wilayah (Thiessen)', phase: 'pre', moduleId: 'thiessen', tooltip: 'Menghitung hujan rata-rata kawasan menggunakan bobot stasiun (Poligon Thiessen/Aljabar).' } },
  { id: 'P3', type: 'govtech', position: { x: 700, y: 200 }, data: { label: 'Infilling Data (CHIRPS)', phase: 'pre', moduleId: 'satelit' } },
 
- // ── PHASE 3: ANALYSIS ENGINE (y=400) ──
- { id: 'E1', type: 'govtech', position: { x: 140, y: 400 }, data: { label: 'Analisis Frekuensi', phase: 'engine', moduleId: 'frekuensi' } },
+ // -- PHASE 3: ANALYSIS ENGINE (y=400) --
+ { id: 'E1', type: 'govtech', position: { x: 140, y: 400 }, data: { label: 'Analisis Frekuensi', phase: 'engine', moduleId: 'frekuensi', tooltip: 'Distribusi probabilitas (Gumbel, Log Pearson, dsb) untuk menentukan hujan rencana berbagai kala ulang.' } },
  { id: 'E2', type: 'govtech', position: { x: 420, y: 400 }, data: { label: 'Areal Reduction Factor', phase: 'engine', moduleId: 'arf' } },
  { id: 'E3', type: 'govtech', position: { x: 700, y: 400 }, data: { label: 'Distribusi Jam-jaman & Hujan Efektif', phase: 'engine', moduleId: 'distribusi' } },
 
- // ── PHASE 4: APPLICATION MODULES (y=600) ──
+ // -- PHASE 4: APPLICATION MODULES (y=600) --
  { id: 'M1', type: 'govtech', position: { x: 0, y: 600 }, data: { label: 'Banjir Rencana (HSS)', phase: 'module', moduleId: 'banjir' } },
  { id: 'M2', type: 'govtech', position: { x: 280, y: 600 }, data: { label: 'Neraca Air (FJ Mock)', phase: 'module', moduleId: 'neraca' } },
  { id: 'M3', type: 'govtech', position: { x: 560, y: 600 }, data: { label: 'Perencanaan Embung', phase: 'module', moduleId: 'embung' } },
  { id: 'M4', type: 'govtech', position: { x: 840, y: 600 }, data: { label: 'Kapasitas Saluran (Manning)', phase: 'module', moduleId: 'saluran' } },
 
- // ── PHASE 5: OUTPUT (y=800) ──
- { id: 'O1', type: 'govtech', position: { x: 140, y: 800 }, data: { label: 'Dashboard Eksekutif', phase: 'output', moduleId: 'dashboard' } },
+ // -- PHASE 5: OUTPUT (y=800) --
+ { id: 'O1', type: 'govtech', position: { x: 140, y: 800 }, data: { label: 'Dashboard Eksekutif', phase: 'output', moduleId: 'dashboard', tooltip: 'Ringkasan kelayakan proyek, neraca air, dan reduksi banjir untuk keperluan pelaporan.' } },
  { id: 'O2', type: 'govtech', position: { x: 420, y: 800 }, data: { label: 'AI Konsultan (Gemini)', phase: 'output', moduleId: 'ai' } },
  { id: 'O3', type: 'govtech', position: { x: 700, y: 800 }, data: { label: 'Ekspor Laporan (PDF/Excel)', phase: 'output', moduleId: 'ekspor' } },
 ];
@@ -57,21 +59,21 @@ const edgeStyle = { strokeWidth: 2, stroke: '#94a3b8' };
 const labelProps = { labelStyle: { fill: '#64748b', fontWeight: 600, fontSize: 10 }, labelBgStyle: { fill: '#ffffff', fillOpacity: 0.8 }, labelBgPadding: [4, 4] as [number, number], labelBgBorderRadius: 4 };
 
 const initialEdges: Edge[] = [
- // Input → Pre-Processing
+ // Input ? Pre-Processing
  { id: 'e-I2-P1', source: 'I2', target: 'P1', type: 'smoothstep', style: edgeStyle, label: 'Data Hujan', ...labelProps },
  { id: 'e-P1-P2', source: 'P1', target: 'P2', type: 'smoothstep', style: edgeStyle, label: 'Data Valid', ...labelProps },
  { id: 'e-I3-P2', source: 'I3', target: 'P2', type: 'smoothstep', style: edgeStyle, label: 'Luas DAS', ...labelProps },
  { id: 'e-I2-P3', source: 'I2', target: 'P3', type: 'smoothstep', style: edgeStyle },
  { id: 'e-P3-P2', source: 'P3', target: 'P2', type: 'smoothstep', style: edgeStyle, animated: true, label: 'Data Lengkap', ...labelProps },
 
- // Pre-Processing → Engine
+ // Pre-Processing ? Engine
  { id: 'e-P2-E1', source: 'P2', target: 'E1', type: 'smoothstep', style: edgeStyle, label: 'Hujan Tahunan', ...labelProps },
  { id: 'e-E1-E2', source: 'E1', target: 'E2', type: 'smoothstep', style: edgeStyle, label: 'Hujan Rencana', ...labelProps },
  { id: 'e-I3-E2', source: 'I3', target: 'E2', type: 'smoothstep', style: edgeStyle },
  { id: 'e-E2-E3', source: 'E2', target: 'E3', type: 'smoothstep', style: edgeStyle, label: 'Hujan Terkoreksi', ...labelProps },
  { id: 'e-I4-E3', source: 'I4', target: 'E3', type: 'smoothstep', style: edgeStyle, label: 'Koef Limpasan', ...labelProps },
 
- // Engine → Modules
+ // Engine ? Modules
  { id: 'e-E3-M1', source: 'E3', target: 'M1', type: 'smoothstep', style: edgeStyle, label: 'Hujan Efektif', ...labelProps },
  { id: 'e-I3-M1', source: 'I3', target: 'M1', type: 'smoothstep', style: edgeStyle },
  { id: 'e-P2-M2', source: 'P2', target: 'M2', type: 'smoothstep', style: edgeStyle, label: 'Hujan Bulanan', ...labelProps },
@@ -80,7 +82,7 @@ const initialEdges: Edge[] = [
  { id: 'e-M2-M3', source: 'M2', target: 'M3', type: 'smoothstep', style: edgeStyle, label: 'Debit Andalan', ...labelProps },
  { id: 'e-M1-M4', source: 'M1', target: 'M4', type: 'smoothstep', style: edgeStyle },
 
- // Modules → Output
+ // Modules ? Output
  { id: 'e-I1-O1', source: 'I1', target: 'O1', type: 'smoothstep', style: edgeStyle },
  { id: 'e-M1-O1', source: 'M1', target: 'O1', type: 'smoothstep', style: edgeStyle },
  { id: 'e-M2-O1', source: 'M2', target: 'O1', type: 'smoothstep', style: edgeStyle },
@@ -149,8 +151,12 @@ export function WorkflowCanvas() {
  }, [setActiveModule]);
 
  return (
- <>
- <div className="w-full h-full bg-slate-50 dark:bg-slate-800 relative border rounded-sm overflow-hidden ">
+ <ModuleLayout
+ title="Alur Analisis Hidrologi Terpadu v1.1"
+ description="Pemetaan data-flow: Input ? Pre-Processing ? Engine ? Modul ? Output"
+ icon={<Network className="w-6 h-6" />}
+ >
+ <div className="w-full h-[75vh] min-h-[600px] bg-white dark:bg-slate-900 relative rounded-sm overflow-hidden border border-slate-200 dark:border-slate-700 mb-4">
  <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeClick={onNodeClick} nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.2 }} className="bg-pupr-surface">
  <Background variant={BackgroundVariant.Dots} gap={24} size={2} color="#cbd5e1" />
  <Controls showInteractive={false} className="bg-white dark:bg-slate-900 border rounded-sm overflow-hidden" />
@@ -163,11 +169,7 @@ export function WorkflowCanvas() {
  return phaseColors[data?.phase || ''] || '#0c3a66';
  }} maskColor="rgba(248, 250, 252, 0.7)" className="bg-white dark:bg-slate-900 border rounded-sm " />
  </ReactFlow>
- <div className="absolute top-4 left-4 z-10 bg-white dark:bg-slate-900 p-4 rounded-sm border-l-4 border-pupr-blue pointer-events-none">
- <h2 className="text-lg font-bold text-pupr-blue">Alur Analisis Hidrologi Terpadu v1.1</h2>
- <p className="text-sm text-slate-500">Pemetaan data-flow: Input → Pre-Processing → Engine → Modul → Output</p>
  </div>
- </div>
- </>
+ </ModuleLayout>
  );
 }

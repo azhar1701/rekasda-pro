@@ -90,7 +90,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Hujan Rencana dari Analisis Frekuensi (Read-Only)</p>
  </div>
  <div className="text-xs">
- <span className="text-slate-600 dark:text-slate-400">R24 (Q{returnPeriod}):</span>
+ <span className="text-slate-600 dark:text-slate-500">R24 (Q{returnPeriod}):</span>
  <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{R24.toFixed(2)} mm</span>
  </div>
  </div>
@@ -103,7 +103,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
  </div>
  <div>
  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Distribusi Hujan Jam-jaman</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400">Mononobe + Alternating Block Method</p>
+ <p className="text-xs text-slate-600 dark:text-slate-500">Mononobe + Alternating Block Method</p>
  </div>
  </div>
 
@@ -159,7 +159,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
  <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm">
  <div className="flex items-center justify-between mb-4">
  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Tabel Alternating Block Method</h4>
- <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+ <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-500">
  <Info className="w-3 h-3" />
  <span>Mononobe IDF → ABM Distribution</span>
  </div>

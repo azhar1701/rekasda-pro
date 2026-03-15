@@ -195,7 +195,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
  isFullScreen ? 'w-full' : 'w-full sm:w-[420px] lg:w-[480px]'
  )}
  >
- <div className="h-full flex flex-col bg-white dark:bg-slate-900/95 border-l border-slate-200 dark:border-slate-700/60 shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
+ <div className="h-full flex flex-col bg-white dark:bg-slate-900/95 border-l-2 border-slate-200 dark:border-slate-700/60 shadow-none relative overflow-hidden">
  <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,#fff,rgba(255,255,255,0.6))] -z-10" />
 
  {/* ── Header ── */}

@@ -14,20 +14,14 @@ export const ThiessenCalculator: React.FC = () => {
  stasiunList, 
  projectStationIds,
  toggleProjectStation,
- luasDas, 
- hasilThiessen, 
- setHasilThiessen, 
  fetchMultipleStationsData,
- qcStatus,
- morfometriDAS
+ qcStatus
  } = useHydrologyStore();
 
  // Local state for searching available database stations
  const [isExpanded, setIsExpanded] = useState(true);
  const [searchTerm, setSearchTerm] = useState('');
  const [filterHealthy, setFilterHealthy] = useState(false);
- const [wmoAudit, setWmoAudit] = useState<WMODensityResult | null>(null);
-
  // 1. Available stations from Master Database (not yet enrolled)
  const availableFromDatabase = useMemo(() => {
  return stasiunList.filter(s => {
@@ -44,100 +38,16 @@ export const ThiessenCalculator: React.FC = () => {
  });
  }, [stasiunList, projectStationIds, searchTerm, filterHealthy, qcStatus]);
 
- // 2. Local configs for enrolled stations (to manage influence area inputs)
- const [configs, setConfigs] = useState<ThiessenStasiunConfig[]>(() => {
- return projectStationIds.map(id => {
- const stasiun = stasiunList.find(s => s.id === id);
- const existingHasil = hasilThiessen?.stasiunConfigs?.find((c: ThiessenStasiunConfig) => c.stasiunId === id);
- 
- return {
- stasiunId: id,
- namaStasiun: stasiun?.nama_stasiun || 'Unknown',
- luasPengaruh: existingHasil?.luasPengaruh || 0,
- bobot: existingHasil?.bobot || 0,
- };
- });
- });
 
- // Sync local configs when enrollment changes globally
- useEffect(() => {
- setConfigs(prev => {
- return projectStationIds.map(id => {
- const existing = prev.find(p => p.stasiunId === id);
- if (existing) return existing;
- 
- const stasiun = stasiunList.find(s => s.id === id);
- return {
- stasiunId: id,
- namaStasiun: stasiun?.nama_stasiun || 'Unknown',
- luasPengaruh: 0,
- bobot: 0,
- };
- });
- });
- }, [projectStationIds, stasiunList]);
-
- // WMO Density Audit Trigger
- useEffect(() => {
- const area = typeof luasDas === 'string' ? parseFloat(luasDas) : (luasDas || morfometriDAS?.luasDAS || 0);
- if (area > 0 && configs.length > 0) {
- // Assume mountainous for Indonesia as default safe engineering practice
- const audit = checkWMODensity(area, configs.length, 'mountainous');
- setWmoAudit(audit);
- } else {
- setWmoAudit(null);
- }
- }, [luasDas, morfometriDAS, configs.length]);
-
- // Total area for weight calculation
- const totalLuas = useMemo(
- () => configs.reduce((sum, c) => sum + (typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh), 0),
- [configs]
- );
-
- // Auto-calculate weights (W = Ai / Atotal)
- const configsWithBobot = useMemo(
- () => configs.map(c => {
- const safeLuas = typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh;
- return {
- ...c,
- bobot: totalLuas > 0 ? safeLuas / totalLuas : 0,
- };
- }),
- [configs, totalLuas]
- );
-
- const handleLuasChange = useCallback((stasiunId: string, value: string) => {
- setConfigs(prev => prev.map(c =>
- c.stasiunId === stasiunId ? { ...c, luasPengaruh: value as any } : c
- ));
- }, []);
 
  const handleSyncAndCalculate = async () => {
- if (configs.length === 0) return;
- 
- const ids = configs.map(c => c.stasiunId);
- await fetchMultipleStationsData(ids);
- 
- // Strict Engineering Check: If Area is set, Thiessen total should match
- const areaVal = typeof luasDas === 'string' ? parseFloat(luasDas) : (luasDas || 0);
- if (areaVal > 0 && Math.abs(totalLuas - areaVal) > 0.1) {
- toast.warning(`Perhatian: Total Luas Thiessen (${totalLuas.toFixed(2)}) tidak sinkron dengan Luas DAS (${areaVal.toFixed(2)}).`);
+ if (projectStationIds.length === 0) {
+ toast.error('Pilih minimal satu stasiun untuk project ini.');
+ return;
  }
-
- try {
- setHasilThiessen({
- stasiunConfigs: configsWithBobot.map(c => ({ 
- ...c, 
- luasPengaruh: typeof c.luasPengaruh === 'string' ? parseFloat(c.luasPengaruh) || 0 : c.luasPengaruh 
- })),
- totalLuas: totalLuas,
- hujanRataRataDAS: [], 
- });
- toast.success(`Konfigurasi ${configsWithBobot.length} stasiun berhasil disimpan ke project.`);
- } catch (err: any) {
- toast.error(err.message || 'Gagal menghitung.');
- }
+ 
+ await fetchMultipleStationsData(projectStationIds);
+ toast.success(`${projectStationIds.length} stasiun berhasil didaftarkan ke project.`);
  };
 
  return (
@@ -179,7 +89,7 @@ export const ThiessenCalculator: React.FC = () => {
  onClick={() => setFilterHealthy(!filterHealthy)}
  className={cn(
  "flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-bold transition-all whitespace-nowrap",
- filterHealthy ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+ filterHealthy ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 dark:text-slate-500 hover:bg-slate-200"
  )}
  >
  <CheckCircle2 className="w-3.5 h-3.5" />
@@ -209,74 +119,43 @@ export const ThiessenCalculator: React.FC = () => {
  )}
  </div>
 
- {/* Selected Analysis Table */}
- {configs.length > 0 ? (
+ {/* Selected Analysis Table - Simplified to just list */}
+ {projectStationIds.length > 0 ? (
  <div className="space-y-3 pt-2 border-t border-slate-100">
  <div className="flex justify-between items-center px-1">
  <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-sm bg-pupr-blue"></div>
- Konfigurasi Area Thiessen
+ Stasiun Project Terpilih
  </h5>
- {wmoAudit && (
- <div className={cn(
- "flex items-center gap-2 px-3 py-1.5 rounded border text-[10px] font-black uppercase tracking-tighter transition-all",
- wmoAudit.isSufficient ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"
- )}>
- {wmoAudit.isSufficient ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
- WMO Density: {wmoAudit.isSufficient ? 'PASS' : 'LOW'}
  </div>
- )}
- </div>
-
- {wmoAudit && !wmoAudit.isSufficient && (
- <div className="p-3 bg-amber-50 border-l-4 border-amber-400 rounded-r-md flex items-start gap-3 animate-in slide-in-from-left-2">
- <Info className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
- <div>
- <p className="text-[11px] font-black text-amber-800 uppercase tracking-tight">Rekomendasi WMO (Hydrological Practices)</p>
- <p className="text-[10px] text-amber-700 leading-relaxed mt-1 font-medium italic">{wmoAudit.recommendation}</p>
- </div>
- </div>
- )}
 
  <div className="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden">
  <table className="w-full text-sm">
  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
  <tr>
  <th className="px-3 py-2 text-left text-[10px] font-black text-slate-500 uppercase tracking-tighter">Nama Stasiun</th>
- <th className="px-3 py-2 text-right text-[10px] font-black text-slate-500 uppercase tracking-tighter">Luas Pengaruh (km²)</th>
- <th className="px-3 py-2 text-right text-[10px] font-black text-slate-500 uppercase tracking-tighter">Bobot (%)</th>
+ <th className="px-3 py-2 text-center text-[10px] font-black text-slate-500 uppercase tracking-tighter">Status Data</th>
  <th className="w-10"></th>
  </tr>
  </thead>
  <tbody className="divide-y divide-slate-100">
- {configsWithBobot.map(c => (
- <tr key={c.stasiunId} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors">
- <td className="px-3 py-2">
- <p className="font-bold text-slate-800 dark:text-slate-200 text-xs">{c.namaStasiun}</p>
- {qcStatus?.[c.stasiunId]?.konsisten ? (
- <span className="text-[8px] text-emerald-600 font-bold uppercase tracking-tighter">QC Passed</span>
+ {projectStationIds.map(id => {
+ const stasiun = stasiunList.find(s => s.id === id);
+ return (
+ <tr key={id} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors">
+ <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200 text-xs">
+ {stasiun?.nama_stasiun || 'Unknown'}
+ </td>
+ <td className="px-3 py-2 text-center">
+ {qcStatus?.[id]?.konsisten ? (
+ <span className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold bg-emerald-100 text-emerald-700 uppercase tracking-tighter">QC Passed</span>
  ) : (
- <span className="text-[8px] text-slate-500 font-medium uppercase tracking-tighter">Audit Pending</span>
+ <span className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold bg-slate-100 text-slate-500 uppercase tracking-tighter">Pending Audit</span>
  )}
- </td>
- <td className="px-3 py-2">
- <input
- type="number"
- step="0.01"
- value={c.luasPengaruh || ''}
- onChange={(e) => handleLuasChange(c.stasiunId, e.target.value)}
- placeholder="0.00"
- className="w-full text-right px-2 py-1 text-xs border border-slate-200 dark:border-slate-700 rounded focus:ring-1 focus:ring-pupr-blue outline-none font-bold"
- />
- </td>
- <td className="px-3 py-2 text-right">
- <span className="text-xs font-black text-pupr-blue tabular-nums">
- {(c.bobot * 100).toFixed(1)}%
- </span>
  </td>
  <td className="px-3 py-2 text-center">
  <button
- onClick={() => toggleProjectStation(c.stasiunId)}
+ onClick={() => toggleProjectStation(id)}
  className="p-1 text-slate-300 hover:text-red-500 transition-colors"
  title="Keluarkan dari project"
  >
@@ -284,37 +163,17 @@ export const ThiessenCalculator: React.FC = () => {
  </button>
  </td>
  </tr>
- ))}
+ )
+ })}
  </tbody>
- <tfoot className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 font-bold">
- <tr>
- <td className="px-3 py-2 text-[10px] text-slate-500 uppercase">Total Parameter</td>
- <td className="px-3 py-2 text-right text-xs text-slate-900 dark:text-slate-100 tabular-nums">{totalLuas.toFixed(2)}</td>
- <td className="px-3 py-2 text-right text-xs text-pupr-blue tabular-nums">
- {totalLuas > 0 ? '100.0%' : '—'}
- </td>
- <td></td>
- </tr>
- </tfoot>
  </table>
  </div>
-
- {/* Validation Guard */}
- {luasDas && totalLuas > 0 && Math.abs(totalLuas - (typeof luasDas === 'string' ? parseFloat(luasDas) : luasDas)) > 0.1 && (
- <div className="flex items-start gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-sm">
- <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
- <div>
- <p className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Spatial Mismatch Warning</p>
- <p className="text-[10px] text-amber-700 leading-tight italic">Total Luas Thiessen ({totalLuas.toFixed(2)} km²) harus sama dengan Luas DAS ({parseFloat(luasDas).toFixed(2)} km²).</p>
- </div>
- </div>
- )}
 
  <button
  onClick={handleSyncAndCalculate}
  className="w-full py-3 bg-pupr-blue text-white rounded font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all "
  >
- Simpan Seleksi & Lanjut Analisis
+ Simpan Seleksi Stasiun
  </button>
  </div>
  ) : (

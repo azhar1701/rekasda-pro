@@ -118,7 +118,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
  {/* Description */}
  {description && (
- <p className="text-slate-600 dark:text-slate-400 max-w-sm mb-8">
+ <p className="text-slate-600 dark:text-slate-500 max-w-sm mb-8">
  {description}
  </p>
  )}

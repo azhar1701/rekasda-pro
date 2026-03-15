@@ -92,7 +92,7 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
  )}
  </h3>
  {volume > 0 && (
- <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
+ <p className="text-sm text-slate-600 dark:text-slate-500 font-medium mt-1">
  <span className="text-slate-500">Total Volume:</span> <span className="font-semibold text-slate-800 dark:text-slate-200">{(volume / 1000).toFixed(2)} ribu m³</span>
  </p>
  )}
@@ -268,12 +268,12 @@ export const FloodHydrographChart: React.FC<FloodHydrographChartProps> = ({
  <div className="flex items-center gap-4 py-1 px-3 bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-700 ">
  <div className="flex items-center gap-2">
  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: primaryColor }}></div>
- <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">DFH (Konvolusi)</span>
+ <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase">DFH (Konvolusi)</span>
  </div>
  {secondaryData && (
  <div className="flex items-center gap-2">
  <div className="w-3 h-0.5 bg-slate-400 rounded-sm"></div>
- <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">Unit Hydrograph</span>
+ <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase">Unit Hydrograph</span>
  </div>
  )}
  </div>

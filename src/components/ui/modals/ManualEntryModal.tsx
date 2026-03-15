@@ -103,13 +103,13 @@ export const ManualEntryModal: React.FC<Props> = ({ isOpen, onClose, onSave }) =
  <div className="bg-slate-100 p-1.5 rounded-sm flex">
  <button
  onClick={() => setActiveType(CalculationType.MANNING)}
- className={`flex-1 py-3 text-xs font-bold uppercase rounded-sm transition-all ${activeType === CalculationType.MANNING ? 'bg-white dark:bg-slate-900 text-safety-blue ' : 'text-slate-500 hover:text-slate-600 dark:text-slate-400'}`}
+ className={`flex-1 py-3 text-xs font-bold uppercase rounded-sm transition-all ${activeType === CalculationType.MANNING ? 'bg-white dark:bg-slate-900 text-safety-blue ' : 'text-slate-500 hover:text-slate-600 dark:text-slate-500'}`}
  >
  Saluran (Manning)
  </button>
  <button
  onClick={() => setActiveType(CalculationType.RATIONAL)}
- className={`flex-1 py-3 text-xs font-bold uppercase rounded-sm transition-all ${activeType === CalculationType.RATIONAL ? 'bg-white dark:bg-slate-900 text-alert-red ' : 'text-slate-500 hover:text-slate-600 dark:text-slate-400'}`}
+ className={`flex-1 py-3 text-xs font-bold uppercase rounded-sm transition-all ${activeType === CalculationType.RATIONAL ? 'bg-white dark:bg-slate-900 text-alert-red ' : 'text-slate-500 hover:text-slate-600 dark:text-slate-500'}`}
  >
  Banjir (Rational)
  </button>handleManningFormChange

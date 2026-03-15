@@ -323,7 +323,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
  { label: 'Total', value: results.totalDemand, unit: 'm³/s', color: 'bg-slate-100 border-slate-300 dark:border-slate-600' }
  ].map((item, i) => (
  <div key={i} className={`p-4 rounded-sm border ${item.color}`}>
- <div className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">{item.label}</div>
+ <div className="text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-2">{item.label}</div>
  <div className="text-xl font-bold text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{item.value}</div>
  <div className="text-xs text-slate-500">{item.unit}</div>
  </div>
@@ -352,7 +352,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
  <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
  {months.map((month, index) => (
  <div key={index}>
- <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-2">{month}</label>
+ <label className="text-xs font-bold text-slate-600 dark:text-slate-500 block mb-2">{month}</label>
  <input
  type="number"
  value={data.monthlySupply[index]}

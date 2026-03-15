@@ -25,7 +25,7 @@ export const MethodSelector: React.FC<MethodSelectorProps> = ({ method, onChange
  className={`px-4 py-2.5 text-sm font-medium rounded-sm border-2 transition-all ${
  method === m.id
  ? 'border-teal-600 text-teal-600 bg-teal-50'
- : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+ : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-500 hover:border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
  }`}
  >
  {m.label}

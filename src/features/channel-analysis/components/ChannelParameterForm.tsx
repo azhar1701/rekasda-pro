@@ -164,7 +164,7 @@ export const ChannelParameterForm: React.FC<ChannelParameterFormProps> = ({
 
  {/* Top Width Display */}
  <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
- <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+ <p className="text-xs font-medium text-slate-600 dark:text-slate-500 uppercase tracking-wider">
  Lebar Atas (Calculated)
  </p>
  <p className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">

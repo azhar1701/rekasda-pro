@@ -389,25 +389,25 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">📐 Verifikasi Parameter</h3>
  <div className="space-y-2">
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Time Lag (Tg)</span>
+ <span className="text-slate-600 dark:text-slate-500">Time Lag (Tg)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.Tg?.toFixed(2)} jam</span>
  </div>
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Unit Time (Tr)</span>
+ <span className="text-slate-600 dark:text-slate-500">Unit Time (Tr)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.Tr?.toFixed(2)} jam</span>
  </div>
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Time to Peak (Tp)</span>
+ <span className="text-slate-600 dark:text-slate-500">Time to Peak (Tp)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.Tp.toFixed(2)} jam</span>
  </div>
  {result.Tb && (
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Base Time (Tb)</span>
+ <span className="text-slate-600 dark:text-slate-500">Base Time (Tb)</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.Tb.toFixed(2)} jam</span>
  </div>
  )}
  <div className="flex justify-between text-sm">
- <span className="text-slate-600 dark:text-slate-400">Koefisien α</span>
+ <span className="text-slate-600 dark:text-slate-500">Koefisien α</span>
  <span className="font-bold text-slate-900 dark:text-slate-100">{result.Alpha?.toFixed(1)}</span>
  </div>
  </div>
@@ -449,7 +449,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
  <tbody>
  {result.hydrograph.map((point, idx) => (
  <tr key={idx} className="border-t border-slate-100 hover:bg-slate-50 dark:bg-slate-800">
- <td className="p-2 text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">{point.time.toFixed(2)}</td>
+ <td className="p-2 text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">{point.time.toFixed(2)}</td>
  <td className="p-2 text-right font-mono text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{point.discharge.toFixed(4)}</td>
  </tr>
  ))}
@@ -481,7 +481,7 @@ export const HydrographCalculator: React.FC<HydrographCalculatorProps> = ({ onSa
  <div className="w-16 h-16 bg-slate-100 rounded-sm flex items-center justify-center mx-auto mb-4">
  <Activity className="w-8 h-8 text-slate-500" />
  </div>
- <p className="text-slate-600 dark:text-slate-400 text-sm">Masukkan parameter dan klik "Hitung Hidrograf"</p>
+ <p className="text-slate-600 dark:text-slate-500 text-sm">Masukkan parameter dan klik "Hitung Hidrograf"</p>
  </div>
  )}
  </div>

@@ -85,7 +85,7 @@ export const StepRouting: React.FC = () => {
  <Info className="w-5 h-5 text-slate-500 mt-1 shrink-0" />
  <div>
  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Penelusuran Banjir (Safety Check)</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+ <p className="text-xs text-slate-600 dark:text-slate-500 mt-1 leading-relaxed">
  Verifikasi keamanan embung terhadap debit banjir rencana. Grafik di bawah memperlihatkan bagaimana waduk meredam (attenuation) puncak banjir.
  </p>
  </div>

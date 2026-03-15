@@ -57,7 +57,7 @@ export const Metric: React.FC<MetricProps> = ({
 
       <div className="relative z-10">
         <div className="flex items-center gap-1.5 mb-2">
-          {isCompact && icon && <div className="text-slate-400">{icon}</div>}
+          {isCompact && icon && <div className="text-slate-500">{icon}</div>}
           <span className={cn(
             "font-bold text-slate-500 uppercase tracking-wider",
             isExecutive ? "text-xs" : "text-[10px]"

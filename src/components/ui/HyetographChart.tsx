@@ -27,7 +27,7 @@ const CustomTooltip = ({ active, payload }: any) => {
  </p>
  <div className="space-y-1.5">
  <div className="flex items-center justify-between gap-4">
- <span className="text-xs text-slate-600 dark:text-slate-400">Total Hujan:</span>
+ <span className="text-xs text-slate-600 dark:text-slate-500">Total Hujan:</span>
  <span className="text-xs font-medium text-slate-900 dark:text-slate-100 tabular-nums text-right">
  {total.toFixed(2)} mm
  </span>
@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload }: any) => {
  <div className="flex items-center justify-between gap-4">
  <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm bg-pupr-blue" />
-          <span className="text-xs text-slate-600 dark:text-slate-400">Hujan Efektif:</span>
+          <span className="text-xs text-slate-600 dark:text-slate-500">Hujan Efektif:</span>
         </div>
         <span className="text-xs font-medium text-pupr-blue tabular-nums text-right">
           {efektif.toFixed(2)} mm
@@ -44,9 +44,9 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CHART_COLORS.baseflow }} />
-          <span className="text-xs text-slate-600 dark:text-slate-400">Losses:</span>
+          <span className="text-xs text-slate-600 dark:text-slate-500">Losses:</span>
         </div>
-        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 tabular-nums text-right">
+        <span className="text-xs font-medium text-slate-600 dark:text-slate-500 tabular-nums text-right">
           {losses.toFixed(2)} mm
         </span>
       </div>

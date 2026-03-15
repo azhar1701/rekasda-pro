@@ -198,7 +198,7 @@ export const CardData: React.FC<CardDataProps> = ({
  return (
  <div className={`p-4 rounded-sm ${highlight ? 'bg-primary-50 border border-primary-200' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
  <div className="flex items-start justify-between gap-2 mb-2">
- <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+ <span className="text-xs font-medium text-slate-600 dark:text-slate-500">
  {label}
  </span>
  {icon && <span className="text-primary-600">{icon}</span>}

@@ -43,7 +43,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>): JSX.E
   const data = payload[0].payload as HydrographDataPoint;
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-3 rounded-none border border-slate-200 dark:border-slate-700 shadow-xl ring-1 ring-black/5">
+    <div className="bg-white dark:bg-slate-900 p-3 rounded-none border border-slate-200 dark:border-slate-700 shadow-none">
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-8">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Waktu</span>
@@ -94,7 +94,7 @@ export const HydrographChart = ({
  <div>
  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h3>
  {volume > 0 && (
- <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+ <p className="text-sm text-slate-600 dark:text-slate-500 font-medium">
  <span className="text-slate-500">Volume:</span>{' '}
  <span className="font-semibold text-slate-800 dark:text-slate-200">{formatNumber(volume, 0)} juta m³</span>
  </p>
@@ -233,20 +233,20 @@ export const HydrographChart = ({
  <div>
  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Durasi</p>
  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-2">
- {metrics.duration.toFixed(1)} <span className="text-xs font-medium text-slate-600 dark:text-slate-400">jam</span>
+ {metrics.duration.toFixed(1)} <span className="text-xs font-medium text-slate-600 dark:text-slate-500">jam</span>
  </p>
  </div>
 
  <div className="text-center">
  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Data Points</p>
  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-2">
- {metrics.dataPointCount} <span className="text-xs font-medium text-slate-600 dark:text-slate-400">titik</span>
+ {metrics.dataPointCount} <span className="text-xs font-medium text-slate-600 dark:text-slate-500">titik</span>
  </p>
  </div>
 
  <div className="text-right flex items-center justify-end gap-2">
  <div className="w-3 h-3 rounded" style={{ backgroundColor: primaryColor, opacity: 0.7 }} />
- <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Area hydrograf</span>
+ <span className="text-xs font-medium text-slate-600 dark:text-slate-500">Area hydrograf</span>
  </div>
  </div>
  </div>

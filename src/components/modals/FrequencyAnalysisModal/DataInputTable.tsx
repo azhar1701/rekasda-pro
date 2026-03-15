@@ -42,8 +42,8 @@ export const DataInputTable: React.FC<DataInputTableProps> = ({ data, onChange, 
  <table className="w-full">
  <thead className="bg-slate-50 dark:bg-slate-800 sticky top-0">
  <tr>
- <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">Tahun</th>
- <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">Hujan (mm)</th>
+ <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-500">Tahun</th>
+ <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-500">Hujan (mm)</th>
  <th className="w-10"></th>
  </tr>
  </thead>

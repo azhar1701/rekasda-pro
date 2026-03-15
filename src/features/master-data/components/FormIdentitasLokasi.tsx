@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { Briefcase, Navigation, Map as MapIcon, Info, Activity } from 'lucide-react';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
+import { Map as MapIcon, Info, Activity } from 'lucide-react';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 
 // Leaflet imports
@@ -117,177 +118,141 @@ export const FormIdentitasLokasi: React.FC = () => {
       : null;
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none overflow-hidden flex flex-col">
-      {/* Professional Header */}
-      <div className="bg-pupr-blue text-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Briefcase className="w-5 h-5 text-pupr-yellow" />
-          <div className="flex flex-col">
-            <h3 className="text-sm font-bold uppercase tracking-wider leading-tight">Identitas Lokasi & Koordinat</h3>
-            <span className="text-[10px] text-blue-200 uppercase tracking-widest font-medium">Data Master Referensi Spasial</span>
-          </div>
+    <div className="space-y-8 p-1">
+      <ProjectContextBanner />
+
+      {/* Header: Flattened & Quieter */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-700 pb-8">
+        <div>
+          <h2 className="text-3xl font-medium text-[#1e293b] dark:text-slate-100 tracking-tight">Identitas Lokasi & Koordinat</h2>
+          <p className="text-sm text-slate-500 mt-1">Data master referensi spasial dan informasi proyek terpusat</p>
         </div>
+
         {isSyncing && (
-          <div className="flex items-center gap-2 px-2 py-1 bg-white/10 rounded-none animate-pulse border border-white/20">
-            <Activity className="w-3.5 h-3.5 text-pupr-yellow" />
-            <span className="text-[9px] font-bold text-white uppercase tracking-tighter">Spatial Sync Active</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-pupr-surface border border-pupr-border animate-pulse">
+            <Activity className="w-4 h-4 text-pupr-blue" />
+            <span className="text-[10px] font-bold text-pupr-blue uppercase tracking-wider">Spatial Sync Active</span>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 divide-y xl:divide-y-0 xl:divide-x divide-slate-300 dark:divide-slate-700">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Kolom Kiri: Form Identitas Tabular */}
-        <div className="xl:col-span-4 flex flex-col bg-white dark:bg-slate-900 border-b border-pupr-blue xl:border-b-0 min-h-[400px]">
+        <div className="lg:col-span-4 space-y-8">
           
-          <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5 border-t-2 border-t-pupr-blue/10">
-            Informasi Proyek
-          </div>
+          <section className="space-y-6">
+            <header className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Informasi Proyek</h3>
+            </header>
 
-          <div className="grid grid-cols-[135px_1fr] text-sm text-slate-800 dark:text-slate-200">
-            {/* Row: Pekerjaan */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Nama Pekerjaan
+            <div className="space-y-4">
+              {[
+                { label: 'Nama Pekerjaan', name: 'namaPekerjaan', placeholder: 'Perencanaan Bendungan X' },
+                { label: 'Nama DAS', name: 'namaDAS', placeholder: 'DAS Citarum' },
+                { label: 'Nama Sungai', name: 'namaSungai', placeholder: 'Sungai Ciliwung' },
+                { label: 'Provinsi', name: 'provinsi', placeholder: 'Jawa Barat' },
+                { label: 'Kabupaten/Kota', name: 'kabupaten', placeholder: 'Bogor' },
+              ].map((field) => (
+                <div key={field.name} className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">
+                    {field.label}
+                  </label>
+                  <input
+                    type="text"
+                    name={field.name}
+                    value={(identitasLokasi as any)[field.name]}
+                    onChange={handleChange}
+                    placeholder={field.placeholder}
+                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-pupr-blue focus:ring-1 focus:ring-pupr-blue/20 outline-none transition-all"
+                  />
+                </div>
+              ))}
             </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group">
-              <input
-                type="text"
-                name="namaPekerjaan"
-                value={identitasLokasi.namaPekerjaan}
-                onChange={handleChange}
-                placeholder="Perencanaan Bendungan X"
-                className="w-full h-full min-h-[40px] px-3 py-2 bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm font-semibold transition-colors"
-              />
-            </div>
+          </section>
 
-            {/* Row: DAS */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Nama DAS
-            </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group">
-              <input
-                type="text"
-                name="namaDAS"
-                value={identitasLokasi.namaDAS}
-                onChange={handleChange}
-                placeholder="DAS Citarum"
-                className="w-full h-full min-h-[40px] px-3 py-2 bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm font-semibold transition-colors"
-              />
-            </div>
+          <section className="space-y-6">
+            <header className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Koordinat Geografis (WGS84)</h3>
+            </header>
 
-            {/* Row: Sungai */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Nama Sungai
-            </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group">
-              <input
-                type="text"
-                name="namaSungai"
-                value={identitasLokasi.namaSungai}
-                onChange={handleChange}
-                placeholder="Sungai Ciliwung"
-                className="w-full h-full min-h-[40px] px-3 py-2 bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm font-semibold transition-colors"
-              />
-            </div>
-
-            {/* Row: Provinsi */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Provinsi
-            </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group">
-              <input
-                type="text"
-                name="provinsi"
-                value={identitasLokasi.provinsi}
-                onChange={handleChange}
-                placeholder="Jawa Barat"
-                className="w-full h-full min-h-[40px] px-3 py-2 bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm font-semibold transition-colors"
-              />
-            </div>
-
-            {/* Row: Kabupaten */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Kabupaten/Kota
-            </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group">
-              <input
-                type="text"
-                name="kabupaten"
-                value={identitasLokasi.kabupaten}
-                onChange={handleChange}
-                placeholder="Bogor"
-                className="w-full h-full min-h-[40px] px-3 py-2 bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm font-semibold transition-colors"
-              />
-            </div>
-          </div>
-
-          <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-auto border-t-4 border-t-pupr-surface border-x-0">
-            <Navigation className="w-3.5 h-3.5 text-pupr-blue" /> Koordinat Geografis (WGS84)
-          </div>
-
-          <div className="grid grid-cols-[135px_1fr] text-sm text-slate-800 dark:text-slate-200 relative">
-            {/* Row: Latitude */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Latitude (y)
-            </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group bg-[#fdfdfd] dark:bg-slate-900">
-              <input
-                type="number"
-                step="any"
-                name="lat"
-                value={identitasLokasi.koordinat.lat ?? ''}
-                onChange={handleChange}
-                placeholder="-6.1754"
-                className="w-full h-full min-h-[40px] px-3 py-2 font-mono tabular-nums tracking-tighter bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm text-pupr-blue dark:text-blue-400 font-bold transition-colors"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Latitude (Y)</label>
+                <input
+                  type="number"
+                  step="any"
+                  name="lat"
+                  value={identitasLokasi.koordinat.lat ?? ''}
+                  onChange={handleChange}
+                  placeholder="-6.1754"
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm text-sm font-bold text-pupr-blue dark:text-blue-400 font-mono tabular-nums focus:border-pupr-blue outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Longitude (X)</label>
+                <input
+                  type="number"
+                  step="any"
+                  name="lng"
+                  value={identitasLokasi.koordinat.lng ?? ''}
+                  onChange={handleChange}
+                  placeholder="106.8272"
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm text-sm font-bold text-pupr-blue dark:text-blue-400 font-mono tabular-nums focus:border-pupr-blue outline-none transition-all"
+                />
+              </div>
             </div>
 
-            {/* Row: Longitude */}
-            <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center font-bold text-slate-600 dark:text-slate-400 text-xs">
-              Longitude (x)
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-sm border border-slate-100 dark:border-slate-800">
+              <div className="flex gap-3">
+                <Info className="w-4 h-4 text-pupr-blue shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400 font-medium">
+                  Gunakan kanvas peta interaktif untuk menentukan koordinat secara otomatis dengan sekali klik.
+                </p>
+              </div>
             </div>
-            <div className="p-0 border-b border-slate-200 dark:border-slate-800 border-l relative group bg-[#fdfdfd] dark:bg-slate-900">
-              <input
-                type="number"
-                step="any"
-                name="lng"
-                value={identitasLokasi.koordinat.lng ?? ''}
-                onChange={handleChange}
-                placeholder="106.8272"
-                className="w-full h-full min-h-[40px] px-3 py-2 font-mono tabular-nums tracking-tighter bg-transparent outline-none focus:bg-blue-50/50 dark:focus:bg-blue-900/20 focus:ring-inset focus:ring-1 focus:ring-pupr-blue text-sm text-pupr-blue dark:text-blue-400 font-bold transition-colors"
-              />
-            </div>
-          </div>
-          
-          <div className="p-3 bg-slate-50 dark:bg-slate-900 text-[10px] font-medium text-slate-500 flex items-center flex-col sm:flex-row gap-2 h-full">
-            <Info className="w-4 h-4 text-pupr-blue shrink-0" />
-            <p className="leading-tight text-center sm:text-left">Klik pada kanvas Peta secara interaktif untuk menentukan kordinat secara otomatis.</p>
-          </div>
+          </section>
         </div>
 
         {/* Kolom Kanan: WebGIS Leaflet */}
-        <div className="xl:col-span-8 flex flex-col h-[450px] xl:h-[500px] relative bg-slate-100 dark:bg-slate-800 p-0 m-0">
-          <div className="absolute top-3 left-3 z-[1000] bg-white dark:bg-slate-900 px-3 py-1.5 border border-slate-200 dark:border-slate-700 shadow-sm rounded-none">
-            <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight flex items-center gap-1.5">
-              <MapIcon className="w-3.5 h-3.5 text-pupr-blue" />
-              Interactive Workstation Map
-            </p>
-          </div>
+        <div className="lg:col-span-8 space-y-6">
+          <section className="h-full flex flex-col space-y-6">
+            <header className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Interactive Workstation Map</h3>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500 uppercase">
+                <MapIcon className="w-3 h-3" />
+                Leaflet Engine
+              </div>
+            </header>
 
-          <MapContainer
-            center={mapCenter}
-            zoom={markerPosition ? 12 : DEFAULT_ZOOM}
-            scrollWheelZoom={true}
-            className="h-full w-full z-0"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <LocationMarker
-              position={markerPosition}
-              setPosition={handleMapPositionChange}
-            />
-          </MapContainer>
+            <div className="flex-1 min-h-[500px] border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden relative group">
+              <MapContainer
+                center={mapCenter}
+                zoom={markerPosition ? 12 : DEFAULT_ZOOM}
+                scrollWheelZoom={true}
+                className="h-full w-full z-0"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationMarker
+                  position={markerPosition}
+                  setPosition={handleMapPositionChange}
+                />
+              </MapContainer>
+              
+              {/* Corner Accents - Engineering Feel */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-pupr-blue/20 z-[1000] pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-pupr-blue/20 z-[1000] pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-pupr-blue/20 z-[1000] pointer-events-none"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-pupr-blue/20 z-[1000] pointer-events-none"></div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

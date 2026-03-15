@@ -67,7 +67,7 @@ export const AutoDelineationCard: React.FC = () => {
  </div>
  <div>
  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Auto-Delineasi DAS (DEM)</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Ekstraksi otomatis Luas & Panjang dari file DEM</p>
+ <p className="text-xs text-slate-600 dark:text-slate-500 font-medium">Ekstraksi otomatis Luas & Panjang dari file DEM</p>
  </div>
  </div>
  </div>
@@ -101,7 +101,7 @@ export const AutoDelineationCard: React.FC = () => {
  ) : (
  <>
  <div className="p-3 bg-slate-100 rounded-sm">
- <FileUp className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+ <FileUp className="w-6 h-6 text-slate-600 dark:text-slate-500" />
  </div>
  <div className="text-center">
  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Upload File DEM</p>
@@ -130,7 +130,7 @@ export const AutoDelineationCard: React.FC = () => {
 
  <div className="mt-4 p-3 bg-pupr-surface border border-pupr-border rounded-sm">
  <p className="text-[10px] uppercase tracking-wider font-bold text-pupr-blue mb-1">Tips</p>
- <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+ <p className="text-xs text-slate-600 dark:text-slate-500 leading-relaxed">
  Gunakan DEM dengan resolusi minimal 30m (SRTM/ASTER) atau 8m (DEMNAS) untuk hasil yang lebih akurat.
  </p>
  </div>

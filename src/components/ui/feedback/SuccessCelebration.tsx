@@ -36,7 +36,7 @@ export const SuccessCelebration: React.FC<SuccessCelebrationProps> = ({
  <h4 className="font-extrabold text-slate-900 dark:text-slate-100 text-lg tracking-tight">Capaian Baru!</h4>
  <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
  </div>
- <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{message}</p>
+ <p className="text-sm font-medium text-slate-600 dark:text-slate-500">{message}</p>
  </div>
  </div>
  </div>

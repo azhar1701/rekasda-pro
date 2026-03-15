@@ -312,7 +312,7 @@ export const SedimentationTab: React.FC<SedimentationTabProps> = ({ onConsultAI 
  {/* Persamaan Rating Curve - Dihapus dari mock diganti Info List */}
  {result && (
  <Card className=" border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 animate-in slide-in-from-bottom-4 duration-75">
- <CardContent className="p-4 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 bg-pupr-surface/50 rounded-sm border border-blue-50">
+ <CardContent className="p-4 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-500 bg-pupr-surface/50 rounded-sm border border-blue-50">
  <Info className="w-5 h-5 text-pupr-blue shrink-0" />
  <p>
  Perhitungan didasarkan pada total durasi sampel: <strong className="text-slate-800 dark:text-slate-200">{samples.reduce((sum, s) => sum + s.days, 0)} hari</strong> dalam setahun. Pastikan total durasi merepresentasikan distribusi aliran tahunan untuk hasil yang akurat.

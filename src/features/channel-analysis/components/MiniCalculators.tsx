@@ -18,7 +18,7 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
  <div className="mt-3 p-4 bg-pupr-surface border border-pupr-border rounded-sm space-y-3">
  <div className="text-xs font-bold text-blue-900 mb-2">Rumus Kirpich: tc = 0.0195 × L^0.77 × S^-0.385</div>
  <div>
- <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Panjang Alur (L)</label>
+ <label className="text-xs font-semibold text-slate-600 dark:text-slate-500 block mb-1">Panjang Alur (L)</label>
  <div className="relative">
   <input
   type="number"
@@ -32,7 +32,7 @@ export const TcCalculator: React.FC<{ onApply: (tc: number) => void; onClose: ()
  </div>
  </div>
  <div>
- <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Kemiringan (S)</label>
+ <label className="text-xs font-semibold text-slate-600 dark:text-slate-500 block mb-1">Kemiringan (S)</label>
  <div className="relative">
   <input
   type="number"
@@ -74,7 +74,7 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
  <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-sm space-y-3">
  <div className="text-xs font-bold text-emerald-900 mb-2">Rumus Mononobe: I = (R₂₄/24) × (24/tc)^(2/3)</div>
  <div>
- <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Hujan Harian (R₂₄)</label>
+ <label className="text-xs font-semibold text-slate-600 dark:text-slate-500 block mb-1">Hujan Harian (R₂₄)</label>
  <div className="relative">
   <input
   type="number"
@@ -87,7 +87,7 @@ export const IntensityCalculator: React.FC<{ tc: number; onApply: (I: number) =>
  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">mm</span>
  </div>
  </div>
- <div className="text-xs text-slate-600 dark:text-slate-400">tc yang digunakan: {tc} menit</div>
+ <div className="text-xs text-slate-600 dark:text-slate-500">tc yang digunakan: {tc} menit</div>
  <button
  onClick={() => {
  onApply(parseFloat(I.toFixed(2)));
@@ -170,7 +170,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  {/* Header */}
  <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Analisis Frekuensi Hujan</h3>
- <button onClick={onClose} className="text-slate-500 hover:text-slate-600 dark:text-slate-400 transition-colors">
+ <button onClick={onClose} className="text-slate-500 hover:text-slate-600 dark:text-slate-500 transition-colors">
  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
  </svg>
@@ -197,8 +197,8 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  <table className="w-full text-sm">
  <thead className="bg-slate-50 dark:bg-slate-800">
  <tr>
- <th className="text-left py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-400 w-28">Tahun</th>
- <th className="text-left py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-400">Hujan (mm)</th>
+ <th className="text-left py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-500 w-28">Tahun</th>
+ <th className="text-left py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-500">Hujan (mm)</th>
  <th className="w-10"></th>
  </tr>
  </thead>
@@ -350,7 +350,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  className={`py-2.5 px-3 rounded-sm text-xs font-semibold transition-all border-2 ${
  method === 'gumbel' 
  ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
- : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'
+ : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-500 hover:border-slate-300 dark:border-slate-600'
  }`}
  >
  Gumbel
@@ -360,7 +360,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  className={`py-2.5 px-3 rounded-sm text-xs font-semibold transition-all border-2 ${
  method === 'normal' 
  ? 'bg-pupr-surface border-blue-500 text-pupr-blue' 
- : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'
+ : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-500 hover:border-slate-300 dark:border-slate-600'
  }`}
  >
  Normal
@@ -370,7 +370,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  className={`py-2.5 px-3 rounded-sm text-xs font-semibold transition-all border-2 ${
  method === 'logpearson3' 
  ? 'bg-purple-50 border-purple-500 text-purple-700' 
- : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'
+ : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-500 hover:border-slate-300 dark:border-slate-600'
  }`}
  >
  Log Pearson III
@@ -380,7 +380,7 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  className={`py-2.5 px-3 rounded-sm text-xs font-semibold transition-all border-2 ${
  method === 'lognormal' 
  ? 'bg-orange-50 border-orange-500 text-orange-700' 
- : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'
+ : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-500 hover:border-slate-300 dark:border-slate-600'
  }`}
  >
  Log-Normal
@@ -395,16 +395,16 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
  <table className="w-full text-sm">
  <thead className="bg-slate-50 dark:bg-slate-800">
  <tr>
- <th className="text-left py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-400">Kala Ulang</th>
- <th className="text-center py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-400">K</th>
- <th className="text-right py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-400">Hujan (mm)</th>
+ <th className="text-left py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-500">Kala Ulang</th>
+ <th className="text-center py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-500">K</th>
+ <th className="text-right py-2.5 px-3 text-xs font-bold text-slate-600 dark:text-slate-500">Hujan (mm)</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-slate-100">
  {analysisResult?.designValues.map((dv, idx) => (
  <tr key={idx} className="even:bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 transition-colors">
  <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">Q{dv.returnPeriod}</td>
- <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400 tabular-nums tabular-nums tracking-tight">{dv.frequency.toFixed(3)}</td>
+ <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-500 tabular-nums tabular-nums tracking-tight">{dv.frequency.toFixed(3)}</td>
  <td className="py-2.5 px-3 text-right font-bold text-pupr-blue tabular-nums tabular-nums tracking-tight">{dv.designValue.toFixed(1)}</td>
  </tr>
  )) || (
@@ -453,7 +453,7 @@ export const EffectiveRainfallCalculator: React.FC<{ C: number; onApply: (Ro: nu
  <p className="text-xs text-purple-800">Koefisien C = <span className="font-bold">{C.toFixed(2)}</span> (dari input utama)</p>
  </div>
  <div>
- <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Hujan Rencana (Rplan)</label>
+ <label className="text-xs font-semibold text-slate-600 dark:text-slate-500 block mb-1">Hujan Rencana (Rplan)</label>
  <div className="relative">
   <input
   type="number"

@@ -36,7 +36,7 @@ export const Tabs: React.FC<TabsProps> = ({
  ${
  activeTab === tab.id
  ? 'text-pupr-blue border-b-4 border-pupr-yellow font-bold'
- : 'text-slate-600 dark:text-slate-400 hover:text-pupr-blue border-b-4 border-transparent'
+ : 'text-slate-600 dark:text-slate-500 hover:text-pupr-blue border-b-4 border-transparent'
  }
  `}
  >

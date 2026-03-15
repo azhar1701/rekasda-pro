@@ -228,7 +228,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
  onClick={() => setSelectedMarker(null)}
  className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-sm bg-slate-100 hover:bg-slate-200 transition-colors"
  >
- <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+ <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
  </button>
 
  {/* Type badge — color synced with marker */}
@@ -246,12 +246,12 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
  <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">{selInfo.outputLabel}</span>
  <div className="flex items-baseline gap-1.5 sm:gap-2">
  <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">{selectedMarker.outputs.Discharge}</span>
- <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">m³/s</span>
+ <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-500">m³/s</span>
  </div>
  </div>
 
  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
- <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400">
+ <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-500">
  <span className="font-semibold">Lokasi:</span> {selectedMarker.location?.latitude.toFixed(6)}, {selectedMarker.location?.longitude.toFixed(6)}
  </p>
  </div>

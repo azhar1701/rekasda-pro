@@ -165,7 +165,7 @@ export const DetailModal: React.FC<Props> = ({ isOpen, data, onClose }) => {
 
  {/* Footer Actions */}
  <div className="p-4 border-t border-slate-100 bg-white dark:bg-slate-900 shrink-0">
- <Button fullWidth onClick={onClose} variant="outline" className="border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+ <Button fullWidth onClick={onClose} variant="outline" className="border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-500">
  Tutup Detail
  </Button>
  </div>

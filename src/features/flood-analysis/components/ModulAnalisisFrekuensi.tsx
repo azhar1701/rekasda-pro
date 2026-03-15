@@ -217,7 +217,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
  title="Analisis Frekuensi Hujan Ekstrem"
  description="Perhitungan probabilitas hujan rencana (SNI 2415:2016)"
  icon={<BarChart3 className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  >
  <ActionableEmptyState
  title="Data Belum Lengkap"
@@ -232,7 +232,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
  title="Analisis Frekuensi Hujan Ekstrem"
  description="Perhitungan probabilitas hujan rencana (SNI 2415:2016)"
  icon={<BarChart3 className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  actions={
  isCalculated && (
  <button
@@ -272,7 +272,7 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
  onClick={() => setInputType(opt.id as any)}
  className={`px-3 py-1 text-[10px] font-bold rounded-sm border transition-all ${inputType === opt.id
  ? 'bg-pupr-blue text-white border-pupr-blue'
- : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800'
+ : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800'
  }`}
  >
  {opt.label}
@@ -354,12 +354,12 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
  </div>
  ) : (
  <div className="space-y-3">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
  <div>
  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Input Data Hujan Maksimum Tahunan</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Masukkan minimal 10 tahun data untuk analisis frekuensi</p>
+ <p className="text-xs text-slate-600 dark:text-slate-500 mt-0.5">Masukkan minimal 10 tahun data untuk analisis frekuensi</p>
  </div>
- <div className="flex items-center gap-2">
+ <div className="flex flex-wrap items-center gap-2">
  <button
  onClick={handlePasteFromExcel}
  className="flex items-center gap-1.5 px-3 py-1.5 bg-pupr-blue hover:bg-pupr-blue text-white text-xs font-semibold rounded-sm transition-colors"

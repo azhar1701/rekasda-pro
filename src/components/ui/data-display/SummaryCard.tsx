@@ -97,7 +97,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
  )}
 
  {/* Label */}
- <p className="text-xs uppercase font-semibold text-slate-600 dark:text-slate-400 tracking-widest">
+ <p className="text-xs uppercase font-semibold text-slate-600 dark:text-slate-500 tracking-widest">
  {metric.label}
  </p>
 
@@ -108,7 +108,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
  {metric.value}
  </span>
  {metric.unit && (
- <span className="text-xs sm:text-sm font-normal text-slate-600 dark:text-slate-400 ml-1">
+ <span className="text-xs sm:text-sm font-normal text-slate-600 dark:text-slate-500 ml-1">
  {metric.unit}
  </span>
  )}

@@ -203,15 +203,15 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
  </div>
  <div className="grid grid-cols-3 gap-3 text-xs">
  <div>
- <span className="text-slate-600 dark:text-slate-400">Luas DAS:</span>
+ <span className="text-slate-600 dark:text-slate-500">Luas DAS:</span>
  <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{A.toFixed(2)} km²</span>
  </div>
  <div>
- <span className="text-slate-600 dark:text-slate-400">Panjang Sungai:</span>
+ <span className="text-slate-600 dark:text-slate-500">Panjang Sungai:</span>
  <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{L.toFixed(2)} km</span>
  </div>
  <div>
- <span className="text-slate-600 dark:text-slate-400">Durasi Hujan:</span>
+ <span className="text-slate-600 dark:text-slate-500">Durasi Hujan:</span>
  <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{distribusiHujanJamJaman.length} jam</span>
  </div>
  </div>
@@ -231,11 +231,11 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
 
  <div className="grid grid-cols-2 gap-4 mb-4">
  <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
- <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Luas DAS (A)</p>
+ <p className="text-xs font-semibold text-slate-600 dark:text-slate-500">Luas DAS (A)</p>
  <p className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{A.toFixed(2)} km²</p>
  </div>
  <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
- <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Panjang Sungai (L)</p>
+ <p className="text-xs font-semibold text-slate-600 dark:text-slate-500">Panjang Sungai (L)</p>
  <p className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{L.toFixed(2)} km</p>
  </div>
  </div>

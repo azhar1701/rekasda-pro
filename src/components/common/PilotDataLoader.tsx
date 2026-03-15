@@ -140,7 +140,7 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
  <div className="flex items-start justify-between mb-3">
  <div className="flex-1">
  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1">{data.name}</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">{data.description}</p>
+ <p className="text-xs text-slate-600 dark:text-slate-500 mb-2">{data.description}</p>
  <div className="flex items-center gap-1.5 text-xs text-slate-500">
  <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -263,7 +263,7 @@ export const PilotDataLoader: React.FC<PilotDataLoaderProps> = ({
 
  {/* Footer */}
  <div className="border-t border-slate-200 dark:border-slate-700 px-8 py-5 bg-slate-50 dark:bg-slate-800 flex items-center justify-between flex-shrink-0">
- <div className="text-xs text-slate-600 dark:text-slate-400">
+ <div className="text-xs text-slate-600 dark:text-slate-500">
  {selectedIndex !== null ? (
  <span className="font-semibold text-purple-600">
  ✓ {pilotData[selectedIndex].name}

@@ -156,7 +156,7 @@ export const DetailedResults: React.FC<DetailedResultsProps> = ({
  <p className={classNames('text-lg font-bold', sectionHeaderStyles[section.color || 'slate'])}>
  {item.value}
  {item.unit && (
- <span className="text-sm font-normal text-slate-600 dark:text-slate-400 ml-1">
+ <span className="text-sm font-normal text-slate-600 dark:text-slate-500 ml-1">
  {item.unit}
  </span>
  )}
@@ -165,7 +165,7 @@ export const DetailedResults: React.FC<DetailedResultsProps> = ({
 
  {/* Description */}
  {item.description && (
- <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 italic">
+ <p className="text-xs text-slate-600 dark:text-slate-500 mt-2 italic">
  {item.description}
  </p>
  )}

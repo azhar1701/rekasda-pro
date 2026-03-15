@@ -152,7 +152,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
  title="Analisis Saluran Manning"
  description="Perhitungan kapasitas debit saluran terbuka · Rumus Manning"
  icon={<Waves className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  sniCode="SNI 03-3424-1994"
  actions={
  <button 
@@ -414,7 +414,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
  { label: 'Tegangan Geser', val: Number(manningResults?.ShearStress || 0).toFixed(2), unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
  ].map((item, i) => (
  <div key={i} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-sm">
- <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase block mb-1 flex items-center gap-1">
+ <span className="text-xs font-bold text-slate-600 dark:text-slate-500 uppercase block mb-1 flex items-center gap-1">
  {item.label}
  <div className="group relative inline-block">
  <svg className="w-3 h-3 text-slate-500 hover:text-pupr-blue cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">

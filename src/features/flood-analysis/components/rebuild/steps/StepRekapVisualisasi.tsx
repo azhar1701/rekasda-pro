@@ -120,7 +120,7 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  </h3>
  <div className="flex gap-2">
  <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-sm hover:bg-slate-50 dark:bg-slate-800 transition-all">
- <Download className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+ <Download className="w-4 h-4 text-slate-600 dark:text-slate-500" />
  </button>
  </div>
  </div>

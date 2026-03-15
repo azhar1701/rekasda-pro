@@ -11,6 +11,7 @@ import { FrequencyAnalysisSummary } from '@/components/ui/FrequencyAnalysisSumma
 import { AreaReductionCard } from '@/features/flood-analysis/components/AreaReductionCard';
 import { HyetographGenerator } from '@/features/flood/components/HyetographGenerator';
 import { Button } from '@/components/ui/Button';
+import { HelpTooltip } from '@/components/ui/govtech';
 import {
  CloudRain, Calculator, Activity, ChevronDown,
  Beaker, BarChart3, Waves, FlaskConical,
@@ -378,7 +379,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  className={cn(
  'flex-1 py-2 rounded-sm text-xs font-bold uppercase tracking-wider transition-all',
  itbVariant === v
- ? 'bg-pupr-blue text-white shadow-indigo-300/40'
+ ? 'bg-pupr-blue text-white'
  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
  )}
  >
@@ -404,7 +405,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  title="Debit Banjir Rencana"
  description="Two-Tier Method Selector · Hybrid Input System · 9 Metode Standar"
  icon={<CloudRain className="w-6 h-6" />}
- iconColorClass="bg-pupr-surface text-pupr-blue"
+ 
  >
  <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
  {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
@@ -465,7 +466,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  className={cn(
  'flex-1 flex items-center justify-center gap-2 py-3 rounded-sm text-sm font-bold transition-all duration-200',
  category === opt.value
- ? 'bg-white dark:bg-slate-900 text-pupr-blue shadow-blue-200/40'
+ ? 'bg-white dark:bg-slate-900 text-pupr-blue'
  : 'text-slate-500 hover:text-slate-700 dark:text-slate-300 hover:bg-white dark:bg-slate-900',
  isDataReady && 'cursor-not-allowed opacity-80'
  )}
@@ -517,7 +518,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  value={m.value}
  className="flex items-center gap-3 px-3 py-2.5 rounded-sm cursor-pointer outline-none data-[highlighted]:bg-pupr-surface transition-colors"
  >
- <div className="w-7 h-7 rounded-sm bg-slate-100 flex items-center justify-center text-slate-600 dark:text-slate-400">
+ <div className="w-7 h-7 rounded-sm bg-slate-100 flex items-center justify-center text-slate-600 dark:text-slate-500">
  {m.icon}
  </div>
  <div>
@@ -535,11 +536,15 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  <hr className="border-slate-100" />
 
  {/* ─── FUNDAMENTAL PARAMETERS (Smart Override) ─── */}
- <div>
- <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
+ <div className="border border-slate-200 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900 overflow-hidden">
+ <details className="group" open>
+ <summary className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 cursor-pointer list-none select-none">
+ <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
  Parameter Fundamental
- </label>
- <div className="space-y-3">
+ </span>
+ <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+ </summary>
+ <div className="p-4 space-y-3 border-t border-slate-200 dark:border-slate-700">
  <SmartOverrideInput
  label="Luas DAS (A)"
  unit="km²"
@@ -663,29 +668,47 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  )}
  </div>
  </div>
+ </details>
  </div>
 
  <hr className="border-slate-100" />
 
  {/* ─── AREA REDUCTION FACTOR (ARF) ─── */}
+ <div className="border border-slate-200 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900 overflow-hidden">
+ <details className="group" open>
+ <summary className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 cursor-pointer list-none select-none">
+ <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+ Area Reduction Factor (ARF)
+ </span>
+ <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+ </summary>
+ <div className="p-4 border-t border-slate-200 dark:border-slate-700">
  <AreaReductionCard />
+ </div>
+ </details>
+ </div>
 
  <hr className="border-slate-100" />
 
  {/* ─── METHOD-SPECIFIC PARAMETERS ─── */}
- <div>
- <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">
+ <div className="border border-slate-200 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900 overflow-hidden">
+ <details className="group" open>
+ <summary className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 cursor-pointer list-none select-none">
+ <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
  Parameter {currentMethodInfo?.label}
- </label>
- <div className="bg-slate-50 dark:bg-slate-800 rounded-sm p-4 border border-slate-100 border-dashed">
+ </span>
+ <ChevronDown className="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" />
+ </summary>
+ <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
  {renderMethodParams()}
  </div>
+ </details>
  </div>
 
  {/* ─── ACTION BUTTON ─── */}
  <div className="pt-1">
  <Button
- className="w-full py-6 rounded-sm font-bold text-base shadow-blue-500/20 bg-pupr-blue hover:bg-blue-700 transition-all"
+ className="w-full py-6 rounded-sm font-bold text-base shadow-none bg-pupr-blue hover:bg-blue-700 transition-all"
  onClick={handleCalculate}
  disabled={isCalculating || !isDataReady}
  >
@@ -742,7 +765,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
  {/* Hydrograph Chart */}
  <div className={cn(
  'flex-1 bg-white dark:bg-slate-900 border rounded-sm p-5 flex flex-col transition-all duration-75',
- isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'
+ isBanjirDirty ? 'border-amber-200' : 'border-white/60'
  )}>
  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2 mb-4">
  <Activity className="w-5 h-5 text-blue-500" />
@@ -841,10 +864,7 @@ const InputField: React.FC<InputFieldProps> = ({ label, value, onChange, unit, t
  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
  {label}
  {tooltip && (
- <span
- className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm bg-slate-100 text-slate-500 text-[8px] font-bold cursor-help"
- title={tooltip}
- >?</span>
+ <HelpTooltip content={tooltip} />
  )}
  </label>
  <div className="relative">

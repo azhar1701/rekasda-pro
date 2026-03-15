@@ -57,7 +57,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h3>
  <button
  onClick={onClose}
- className="min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-center text-slate-500 hover:text-slate-600 dark:text-slate-400 active:text-slate-800 dark:text-slate-200 transition-colors"
+ className="min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-center text-slate-500 hover:text-slate-600 dark:text-slate-500 active:text-slate-800 dark:text-slate-200 transition-colors"
  >
  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

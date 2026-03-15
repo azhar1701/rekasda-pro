@@ -98,7 +98,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Hujan Rencana dari Analisis Frekuensi (Read-Only)</p>
  </div>
  <div className="text-xs">
- <span className="text-slate-600 dark:text-slate-400">R24 (Q{returnPeriod}):</span>
+ <span className="text-slate-600 dark:text-slate-500">R24 (Q{returnPeriod}):</span>
  <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{R24.toFixed(2)} mm</span>
  </div>
  </div>
@@ -111,7 +111,7 @@ export const DistribusiHujanStep: React.FC<DistribusiHujanStepProps> = ({ onComp
  </div>
  <div>
  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Distribusi Hujan Jam-jaman</h3>
- <p className="text-xs text-slate-600 dark:text-slate-400">Mononobe + Alternating Block Method</p>
+ <p className="text-xs text-slate-600 dark:text-slate-500">Mononobe + Alternating Block Method</p>
  </div>
  </div>
 

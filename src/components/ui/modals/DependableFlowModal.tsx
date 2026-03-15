@@ -52,7 +52,7 @@ export const DependableFlowModal: React.FC<DependableFlowModalProps> = ({ isOpen
  </div>
  <button
  onClick={onClose}
- className="text-slate-500 hover:text-slate-600 dark:text-slate-400 transition-colors"
+ className="text-slate-500 hover:text-slate-600 dark:text-slate-500 transition-colors"
  >
  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

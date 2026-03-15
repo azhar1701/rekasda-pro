@@ -25,7 +25,7 @@ export const MasterDataPage: React.FC = () => {
  title="Master Data Hidrologi"
  description="Single Source of Truth untuk Data & Parameter Hidrologi"
  icon={<Database className="w-6 h-6" />}
- iconColorClass="bg-pupr-blue text-white"
+ 
  >
  <div className="space-y-6">
  {/* Professional Engineering Tabs */}

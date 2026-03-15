@@ -36,7 +36,7 @@ export const MasterDataSelector: React.FC = () => {
  <Database className="w-3.5 h-3.5" /> Sumber Master Data
  </label>
  <div
- className={`w-full bg-white dark:bg-slate-900 border ${isOpen ? 'border-teal-400 ring-4 ring-teal-500/10' : 'border-slate-200 dark:border-slate-700'} rounded-sm cursor-copy transition-all p-3 flex items-center justify-between group hover:border-teal-300 hover:shadow`}
+ className={`w-full bg-white dark:bg-slate-900 border ${isOpen ? 'border-teal-400 ring-4 ring-teal-500/10' : 'border-slate-200 dark:border-slate-700'} rounded-sm cursor-copy transition-all p-3 flex items-center justify-between group hover:border-teal-300`}
  onClick={() => setIsOpen(!isOpen)}
  >
  {selectedStasiun ? (
@@ -65,12 +65,12 @@ export const MasterDataSelector: React.FC = () => {
  </div>
  )}
 
- <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-75 ${isOpen ? 'rotate-180 text-pupr-blue' : 'group-hover:text-slate-600 dark:text-slate-400'}`} />
+ <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-75 ${isOpen ? 'rotate-180 text-pupr-blue' : 'group-hover:text-slate-600 dark:text-slate-500'}`} />
  </div>
 
  {/* Dropdown Menu */}
  {isOpen && (
- <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 rounded-sm shadow-slate-200/50 z-[9999] max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 custom-scrollbar">
+ <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700 rounded-sm shadow-none z-[9999] max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 custom-scrollbar">
  {stasiunList.length === 0 ? (
  <div className="p-4 text-center text-sm text-slate-500">Memuat stasiun...</div>
  ) : (

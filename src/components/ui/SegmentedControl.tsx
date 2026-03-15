@@ -20,7 +20,7 @@ export const SegmentedControl = ({ items, className }: SegmentedControlProps) =>
  <TabsTrigger
  key={item.value}
  value={item.value}
- className="rounded-sm data-[state=active]:bg-white dark:bg-slate-900 data-[state=active]:text-teal-700 data-[state=active]: font-semibold text-slate-600 dark:text-slate-400 px-4 py-2.5 transition-all"
+ className="rounded-sm data-[state=active]:bg-white dark:bg-slate-900 data-[state=active]:text-teal-700 data-[state=active]: font-semibold text-slate-600 dark:text-slate-500 px-4 py-2.5 transition-all"
  >
  <div className="flex items-center gap-2">
  {item.icon && <span className="w-4 h-4">{item.icon}</span>}

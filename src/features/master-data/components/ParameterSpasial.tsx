@@ -43,7 +43,7 @@ export const ParameterSpasial: React.FC = () => {
  </div>
  <div>
  <h2 className="text-2xl font-extrabold text-pupr-blue tracking-tight uppercase leading-tight">Analisis Spasial & Kewilayahan</h2>
- <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-1">
+ <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
  <Info className="w-3.5 h-3.5" />
  Sistem Otomasi Delineasi & Karakterisasi Geospasial DAS
  </p>

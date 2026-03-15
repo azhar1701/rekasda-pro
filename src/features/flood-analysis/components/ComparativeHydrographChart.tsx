@@ -62,7 +62,7 @@ export const ComparativeHydrographChart: React.FC<ComparativeHydrographProps> = 
  {/* Header */}
  <div className="px-6 py-5 border-b border-slate-100 bg-pupr-blue text-white">
  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h3>
- <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+ <p className="text-sm text-slate-600 dark:text-slate-500 font-medium">
  Analisis perbandingan untuk berbagai kala ulang dan skenario
  </p>
  </div>
@@ -172,9 +172,9 @@ export const ComparativeHydrographChart: React.FC<ComparativeHydrographProps> = 
  <table className="w-full text-xs">
  <thead>
  <tr className="border-b-2 border-slate-200 dark:border-slate-700">
- <th className="text-left py-3 px-3 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Skenario</th>
- <th className="text-right py-3 px-3 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Q-Peak</th>
- <th className="text-right py-3 px-3 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">T-Peak</th>
+ <th className="text-left py-3 px-3 font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wide">Skenario</th>
+ <th className="text-right py-3 px-3 font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wide">Q-Peak</th>
+ <th className="text-right py-3 px-3 font-bold text-slate-600 dark:text-slate-500 uppercase tracking-wide">T-Peak</th>
  </tr>
  </thead>
  <tbody>
@@ -203,7 +203,7 @@ export const ComparativeHydrographChart: React.FC<ComparativeHydrographProps> = 
 
  {/* Info */}
  <div className="px-6 py-2 bg-slate-50 dark:bg-slate-800 text-center border-t border-slate-100">
- <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+ <p className="text-xs text-slate-600 dark:text-slate-500 leading-relaxed font-medium">
  <span className="font-semibold text-slate-700 dark:text-slate-300">💡 Tips:</span> Analisis perbandingan membantu dalam perencanaan infrastruktur dan manajemen banjir
  </p>
  </div>

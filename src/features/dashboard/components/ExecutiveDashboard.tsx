@@ -50,7 +50,7 @@ export const ExecutiveDashboard = () => {
  title="Executive Summary & Pelaporan"
  description="Laporan akhir kelayakan proyek dari hulu (Banjir) ke hilir (Embung)"
  icon={<FileText className="w-6 h-6" />}
- iconColorClass="bg-pupr-blue text-white"
+ 
  sniCode="SNI 2415:2016 & Pd T-07-2004-A"
  actions={
       <div className="flex gap-3">
@@ -106,20 +106,20 @@ export const ExecutiveDashboard = () => {
  : undefined
  }
  icon={<MapPin />}
- iconColorClass="text-pupr-blue"
+ 
  />
  <InfoProperty
  label="Luas DAS Terukur"
  value={luasDas ? `${luasDas} km²` : undefined}
  icon={<Activity />}
- iconColorClass="text-teal-600"
+ 
  />
  </div>
   </Card>
 
   {/* Card 2: Flood Analysis */}
   <Metric
-  label="Analisis Banjir"
+  label="Analisis Banjir" tooltip="Debit Puncak Banjir Rencana (Qp) berdasarkan metode hidrologi terpilih. Mewakili estimasi debit air maksimum per detik yang sangat memengaruhi desain keamanan struktur."
   value={hasilBanjir?.debitPuncak || '0'}
   unit="m³/s · Debit Puncak"
   variant="blue"
@@ -129,7 +129,7 @@ export const ExecutiveDashboard = () => {
 
   {/* Card 3: Embung Feasibility */}
   <Metric
-  label="Reduksi Banjir"
+  label="Reduksi Banjir" tooltip="Persentase penurunan debit puncak akibat adanya bangunan tampungan (Embung/Bendungan). Mengatur efisiensi kinerja bangunan."
   value={hasilEmbung?.reduksiPuncak || 0}
   unit="% · Efektivitas"
   variant="emerald"

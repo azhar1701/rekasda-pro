@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Mountain, Save, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { HelpTooltip } from '@/components/ui/govtech';
 import { useHydrologyStore, type MorfometriDAS } from '@/stores/useHydrologyStore';
 import { toast } from '@/hooks/useToast';
 
@@ -83,10 +84,10 @@ export const KarakteristikDASCard: React.FC = () => {
  const isValid = safeA > 0 && safeL > 0;
 
   return (
-    <Card className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+    <Card className="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden shadow-none">
       <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-pupr-blue rounded-lg">
+          <div className="p-2 bg-pupr-blue rounded-sm">
             <Mountain className="w-5 h-5 text-pupr-yellow" />
           </div>
           <div>
@@ -99,15 +100,15 @@ export const KarakteristikDASCard: React.FC = () => {
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Luas DAS (A)
+            <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Luas DAS (A) <HelpTooltip content="Luas Daerah Aliran Sungai dari hulu hingga titik pengamatan (outlet)" />
             </label>
             <div className="relative">
               <input
                 type="number"
                 value={formData.luasDAS === 0 ? 0 : (formData.luasDAS ?? '')}
                 onChange={(e) => handleChange('luasDAS', e.target.value)}
-                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
                 placeholder="0.00"
                 step="0.01"
               />
@@ -118,15 +119,15 @@ export const KarakteristikDASCard: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Panjang Sungai (L)
+            <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Panjang Sungai (L) <HelpTooltip content="Panjang sungai utama dari titik terjauh di hulu hingga outlet" />
             </label>
             <div className="relative">
               <input
                 type="number"
                 value={formData.panjangSungai === 0 ? 0 : (formData.panjangSungai ?? '')}
                 onChange={(e) => handleChange('panjangSungai', e.target.value)}
-                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
                 placeholder="0.00"
                 step="0.01"
               />
@@ -137,15 +138,15 @@ export const KarakteristikDASCard: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Kemiringan Sungai (S)
+            <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Kemiringan Sungai (S) <HelpTooltip content="Perbedaan elevasi per satuan panjang sungai (m/m). Menghitung waktu konsentrasi (tc)" />
             </label>
             <div className="relative">
               <input
                 type="number"
                 value={formData.kemiringanSungai === 0 ? 0 : (formData.kemiringanSungai ?? '')}
                 onChange={(e) => handleChange('kemiringanSungai', e.target.value)}
-                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
                 placeholder="0.0000"
                 step="0.0001"
               />
@@ -156,15 +157,14 @@ export const KarakteristikDASCard: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Elevasi Rata-rata
-            </label>
+            <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Elevasi Rata-rata <HelpTooltip content="Ketinggian rata-rata DAS. Opsional, umumnya untuk koreksi suhu / orografik." /> </label>
             <div className="relative">
               <input
                 type="number"
                 value={formData.elevasi === 0 ? 0 : (formData.elevasi ?? '')}
                 onChange={(e) => handleChange('elevasi', e.target.value)}
-                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
+                className="w-full h-11 px-4 pr-12 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 focus:border-pupr-blue tabular-nums tracking-tight font-semibold"
                 placeholder="0"
                 step="1"
               />
@@ -176,14 +176,14 @@ export const KarakteristikDASCard: React.FC = () => {
         </div>
 
         {!isValid && (
-          <div className="flex items-center gap-3 p-4 mt-6 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800">
+          <div className="flex items-center gap-3 p-4 mt-6 bg-red-50 border border-red-200 rounded-sm text-xs text-red-800">
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
             <span className="font-semibold">Luas DAS dan Panjang Sungai harus diisi dengan nilai &gt; 0</span>
           </div>
         )}
 
         {logicalCheck && isValid && (
-          <div className={`flex items-start gap-3 p-4 mt-6 rounded-lg border text-xs font-medium transition-colors ${
+          <div className={`flex items-start gap-3 p-4 mt-6 rounded-sm border text-xs font-medium transition-colors ${
             logicalCheck.isLogical 
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
               : 'bg-red-50 border-red-200 text-red-800'
@@ -200,11 +200,11 @@ export const KarakteristikDASCard: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={!isValid}
-          className={`w-full h-11 mt-6 font-bold uppercase tracking-wider text-xs rounded-lg transition-all flex items-center justify-center gap-2 ${!isValid
-            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400'
+          className={`w-full h-11 mt-6 font-bold uppercase tracking-wider text-xs rounded-sm transition-all flex items-center justify-center gap-2 ${!isValid
+            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-500'
             : isSaved
-            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
-            : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-sm'
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-none'
+            : 'bg-pupr-blue hover:bg-blue-800 text-white shadow-none'
           }`}
         >
           <Save className="w-4 h-4" />

@@ -100,7 +100,7 @@ export const StepGeometry: React.FC = () => {
  <table className="w-full text-xs text-left">
  <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 font-bold sticky top-0 z-10">
  <tr>
- <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">Elevasi (m)</th>
+ <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-start gap-1">Elevasi (m) <HelpTooltip content="Ketinggian muka air dari datum referensi" /></th>
  <th className="px-2 py-3 border-b border-slate-200 dark:border-slate-700 text-right">Volume (m³)</th>
  <th className="px-2 py-3 border-b border-slate-200 dark:border-slate-700 text-right">Luas (m²)</th>
  <th className="w-10 border-b border-slate-200 dark:border-slate-700"></th>

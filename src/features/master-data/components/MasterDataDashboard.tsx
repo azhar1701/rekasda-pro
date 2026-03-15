@@ -158,7 +158,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  { label: 'Homogenitas', status: qcStatusSummary.homogeneityValid }
  ].map(test => (
  <div key={test.label} className="flex items-center justify-between border-b border-slate-50 pb-2">
- <span className="text-sm text-slate-600 dark:text-slate-400">{test.label}</span>
+ <span className="text-sm text-slate-600 dark:text-slate-500">{test.label}</span>
   {test.status ? 
   <span className="text-[10px] font-bold text-emerald-500 uppercase">Valid</span> : 
   <span className="text-[10px] font-bold text-red-500 uppercase">Fails</span>
@@ -189,7 +189,7 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
  <div>
  <p className="text-5xl font-light tracking-tight text-slate-800 dark:text-slate-100 tabular-nums">
  {storeMorfometri.luasDAS.toFixed(2)}
- <span className="text-sm font-bold text-slate-400 ml-2 uppercase">km²</span>
+ <span className="text-sm font-bold text-slate-500 ml-2 uppercase">km²</span>
  </p>
  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Area (A)</p>
  </div>

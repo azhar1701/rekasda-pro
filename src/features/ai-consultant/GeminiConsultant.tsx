@@ -154,7 +154,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
  title="Pusat Konsultasi AI"
  description="Dashboard kecerdasan buatan terintegrasi SNI"
  icon={<BrainCircuit className="w-6 h-6" />}
- iconColorClass="bg-indigo-600 text-white"
+ 
  >
  <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-220px)] relative z-10">
  
@@ -203,9 +203,9 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
  <div className="flex items-center gap-2.5">
  <div className={cn(
  "w-1.5 h-1.5 rounded-sm",
- item.isLoaded ? "bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]" : "bg-slate-300"
+ item.isLoaded ? "bg-sky-500" : "bg-slate-300"
  )} />
- <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 tracking-tight">{item.label}</span>
+ <span className="text-[11px] font-bold text-slate-600 dark:text-slate-500 tracking-tight">{item.label}</span>
  </div>
  {item.isLoaded ? (
  <div className="w-5 h-5 rounded-sm bg-emerald-50 flex items-center justify-center">

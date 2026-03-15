@@ -114,7 +114,7 @@ export const SNIComplianceReport: React.FC = () => {
  </span>
  </div>
  <p className="text-xs text-slate-500 mt-1">{item.description}</p>
- <div className="mt-2 text-[10px] font-mono bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded inline-block text-slate-600 dark:text-slate-400">
+ <div className="mt-2 text-[10px] font-mono bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded inline-block text-slate-600 dark:text-slate-500">
  Nilai: {item.value}
  </div>
  </div>

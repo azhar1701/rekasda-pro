@@ -144,13 +144,13 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
  <table className="w-full text-[10px]">
  <thead className="bg-slate-50 dark:bg-slate-800 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
  <tr>
- <th className="py-2 px-2 text-left font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">Bln</th>
- <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">Pola</th>
- <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">Kc</th>
- <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">P</th>
- <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">WLR</th>
- <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">Reff</th>
- <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">ETo</th>
+ <th className="py-2 px-2 text-left font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">Bln</th>
+ <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">Pola</th>
+ <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">Kc</th>
+ <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">P</th>
+ <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">WLR</th>
+ <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">Reff</th>
+ <th className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-500 whitespace-nowrap">ETo</th>
  </tr>
  </thead>
  <tbody>

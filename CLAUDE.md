@@ -16,14 +16,20 @@ Indonesian Water Resources Engineers (BBWS, PUPR, Consultants). They use this in
 **Authoritative, Precise, Expert-Grade.** The interface evokes confidence in mathematical results, feeling like an international engineering workstation (e.g., ArcGIS, SAP2000) localized for the Indonesian context.
 
 ### Aesthetic Direction
-**GovTech Professional with Soft Glassmorphism.** High contrast, sharp borders, and a clear hierarchy, enhanced by subtle glassmorphism effects for a modern, high-end feel. Uses the PUPR official palette (#0c3a66 for primary navy, #f2c114 for accents).
+**GovTech Professional with Flattened Design.** High contrast, sharp borders, and a clear hierarchy. Completely shadow-less and devoid of glassmorphism for a highly serious, high-end technical feel. Uses the PUPR official palette (#0c3a66 for primary navy, #f2c114 for accents). Subtle micro-animations are used to enhance interactivity without compromising the professional tone.
 
 ### Design Principles
 1. **PUPR Identity First**: Core identity driven by PUPR official colors (Navy/Yellow) to establish authority and government trust.
 2. **Local First (Bahasa Indonesia)**: Interface and documentation use professional Bahasa Indonesia suitable for Indonesian engineering standards.
 3. **Technical Transparency**: Never show a result without its engineering metadata (SNI clause, bias factor, etc.).
 4. **Auditability First**: Mandatory use of `tabular-nums` for all numeric data to ensure Excel-like vertical alignment and auditability.
-5. **Expert Workflow**: The UI must follow the logical sequence of a hydrological study (Inputs -> QC -> Engine -> Output).
+5. **Expert Workflow & Accessibility**: The UI follows the logical sequence of a hydrological study (Inputs -> QC -> Engine -> Output). Compliance with WCAG 2.1 Level AA is required.
+
+### Reference Recommendations
+- **Gov.uk Design System**: Best-in-class for flattened, accessible, high-contrast GovTech.
+- **USGS National Water Dashboard**: For map-centric data visualization.
+- **Stripe Dashboard**: Gold standard for technical density and subtle micro-animations.
+- **NOAA HDC**: For technical data presentation and tabular auditing.
 
 ## Interface Audit (March 2026)
 

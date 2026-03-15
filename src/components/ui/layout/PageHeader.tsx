@@ -25,7 +25,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
  </div>
  <div>
  <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{title}</h1>
- <p className="text-sm text-slate-500 font-medium">{subtitle}</p>
+ <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
  </div>
  </div>
  {actions && <div className="flex items-center gap-2">{actions}</div>}

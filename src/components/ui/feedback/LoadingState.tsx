@@ -23,7 +23,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       <div className="absolute inset-0 border-2 border-pupr-blue rounded-sm border-t-transparent animate-spin"></div>
     </div>
  {message && (
- <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-400">{message}</p>
+ <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-500">{message}</p>
  )}
  </div>
  );

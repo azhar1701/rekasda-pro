@@ -281,7 +281,7 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
       {/* LEFT SIDE: MAP (5 Columns) */}
       <div className="lg:col-span-5 space-y-4">
-        <div className="p-0 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden h-[600px] flex flex-col bg-white dark:bg-slate-900 shadow-sm">
+        <div className="p-0 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden h-[600px] flex flex-col bg-white dark:bg-slate-900 shadow-none">
           <div className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-wrap justify-between items-center gap-2">
             <div className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest text-slate-700 dark:text-slate-300">
               <MapIcon className="w-4 h-4 text-pupr-blue" />
@@ -338,7 +338,7 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
       {/* RIGHT SIDE: DATA MATRICES (7 Columns) */}
       <div className="lg:col-span-7 space-y-6">
         {validationError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-sm flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
             <p className="text-[10px] font-bold text-red-800 leading-tight uppercase tracking-widest">{validationError}</p>
           </div>
@@ -346,37 +346,37 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
 
         {/* Spatial Stats Group (2 cols internal grid) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-l-4 border-l-pupr-blue p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200">
+          <Card className="border-l-4 border-l-pupr-blue p-6 bg-white dark:bg-slate-900 rounded-sm shadow-none border border-slate-200">
             <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-wider">Parameter Geometri DAS</h4>
             <div className="flex justify-between items-baseline border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Luas DAS (A)</span>
-              <span className="text-3xl font-light text-pupr-blue tabular-nums tracking-tight">{spatialResults?.params.areaKm2.toFixed(3) || '0.000'} <small className="text-[10px] font-bold text-slate-400 uppercase">km²</small></span>
+              <span className="text-3xl font-light text-pupr-blue tabular-nums tracking-tight">{spatialResults?.params.areaKm2.toFixed(3) || '0.000'} <small className="text-[10px] font-bold text-slate-500 uppercase">km²</small></span>
             </div>
             <div className="flex justify-between items-baseline">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Status Sungai</span>
-              <span className={`text-[10px] font-black uppercase ${riverFeature ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <span className={`text-[10px] font-black uppercase ${riverFeature ? 'text-emerald-600' : 'text-slate-500'}`}>
                 {riverFeature ? 'Verified' : 'Missing'}
               </span>
             </div>
           </Card>
 
-          <Card className="border-l-4 border-l-emerald-600 p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200">
+          <Card className="border-l-4 border-l-emerald-600 p-6 bg-white dark:bg-slate-900 rounded-sm shadow-none border border-slate-200">
             <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-3 tracking-wider">Koefisien Pengaliran (C)</h4>
             <div className="flex justify-between items-baseline mb-4">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 ">C Komposit</span>
               <span className="text-3xl font-light text-emerald-700 tabular-nums tracking-tight">{spatialResults?.compositeResult.compositeC.toFixed(3) || '0.000'}</span>
             </div>
             <details className="text-[10px] group">
-              <summary className="cursor-pointer text-slate-400 font-bold hover:text-pupr-blue uppercase tracking-widest transition-colors flex items-center gap-1">
+              <summary className="cursor-pointer text-slate-500 font-bold hover:text-pupr-blue uppercase tracking-widest transition-colors flex items-center gap-1">
                 <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
                 Rincian Lahan
               </summary>
-              <div className="mt-3 max-h-[150px] overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-lg">
+              <div className="mt-3 max-h-[150px] overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-sm">
                 <table className="w-full">
                   <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 uppercase tracking-wider">
                     <tr><th className="text-left py-2 px-3 font-bold">JENIS</th><th className="text-right py-2 px-3 font-bold">LUAS</th><th className="text-right py-2 px-3 font-bold">C</th></tr>
                   </thead>
-                  <tbody className="tabular-nums text-slate-600 dark:text-slate-400">
+                  <tbody className="tabular-nums text-slate-600 dark:text-slate-500">
                     {spatialResults?.compositeResult.details.map((d: any, i: number) => (
                       <tr key={i} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50 transition-colors">
                         <td className="py-2 px-3 font-medium uppercase tracking-tight text-[10px]">{d.jenis}</td>
@@ -392,32 +392,32 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
         </div>
 
         {slopeResult && (
-          <Card className="border-l-4 border-l-indigo-600 p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 animate-in fade-in duration-75">
+          <Card className="border-l-4 border-l-indigo-600 p-6 bg-white dark:bg-slate-900 rounded-sm shadow-none border border-slate-200 animate-in fade-in duration-75">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">River Slope Analysis</h4>
               <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[9px] font-bold rounded-sm border border-indigo-100 uppercase">Satellite Profile</span>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4 border-b border-slate-50 dark:border-slate-800 pb-4">
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1 tracking-wider">Headwater (H1)</p>
-                <p className="text-xl font-light text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{slopeResult.upstream.toFixed(1)} <small className="text-[10px] font-bold text-slate-400 uppercase">m</small></p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-wider">Headwater (H1)</p>
+                <p className="text-xl font-light text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{slopeResult.upstream.toFixed(1)} <small className="text-[10px] font-bold text-slate-500 uppercase">m</small></p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1 tracking-wider">Outlet (H2)</p>
-                <p className="text-xl font-light text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{slopeResult.downstream.toFixed(1)} <small className="text-[10px] font-bold text-slate-400 uppercase">m</small></p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-wider">Outlet (H2)</p>
+                <p className="text-xl font-light text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{slopeResult.downstream.toFixed(1)} <small className="text-[10px] font-bold text-slate-500 uppercase">m</small></p>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Kemiringan (S)</span>
               <span className="text-3xl font-light text-indigo-700 tabular-nums tracking-tight">
                 {slopeResult.slope.toFixed(5)}
-                <small className="text-[10px] font-bold text-slate-400 ml-1 uppercase">m/m</small>
+                <small className="text-[10px] font-bold text-slate-500 ml-1 uppercase">m/m</small>
               </span>
             </div>
           </Card>
         )}
 
-        <Card className="border-l-4 border-l-pupr-yellow p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200">
+        <Card className="border-l-4 border-l-pupr-yellow p-6 bg-white dark:bg-slate-900 rounded-sm shadow-none border border-slate-200">
           <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-wider flex items-center gap-2">
             <Satellite className="w-4 h-4 text-pupr-yellow" />
             Satelite Engine (CHIRPS)
@@ -426,15 +426,15 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wider">Start Date</label>
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-4 h-11">
-                  <CalendarRange className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-sm px-4 h-11">
+                  <CalendarRange className="w-4 h-4 text-slate-500" />
                   <input type="text" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-sm font-mono font-bold w-full outline-none text-slate-700 dark:text-slate-300" placeholder="01/01/2010" />
                 </div>
               </div>
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wider">End Date</label>
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-4 h-11">
-                  <CalendarRange className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-sm px-4 h-11">
+                  <CalendarRange className="w-4 h-4 text-slate-500" />
                   <input type="text" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-sm font-mono font-bold w-full outline-none text-slate-700 dark:text-slate-300" placeholder="12/31/2023" />
                 </div>
               </div>
@@ -443,7 +443,7 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
             <Button
               onClick={handleExtractChirps}
               disabled={isExtracting || !dasFeature}
-              className="w-full h-11 text-xs font-bold uppercase tracking-wider bg-pupr-blue hover:bg-blue-800 transition-colors rounded-lg shadow-sm"
+              className="w-full h-11 text-xs font-bold uppercase tracking-wider bg-pupr-blue hover:bg-blue-800 transition-colors rounded-sm shadow-none"
             >
               <Satellite className={`w-4 h-4 mr-2 ${isExtracting ? 'animate-bounce text-pupr-yellow' : ''}`} />
               {isExtracting ? 'Processing Statistics...' : 'Fetch CHIRPS Data'}
@@ -458,7 +458,7 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
         </Card>
 
         {biasResult && (
-          <Card className="border-l-4 border-l-amber-500 p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 animate-in slide-in-from-right-2 duration-75">
+          <Card className="border-l-4 border-l-amber-500 p-6 bg-white dark:bg-slate-900 rounded-sm shadow-none border border-slate-200 animate-in slide-in-from-right-2 duration-75">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Satellite Bias Correction</h4>
               <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-sm border border-amber-100 uppercase tracking-wider">PCH vs CHIRPS</span>
@@ -473,17 +473,17 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
               </div>
               
               <div className="grid grid-cols-2 gap-4 text-[10px]">
-                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-sm border border-slate-200 dark:border-slate-800">
                   <p className="text-slate-500 font-bold uppercase mb-1 tracking-wider">Ground (PCH)</p>
                   <p className="text-base font-bold text-slate-800 dark:text-slate-200 tabular-nums">{biasResult.groundTotal.toFixed(1)} mm</p>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-sm border border-slate-200 dark:border-slate-800">
                   <p className="text-slate-500 font-bold uppercase mb-1 tracking-wider">Satellite</p>
                   <p className="text-base font-bold text-slate-800 dark:text-slate-200 tabular-nums">{biasResult.satelliteTotal.toFixed(1)} mm</p>
                 </div>
               </div>
               
-              <div className="p-3 bg-pupr-surface border border-pupr-border rounded-lg">
+              <div className="p-3 bg-pupr-surface border border-pupr-border rounded-sm">
                 <p className="text-[10px] text-pupr-blue font-bold leading-relaxed uppercase tracking-wider">
                   <span className="mr-1">⚠️</span> Engineering Note: Calibrated using {biasResult.overlapYears.length} overlap years ({biasResult.overlapYears[0]} - {biasResult.overlapYears[biasResult.overlapYears.length - 1]}).
                 </p>
@@ -497,11 +497,11 @@ export const WebGISPanel: React.FC<{ children?: React.ReactNode }> = ({ children
 
         {chirpsData.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-75 pt-2">
-            <div className="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+            <div className="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-sm shadow-none">
               <ChirpsTimeSeriesChart data={chirpsData} />
             </div>
             {dmcResult && (
-              <div className="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+              <div className="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-sm shadow-none">
                 <DoubleMassCurveChart result={dmcResult} />
               </div>
             )}

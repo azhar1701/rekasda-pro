@@ -31,7 +31,7 @@ export const Button: React.FC<ButtonProps> = ({
  const variants = {
  primary: "bg-pupr-blue text-white hover:bg-pupr-blue hover: ] border border-[#0a2f52]",
  secondary: "border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-pupr-blue hover:bg-slate-50 dark:bg-slate-800 active:bg-slate-100 ",
- ghost: "bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 active:bg-slate-200",
+ ghost: "bg-transparent text-slate-600 dark:text-slate-500 hover:bg-slate-100 active:bg-slate-200",
  danger: "bg-error text-white hover:bg-error-dark hover: ] border border-red-700",
  outline: "border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-pupr-blue hover:bg-slate-50 dark:bg-slate-800 active:bg-slate-100 ",
  default: "bg-pupr-blue text-white hover:bg-pupr-blue hover: ] border border-[#0a2f52]",

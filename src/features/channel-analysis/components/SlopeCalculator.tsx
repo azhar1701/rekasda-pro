@@ -40,7 +40,7 @@ export const SlopeCalculator: React.FC<Props> = ({ onSlopeCalculated, onClose })
  <p className="text-xs text-slate-500">Hitung slope dari elevasi dan jarak</p>
  </div>
  </div>
- <button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-600 dark:text-slate-400 rounded transition-colors">
+ <button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-600 dark:text-slate-500 rounded transition-colors">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
  </svg>

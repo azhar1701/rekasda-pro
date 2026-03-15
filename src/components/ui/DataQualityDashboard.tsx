@@ -136,7 +136,7 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Konsistensi</span>
  {getStatusIcon(status.konsisten)}
  </div>
- <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">
+ <p className="text-[11px] font-medium text-slate-600 dark:text-slate-500 leading-tight">
  {results?.konsistensi?.message || (status.konsisten ? 'Data konsisten (RAPS)' : 'Data tidak konsisten')}
  </p>
  </div>
@@ -146,7 +146,7 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Homogenitas</span>
  {getStatusIcon(status.homogen)}
  </div>
- <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">
+ <p className="text-[11px] font-medium text-slate-600 dark:text-slate-500 leading-tight">
  {results?.homogenitas?.message || (status.homogen ? 'Rata-rata homogen' : 'Data tidak homogen')}
  </p>
  </div>
@@ -156,7 +156,7 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Pencilan</span>
  {getStatusIcon(status.bebasOutlier)}
  </div>
- <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">
+ <p className="text-[11px] font-medium text-slate-600 dark:text-slate-500 leading-tight">
  {results?.outlier?.message || (status.bebasOutlier ? 'Bebas Outlier Grubbs' : 'Terdeteksi Outlier')}
  </p>
  </div>

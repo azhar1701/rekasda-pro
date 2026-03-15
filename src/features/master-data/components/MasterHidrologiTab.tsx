@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
-import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
+import { CloudRain, Plus, Upload, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 
 import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
@@ -16,68 +16,71 @@ import { calculateStationHealth } from '@/lib/utils/qc/dataHealthMath';
 import { DailyRainfallMatrix } from './DailyRainfallMatrix';
 
 
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
+
 export const MasterHidrologiTab: React.FC = () => {
- const {
- stasiunList,
- selectedStasiun,
- dataHujan,
- isLoading,
- error,
- fetchStasiun,
- fetchMultipleStationsData,
- addStasiun,
- addDataHujan,
- importDataHujanBatch,
- selectStasiun,
- updateDataHujanManual,
- seedInitialStations,
- updateStasiun,
- deleteStasiun,
- deleteDataHujanByYear,
- updateDataHujanSingle,
- activeRainfallSource,
- arealRainfallAlgebraic,
- arealRainfallThiessen,
- arealRainfallIsohyet,
- stationHealth,
- setStationHealth,
- setQCStatus,
- setQCResults,
+  // ... (keeping existing hooks)
+  const {
+    stasiunList,
+    selectedStasiun,
+    dataHujan,
+    isLoading,
+    error,
+    fetchStasiun,
+    fetchMultipleStationsData,
+    addStasiun,
+    addDataHujan,
+    importDataHujanBatch,
+    selectStasiun,
+    updateDataHujanManual,
+    seedInitialStations,
+    updateStasiun,
+    deleteStasiun,
+    deleteDataHujanByYear,
+    updateDataHujanSingle,
+    activeRainfallSource,
+    arealRainfallAlgebraic,
+    arealRainfallThiessen,
+    arealRainfallIsohyet,
+    stationHealth,
+    setStationHealth,
+    setQCStatus,
+    setQCResults,
     setStasiunAmsData,
     stasiunAmsData,
     syncRainfallMetadata
   } = useHydrologyStore();
 
- const fileInputRef = useRef<HTMLInputElement>(null);
- const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
- const [showModalStasiun, setShowModalStasiun] = useState(false);
- const [editingStasiunId, setEditingStasiunId] = useState<string | null>(null);
- const [showModalHujan, setShowModalHujan] = useState(false);
- const [formStasiun, setFormStasiun] = useState({
- nama_stasiun: '',
- koordinat_x: '',
- koordinat_y: '',
- elevasi: '',
- keterangan: ''
- });
- const [formHujan, setFormHujan] = useState({
- tanggal: '',
- curah_hujan: ''
- });
- const [isInfilling, setIsInfilling] = useState(false);
- const [showModalBulk, setShowModalBulk] = useState(false);
- const [bulkRawText, setBulkRawText] = useState('');
- const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
- const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
- const [isProcessingOcr, setIsProcessingOcr] = useState(false);
- const ocrFileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [showModalStasiun, setShowModalStasiun] = useState(false);
+  const [editingStasiunId, setEditingStasiunId] = useState<string | null>(null);
+  const [showModalHujan, setShowModalHujan] = useState(false);
+  const [formStasiun, setFormStasiun] = useState({
+    nama_stasiun: '',
+    koordinat_x: '',
+    koordinat_y: '',
+    elevasi: '',
+    keterangan: ''
+  });
+  const [formHujan, setFormHujan] = useState({
+    tanggal: '',
+    curah_hujan: ''
+  });
+  const [isInfilling, setIsInfilling] = useState(false);
+  const [showModalBulk, setShowModalBulk] = useState(false);
+  const [bulkRawText, setBulkRawText] = useState('');
+  const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
+  const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
+  const [isProcessingOcr, setIsProcessingOcr] = useState(false);
+  const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
- // QC Modal States
- const [showModalQC, setShowModalQC] = useState(false);
- const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
- const [qcProgress, setQCProgress] = useState<{ current: number, total: number, station: string } | null>(null);
- const [qcSummary, setQcSummary] = useState<Record<string, any> | null>(null);
- const [isQCLoading, setIsQCLoading] = useState(false);
+  // QC Modal States
+  const [showModalQC, setShowModalQC] = useState(false);
+  const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
+  const [qcProgress, setQCProgress] = useState<{ current: number, total: number, station: string } | null>(null);
+  const [qcSummary, setQcSummary] = useState<Record<string, any> | null>(null);
+  const [isQCLoading, setIsQCLoading] = useState(false);
 
   const parseBulkRainfall = (text: string, year: number): any[] => {
     const lines = text.trim().split('\n');
@@ -107,13 +110,13 @@ export const MasterHidrologiTab: React.FC = () => {
         if (rainfall !== null) {
           const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const d = new Date(dateStr);
-              if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day && selectedStasiun) {
-                records.push({
-                  stasiun_id: selectedStasiun.id,
-                  tanggal: dateStr,
-                  curah_hujan: rainfall
-                });
-              }
+          if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day && selectedStasiun) {
+            records.push({
+              stasiun_id: selectedStasiun.id,
+              tanggal: dateStr,
+              curah_hujan: rainfall
+            });
+          }
         }
       });
     });
@@ -125,506 +128,469 @@ export const MasterHidrologiTab: React.FC = () => {
     setBulkPreview(result);
   };
 
- const handleBulkSave = async () => {
- if (!bulkPreview || bulkPreview.length === 0 || !selectedStasiun) return;
- try {
- await importDataHujanBatch(bulkPreview);
- toast.success(`Berhasil mengimpor ${bulkPreview.length} data harian.`);
- setShowModalBulk(false);
- setBulkRawText('');
- setBulkPreview(null);
- } catch (err) {
- console.error(err);
- toast.error('Gagal menyimpan data bulk.');
- }
- };
+  const handleBulkSave = async () => {
+    if (!bulkPreview || bulkPreview.length === 0 || !selectedStasiun) return;
+    try {
+      await importDataHujanBatch(bulkPreview);
+      toast.success(`Berhasil mengimpor ${bulkPreview.length} data harian.`);
+      setShowModalBulk(false);
+      setBulkRawText('');
+      setBulkPreview(null);
+    } catch (err) {
+      console.error(err);
+      toast.error('Gagal menyimpan data bulk.');
+    }
+  };
 
- const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
- const file = e.target.files?.[0];
- if (!file || !selectedStasiun) return;
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedStasiun) return;
 
- setIsProcessingOcr(true);
- try {
- const reader = new FileReader();
- reader.onload = async (event) => {
- const base64 = event.target?.result as string;
- try {
- const matrix = await extractRainfallFromPdf(base64, bulkYear);
- if (matrix) {
- const records: any[] = [];
- matrix.forEach((row, dayIdx) => {
- row.forEach((val, monthIdx) => {
- if (val !== null && val !== undefined) {
- const day = dayIdx + 1;
- const month = monthIdx + 1;
- const dateStr = `${bulkYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
- const d = new Date(dateStr);
-              if (d.getFullYear() === bulkYear && d.getMonth() === monthIdx && d.getDate() === day && selectedStasiun) {
-                records.push({
-                  stasiun_id: selectedStasiun.id,
-                  tanggal: dateStr,
-                  curah_hujan: val
-                });
-              }
- }
- });
- });
- setBulkPreview(records);
- toast.success(`AI berhasil mengekstrak ${records.length} data curah hujan.`);
- } else {
- toast.error('AI gagal mengekstrak data. Pastikan file PDF berisi tabel curah hujan.');
- }
- } catch (err) {
- console.error(err);
- toast.error('Terjadi kesalahan saat memproses OCR.');
- } finally {
- setIsProcessingOcr(false);
- }
- };
- reader.readAsDataURL(file);
- } catch (err) {
- console.error(err);
- setIsProcessingOcr(false);
- }
- if (ocrFileInputRef.current) ocrFileInputRef.current.value = '';
- };
+    setIsProcessingOcr(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        try {
+          const matrix = await extractRainfallFromPdf(base64, bulkYear);
+          if (matrix) {
+            const records: any[] = [];
+            matrix.forEach((row, dayIdx) => {
+              row.forEach((val, monthIdx) => {
+                if (val !== null && val !== undefined) {
+                  const day = dayIdx + 1;
+                  const month = monthIdx + 1;
+                  const dateStr = `${bulkYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const d = new Date(dateStr);
+                  if (d.getFullYear() === bulkYear && d.getMonth() === monthIdx && d.getDate() === day && selectedStasiun) {
+                    records.push({
+                      stasiun_id: selectedStasiun.id,
+                      tanggal: dateStr,
+                      curah_hujan: val
+                    });
+                  }
+                }
+              });
+            });
+            setBulkPreview(records);
+            toast.success(`AI berhasil mengekstrak ${records.length} data curah hujan.`);
+          } else {
+            toast.error('AI gagal mengekstrak data. Pastikan file PDF berisi tabel curah hujan.');
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Terjadi kesalahan saat memproses OCR.');
+        } finally {
+          setIsProcessingOcr(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      setIsProcessingOcr(false);
+    }
+    if (ocrFileInputRef.current) ocrFileInputRef.current.value = '';
+  };
 
- useEffect(() => {
- fetchStasiun();
- }, [fetchStasiun]);
+  useEffect(() => {
+    fetchStasiun();
+  }, [fetchStasiun]);
 
- // AUTO-FETCH: Ensure data is loaded if a station is restored from persistence
- useEffect(() => {
- if (selectedStasiun && dataHujan.length === 0) {
- fetchMultipleStationsData([selectedStasiun.id]);
- }
- }, [selectedStasiun, fetchMultipleStationsData, dataHujan.length]);
+  useEffect(() => {
+    if (selectedStasiun && dataHujan.length === 0) {
+      fetchMultipleStationsData([selectedStasiun.id]);
+    }
+  }, [selectedStasiun, fetchMultipleStationsData, dataHujan.length]);
 
- useEffect(() => {
- if (dataHujan.length >= 10) {
- updateDataHujanManual(dataHujan);
- }
- }, [dataHujan, updateDataHujanManual]);
+  useEffect(() => {
+    if (dataHujan.length >= 10) {
+      updateDataHujanManual(dataHujan);
+    }
+  }, [dataHujan, updateDataHujanManual]);
 
- const displayData = React.useMemo(() => {
- if (activeRainfallSource === 'aljabar') return arealRainfallAlgebraic || [];
- if (activeRainfallSource === 'thiessen') return arealRainfallThiessen || [];
- if (activeRainfallSource === 'isohyet') return arealRainfallIsohyet || [];
+  const displayData = React.useMemo(() => {
+    if (activeRainfallSource === 'aljabar') return arealRainfallAlgebraic || [];
+    if (activeRainfallSource === 'thiessen') return arealRainfallThiessen || [];
+    if (activeRainfallSource === 'isohyet') return arealRainfallIsohyet || [];
+    if (!selectedStasiun) return [];
+    return dataHujan.filter(d => d.stasiun_id === selectedStasiun.id);
+  }, [activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet, dataHujan, selectedStasiun]);
 
- // Default: Titik (Point) data filtered by selected station
- if (!selectedStasiun) return [];
- return dataHujan.filter(d => d.stasiun_id === selectedStasiun.id);
- }, [activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet, dataHujan, selectedStasiun]);
+  const availableYears = React.useMemo(() => {
+    const years = new Set(displayData.map(d => {
+      const y = parseInt(d.tanggal.split('-')[0], 10);
+      return y;
+    }));
+    const yearList = Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
+    if (yearList.length === 0) return [new Date().getFullYear()];
+    return yearList;
+  }, [displayData]);
 
- const availableYears = React.useMemo(() => {
- const years = new Set(displayData.map(d => {
- const y = parseInt(d.tanggal.split('-')[0], 10);
- return y;
- }));
- const yearList = Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
- 
- // Only fallback to current year if there is absolutely no data for any year
- if (yearList.length === 0) return [new Date().getFullYear()];
- return yearList;
- }, [displayData]);
+  useEffect(() => {
+    if (availableYears.length > 0) {
+      const latestYear = availableYears[0];
+      if (!availableYears.includes(selectedYear)) {
+        setSelectedYear(latestYear);
+      }
+    }
+  }, [availableYears, selectedYear]);
 
- useEffect(() => {
- // Auto-select the latest available year if current selectedYear is not in the list
- if (availableYears.length > 0) {
- const latestYear = availableYears[0];
- if (!availableYears.includes(selectedYear)) {
- setSelectedYear(latestYear);
- }
- }
- }, [availableYears, selectedYear]);
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const year = parseInt(e.target.value, 10);
+    setSelectedYear(year);
+  };
 
- const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
- const year = parseInt(e.target.value, 10);
- setSelectedYear(year);
- };
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedStasiun) return;
 
- const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
- const file = e.target.files?.[0];
- if (!file || !selectedStasiun) return;
+    const confirmed = confirm(
+      `Import data ke stasiun: ${selectedStasiun.nama_stasiun}\n\n` +
+      `File: ${file.name}\n\n` +
+      `Lanjutkan?`
+    );
 
- const confirmed = confirm(
- `Import data ke stasiun: ${selectedStasiun.nama_stasiun}\n\n` +
- `File: ${file.name}\n\n` +
- `Lanjutkan?`
- );
+    if (!confirmed) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
- if (!confirmed) {
- if (fileInputRef.current) fileInputRef.current.value = '';
- return;
- }
+    try {
+      const data = await file.arrayBuffer();
+      const jsonData = await parseExcelData<{ Tanggal: string; 'Curah Hujan (mm)': number }>(data, 4);
 
- try {
- const data = await file.arrayBuffer();
- const jsonData = await parseExcelData<{ Tanggal: string; 'Curah Hujan (mm)': number }>(data, 4);
+      const dataList = jsonData
+        .filter(row => row.Tanggal && row['Curah Hujan (mm)'] !== undefined)
+        .map(row => ({
+          stasiun_id: selectedStasiun.id,
+          tanggal: row.Tanggal,
+          curah_hujan: row['Curah Hujan (mm)'] || 0
+        }));
 
- const dataList = jsonData
- .filter(row => row.Tanggal && row['Curah Hujan (mm)'] !== undefined)
- .map(row => ({
- stasiun_id: selectedStasiun.id,
- tanggal: row.Tanggal,
- curah_hujan: row['Curah Hujan (mm)'] || 0
- }));
+      if (dataList.length === 0) {
+        toast.warning('Tidak ada data valid di file Excel.');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
 
- if (dataList.length === 0) {
- toast.warning('Tidak ada data valid di file Excel.');
- if (fileInputRef.current) fileInputRef.current.value = '';
- return;
- }
+      await importDataHujanBatch(dataList);
+      toast.success(`Berhasil import ${dataList.length} data ke stasiun ${selectedStasiun.nama_stasiun}`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Gagal import file. Pastikan format sesuai template.');
+    }
 
- await importDataHujanBatch(dataList);
- toast.success(`Berhasil import ${dataList.length} data ke stasiun ${selectedStasiun.nama_stasiun}`);
- } catch (err) {
- console.error(err);
- toast.error('Gagal import file. Pastikan format sesuai template.');
- }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
- if (fileInputRef.current) fileInputRef.current.value = '';
- };
+  const downloadTemplate = async () => {
+    if (!selectedStasiun) {
+      toast.warning('Pilih stasiun terlebih dahulu.');
+      return;
+    }
+    await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
+  };
 
- const downloadTemplate = async () => {
- if (!selectedStasiun) {
- toast.warning('Pilih stasiun terlebih dahulu.');
- return;
- }
- await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
- };
+  const handleInfillData = async () => {
+    if (!selectedStasiun || stasiunList.length < 2) {
+      toast.warning('Dibutuhkan minimal 2 stasiun untuk melakukan infilling (IDW).');
+      return;
+    }
+    setIsInfilling(true);
 
+    try {
+      const otherStationIds = stasiunList.map(s => s.id);
+      let allReferenceData: any[] = [];
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('master_data_hujan')
+          .select('*')
+          .in('stasiun_id', otherStationIds);
+        if (error) throw error;
+        allReferenceData = data || [];
+      }
 
+      const referenceStations = stasiunList
+        .filter(s => s.id !== selectedStasiun.id)
+        .map(s => ({
+          stasiun: s,
+          data: allReferenceData.filter(rd => rd.stasiun_id === s.id)
+        }));
 
- const handleInfillData = async () => {
- if (!selectedStasiun || stasiunList.length < 2) {
- toast.warning('Dibutuhkan minimal 2 stasiun untuk melakukan infilling (IDW).');
- return;
- }
- setIsInfilling(true);
+      const dataWithAnomalies = detectAnomalies(dataHujan);
+      const filledData = infillRainfallData(
+        selectedStasiun,
+        dataWithAnomalies,
+        referenceStations
+      );
 
- try {
- // 1. Fetch data for all stations to have reference data
- const otherStationIds = stasiunList.map(s => s.id);
- // Temporarily fetch all to ensure we have neighbors
- let allReferenceData: any[] = [];
- if (supabase) {
- const { data, error } = await supabase
- .from('master_data_hujan')
- .select('*')
- .in('stasiun_id', otherStationIds);
- if (error) throw error;
- allReferenceData = data || [];
- }
+      updateDataHujanManual(filledData);
+      await syncRainfallMetadata();
+      toast.success('Berhasil mengisi data kosong dan mensinkronkan metadata ke cloud.');
+    } catch (error) {
+      console.error('Error infilling data:', error);
+      toast.error('Gagal mengisi data kosong.');
+    } finally {
+      setIsInfilling(false);
+    }
+  };
 
- // 2. Prepare reference objects
- const referenceStations = stasiunList
- .filter(s => s.id !== selectedStasiun.id)
- .map(s => ({
- stasiun: s,
- data: allReferenceData.filter(rd => rd.stasiun_id === s.id)
- }));
-
- // 3. Detect Anomalies first to know what to fill
- const dataWithAnomalies = detectAnomalies(dataHujan);
-
- // 4. Perform Infilling
- const filledData = infillRainfallData(
- selectedStasiun,
- dataWithAnomalies,
- referenceStations
- );
-
- // 5. Update local store and sync to Supabase
- updateDataHujanManual(filledData);
- 
- // 6. Push metadata to Supabase automatically
-    await syncRainfallMetadata();
- 
- toast.success('Berhasil mengisi data kosong dan mensinkronkan metadata ke cloud.');
- } catch (error) {
- console.error('Error infilling data:', error);
- toast.error('Gagal mengisi data kosong.');
- } finally {
- setIsInfilling(false);
- }
- };
-
- const handleDeleteYear = async () => {
- if (!selectedStasiun) return;
- const confirmed = window.confirm(`⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?
+  const handleDeleteYear = async () => {
+    if (!selectedStasiun) return;
+    const confirmed = window.confirm(`⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?
 Tindakan ini tidak dapat dibatalkan!`);
- if (confirmed) {
- try {
- await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
- 
- // CRITICAL FIX: Refresh health and AMS data after deletion
- const { dataHujan: updatedData } = useHydrologyStore.getState();
- const filteredData = updatedData.filter(d => d.stasiun_id === selectedStasiun.id);
- 
- const newHealth = { ...stationHealth };
- const newAmsData = { ...stasiunAmsData };
- 
- if (filteredData.length > 0) {
- newHealth[selectedStasiun.id] = calculateStationHealth(filteredData);
- 
- const maxByYear: Record<number, number> = {};
- filteredData.forEach(row => {
- const y = parseInt(row.tanggal.split('-')[0], 10);
- if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) maxByYear[y] = row.curah_hujan;
- });
- newAmsData[selectedStasiun.id] = Object.entries(maxByYear)
- .map(([year, hujan]) => ({ tahun: parseInt(year), hujan }))
- .sort((a, b) => a.tahun - b.tahun);
- } else {
- delete newHealth[selectedStasiun.id];
- delete newAmsData[selectedStasiun.id];
- }
- 
- setStationHealth(newHealth);
- setStasiunAmsData(newAmsData);
- 
- toast.success(`Data tahun ${selectedYear} berhasil dihapus dan status stasiun diperbarui.`);
- } catch (err) {
- console.error(err);
- toast.error('Gagal menghapus data.');
- }
- }
- };
+    if (confirmed) {
+      try {
+        await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
+        const { dataHujan: updatedData } = useHydrologyStore.getState();
+        const filteredData = updatedData.filter(d => d.stasiun_id === selectedStasiun.id);
+        const newHealth = { ...stationHealth };
+        const newAmsData = { ...stasiunAmsData };
+        if (filteredData.length > 0) {
+          newHealth[selectedStasiun.id] = calculateStationHealth(filteredData);
+          const maxByYear: Record<number, number> = {};
+          filteredData.forEach(row => {
+            const y = parseInt(row.tanggal.split('-')[0], 10);
+            if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) maxByYear[y] = row.curah_hujan;
+          });
+          newAmsData[selectedStasiun.id] = Object.entries(maxByYear)
+            .map(([year, hujan]) => ({ tahun: parseInt(year), hujan }))
+            .sort((a, b) => a.tahun - b.tahun);
+        } else {
+          delete newHealth[selectedStasiun.id];
+          delete newAmsData[selectedStasiun.id];
+        }
+        setStationHealth(newHealth);
+        setStasiunAmsData(newAmsData);
+        toast.success(`Data tahun ${selectedYear} berhasil dihapus dan status stasiun diperbarui.`);
+      } catch (err) {
+        console.error(err);
+        toast.error('Gagal menghapus data.');
+      }
+    }
+  };
 
- const handleCellClick = async (dateStr: string, currentVal: number | null) => {
- if (!selectedStasiun) return;
- const newValStr = window.prompt(`Masukkan Curah Hujan untuk ${dateStr}:`, currentVal !== null ? currentVal.toString() : '0');
- if (newValStr !== null) {
- const newVal = parseFloat(newValStr);
- if (!isNaN(newVal) && newVal >= 0) {
- try {
- await updateDataHujanSingle(selectedStasiun.id, dateStr, newVal);
- } catch (err) {
- console.error(err);
- toast.error('Gagal mengupdate data.');
- }
- } else {
- toast.warning('Nilai tidak valid. Masukkan angka positif.');
- }
- }
- };
+  const handleCellClick = async (dateStr: string, currentVal: number | null) => {
+    if (!selectedStasiun) return;
+    const newValStr = window.prompt(`Masukkan Curah Hujan untuk ${dateStr}:`, currentVal !== null ? currentVal.toString() : '0');
+    if (newValStr !== null) {
+      const newVal = parseFloat(newValStr);
+      if (!isNaN(newVal) && newVal >= 0) {
+        try {
+          await updateDataHujanSingle(selectedStasiun.id, dateStr, newVal);
+        } catch (err) {
+          console.error(err);
+          toast.error('Gagal mengupdate data.');
+        }
+      } else {
+        toast.warning('Nilai tidak valid. Masukkan angka positif.');
+      }
+    }
+  };
 
- const annualMaximums = React.useMemo(() => {
- if (!displayData || displayData.length === 0) return [];
- const maxByYear: Record<number, number> = {};
- displayData.forEach(row => {
- const [yyyy] = row.tanggal.split('-');
- const y = parseInt(yyyy, 10);
- if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) {
- maxByYear[y] = row.curah_hujan;
- }
- });
- return Object.entries(maxByYear)
- .map(([y, val]) => ({ tahun: parseInt(y, 10), curah_hujan: val }))
- .sort((a, b) => b.tahun - a.tahun);
- }, [displayData]);
+  const annualMaximums = React.useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+    const maxByYear: Record<number, number> = {};
+    displayData.forEach(row => {
+      const [yyyy] = row.tanggal.split('-');
+      const y = parseInt(yyyy, 10);
+      if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) {
+        maxByYear[y] = row.curah_hujan;
+      }
+    });
+    return Object.entries(maxByYear)
+      .map(([y, val]) => ({ tahun: parseInt(y, 10), curah_hujan: val }))
+      .sort((a, b) => b.tahun - a.tahun);
+  }, [displayData]);
 
+  return (
+    <div className="space-y-8 p-1">
+      <ProjectContextBanner />
 
- return (
- <div className="space-y-6">
- {error && (
- <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm flex items-start gap-3">
- <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
- <div>
- <h4 className="font-bold text-sm">Terjadi Kesalahan</h4>
- <p className="text-sm mt-1">{error}</p>
- </div>
- </div>
- )}
- <div className="flex justify-between items-center">
- <div>
- <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Database Master Stasiun</h2>
- <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Kelola daftar stasiun dan data hujan historis secara terpusat</p>
- </div>
- <div className="flex gap-3">
- <Button
- onClick={() => {
- setSelectedQCStations([]);
- setQcSummary(null);
- setQCProgress(null);
- setShowModalQC(true);
- }}
- variant="outline"
- className="rounded-sm font-bold bg-white dark:bg-slate-900 border-pupr-blue text-pupr-blue hover:bg-pupr-surface"
- >
- <Sparkles className="w-4 h-4 mr-2" />
- Audit & Hubungkan ke Distribusi
- </Button>
- <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
- <Download className="w-4 h-4 mr-2" />
- Download Template
- </Button>
- {selectedStasiun && (
- <>
- <input
- ref={fileInputRef}
- type="file"
- accept=".xlsx,.xls"
- onChange={handleFileUpload}
- className="hidden"
- />
- <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-teal-200 text-teal-700 hover:bg-teal-50">
- <Upload className="w-4 h-4 mr-2" />
- Import Excel
- </Button>
- <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-teal-200 text-teal-700 hover:bg-teal-50">
- <Activity className="w-4 h-4 mr-2" />
- Bulk Paste
- </Button>
- </>
- )}
- <Button onClick={() => {
- setEditingStasiunId(null);
- setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
- setShowModalStasiun(true);
- }} className="rounded-sm font-bold bg-pupr-blue hover:bg-teal-700 shadow-teal-500/20">
- <Plus className="w-4 h-4 mr-2" />
- Tambah Stasiun
- </Button>
- </div>
- </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="font-bold text-sm">Terjadi Kesalahan</h4>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      )}
 
- <div className="flex flex-col lg:flex-row gap-8 mt-8 items-start">
- <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
- <div className="flex justify-between items-center px-2">
- <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
- <MapPin className="w-5 h-5 text-pupr-blue" />
- Daftar Stasiun
- </h3>
- <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-sm">{stasiunList.length} Total</span>
- </div>
+      {/* Header: Flattened & Quieter */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-700 pb-8">
+        <div>
+          <h2 className="text-3xl font-medium text-[#1e293b] dark:text-slate-100 tracking-tight">Database Master Stasiun</h2>
+          <p className="text-sm text-slate-500 mt-1">Kelola daftar stasiun dan data hujan historis secara terpusat</p>
+        </div>
 
- <div className="flex flex-col gap-1">
- {isLoading && stasiunList.length === 0 ? (
- <div className="flex justify-center items-center h-40">
- <div className="animate-pulse bg-slate-200 rounded-sm h-8 w-8 border-b-2 border-teal-600"></div>
- </div>
- ) : (
- stasiunList.map((stasiun) => {
- const isActive = selectedStasiun?.id === stasiun.id;
- const status = useHydrologyStore.getState().qcStatus?.[stasiun.id];
- const health = useHydrologyStore.getState().stationHealth?.[stasiun.id];
- 
- // Logic for Health Badge
- let healthColor = 'bg-slate-100 text-slate-500';
- let healthLabel = 'No Audit';
- 
- if (status) {
- const passedCount = [status.konsisten, status.bebasOutlier, status.homogen].filter(Boolean).length;
- if (passedCount === 3) {
- healthColor = 'bg-emerald-500 text-white ';
- healthLabel = '🟢 Healthy';
- } else if (passedCount >= 1) {
- healthColor = 'bg-amber-500 text-white ';
- healthLabel = '🟡 Caution';
- } else {
- healthColor = 'bg-red-500 text-white ';
- healthLabel = '🔴 Unstable';
- }
- }
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={() => {
+              setSelectedQCStations([]);
+              setQcSummary(null);
+              setQCProgress(null);
+              setShowModalQC(true);
+            }}
+            variant="outline"
+            className="rounded-sm font-bold bg-white dark:bg-slate-900 border-pupr-blue text-pupr-blue hover:bg-pupr-surface border-2 h-10 px-4"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Audit & QC
+          </Button>
 
- return (
- <div
- key={stasiun.id}
- onClick={() => selectStasiun(stasiun)}
- className={`group p-4 rounded-sm cursor-pointer transition-colors ${isActive
- ? 'bg-pupr-surface/50 text-pupr-blue'
- : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
- }`}
- >
- <div className="flex justify-between items-start">
- <div className="flex flex-col gap-1">
- <h4 className={`font-bold text-[15px] ${isActive ? 'text-pupr-blue' : 'text-slate-800 dark:text-slate-200'}`}>
- {stasiun.nama_stasiun}
- </h4>
- <div className="flex gap-1.5 flex-wrap">
- <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm w-fit tracking-tighter ${healthColor}`}>
- {healthLabel}
- </span>
- {health && (
- <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm w-fit tracking-tighter ${
- health.healthScore >= 80 ? 'bg-emerald-100 text-emerald-700' : 
- health.healthScore >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
- }`}>
- Score: {health.healthScore}
- </span>
- )}
- </div>
- </div>
- <div className="flex gap-1">
- <button
- onClick={(e) => {
- e.stopPropagation();
- selectStasiun(stasiun);
- }}
- className={`p-1.5 rounded-sm ${isActive ? 'bg-pupr-blue text-white' : 'hover:bg-slate-100 text-slate-500'}`}
- title="Lihat Matriks Data"
- >
- <CloudRain className="w-3.5 h-3.5" />
- </button>
- <button
- onClick={(e) => {
- e.stopPropagation();
- setEditingStasiunId(stasiun.id);
- setFormStasiun({
- nama_stasiun: stasiun.nama_stasiun,
- koordinat_x: stasiun.koordinat_x?.toString() || '',
- koordinat_y: stasiun.koordinat_y?.toString() || '',
- elevasi: stasiun.elevasi?.toString() || '',
- keterangan: stasiun.keterangan || ''
- });
- setShowModalStasiun(true);
- }}
- className="p-1.5 rounded-sm hover:bg-slate-100 text-slate-500"
- title="Edit Stasiun"
- >
- <Edit2 className="w-3.5 h-3.5" />
- </button>
- <button
- onClick={async (e) => {
- e.stopPropagation();
- if (window.confirm(`Apakah Anda yakin ingin menghapus stasiun ${stasiun.nama_stasiun}?`)) {
- try {
- await deleteStasiun(stasiun.id);
- } catch (err) {
- console.error(err);
- toast.error('Gagal menghapus stasiun.');
- }
- }
- }}
- className="p-1.5 rounded-sm hover:bg-red-50 text-red-500"
- title="Hapus Stasiun"
- >
- <Trash2 className="w-3.5 h-3.5" />
- </button>
- </div>
- </div>
- <div className="mt-3 flex flex-col gap-1.5">
- {health && health.periodStart && (
- <div className="flex justify-between items-center text-[10px]">
- <span className="text-slate-500 font-medium">Periode: <span className="font-bold text-slate-700 dark:text-slate-300">{health.periodStart} — {health.periodEnd}</span></span>
- <span className="text-slate-500 font-medium">Gap: <span className="font-bold text-slate-700 dark:text-slate-300">{health.missingPercentage}%</span></span>
- </div>
- )}
- <div className="flex justify-between items-center text-[10px]">
- <span className="text-slate-500 font-medium">Elevasi: <span className="font-bold text-slate-700 dark:text-slate-300">{stasiun.elevasi} m</span></span>
- <span className="text-slate-500 font-medium">Koordinat: <span className="font-bold text-slate-700 dark:text-slate-300">{stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}</span></span>
- </div>
- </div>
- </div>
- );
- })
- )}
- </div>
- </div>
+          {selectedStasiun && (
+            <>
+              <Button onClick={downloadTemplate} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-slate-200 text-slate-600 hover:bg-slate-50 border-2 h-10 px-4">
+                <Download className="w-4 h-4 mr-2" />
+                Template
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-slate-200 text-slate-600 hover:bg-slate-50 border-2 h-10 px-4">
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </Button>
+              <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-sm font-bold bg-white dark:bg-slate-900 border-slate-200 text-slate-600 hover:bg-slate-50 border-2 h-10 px-4">
+                <Activity className="w-4 h-4 mr-2" />
+                Bulk Paste
+              </Button>
+            </>
+          )}
+          
+          <Button 
+            onClick={() => {
+              setEditingStasiunId(null);
+              setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
+              setShowModalStasiun(true);
+            }} 
+            className="rounded-sm font-bold bg-pupr-blue hover:bg-slate-900 h-10 px-4"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Tambah Stasiun
+          </Button>
+        </div>
+      </div>  <div className="flex flex-col lg:flex-row gap-0 mt-2 items-start bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 min-h-[600px]">
+    {/* Left Column: Station Navigator */}
+    <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col border-r border-slate-200 dark:border-slate-700 self-stretch">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50">
+        <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-pupr-blue"></span>
+          DAFTAR STASIUN
+          <span className="ml-auto bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[10px] tabular-nums font-bold">{stasiunList.length}</span>
+        </h3>
+      </div>
 
- <div className="w-full lg:w-2/3 xl:w-3/4 flex flex-col gap-6 lg:sticky lg:top-6">
+      <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800 overflow-y-auto max-h-[700px] custom-scrollbar">
+        {isLoading && stasiunList.length === 0 ? (
+          <div className="flex justify-center items-center h-40">
+            <Activity className="w-6 h-6 text-slate-300 animate-spin" />
+          </div>
+        ) : (
+          stasiunList.map((stasiun) => {
+            const isActive = selectedStasiun?.id === stasiun.id;
+            const status = useHydrologyStore.getState().qcStatus?.[stasiun.id];
+            const health = useHydrologyStore.getState().stationHealth?.[stasiun.id];
+            
+            let healthColor = 'text-slate-400';
+            let healthLabel = 'STANDBY';
+            
+            if (status) {
+              const passedCount = [status.konsisten, status.bebasOutlier, status.homogen].filter(Boolean).length;
+              if (passedCount === 3) {
+                healthColor = 'text-emerald-500';
+                healthLabel = 'HEALTHY';
+              } else if (passedCount >= 1) {
+                healthColor = 'text-amber-500';
+                healthLabel = 'CAUTION';
+              } else {
+                healthColor = 'text-red-500';
+                healthLabel = 'UNSTABLE';
+              }
+            }
+
+            return (
+              <div
+                key={stasiun.id}
+                onClick={() => selectStasiun(stasiun)}
+                className={`group px-5 py-4 cursor-pointer transition-all border-l-4 ${isActive
+                  ? 'bg-slate-50 dark:bg-slate-800/50 border-pupr-blue'
+                  : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30 border-transparent'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex flex-col gap-0.5">
+                    <h4 className={`font-bold text-sm tracking-tight leading-tight ${isActive ? 'text-pupr-blue' : 'text-slate-800 dark:text-slate-200'}`}>
+                      {stasiun.nama_stasiun}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[9px] font-black tracking-tighter flex items-center gap-1 ${healthColor}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${healthColor.replace('text', 'bg')}`}></span>
+                        {healthLabel}
+                      </span>
+                      {health && (
+                        <span className="text-[9px] font-bold text-slate-400 tabular-nums">
+                          SCORE: {health.healthScore}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingStasiunId(stasiun.id);
+                        setFormStasiun({
+                          nama_stasiun: stasiun.nama_stasiun,
+                          koordinat_x: stasiun.koordinat_x?.toString() || '',
+                          koordinat_y: stasiun.koordinat_y?.toString() || '',
+                          elevasi: stasiun.elevasi?.toString() || '',
+                          keterangan: stasiun.keterangan || ''
+                        });
+                        setShowModalStasiun(true);
+                      }}
+                      className="p-1 px-2 text-slate-400 hover:text-pupr-blue"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Hapus stasiun ${stasiun.nama_stasiun}?`)) {
+                          try { await deleteStasiun(stasiun.id); } catch (err) { toast.error('Gagal menghapus'); }
+                        }
+                      }}
+                      className="p-1 px-2 text-slate-400 hover:text-red-500"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 font-medium">
+                  <div className="flex flex-col">
+                    <span className="text-[8px] text-slate-400 uppercase tracking-tighter">ELEVASI</span>
+                    <span className="tabular-nums font-bold text-slate-600">{stasiun.elevasi} M</span>
+                  </div>
+                  <div className="flex flex-col text-right">
+                    <span className="text-[8px] text-slate-400 uppercase tracking-tighter">GAP</span>
+                    <span className="tabular-nums font-bold text-slate-600">{health?.missingPercentage || 0}%</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+
+    {/* Right Column: Data Workspace */}
+    <div className="w-full lg:w-2/3 xl:w-3/4 flex flex-col self-stretch bg-slate-50/30 dark:bg-slate-900/30 overflow-hidden">
  {!selectedStasiun ? (
  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
  <div className="w-24 h-24 mb-6 bg-white dark:bg-slate-900 border border-teal-100 rounded-sm flex items-center justify-center">
@@ -709,40 +675,36 @@ Tindakan ini tidak dapat dibatalkan!`);
 
  <DailyRainfallMatrix data={displayData} year={selectedYear} onCellClick={handleCellClick} />
 
- {annualMaximums.length > 0 && (
- <div className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden">
- <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex justify-between items-center">
- <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm uppercase tracking-wider">
- Rekapitulasi Hujan Maksimum {
- activeRainfallSource === 'aljabar' ? '(Aljabar)' :
- activeRainfallSource === 'thiessen' ? '(Thiessen)' :
- activeRainfallSource === 'isohyet' ? '(Isohyet)' :
- 'Tahunan'
- }
- </h4>
- </div>
- <div className="p-0 overflow-x-auto">
- <table className="w-full text-sm">
- <thead>
- <tr className="bg-slate-100 border-b border-slate-200 dark:border-slate-700">
- {annualMaximums.map(m => (
- <th key={m.tahun} className="py-2 px-3 border-r border-slate-200 dark:border-slate-700 text-center text-xs font-bold text-slate-600 dark:text-slate-400">{m.tahun}</th>
- ))}
- </tr>
- </thead>
- <tbody>
- <tr>
- {annualMaximums.map(m => (
- <td key={m.tahun} className="py-3 px-3 border-r border-slate-200 dark:border-slate-700 text-center font-bold text-pupr-blue tabular-nums">
- {m.curah_hujan.toFixed(1)}
- </td>
- ))}
- </tr>
- </tbody>
- </table>
- </div>
- </div>
- )}
+            {annualMaximums.length > 0 && (
+              <div className="mt-8 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                  <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-pupr-blue"></span>
+                    REKAPITULASI HUJAN MAKSIMUM
+                  </h4>
+                </div>
+                <div className="p-0 overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100/50 border-b border-slate-200 dark:border-slate-700">
+                        {annualMaximums.map(m => (
+                          <th key={m.tahun} className="py-2 px-3 border-r border-slate-200 dark:border-slate-700 text-center text-[10px] font-black text-slate-500 uppercase tracking-tighter tabular-nums">{m.tahun}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        {annualMaximums.map(m => (
+                          <td key={m.tahun} className="py-4 px-3 border-r border-slate-200 dark:border-slate-700 text-center font-black text-pupr-blue tabular-nums tracking-tight text-base">
+                            {m.curah_hujan.toFixed(1)}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
  </div>
  </div>
 
@@ -764,7 +726,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  <button onClick={() => {
  setShowModalStasiun(false);
  setEditingStasiunId(null);
- }} className="text-slate-500 hover:text-slate-600 dark:text-slate-400">
+ }} className="text-slate-500 hover:text-slate-600 dark:text-slate-500">
  <X className="w-5 h-5" />
  </button>
  </div>
@@ -867,12 +829,13 @@ Tindakan ini tidak dapat dibatalkan!`);
  <div className="bg-white dark:bg-slate-900 rounded-sm max-w-md w-full p-6">
  <div className="flex justify-between items-center mb-6">
  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Tambah Data Curah Hujan</h3>
- <button onClick={() => setShowModalHujan(false)} className="text-slate-500 hover:text-slate-600 dark:text-slate-400">
+ <button onClick={() => setShowModalHujan(false)} className="text-slate-500 hover:text-slate-600 dark:text-slate-500">
  <X className="w-5 h-5" />
  </button>
  </div>
- <form onSubmit={async (e) => {
+  <form onSubmit={async (e) => {
  e.preventDefault();
+ if (!selectedStasiun) return;
  try {
  await addDataHujan({
  stasiun_id: selectedStasiun.id,
@@ -909,7 +872,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  <div className="bg-teal-50 border border-teal-200 rounded-sm p-3">
  <p className="text-xs text-teal-700">
- <span className="font-bold">Stasiun:</span> {selectedStasiun.nama_stasiun}
+ <span className="font-bold">Stasiun:</span> {selectedStasiun?.nama_stasiun}
  </p>
  </div>
  <div className="flex gap-3 pt-2">
@@ -977,7 +940,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  <Button
  onClick={() => ocrFileInputRef.current?.click()}
  disabled={isProcessingOcr}
- className="bg-pupr-blue hover:bg-slate-900 text-white w-full py-7 rounded-sm font-extrabold text-sm shadow-pupr-blue/20"
+ className="bg-pupr-blue hover:bg-slate-900 text-white w-full py-7 rounded-sm font-extrabold text-sm shadow-none"
  >
  {isProcessingOcr ? (
  <>
@@ -1012,7 +975,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  <Button
  onClick={handleBulkPreview}
  variant="outline"
- className="text-slate-600 dark:text-slate-400 border-2 border-slate-200 dark:border-slate-700 hover:border-slate-800 hover:bg-slate-800 hover:text-white font-bold py-5 rounded-sm transition-all"
+ className="text-slate-600 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700 hover:border-slate-800 hover:bg-slate-800 hover:text-white font-bold py-5 rounded-sm transition-all"
  >
  Pratinjau Data Manual
  </Button>
@@ -1034,20 +997,20 @@ Tindakan ini tidak dapat dibatalkan!`);
  <table className="w-full text-[11px] border-collapse">
  <thead className="bg-slate-200 sticky top-0 z-10">
  <tr>
- <th className="p-3 border-b border-slate-300 dark:border-slate-600 text-left font-extrabold text-slate-600 dark:text-slate-400">TANGGAL</th>
- <th className="p-3 border-b border-slate-300 dark:border-slate-600 text-right font-extrabold text-slate-600 dark:text-slate-400">CH (MM)</th>
+ <th className="p-3 border-b border-slate-300 dark:border-slate-600 text-left font-extrabold text-slate-600 dark:text-slate-500">TANGGAL</th>
+ <th className="p-3 border-b border-slate-300 dark:border-slate-600 text-right font-extrabold text-slate-600 dark:text-slate-500">CH (MM)</th>
  </tr>
  </thead>
  <tbody>
- {bulkPreview.slice(0, 200).map((row, idx) => (
+ {bulkPreview?.slice(0, 200).map((row, idx) => (
  <tr key={idx} className="border-b border-slate-100 hover:bg-pupr-blue/[0.03] transition-colors">
- <td className="p-3 border-r border-slate-100 font-mono text-slate-600 dark:text-slate-400">{row.tanggal}</td>
+ <td className="p-3 border-r border-slate-100 font-mono text-slate-600 dark:text-slate-500">{row.tanggal}</td>
  <td className="p-3 text-right font-bold text-pupr-blue tabular-nums text-sm">
  {row.curah_hujan.toFixed(1)}
  </td>
  </tr>
  ))}
- {bulkPreview.length > 200 && (
+ {bulkPreview && bulkPreview.length > 200 && (
  <tr>
  <td colSpan={2} className="p-4 text-center text-slate-500 italic bg-white dark:bg-slate-900 font-medium">
  ... Menampilkan 200 dari {bulkPreview.length} baris data
@@ -1068,7 +1031,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  <Button
  onClick={handleBulkSave}
  disabled={!bulkPreview || bulkPreview.length === 0 || isLoading}
- className="w-full bg-pupr-blue hover:bg-slate-900 text-white py-8 rounded-sm font-extrabold text-base shadow-pupr-blue/30 disabled:opacity-50 disabled: transition-all "
+ className="w-full bg-pupr-blue hover:bg-slate-900 text-white py-8 rounded-sm font-extrabold text-base shadow-none disabled:opacity-50 disabled: transition-all "
  >
  {isLoading ? (
  <span className="flex items-center gap-2">
@@ -1145,9 +1108,9 @@ Tindakan ini tidak dapat dibatalkan!`);
  <th className="px-3 py-2 text-center">Homogen</th>
  </tr>
  </thead>
- <tbody>
- {Object.entries(qcSummary).map(([id, status]: [string, any]) => {
- const stasiun = stasiunList.find(s => s.id === id);
+  <tbody>
+    {qcSummary && Object.entries(qcSummary).map(([id, status]: [string, any]) => {
+      const stasiun = stasiunList.find(s => s.id === id);
  return (
  <tr key={id} className="border-b border-slate-100 bg-white dark:bg-slate-900">
  <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300">{stasiun?.nama_stasiun}</td>
@@ -1274,7 +1237,7 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
  </div>
- )}
- </div>
- );
+      )}
+    </div>
+  );
 };

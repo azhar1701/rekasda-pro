@@ -134,7 +134,7 @@ export default function ChannelCapacity() {
 
  {/* Section A: Geometri */}
  <div className="mb-8">
- <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-4">
+ <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-4">
  Geometri
  </h3>
 
@@ -194,7 +194,7 @@ export default function ChannelCapacity() {
 
  {/* Section B: Hidrolika */}
  <div>
- <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-4">
+ <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-500 uppercase tracking-wide mb-4">
  Hidrolika
  </h3>
 
@@ -285,19 +285,19 @@ export default function ChannelCapacity() {
  <>
  <div className="grid grid-cols-3 gap-6 mb-8">
  <div className="bg-white dark:bg-slate-900 rounded-sm p-6 border border-slate-200 dark:border-slate-700 ">
- <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Debit Kapasitas</div>
+ <div className="text-sm text-slate-600 dark:text-slate-500 mb-2">Debit Kapasitas</div>
  <div className="text-3xl font-bold text-pupr-blue">{results.Q.toFixed(3)}</div>
  <div className="text-sm text-slate-500 mt-1">m³/s</div>
  </div>
 
  <div className="bg-white dark:bg-slate-900 rounded-sm p-6 border border-slate-200 dark:border-slate-700 ">
- <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Kecepatan Aliran</div>
+ <div className="text-sm text-slate-600 dark:text-slate-500 mb-2">Kecepatan Aliran</div>
  <div className="text-3xl font-bold text-slate-700 dark:text-slate-300">{results.V.toFixed(3)}</div>
  <div className="text-sm text-slate-500 mt-1">m/s</div>
  </div>
 
  <div className="bg-white dark:bg-slate-900 rounded-sm p-6 border border-slate-200 dark:border-slate-700 ">
- <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Status Aliran</div>
+ <div className="text-sm text-slate-600 dark:text-slate-500 mb-2">Status Aliran</div>
  <div className={`text-2xl font-bold ${results.Fr < 1 ? 'text-green-600' : 'text-orange-600'}`}>
  {results.Fr < 1 ? 'Subkritis' : 'Superkritis'}
  </div>
@@ -322,27 +322,27 @@ export default function ChannelCapacity() {
  <tbody className="divide-y divide-slate-200">
  <tr className="hover:bg-slate-50 dark:bg-slate-800">
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">Luas Basah</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono tabular-nums tracking-tight">A</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 font-mono tabular-nums tracking-tight">A</td>
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 text-right font-medium tabular-nums tracking-tight">{results.A.toFixed(3)}</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">m²</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">m²</td>
  </tr>
  <tr className="hover:bg-slate-50 dark:bg-slate-800">
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">Keliling Basah</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono tabular-nums tracking-tight">P</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 font-mono tabular-nums tracking-tight">P</td>
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 text-right font-medium tabular-nums tracking-tight">{results.P.toFixed(3)}</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">m</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">m</td>
  </tr>
  <tr className="hover:bg-slate-50 dark:bg-slate-800">
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">Jari-jari Hidrolis</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono tabular-nums tracking-tight">R</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 font-mono tabular-nums tracking-tight">R</td>
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 text-right font-medium tabular-nums tracking-tight">{results.R.toFixed(3)}</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">m</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">m</td>
  </tr>
  <tr className="hover:bg-slate-50 dark:bg-slate-800">
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">Lebar Atas</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono tabular-nums tracking-tight">T</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 font-mono tabular-nums tracking-tight">T</td>
  <td className="px-6 py-4 text-sm text-slate-800 dark:text-slate-200 text-right font-medium tabular-nums tracking-tight">{results.T.toFixed(3)}</td>
- <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 tabular-nums tracking-tight">m</td>
+ <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-500 tabular-nums tracking-tight">m</td>
  </tr>
  </tbody>
  </table>

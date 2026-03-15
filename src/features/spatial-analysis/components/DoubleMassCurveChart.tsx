@@ -75,7 +75,7 @@ export const DoubleMassCurveChart: React.FC<DoubleMassCurveChartProps> = ({
  </ResponsiveContainer>
  </div>
 
- <div className="mt-2 text-[10px] font-mono p-2 bg-slate-50 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+ <div className="mt-2 text-[10px] font-mono p-2 bg-slate-50 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-500 border border-slate-200 dark:border-slate-700">
  {pesan}
  {!isKonsisten && breakYear && (
  <span className="block mt-1 font-bold text-rose-600">⚠ Diperlukan koreksi data pra-{breakYear} (Faktor: {faktorKoreksi?.toFixed(3)})</span>
