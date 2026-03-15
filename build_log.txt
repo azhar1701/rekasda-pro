@@ -1,0 +1,27 @@
+
+> hydrofield-pro@1.1.0 build
+> tsc && vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 2324 modules transformed.
+[31m✗[39m Build failed in 8.92s
+[31merror during build:
+[31m[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] There was an error during the build:
+  [vite]: Rollup failed to resolve import "react-virtuoso" from "C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/src/features/master-data/components/DailyRainfallMatrix.tsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  [vite]: Rollup failed to resolve import "react-virtuoso" from "C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/src/features/master-data/components/DailyRainfallMatrix.tsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`[31m
+    at getRollupError (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
+    at file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/rollup/dist/es/shared/node-entry.js:23467:39
+    at async catchUnfinishedHookActions (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/rollup/dist/es/shared/node-entry.js:22925:16)
+    at async rollupInternal (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/rollup/dist/es/shared/node-entry.js:23450:5)
+    at async buildEnvironment (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/vite/dist/node/chunks/config.js:33541:12)
+    at async Object.build (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/vite/dist/node/chunks/config.js:33900:19)
+    at async Object.buildApp (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/vite/dist/node/chunks/config.js:33897:153)
+    at async CAC.<anonymous> (file:///C:/Users/ariaz/OneDrive/Documents/GitHub/rekasda-pro/node_modules/vite/dist/node/cli.js:629:3)[39m

@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.svg', 'docs/**/*.pdf'],
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Rekasda Pro',
         short_name: 'Rekasda',

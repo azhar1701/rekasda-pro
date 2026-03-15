@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { X, CheckCircle, Download, Save, AlertTriangle, Activity } from 'lucide-react';
 import { DataInputTable } from './FrequencyAnalysisModal/DataInputTable';
-import { StatCard } from './FrequencyAnalysisModal/StatCard';
+import { Metric } from '@/components/ui/Metric';
 import { AnnualMaxGrid } from './FrequencyAnalysisModal/AnnualMaxGrid';
 import { calculateStatistics, performFrequencyAnalysis, type DistributionMethod } from '@/lib/engine/statistics/frequency';
 import { validateDistributionFit } from '@/lib/engine/statistics/goodnessOfFit';
@@ -278,10 +279,10 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
  <div className="col-span-12 md:col-span-7 flex flex-col gap-4">
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
- <StatCard label="Jumlah Data" value={data.length.toString()} />
- <StatCard label="Rata-rata" value={statistics?.mean?.toFixed(2) || '0.00'} />
- <StatCard label="Std Deviasi" value={statistics?.stdDev?.toFixed(2) || '0.00'} />
- <StatCard label="Skewness (Cs)" value={statistics?.cs?.toFixed(3) || '0.000'} />
+ <Metric label="Jumlah Data" value={data.length} density="compact" variant="slate" />
+ <Metric label="Rata-rata" value={statistics?.mean || 0} density="compact" variant="slate" />
+ <Metric label="Std Deviasi" value={statistics?.stdDev || 0} density="compact" variant="slate" />
+ <Metric label="Skewness (Cs)" value={statistics?.cs || 0} density="compact" variant="slate" />
  </div>
 
  {data.length >= 10 && (

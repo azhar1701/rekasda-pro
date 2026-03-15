@@ -37,62 +37,42 @@ export function detectAnomalies(data: DataHujan[]): DataHujan[] {
  return processedData;
 }
 
+import { infillMissingData } from '../lib/utils/spatialMath';
+
 /**
  * Infilling data menggunakan metode Rerata Bobot Jarak (Inverse Distance Weighting - IDW)
  * Mencatat log stasiun referensi yang digunakan
  */
 export function infillRainfallData(
- targetStasiun: StasiunHidrologi,
- targetData: DataHujan[],
- referenceStations: { stasiun: StasiunHidrologi; data: DataHujan[] }[]
+  targetStasiun: StasiunHidrologi,
+  targetData: DataHujan[],
+  referenceStations: { stasiun: StasiunHidrologi; data: DataHujan[] }[]
 ): DataHujan[] {
- return targetData.map(d => {
- // Hanya infill jika data 0 (asumsi 0 adalah missing untuk alat tertentu) atau anomali
- if (d.curah_hujan > 0 && d.anomaly_type !== 'SUSPICIOUS_ZERO') return d;
+  // Flatten reference data for infillMissingData
+  const allReferenceStations = referenceStations.map(r => r.stasiun);
+  const allReferenceData = referenceStations.flatMap(r => r.data);
 
- // Cari data pada tanggal yang sama di stasiun referensi
- const neighbors = referenceStations
- .map(ref => {
- const refEntry = ref.data.find(rd => rd.tanggal === d.tanggal);
- const refVal = refEntry?.curah_hujan || 0;
- const dist = calculateDistance(targetStasiun, ref.stasiun);
- return { id: ref.stasiun.id, nama: ref.stasiun.nama_stasiun, val: refVal, dist };
- })
- .filter(n => n.val > 0);
+  return targetData.map(d => {
+    // Hanya infill jika data 0 (asumsi 0 adalah missing untuk alat tertentu) atau anomali
+    if (d.curah_hujan > 0 && d.anomaly_type !== 'SUSPICIOUS_ZERO') return d;
 
- if (neighbors.length === 0) return d;
+    const result = infillMissingData(
+      targetStasiun,
+      allReferenceStations,
+      allReferenceData,
+      d.tanggal,
+      'idw'
+    );
 
- // Hitung bobot IDW (1/d^2)
- let weightSum = 0;
- let valueSum = 0;
- 
- neighbors.forEach(n => {
- const w = 1 / Math.pow(n.dist, 2);
- weightSum += w;
- valueSum += n.val * w;
- });
+    if (result.value === 0) return d;
 
- return {
- ...d,
- curah_hujan: parseFloat((valueSum / weightSum).toFixed(2)),
- is_infilled: true,
- infilled_from: neighbors.map(n => n.nama),
- keterangan: `Infilled via IDW from: ${neighbors.map(n => n.nama).join(', ')}`
- };
- });
-}
-
-/**
- * Helper: Hitung jarak antar stasiun (Euclidean sederhana untuk koordinat)
- */
-function calculateDistance(s1: StasiunHidrologi, s2: StasiunHidrologi): number {
- const x1 = s1.koordinat_x || 0;
- const y1 = s1.koordinat_y || 0;
- const x2 = s2.koordinat_x || 0;
- const y2 = s2.koordinat_y || 0;
- const dx = x1 - x2;
- const dy = y1 - y2;
- return Math.sqrt(dx * dx + dy * dy) || 0.001; 
+    return {
+      ...d,
+      curah_hujan: parseFloat(result.value.toFixed(2)),
+      is_infilled: true,
+      keterangan: `Infilled via ${result.method}${result.metadata ? ` (${result.metadata})` : ''}`
+    };
+  });
 }
 
 /**

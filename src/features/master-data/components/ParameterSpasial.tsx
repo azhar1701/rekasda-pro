@@ -38,7 +38,7 @@ export const ParameterSpasial: React.FC = () => {
  {/* Header Section */}
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-sm border border-slate-200 dark:border-slate-700 ">
  <div className="flex items-center gap-4">
- <div className="p-3 bg-pupr-blue rounded-sm shadow-pupr-blue/20">
+ <div className="p-3 bg-pupr-blue rounded-sm">
  <MapPin className="w-8 h-8 text-pupr-yellow" />
  </div>
  <div>
@@ -85,7 +85,7 @@ export const ParameterSpasial: React.FC = () => {
  {checklistItems.map((item) => (
  <div 
  key={item.id} 
- className={`w-1.5 h-1.5 rounded-sm transition-all duration-75 ${item.status ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`}
+ className={`w-1.5 h-1.5 rounded-sm transition-all duration-75 ${item.status ? 'bg-emerald-500' : 'bg-slate-300'}`}
  title={`${item.label}: ${item.status ? 'Lengkap' : 'Belum Lengkap'}`}
  />
  ))}

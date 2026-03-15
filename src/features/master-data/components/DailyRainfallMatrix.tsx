@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
 import { DataHujan } from '@/types/hydrology.types';
 import { cn } from '@/lib/utils';
@@ -144,12 +144,12 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
  ))}
  </tr>
  )}
- itemContent={(dayIndex, row) => (
+ itemContent={(dayIndex: number, row: (DataHujan | null)[]) => (
  <>
  <th className="py-1 px-1.5 border-r border-b border-slate-200 dark:border-slate-700 font-black text-slate-500 text-center sticky left-0 bg-white dark:bg-slate-900 z-20 group-hover:bg-slate-100 text-[10px] tabular-nums">
  {dayIndex + 1}
  </th>
- {row.map((cell, monthIndex) => {
+ {row.map((cell: DataHujan | null, monthIndex: number) => {
  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
  const isValidDay = dayIndex + 1 <= daysInMonth;
  
@@ -188,8 +188,8 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
  </>
  )}
  components={{
- Table: ({ style, ...props }) => <table {...props} style={{ ...style, borderCollapse: 'collapse', width: '100%' }} />,
- TableRow: (props) => <tr {...props} className="even:bg-slate-50/70 odd:bg-white dark:even:bg-slate-800/40 dark:odd:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" />
+ Table: ({ style, ...props }: any) => <table {...props} style={{ ...style, borderCollapse: 'collapse', width: '100%' }} />,
+ TableRow: (props: any) => <tr {...props} className="even:bg-slate-50/70 odd:bg-white dark:even:bg-slate-800/40 dark:odd:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" />
  }}
  />
  </div>

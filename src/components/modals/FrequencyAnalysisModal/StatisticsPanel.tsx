@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { RainfallDataPoint, DistributionMethod } from '../FrequencyAnalysisModal';
 import { Metric } from '@/components/ui/Metric';
 import { ValidationStatusBox } from './ValidationStatusBox';

@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+// @ts-ignore
 import autoTable from 'jspdf-autotable';
 import { 
  IdentitasLokasi, 
@@ -23,7 +24,7 @@ export interface ReportData {
 }
 
 export const generateSNICompliancePDF = (data: ReportData) => {
- const doc = new jsPDF();
+ const doc = new jsPDF() as any;
  const pageWidth = doc.internal.pageSize.getWidth();
  
  // --- HEADER ---
@@ -87,7 +88,7 @@ export const generateSNICompliancePDF = (data: ReportData) => {
  columnStyles: {
  1: { fontStyle: 'bold' }
  },
- didParseCell: (data) => {
+ didParseCell: (data: any) => {
  if (data.section === 'body' && data.column.index === 1) {
  const status = data.cell.raw as string;
  if (status === 'PASSED') data.cell.styles.textColor = [16, 185, 129];

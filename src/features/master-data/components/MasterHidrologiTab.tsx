@@ -43,9 +43,10 @@ export const MasterHidrologiTab: React.FC = () => {
  setStationHealth,
  setQCStatus,
  setQCResults,
- setStasiunAmsData,
- stasiunAmsData
- } = useHydrologyStore();
+    setStasiunAmsData,
+    stasiunAmsData,
+    syncRainfallMetadata
+  } = useHydrologyStore();
 
  const fileInputRef = useRef<HTMLInputElement>(null);
  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -78,51 +79,51 @@ export const MasterHidrologiTab: React.FC = () => {
  const [qcSummary, setQcSummary] = useState<Record<string, any> | null>(null);
  const [isQCLoading, setIsQCLoading] = useState(false);
 
- const parseBulkRainfall = (text: string, year: number): any[] => {
- const lines = text.trim().split('\n');
- const records: any[] = [];
+  const parseBulkRainfall = (text: string, year: number): any[] => {
+    const lines = text.trim().split('\n');
+    const records: any[] = [];
 
- lines.forEach((line) => {
- const parts = line.trim().split(/\s+/);
- if (parts.length < 2) return;
+    lines.forEach((line) => {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length < 2) return;
 
- const day = parseInt(parts[0], 10);
- if (isNaN(day) || day < 1 || day > 31) return;
+      const day = parseInt(parts[0], 10);
+      if (isNaN(day) || day < 1 || day > 31) return;
 
- const values = parts.slice(1);
- values.forEach((val, monthIdx) => {
- if (monthIdx >= 12) return;
+      const values = parts.slice(1);
+      values.forEach((val, monthIdx) => {
+        if (monthIdx >= 12) return;
 
- let rainfall: number | null = null;
- if (val === '-' || val === 'NR' || val === '') {
- rainfall = null;
- } else {
- const parsed = parseFloat(val.replace(',', '.'));
- if (!isNaN(parsed)) {
- rainfall = parsed;
- }
- }
+        let rainfall: number | null = null;
+        if (val === '-' || val === 'NR' || val === '') {
+          rainfall = null;
+        } else {
+          const parsed = parseFloat(val.replace(',', '.'));
+          if (!isNaN(parsed)) {
+            rainfall = parsed;
+          }
+        }
 
- if (rainfall !== null) {
- const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
- const d = new Date(dateStr);
- if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day) {
- records.push({
- stasiun_id: selectedStasiun?.id,
- tanggal: dateStr,
- curah_hujan: rainfall
- });
- }
- }
- });
- });
- return records;
- };
+        if (rainfall !== null) {
+          const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const d = new Date(dateStr);
+              if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day && selectedStasiun) {
+                records.push({
+                  stasiun_id: selectedStasiun.id,
+                  tanggal: dateStr,
+                  curah_hujan: rainfall
+                });
+              }
+        }
+      });
+    });
+    return records;
+  };
 
- const handleBulkPreview = () => {
- const result = parseBulkRainfall(bulkRawText, bulkYear);
- setBulkPreview(result);
- };
+  const handleBulkPreview = () => {
+    const result = parseBulkRainfall(bulkRawText, bulkYear);
+    setBulkPreview(result);
+  };
 
  const handleBulkSave = async () => {
  if (!bulkPreview || bulkPreview.length === 0 || !selectedStasiun) return;
@@ -158,13 +159,13 @@ export const MasterHidrologiTab: React.FC = () => {
  const month = monthIdx + 1;
  const dateStr = `${bulkYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
  const d = new Date(dateStr);
- if (d.getFullYear() === bulkYear && d.getMonth() === monthIdx && d.getDate() === day) {
- records.push({
- stasiun_id: selectedStasiun.id,
- tanggal: dateStr,
- curah_hujan: val
- });
- }
+              if (d.getFullYear() === bulkYear && d.getMonth() === monthIdx && d.getDate() === day && selectedStasiun) {
+                records.push({
+                  stasiun_id: selectedStasiun.id,
+                  tanggal: dateStr,
+                  curah_hujan: val
+                });
+              }
  }
  });
  });
@@ -338,7 +339,7 @@ export const MasterHidrologiTab: React.FC = () => {
  updateDataHujanManual(filledData);
  
  // 6. Push metadata to Supabase automatically
- await useHydrologyStore.getState().syncRainfallMetadata();
+    await syncRainfallMetadata();
  
  toast.success('Berhasil mengisi data kosong dan mensinkronkan metadata ke cloud.');
  } catch (error) {
