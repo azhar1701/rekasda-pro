@@ -160,20 +160,64 @@ export function getKNormal(returnPeriod: number): number {
 }
 
 /**
+ * Get Gumbel Yn and Sn values based on sample size
+ * Interpolates from standard SNI 2415:2016 tables.
+ * 
+ * @param n - Sample size
+ * @returns { yn, sn }
+ */
+export function getGumbelYnSn(n: number): { yn: number; sn: number } {
+  // Reference table for Gumbel Reduced Mean (Yn) and Reduced Standard Deviation (Sn)
+  const TABLE = [
+    { n: 10, yn: 0.4952, sn: 0.9496 },
+    { n: 15, yn: 0.5128, sn: 1.0206 },
+    { n: 20, yn: 0.5236, sn: 1.0628 },
+    { n: 25, yn: 0.5309, sn: 1.0915 },
+    { n: 30, yn: 0.5362, sn: 1.1124 },
+    { n: 35, yn: 0.5402, sn: 1.1285 },
+    { n: 40, yn: 0.5436, sn: 1.1413 },
+    { n: 45, yn: 0.5463, sn: 1.1518 },
+    { n: 50, yn: 0.5485, sn: 1.1607 },
+    { n: 60, yn: 0.5521, sn: 1.1747 },
+    { n: 70, yn: 0.5548, sn: 1.1854 },
+    { n: 80, yn: 0.5569, sn: 1.1938 },
+    { n: 90, yn: 0.5586, sn: 1.2007 },
+    { n: 100, yn: 0.5600, sn: 1.2065 },
+  ];
+
+  if (n <= 10) return { yn: TABLE[0].yn, sn: TABLE[0].sn };
+  if (n >= 100) return { yn: 0.5772, sn: 1.2825 }; // Standard asymptotic values for n->inf
+
+  for (let i = 0; i < TABLE.length - 1; i++) {
+    const t0 = TABLE[i];
+    const t1 = TABLE[i + 1];
+    if (n >= t0.n && n <= t1.n) {
+      const f = (n - t0.n) / (t1.n - t0.n);
+      return {
+        yn: t0.yn + f * (t1.yn - t0.yn),
+        sn: t0.sn + f * (t1.sn - t0.sn),
+      };
+    }
+  }
+  return { yn: 0.5772, sn: 1.2825 };
+}
+
+/**
  * Calculate frequency factor K for Gumbel Distribution
  * 
  * Formula: XT = X̄ + K × S
- * K = -(√6/π) × [0.5772 + ln(ln(T/(T-1)))]
+ * K = -(√6/π) × [Yn + ln(ln(T/(T-1)))] / Sn
  * 
  * @param returnPeriod - Return period in years
+ * @param n - Sample size
  * @returns Frequency factor K
  * 
  * @reference SNI 2415:2016 Lampiran C
  */
-export function getKGumbel(returnPeriod: number): number {
+export function getKGumbel(returnPeriod: number, n: number): number {
   if (returnPeriod <= 1) return 0; // T=1 → K=0 (median), T<1 invalid
-  const yn = 0.5772; // Euler's constant
-  const sn = 1.2825; // Standard deviation for Gumbel
+  
+  const { yn, sn } = getGumbelYnSn(n);
   const yT = -Math.log(-Math.log(1 - 1 / returnPeriod));
   
   const K = (yT - yn) / sn;
@@ -292,7 +336,7 @@ export function analyzeGumbel(input: FrequencyInput): FrequencyResult {
   const stats = calculateStatistics(validated.data);
   
   const designValues = validated.returnPeriods.map(T => {
-    const K = getKGumbel(T);
+    const K = getKGumbel(T, stats.n);
     const XT = stats.mean + K * stats.stdDev;
     
     return {

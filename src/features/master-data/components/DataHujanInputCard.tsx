@@ -54,14 +54,18 @@ export const DataHujanInputCard: React.FC = () => {
       const filledData = localData.map(item => {
         const value = typeof item.curah_hujan === 'number' ? item.curah_hujan : parseFloat(String(item.curah_hujan)) || 0;
         if (value === 0) {
-          const infilledValue = infillMissingData(
+          const infillResult = infillMissingData(
             selectedStasiun,
             stasiunList,
             allData,
             item.tanggal,
             'idw'
           );
-          return { ...item, curah_hujan: infilledValue > 0 ? parseFloat(infilledValue.toFixed(1)) : 0 };
+          return { 
+            ...item, 
+            curah_hujan: infillResult && infillResult.value > 0 ? parseFloat(infillResult.value.toFixed(1)) : 0,
+            is_infilled: infillResult && infillResult.value > 0
+          };
         }
         return item;
       });

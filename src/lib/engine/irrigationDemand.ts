@@ -182,9 +182,10 @@ export function generateDefaultIrrigationInput(
 ): IrrigationMonthlyInput[] {
   return MONTH_LABELS.map((month, i) => {
     const pola = DEFAULT_POLA_TANAM[i];
-    // Convert monthly Reff (mm/month) to mm/day
+    // Padi Reff factor = 0.7, Palawija Reff factor = 0.5 (KP-01)
+    const factorReff = pola === 'padi' ? 0.7 : 0.5;
     const reffDaily = monthlyReffMm
-      ? (monthlyReffMm[i] * 0.7) / DAYS_IN_MONTH[i]  // R80 × 0.7 for paddy
+      ? (monthlyReffMm[i] * factorReff) / DAYS_IN_MONTH[i]  // R80 × factor
       : 0;
 
     return {

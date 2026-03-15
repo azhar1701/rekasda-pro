@@ -581,6 +581,34 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
               </div>
             </div>
             <div className="p-4">
+              {/* Audit Trail: Rainfall Data Source */}
+              <div className="mb-4 flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-md">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pupr-blue/10">
+                    <Info className="h-4 w-4 text-pupr-blue" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sumber Data Hujan Terpilih</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800">
+                        {inputType === 'point' ? 'Data Titik (Stasiun Tunggal)' : 
+                         inputType === 'areal_thiessen' ? 'Hujan Wilayah (Poligon Thiessen)' :
+                         inputType === 'areal_algebraic' ? 'Hujan Wilayah (Rata-rata Aljabar)' :
+                         'Hujan Wilayah (Garis Isohyet)'}
+                      </span>
+                      <span className="px-2 py-0.5 bg-pupr-blue text-white text-[9px] font-bold rounded uppercase">
+                        Verified SNI
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {selectedStasiun && inputType === 'point' && (
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Stasiun</p>
+                    <p className="text-sm font-bold text-pupr-blue">{selectedStasiun.nama_stasiun}</p>
+                  </div>
+                )}
+              </div>
 
               {selectedMethod !== recommendedMethod && (
                 <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-2">

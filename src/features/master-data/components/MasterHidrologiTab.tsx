@@ -277,15 +277,19 @@ export const MasterHidrologiTab: React.FC = () => {
             const filledData = dataHujan.map(item => {
 
                 if (item.curah_hujan === null || String(item.curah_hujan).trim() === '-' || String(item.curah_hujan).trim() === '') {
-                    const infilledValue = infillMissingData(
+                    const infillResult = infillMissingData(
                         selectedStasiun,
                         stasiunList,
                         allData,
                         item.tanggal,
                         'idw'
                     );
-                    if (infilledValue > 0) {
-                        return { ...item, curah_hujan: parseFloat(infilledValue.toFixed(1)) };
+                    if (infillResult && infillResult.value > 0) {
+                        return { 
+                            ...item, 
+                            curah_hujan: parseFloat(infillResult.value.toFixed(1)),
+                            is_infilled: true 
+                        };
                     }
                 }
                 return item;

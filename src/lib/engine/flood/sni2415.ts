@@ -22,7 +22,7 @@ import type {
 
 /**
  * Batas Luas DAS untuk Metode Rasional (SNI 2415:2016 Pasal 5.2)
- * Metode Rasional HANYA berlaku untuk DAS ≤ 300 ha (3 km²)
+ * Metode Rasional berlaku untuk DAS ≤ 5000 ha (50 km²)
  */
 export { SNI_RATIONAL_AREA_LIMIT_KM2, SNI_RATIONAL_AREA_LIMIT_HA } from '../../constants/sni';
 
@@ -44,8 +44,8 @@ export interface SNI2415WorkflowResult {
  * Validasi Workflow SNI 2415:2016 - Pemilihan Metode Berdasarkan Luas DAS
  * 
  * Aturan SNI 2415:2016 Pasal 5.2:
- * - Luas DAS ≤ 300 ha (3 km²): Metode Rasional DIPERBOLEHKAN
- * - Luas DAS > 300 ha (3 km²): WAJIB menggunakan HSS (Hidrograf Satuan Sintetis)
+ * - Luas DAS ≤ 5000 ha (50 km²): Metode Rasional DIPERBOLEHKAN
+ * - Luas DAS > 5000 ha (50 km²): WAJIB menggunakan HSS (Hidrograf Satuan Sintetis)
  * 
  * @param areaKm2 - Luas Daerah Aliran Sungai dalam km²
  * @returns Hasil validasi workflow dengan rekomendasi metode
@@ -73,7 +73,7 @@ export const validateSNI2415Workflow = (areaKm2: number): SNI2415WorkflowResult 
   return {
     recommendedMethod: 'hss',
     isRationalValid: false,
-    warning: `Luas DAS (${areaKm2.toFixed(2)} km² / ${(areaKm2 * 100).toFixed(0)} ha) melebihi batas Metode Rasional (300 ha). Sesuai SNI 2415:2016 Pasal 5.2, gunakan Metode HSS (Hidrograf Satuan Sintetis).`,
+    warning: `Luas DAS (${areaKm2.toFixed(2)} km² / ${(areaKm2 * 100).toFixed(0)} ha) melebihi batas Metode Rasional (5000 ha / 50 km²). Sesuai SNI 2415:2016 Pasal 5.2, gunakan Metode HSS (Hidrograf Satuan Sintetis).`,
     areaKm2,
   };
 };
@@ -110,7 +110,7 @@ const RationalInputSchema = z.object({
  * - **0.278** = Faktor konversi metrik (1/3.6)
  * 
  * Batasan Penggunaan:
- * - Luas DAS ≤ 300 ha (3 km²)
+ * - Luas DAS ≤ 5000 ha (50 km²)
  * - DAS relatif homogen
  * - Waktu konsentrasi < 6 jam
  * 

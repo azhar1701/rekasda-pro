@@ -4,7 +4,16 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { KarakteristikDASCard } from './KarakteristikDASCard';
 import { TutupanLahanCard } from './TutupanLahanCard';
 import { HujanWilayahCard } from './HujanWilayahCard';
-import { WebGISPanel } from '../../spatial-analysis/WebGISPanel';
+const WebGISPanel = React.lazy(() => import('../../spatial-analysis/WebGISPanel').then(m => ({ default: m.WebGISPanel })));
+
+const MapFallback = () => (
+  <div className="w-full h-96 bg-slate-100 animate-pulse rounded-lg border border-slate-200 flex items-center justify-center">
+    <div className="text-slate-400 font-bold flex flex-col items-center gap-2">
+      <div className="w-8 h-8 rounded-full border-4 border-slate-300 border-t-pupr-blue animate-spin" />
+      Memuat Peta Spasial...
+    </div>
+  </div>
+);
 
 export const ParameterSpasial: React.FC = () => {
   const { morfometriDAS, tutupanLahan, curahHujanWilayah } = useHydrologyStore();
@@ -69,9 +78,10 @@ export const ParameterSpasial: React.FC = () => {
         </div>
       </div>
 
-      {/* Full Width WebGIS (The Master Input) */}
       <div className="w-full transition-all duration-500">
-        <WebGISPanel />
+        <React.Suspense fallback={<MapFallback />}>
+          <WebGISPanel />
+        </React.Suspense>
       </div>
 
       {/* Guidance Box */}

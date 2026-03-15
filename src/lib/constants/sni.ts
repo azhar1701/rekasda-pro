@@ -198,10 +198,10 @@ export const RATIONAL_CONVERSION_FACTOR = 0.278;
 
 /**
  * Batas Luas DAS untuk Metode Rasional (SNI 2415:2016 Pasal 5.2)
- * Metode Rasional HANYA berlaku untuk DAS ≤ 300 ha (3 km²)
+ * Metode Rasional berlaku untuk DAS ≤ 5000 ha (50 km²)
  */
-export const SNI_RATIONAL_AREA_LIMIT_KM2 = 3.0;
-export const SNI_RATIONAL_AREA_LIMIT_HA = 300;
+export const SNI_RATIONAL_AREA_LIMIT_KM2 = 50.0;
+export const SNI_RATIONAL_AREA_LIMIT_HA = 5000;
 
 /**
  * Batas Validasi Input (SK Menteri PU No. 306/1989)

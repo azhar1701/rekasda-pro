@@ -78,7 +78,7 @@ export const RationalInputSchema = z.object({
     .number()
     .positive('Luas DAS harus > 0')
     .min(0.01, 'Luas DAS minimal 0.01 Ha')
-    .max(50000, 'Luas DAS maksimal 50,000 Ha untuk Metode Rasional'),
+    .max(5000, 'Luas DAS maksimal 5000 Ha untuk Metode Rasional sesuai SNI 2415:2016'),
 });
 
 /**
@@ -146,6 +146,7 @@ export function calculateTc(input: TcInput): number {
  * 
  * @reference SNI 2415:2016 Pasal 5.2
  * @reference Permen PU No. 12/PRT/M/2014 Lampiran A
+ * @deprecated Gunakan calculateRationalDischarge dari sni2415.ts sebagai SSOT.
  * 
  * @example
  * ```typescript
@@ -164,13 +165,8 @@ export function calculateRationalDischarge(input: RationalMethodInput): Rational
   const warnings: string[] = [];
   
   // Check catchment area suitability for Rational Method
-  // SNI 2415:2016: Rational Method is suitable for A < 5000 Ha
-  if (validated.A > 5000) {
-    warnings.push(
-      'Peringatan: Metode Rasional kurang akurat untuk DAS > 5000 Ha. ' +
-      'Disarankan menggunakan metode HSS (Hidrograf Satuan Sintetik).'
-    );
-  } else if (validated.A > 300) {
+  // SNI 2415:2016: Rational Method is highly accurate for A <= 300 Ha
+  if (validated.A > 300) {
     warnings.push(
       'Peringatan: Metode Rasional kurang akurat untuk DAS > 300 Ha. ' +
       'Pertimbangkan menggunakan metode HSS untuk hasil lebih akurat.'

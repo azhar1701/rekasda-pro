@@ -22,6 +22,7 @@ export interface DataHujan {
   stasiun_id: string;
   tanggal: string; 
   curah_hujan: number; 
+  is_infilled?: boolean;
   created_at?: string;
 }
 

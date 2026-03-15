@@ -23,6 +23,11 @@ export default {
 					'Plus Jakarta Sans',
 					'system-ui',
 					'sans-serif'
+				],
+				mono: [
+					'ui-monospace',
+					'Cascadia Code',
+					'monospace'
 				]
 			},
 			colors: {
@@ -108,14 +113,17 @@ export default {
 				'88': '22rem'
 			},
 			borderRadius: {
-				sm: '0.375rem',
-				md: '0.5rem',
-				lg: '0.75rem',
-				xl: '1rem'
+				DEFAULT: '0',
+				sm: '0',
+				md: '0',
+				lg: '0',
+				xl: '0'
 			},
 			boxShadow: {
-				soft: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-				card: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+				// Flattened Design: No shadows. Use borders instead.
+				DEFAULT: 'none',
+				soft: 'none',
+				card: 'none'
 			},
 			transitionDuration: {
 				fast: '150ms',
@@ -131,7 +139,8 @@ export default {
 			animation: {
 				'fade-in': 'fadeIn 300ms cubic-bezier(0.4, 0.0, 0.2, 1)',
 				'slide-up': 'slideUp 400ms cubic-bezier(0.0, 0.0, 0.2, 1)',
-				stagger: 'staggerFadeIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1) backwards'
+				stagger: 'staggerFadeIn 300ms cubic-bezier(0.0, 0.0, 0.2, 1) backwards',
+				flash: 'flash 1.5s ease-in-out infinite'
 			},
 			keyframes: {
 				fadeIn: {
@@ -161,6 +170,10 @@ export default {
 						opacity: '1',
 						transform: 'translateY(0)'
 					}
+				},
+				flash: {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' }
 				}
 			},
 			fontFeatureSettings: {

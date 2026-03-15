@@ -178,11 +178,27 @@ export function calculateARF(luasDas: number, hujanTitik: number, durasi: number
 
   // Duration-based coefficient adjustment
   // For shorter durations, ARF is lower (more reduction)
-  let durationCoef = 0.04; // default for 24-hour
+  // Duration-based coefficient adjustment (PSA 007)
+  // Continuous approximation for duration-based coefficient 'c' in: ARF = 1 - c * A^0.35
+  const durationMap: [number, number][] = [
+    [1, 0.060], [6, 0.050], [12, 0.045], [24, 0.040], [48, 0.036]
+  ];
+  
+  let durationCoef = 0.04;
   if (durasi <= 1) durationCoef = 0.06;
-  else if (durasi <= 6) durationCoef = 0.05;
-  else if (durasi <= 12) durationCoef = 0.045;
-  // 24h: 0.04
+  else if (durasi >= 48) durationCoef = 0.036;
+  else {
+    // Linear interpolation for duration coefficient
+    for (let i = 0; i < durationMap.length - 1; i++) {
+        const [d0, c0] = durationMap[i];
+        const [d1, c1] = durationMap[i+1];
+        if (durasi >= d0 && durasi <= d1) {
+            const fraction = (durasi - d0) / (d1 - d0);
+            durationCoef = c0 + fraction * (c1 - c0);
+            break;
+        }
+    }
+  }
 
   // PSA 007 empirical: ARF = 1 - c × A^0.35
   let arf = 1 - durationCoef * Math.pow(luasDas, 0.35);
@@ -228,14 +244,28 @@ export function calculatePMP(annualMax: number[]): PMPResult {
   const stdDev = Math.sqrt(variance);
 
   // Hershfield Kn factor — varies by sample size
-  // Standard: Kn ≈ 15 for large samples, reduced for small samples
-  // Using WMO-recommended table approximation
+  // Standard WMO-recommended Kn values (Technical Note 332)
+  const KN_TABLE: [number, number][] = [
+    [5, 7.5], [10, 9.6], [20, 11.5], [30, 12.5], [40, 13.1], 
+    [50, 13.5], [60, 13.8], [70, 14.1], [80, 14.3], [90, 14.4], [100, 14.5], [500, 15.0]
+  ];
+  
   let kn: number;
-  if (n <= 10) kn = 10;
-  else if (n <= 20) kn = 12;
-  else if (n <= 30) kn = 13;
-  else if (n <= 50) kn = 14;
-  else kn = 15;
+  if (n <= 5) kn = 7.5;
+  else if (n >= 500) kn = 15.0;
+  else {
+    // Continuous linear interpolation for Kn factor
+    kn = 15.0; // Default
+    for (let i = 0; i < KN_TABLE.length - 1; i++) {
+      const [n0, k0] = KN_TABLE[i];
+      const [n1, k1] = KN_TABLE[i + 1];
+      if (n >= n0 && n <= n1) {
+        const fraction = (n - n0) / (n1 - n0);
+        kn = k0 + fraction * (k1 - k0);
+        break;
+      }
+    }
+  }
 
   // Guard: if stdDev is 0, PMP equals mean (no variability)
   const pmp = stdDev > 0

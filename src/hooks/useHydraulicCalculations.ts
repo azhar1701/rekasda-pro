@@ -39,19 +39,31 @@ export const useHydraulicCalculations = () => {
     }
   }, []);
 
-  const calculateRationalMethod = useCallback(async (inputs: RationalInputs, useEdgeFunction = false) => {
+  const calculateRationalMethod = useCallback(async (inputs: RationalInputs, useEdgeFunction = true) => {
     try {
       setIsCalculating(true);
       setError(null);
       
       let results;
       if (useEdgeFunction && isSupabaseEnabled()) {
-        const response = await apiService.invokeFunction<any>('hydrology-calculations', {
-          type: 'rational',
-          inputs
+        const response = await apiService.invokeFunction<any>('hydro-calc', {
+          method: 'rational',
+          basin_parameters: {
+             catchment_area_km2: inputs.area,
+             runoff_coefficient_c: inputs.runoffCoefficient,
+             rainfall_intensity_mm: inputs.rainfallDesign
+          }
         });
         if (response.error) throw new Error(response.error.message);
-        results = response.data;
+        
+        // Map the Edge Function response back to frontend expected shapes
+        const fallbackResults = calculateRational(inputs);
+        results = { 
+           ...fallbackResults, // Use fallback for other strings like Intensity/Tc string values
+           Discharge: response.data?.summary?.peak_discharge_m3s 
+             ? response.data.summary.peak_discharge_m3s.toString()
+             : fallbackResults.Discharge
+        };
       } else {
         results = calculateRational(inputs);
       }

@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Waves, CloudRain, Scale, Database, Sparkles, Droplets, FileText, TrendingUp, History } from 'lucide-react';
-import { ManningCalculator } from '@/features/channel-analysis/components/ManningCalculator';
-import { MasterDataPage } from '@/features/master-data/components/MasterDataPage';
-import { ModulAnalisisFrekuensi } from '@/features/flood-analysis/components/ModulAnalisisFrekuensi';
-import { ExecutiveDashboard } from '@/features/dashboard/components/ExecutiveDashboard';
 import { GeminiConsultant } from '@/features/ai-consultant/GeminiConsultant';
 import { AIConsultantDrawer } from '@/features/ai-consultant/AIConsultantDrawer';
-import { AllDataTab } from '@/features/history/components/AllDataTab';
 import { ReportModal } from '@/components/ui/modals/ReportModal';
 import { AllDataDetailModal } from '@/components/ui/modals/AllDataDetailModal';
 
@@ -16,6 +11,12 @@ const FloodAnalysisTab = React.lazy(() => import('@/features/flood-analysis/comp
 const WaterBalanceTab = React.lazy(() => import('@/features/water-balance/components/WaterBalanceTab').then(m => ({ default: m.WaterBalanceTab })));
 const EmbungDashboard = React.lazy(() => import('@/features/embung/components/EmbungDashboard').then(m => ({ default: m.EmbungDashboard })));
 const WorkflowCanvas = React.lazy(() => import('@/features/workflow/WorkflowCanvas').then(m => ({ default: m.WorkflowCanvas })));
+
+const ManningCalculator = React.lazy(() => import('@/features/channel-analysis/components/ManningCalculator').then(m => ({ default: m.ManningCalculator })));
+const MasterDataPage = React.lazy(() => import('@/features/master-data/components/MasterDataPage').then(m => ({ default: m.MasterDataPage })));
+const ModulAnalisisFrekuensi = React.lazy(() => import('@/features/flood-analysis/components/ModulAnalisisFrekuensi').then(m => ({ default: m.ModulAnalisisFrekuensi })));
+const ExecutiveDashboard = React.lazy(() => import('@/features/dashboard/components/ExecutiveDashboard').then(m => ({ default: m.ExecutiveDashboard })));
+const AllDataTab = React.lazy(() => import('@/features/history/components/AllDataTab').then(m => ({ default: m.AllDataTab })));
 import { AllCalculationsData } from '@/services/allCalculationsService';
 import { ToastContainer } from '@/components/ui/feedback/Toast';
 import { CalculationType } from '@/types/types';

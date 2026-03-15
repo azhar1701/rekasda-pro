@@ -294,16 +294,38 @@ export function calculateSedimentYield(input: SedimentationInput): SedimentYield
   const totalLoadTonnes = suspendedLoadTonnes + bedLoadTonnes;
   const totalVolumeM3 = totalLoadTonnes / beratJenis;
   
-  // Trap Efficiency (Brune, 1953)
-  let trapEfficiency = 95; // Default high
+  // Trap Efficiency (Brune, 1953) - Median Curve via Tabular Interpolation
+  let trapEfficiency = 0; 
   if (reservoirCapacity && input.annualInflow) {
       const cr = reservoirCapacity / input.annualInflow; // Capacity-Inflow ratio
-      if (cr > 0.001) {
-          trapEfficiency = (cr / (0.0001 + 0.012 * cr + 0.00011 * Math.sqrt(cr))) * 100;
-          if (trapEfficiency > 100) trapEfficiency = 100;
-      } else {
+      
+      // Brune Median Curve Table: [C/I, TE(%)]
+      const BRUNE_TABLE: [number, number][] = [
+        [0.001, 0.0], [0.005, 16.0], [0.01, 43.0], [0.02, 63.0],
+        [0.05, 78.0], [0.1, 87.0], [0.2, 93.0], [0.3, 95.0],
+        [0.5, 96.0], [1.0, 98.0], [2.0, 99.0], [10.0, 100.0]
+      ];
+
+      if (cr <= 0.001) {
           trapEfficiency = 0;
+      } else if (cr >= 10.0) {
+          trapEfficiency = 100;
+      } else {
+          for (let i = 0; i < BRUNE_TABLE.length - 1; i++) {
+              const [cr0, te0] = BRUNE_TABLE[i];
+              const [cr1, te1] = BRUNE_TABLE[i + 1];
+              if (cr >= cr0 && cr <= cr1) {
+                  const fraction = (cr - cr0) / (cr1 - cr0);
+                  trapEfficiency = te0 + fraction * (te1 - te0);
+                  break;
+              }
+          }
       }
+  } else {
+      // Brown (1944) Alternative Curve for small reservoirs without known C/I
+      // TE = 100 * (1 - (1 / (1 + 0.0021 * D * (C/W))))
+      // simplified to a conservative default of 95% if no data is provided.
+      trapEfficiency = 95;
   }
 
   const trappedVolumeM3 = (trapEfficiency / 100) * totalVolumeM3;

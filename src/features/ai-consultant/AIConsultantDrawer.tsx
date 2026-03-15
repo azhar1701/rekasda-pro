@@ -1,7 +1,7 @@
 /**
- * AIConsultantDrawer — Context-Aware Floating Slide-Over
+ * AIConsultantDrawer — Flattened Design Slide-Over
  * =======================================================
- * A glassmorphism right-side drawer that acts as a Context-Aware
+ * A flat right-side drawer that acts as a Context-Aware
  * Engineering AI Assistant. Reads live data from useHydrologyStore
  * and provides actionable parameter suggestions.
  */
@@ -16,7 +16,7 @@ import { consultHydrologist } from '@/services/geminiService';
 import { useAIContext, type ActiveModule, type SuggestionChip } from '@/hooks/useAIContext';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import {
-    Bot, User, Send, X, Sparkles, Zap,
+    Bot, User, Send, X, Sparkles,
     AlertTriangle, Info, Maximize2, Minimize2,
     Shield, Activity, Clock
 } from 'lucide-react';
@@ -171,7 +171,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         <>
             {isOpen && (
                 <div
-                    className="fixed inset-0 z-[60] bg-slate-900/20 backdrop-blur-[2px] transition-opacity duration-300"
+                    className="fixed inset-0 z-[60] bg-slate-900/30 transition-opacity duration-300"
                     onClick={onClose}
                 />
             )}
@@ -183,19 +183,18 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                     isFullScreen ? 'w-full' : 'w-full sm:w-[420px] lg:w-[480px]'
                 )}
             >
-                <div className="h-full flex flex-col bg-white/95 backdrop-blur-2xl border-l border-slate-200/60 shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] relative overflow-hidden">
-                    <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,#fff,rgba(255,255,255,0.6))] -z-10" />
+                <div className="h-full flex flex-col bg-white border-l border-slate-300 relative overflow-hidden">
 
                     {/* ── Header ── */}
-                    <div className="shrink-0 px-5 py-4 border-b border-slate-100 bg-pupr-blue text-white z-10 shadow-sm">
+                    <div className="shrink-0 px-5 py-4 border-b border-slate-300 bg-pupr-blue text-white z-10">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                    <div className="w-10 h-10 bg-white/15 flex items-center justify-center border border-white/20">
                                         <Sparkles className="w-5 h-5 text-white" />
                                     </div>
                                     {hasIssues && (
-                                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-md border-2 border-pupr-blue animate-pulse" />
+                                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 border-2 border-pupr-blue animate-flash" />
                                     )}
                                 </div>
                                 <div>
@@ -204,10 +203,11 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                 </div>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <button onClick={() => setIsFullScreen(!isFullScreen)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+                                <span className="flat-badge text-[9px] text-white/80 bg-white/10 border border-white/20">AI POWERED</span>
+                                <button onClick={() => setIsFullScreen(!isFullScreen)} className="w-8 h-8 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
                                     {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                                 </button>
-                                <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+                                <button onClick={onClose} className="w-8 h-8 bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
@@ -219,12 +219,8 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                         {messages.length === 0 && !isLoading && (
                             <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
                                 <div className="relative mb-6">
-                                    <div className="absolute inset-0 bg-pupr-blue/10 blur-[40px] rounded-full scale-150" />
-                                    <div className="w-16 h-16 bg-white rounded-xl shadow-xl flex items-center justify-center relative z-10 ring-1 ring-black/5 rotate-3">
+                                    <div className="w-16 h-16 bg-white border border-slate-300 flex items-center justify-center relative z-10">
                                         <Sparkles className="w-8 h-8 text-pupr-blue" />
-                                    </div>
-                                    <div className="absolute -right-2 -top-2 w-8 h-8 bg-pupr-yellow rounded-xl shadow-lg flex items-center justify-center z-20 -rotate-12">
-                                        <Zap className="w-4 h-4 text-pupr-blue" />
                                     </div>
                                 </div>
 
@@ -233,21 +229,22 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                     Saya siap membantu mengaudit parameter hidrologi Anda berdasarkan standar <span className="text-pupr-blue font-bold">SNI & Permen PUPR</span>.
                                 </p>
 
-                                <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-4 mb-4 relative overflow-hidden group hover:border-pupr-blue/30 transition-all">
+                                <div className="w-full bg-slate-50 border border-slate-300 p-4 mb-4 relative overflow-hidden group hover:border-pupr-blue/30 transition-all">
                                     <div className="flex items-center justify-between mb-3 relative z-10">
                                         <div className="flex items-center gap-2">
                                             <Shield className="w-3.5 h-3.5 text-sky-500" />
                                             <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-700">Integritas Data</span>
                                         </div>
-                                        <span className="text-[10px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">{integrityPercentage}%</span>
+                                        <span className="text-[10px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 border border-sky-200">{integrityPercentage}%</span>
                                     </div>
-                                    <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden mb-4 relative z-10">
-                                        <div className="h-full bg-sky-500 transition-all duration-1000 ease-out" style={{ width: `${integrityPercentage}%` }} />
+                                    {/* Flat Confidence Bar (Insight 5) */}
+                                    <div className="h-2 w-full bg-slate-200 overflow-hidden mb-4 relative z-10">
+                                        <div className="h-full bg-emerald-600 transition-all duration-1000 ease-out" style={{ width: `${integrityPercentage}%` }} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-1.5 relative z-10">
                                         {dataStatus.slice(0, 4).map((item, idx) => (
                                             <div key={idx} className="flex items-center gap-1.5">
-                                                <div className={cn("w-1 h-1 rounded-full", item.isLoaded ? "bg-sky-500" : "bg-slate-300")} />
+                                                <div className={cn("w-1.5 h-1.5", item.isLoaded ? "bg-emerald-600" : "bg-slate-300")} />
                                                 <span className="text-[9px] font-bold text-slate-500 truncate">{item.label}</span>
                                             </div>
                                         ))}
@@ -260,18 +257,21 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                             <div key={msg.id} className={cn("flex group animate-in fade-in slide-in-from-bottom-2 duration-300", msg.role === 'user' ? "justify-end" : "justify-start")}>
                                 <div className={cn("max-w-[90%] flex gap-3", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                                     <div className={cn(
-                                        "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-md border-2 border-white transition-transform group-hover:scale-110",
+                                        "w-8 h-8 flex items-center justify-center shrink-0 border border-slate-300 transition-transform group-hover:scale-105",
                                         msg.role === 'user' ? "bg-pupr-blue text-white" : "bg-white text-pupr-blue"
                                     )}>
                                         {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                                     </div>
 
                                     <div className="flex flex-col gap-1.5 min-w-0">
+                                        {msg.role === 'assistant' && (
+                                            <span className="flat-badge mb-1">AI GENERATED</span>
+                                        )}
                                         <div className={cn(
-                                            "p-4 rounded-[1.5rem] shadow-sm relative overflow-hidden",
+                                            "p-4 relative overflow-hidden",
                                             msg.role === 'user'
-                                                ? "bg-pupr-blue text-white rounded-tr-none ring-1 ring-white/10"
-                                                : "bg-white border border-slate-200 rounded-tl-none ring-1 ring-black/[0.02]"
+                                                ? "bg-pupr-blue text-white"
+                                                : "bg-white border border-slate-300"
                                         )}>
                                             <div className={cn(
                                                 "prose prose-sm max-w-none relative z-10",
@@ -285,8 +285,8 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                                         blockquote: ({ node, ...props }: any) => <blockquote className="border-l-4 border-pupr-yellow bg-slate-50 py-1 px-4 italic" {...props} />,
                                                         code: ({ node, inline, ...props }: any) =>
                                                             inline
-                                                                ? <code className="bg-slate-100 text-pupr-blue px-1.5 py-0.5 rounded font-bold" {...props} />
-                                                                : <code className="block bg-slate-900 text-slate-100 p-3 rounded-xl my-3 text-[10px] font-mono overflow-x-auto" {...props} />
+                                                                ? <code className="bg-slate-100 text-pupr-blue px-1.5 py-0.5 font-bold font-mono" {...props} />
+                                                                : <code className="block bg-slate-900 text-slate-100 p-3 my-3 text-[10px] font-mono overflow-x-auto" {...props} />
                                                     }}
                                                 >
                                                     {msg.content}
@@ -308,13 +308,13 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                         {isLoading && (
                             <div className="flex justify-start">
                                 <div className="flex gap-2.5">
-                                    <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                    <div className="w-7 h-7 bg-slate-100 flex items-center justify-center border border-slate-300 flex-shrink-0">
                                         <Bot className="w-3.5 h-3.5 text-slate-500" />
                                     </div>
-                                    <div className="bg-white border border-slate-200 rounded-md rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-pupr-blue rounded-md animate-bounce [animation-delay:-0.3s]" />
-                                        <div className="w-1.5 h-1.5 bg-pupr-blue rounded-md animate-bounce [animation-delay:-0.15s]" />
-                                        <div className="w-1.5 h-1.5 bg-pupr-blue rounded-md animate-bounce" />
+                                    <div className="bg-white border border-slate-300 px-4 py-3 flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-pupr-blue animate-bounce [animation-delay:-0.3s]" />
+                                        <div className="w-1.5 h-1.5 bg-pupr-blue animate-bounce [animation-delay:-0.15s]" />
+                                        <div className="w-1.5 h-1.5 bg-pupr-blue animate-bounce" />
                                         <span className="text-[10px] text-slate-400 ml-1 font-medium">Menganalisis...</span>
                                     </div>
                                 </div>
@@ -326,7 +326,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
 
                     {/* ── Suggestion Chips ── */}
                     {suggestionChips.length > 0 && messages.length < 3 && (
-                        <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                        <div className="shrink-0 px-4 py-3 border-t border-slate-300 bg-slate-50">
                             <div className="flex items-center gap-1.5 mb-2.5">
                                 {hasIssues ? <AlertTriangle className="w-3 h-3 text-amber-500" /> : <Info className="w-3 h-3 text-slate-400" />}
                                 <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Audit Rekomendasi</span>
@@ -337,10 +337,10 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                                         key={chip.id}
                                         onClick={() => handleChipClick(chip)}
                                         disabled={isLoading}
-                                        className="text-left p-3 rounded-xl bg-white border border-slate-200 hover:border-pupr-blue hover:shadow-lg transition-all group relative overflow-hidden"
+                                        className="text-left p-3 bg-white border border-slate-300 hover:border-pupr-blue transition-all group relative overflow-hidden"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-pupr-blue/10 transition-colors">
+                                            <div className="p-2 bg-slate-50 group-hover:bg-pupr-blue/10 transition-colors">
                                                 <Activity className="w-3.5 h-3.5 text-pupr-blue" />
                                             </div>
                                             <span className="text-[11px] font-bold text-slate-700 group-hover:text-pupr-blue transition-colors leading-tight">{chip.label}</span>
@@ -352,8 +352,8 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                     )}
 
                     {/* ── Input Area ── */}
-                    <div className="shrink-0 p-4 border-t border-slate-200 bg-slate-50/80 backdrop-blur-md">
-                        <div className="flex items-end gap-3 bg-white p-2 rounded-[1.75rem] border border-slate-300 shadow-xl shadow-black/5 focus-within:border-pupr-blue transition-all group/input ring-1 ring-black/[0.02]">
+                    <div className="shrink-0 p-4 border-t border-slate-300 bg-slate-50">
+                        <div className="flex items-end gap-3 bg-white p-2 border border-slate-300 focus-within:border-pupr-blue transition-all group/input">
                             <div className="flex-1 relative pl-2">
                                 <textarea
                                     ref={inputRef}
@@ -373,10 +373,10 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                             <button
                                 onClick={() => handleSend()}
                                 disabled={isLoading || !query.trim()}
-                                className="w-11 h-11 rounded-full bg-slate-900 hover:bg-pupr-blue disabled:bg-slate-200 text-white flex items-center justify-center shadow-lg transition-all active:scale-95 shrink-0"
+                                className="w-11 h-11 bg-slate-900 hover:bg-pupr-blue disabled:bg-slate-200 text-white flex items-center justify-center transition-all active:scale-95 shrink-0"
                             >
                                 {isLoading ? (
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin" />
                                 ) : (
                                     <Send className="w-4 h-4" />
                                 )}

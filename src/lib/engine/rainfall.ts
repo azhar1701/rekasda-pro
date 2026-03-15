@@ -119,6 +119,8 @@ export interface TimeConcentrationInput {
   L: number;
   /** Kemiringan lahan (m/m) */
   S: number;
+  /** Luas DAS (km²) - Opsional, dibutuhkan untuk Bransby-Williams */
+  A?: number;
   /** Metode perhitungan */
   method: 'kirpich' | 'bransby-williams' | 'california';
 }
@@ -126,6 +128,7 @@ export interface TimeConcentrationInput {
 const TcInputSchema = z.object({
   L: z.number().min(0.01, 'Panjang minimum 0.01 km').max(1000, 'Panjang maksimum 1000 km'),
   S: z.number().min(0.0001, 'Kemiringan minimum 0.0001').max(1, 'Kemiringan maksimum 1'),
+  A: z.number().min(0.01, 'Luas minimum 0.01 km²').max(100000, 'Luas maksimum 100000 km²').optional(),
   method: z.enum(['kirpich', 'bransby-williams', 'california']),
 });
 
@@ -180,11 +183,14 @@ export const calculateCaliforniaCulvert = (L: number, H: number): number => {
  */
 export const calculateTimeConcentration = (input: TimeConcentrationInput): number => {
   const validated = TcInputSchema.parse(input);
-  const { L, S, method } = validated;
+  const { L, S, method, A } = validated;
 
   switch (method) {
     case 'kirpich':
       return parseFloat(calculateKirpich(L, S).toFixed(2));
+    case 'bransby-williams':
+      if (!A) throw new Error('Parameter luas DAS (A) wajib untuk metode Bransby-Williams');
+      return parseFloat(calculateBransbyWilliams(L, A, S).toFixed(2));
     case 'california':
       const H = L * 1000 * S; // Estimasi beda tinggi
       return parseFloat((calculateCaliforniaCulvert(L, H) * 60).toFixed(2));

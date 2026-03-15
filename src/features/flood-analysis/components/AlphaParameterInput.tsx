@@ -46,23 +46,50 @@ const ALPHA_OPTIONS = [
     value: 3.0,
     characteristics: 'Topografi datar, rawa/danau, vegetasi sangat lebat',
   },
+  {
+    id: 'custom',
+    name: 'Custom / Kalibrasi',
+    description: 'Input parameter Alpha secara manual untuk kalibrasi',
+    value: 2.0,
+    characteristics: 'Gunakan jika anda memiliki data pengamatan lapangan',
+  },
 ];
 
 export const AlphaParameterInput: React.FC<AlphaParameterInputProps> = ({
+  value,
   onChange,
   error: externalError,
 }) => {
-  const [selectedId, setSelectedId] = useState<string>('');
+  const [selectedId, setSelectedId] = useState<string>(() => {
+    if (value) {
+      const match = ALPHA_OPTIONS.find((opt) => opt.value === value && opt.id !== 'custom');
+      return match ? match.id : 'custom';
+    }
+    return '';
+  });
+  const [customValue, setCustomValue] = useState<number>(value || 2.0);
 
   const selectedOption = ALPHA_OPTIONS.find((opt) => opt.id === selectedId);
 
   const handleChange = (id: string) => {
     setSelectedId(id);
-    const option = ALPHA_OPTIONS.find((opt) => opt.id === id);
-    if (option) {
-      onChange(option.value);
+    if (id === 'custom') {
+      onChange(customValue);
     } else {
-      onChange(null);
+      const option = ALPHA_OPTIONS.find((opt) => opt.id === id);
+      if (option) {
+        onChange(option.value);
+      } else {
+        onChange(null);
+      }
+    }
+  };
+
+  const handleCustomValueChange = (valStr: string) => {
+    const val = parseFloat(valStr);
+    setCustomValue(val);
+    if (!isNaN(val)) {
+        onChange(val);
     }
   };
 
@@ -78,7 +105,7 @@ export const AlphaParameterInput: React.FC<AlphaParameterInputProps> = ({
         placeholder="-- Pilih karakteristik DAS --"
       />
 
-      {selectedOption && (
+      {selectedOption && selectedId !== 'custom' && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md">
           <div className="flex items-start gap-2">
             <div className="w-5 h-5 rounded-md bg-pupr-blue flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -93,6 +120,24 @@ export const AlphaParameterInput: React.FC<AlphaParameterInputProps> = ({
               <p className="text-xs text-pupr-blue mt-1 italic">{selectedOption.characteristics}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {selectedId === 'custom' && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+            <label className="block text-xs font-bold text-amber-900 uppercase tracking-wider mb-2">Nilai Kalibrasi Alpha (α)</label>
+            <div className="flex items-center gap-3">
+                <input 
+                    type="number"
+                    step="0.1"
+                    min="1.0"
+                    max="5.0"
+                    value={customValue}
+                    onChange={(e) => handleCustomValueChange(e.target.value)}
+                    className="w-32 bg-white border border-amber-300 text-amber-900 font-bold rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-pupr-blue"
+                />
+                <p className="text-xs text-amber-700 italic">Range kalibrasi profesional: 1.5 s/d 3.0</p>
+            </div>
         </div>
       )}
 

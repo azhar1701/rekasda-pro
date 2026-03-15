@@ -50,8 +50,8 @@ export function infillIDW(
 export function infillNormalRatio(
   targetAvg: number,
   surroundingData: { avg: number; value: number }[]
-): number {
-  if (surroundingData.length === 0 || targetAvg === 0) return 0;
+): { value: number; isLongTermMean: boolean } {
+  if (surroundingData.length === 0 || targetAvg === 0) return { value: 0, isLongTermMean: false };
 
   let sum = 0;
   let count = 0;
@@ -62,7 +62,10 @@ export function infillNormalRatio(
     count++;
   }
 
-  return count === 0 ? 0 : sum / count;
+  return { 
+    value: count === 0 ? 0 : sum / count,
+    isLongTermMean: false // Currently only supports on-the-fly dataset mean
+  };
 }
 
 /**
@@ -74,7 +77,7 @@ export function infillMissingData(
   allData: DataHujan[],
   targetDate: string,
   method: 'normal_ratio' | 'idw' = 'idw'
-): number {
+): { value: number; method: string; metadata?: string } {
   // 1. Cari data stasiun lain pada tanggal yang sama
   const surroundingData = allStations
     .filter(s => s.id !== targetStation.id)
@@ -84,10 +87,13 @@ export function infillMissingData(
     })
     .filter(d => d.value > 0);
 
-  if (surroundingData.length === 0) return 0;
+  if (surroundingData.length === 0) return { value: 0, method: 'None' };
 
   if (method === 'idw' && targetStation.koordinat_x !== null && targetStation.koordinat_y !== null) {
-    return infillIDW(targetStation, surroundingData);
+    return { 
+      value: infillIDW(targetStation, surroundingData),
+      method: 'IDW'
+    };
   }
 
   // Fallback to Normal Ratio or Simple Average if coordinates missing
@@ -105,10 +111,18 @@ export function infillMissingData(
   })).filter(d => d.avg > 0);
 
   if (targetAvg > 0 && surroundingWithAvg.length > 0) {
-    return infillNormalRatio(targetAvg, surroundingWithAvg);
+    const res = infillNormalRatio(targetAvg, surroundingWithAvg);
+    return {
+      value: res.value,
+      method: 'Normal Ratio',
+      metadata: res.isLongTermMean ? 'Long-term Mean' : 'Short-term Dataset Mean'
+    };
   }
 
   // Last fallback: Simple Average
   const validValues = surroundingData.map(d => d.value);
-  return validValues.reduce((a, b) => a + b, 0) / validValues.length;
+  return {
+    value: validValues.reduce((a, b) => a + b, 0) / validValues.length,
+    method: 'Simple Average'
+  };
 }

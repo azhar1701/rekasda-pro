@@ -7,7 +7,10 @@ interface DailyRainfallMatrixProps {
 }
 
 export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, year, onCellClick }) => {
-    const matrix: (number | null)[][] = Array.from({ length: 31 }, () => Array(12).fill(null));
+    const matrix: { val: number | null; isInfilled: boolean }[][] = Array.from(
+        { length: 31 }, 
+        () => Array.from({ length: 12 }, () => ({ val: null, isInfilled: false }))
+    );
     
     data.forEach(row => {
         const [yyyy, mm, dd] = row.tanggal.split('-');
@@ -15,7 +18,10 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
         if (rowYear === year) {
             const month = parseInt(mm, 10) - 1;
             const day = parseInt(dd, 10) - 1;
-            matrix[day][month] = row.curah_hujan;
+            matrix[day][month] = { 
+                val: row.curah_hujan, 
+                isInfilled: row.is_infilled || false 
+            };
         }
     });
 
@@ -46,7 +52,7 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
         const daysInMonth = new Date(year, m + 1, 0).getDate();
         let hasData = false;
         for (let d = 0; d < daysInMonth; d++) {
-            const val = matrix[d][m];
+            const { val } = matrix[d][m];
             if (val !== null) {
                 hasData = true;
                 monthlyStats[m].jumlah += val;
@@ -74,14 +80,19 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
         }
     }
 
-    const getCellClass = (val: number | null) => {
+    const getCellClass = (val: number | null, isInfilled: boolean = false) => {
         if (val === null) return 'text-slate-400 text-center';
-        if (val < 0) return 'text-red-500 font-bold bg-red-50 text-right pr-2';
-        if (val === 0) return 'text-slate-400 text-right pr-2';
-        if (val > 0 && val < 50) return 'text-slate-800 text-right pr-2';
-        if (val >= 50 && val < 300) return 'bg-blue-100 text-pupr-blue font-bold text-right pr-2';
-        if (val >= 300) return 'bg-red-100 text-red-700 font-bold text-right pr-2';
-        return 'text-right pr-2';
+        
+        const baseClasses = isInfilled 
+            ? 'italic text-indigo-600 bg-indigo-50/30' 
+            : '';
+            
+        if (val < 0) return `${baseClasses} text-red-500 font-bold bg-red-50 text-right pr-2`;
+        if (val === 0) return `${baseClasses} text-slate-400 text-right pr-2`;
+        if (val > 0 && val < 50) return `${baseClasses} text-slate-800 text-right pr-2`;
+        if (val >= 50 && val < 300) return `${baseClasses} bg-blue-100 text-pupr-blue font-bold text-right pr-2`;
+        if (val >= 300) return `${baseClasses} bg-red-100 text-red-700 font-bold text-right pr-2`;
+        return `${baseClasses} text-right pr-2`;
     };
 
     return (
@@ -108,23 +119,24 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
                                 <th scope="row" className="py-1 px-1.5 border border-slate-500 font-bold text-slate-700 text-center sticky left-0 bg-slate-100 z-20 group-hover:bg-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                     {dayIndex + 1}
                                 </th>
-                                {row.map((val, monthIndex) => {
+                                {row.map((cell, monthIndex) => {
                                     const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
                                     const isValidDay = dayIndex + 1 <= daysInMonth;
                                     
                                     if (!isValidDay) {
                                         return <td key={monthIndex} className="py-1 px-1.5 border border-slate-500 bg-slate-300" aria-hidden="true"></td>;
                                     }
-
+                                    
+                                    const { val, isInfilled } = cell;
                                     const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`;
                                     const ariaLabel = val !== null 
-                                        ? `Curah hujan tanggal ${dayIndex + 1} ${months[monthIndex]} ${year}: ${val.toFixed(1)} mm`
+                                        ? `Curah hujan tanggal ${dayIndex + 1} ${months[monthIndex]} ${year}: ${val.toFixed(1)} mm ${isInfilled ? '(infilled)' : ''}`
                                         : `Data curah hujan tanggal ${dayIndex + 1} ${months[monthIndex]} ${year} kosong`;
 
                                     return (
                                         <td 
                                             key={monthIndex} 
-                                            className={`py-1 border border-slate-500 tabular-nums ${getCellClass(val)} ${onCellClick ? 'cursor-pointer hover:bg-teal-100 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pupr-blue' : ''}`}
+                                            className={`py-1 border border-slate-500 tabular-nums ${getCellClass(val, isInfilled)} ${onCellClick ? 'cursor-pointer hover:bg-teal-100 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pupr-blue' : ''}`}
                                             onClick={() => {
                                                 if (onCellClick) {
                                                     onCellClick(dateStr, val);
@@ -139,6 +151,7 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
                                             role={onCellClick ? "button" : "cell"}
                                             tabIndex={onCellClick ? 0 : undefined}
                                             aria-label={ariaLabel}
+                                            title={isInfilled ? "Data ini diisi secara otomatis (Infilled)" : undefined}
                                         >
                                             {val !== null ? val.toFixed(1) : '-'}
                                         </td>
