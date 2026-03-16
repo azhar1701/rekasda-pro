@@ -122,9 +122,19 @@ export const TutupanLahanCard: React.FC = () => {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider text-[10px]">Jenis Tutupan Lahan</th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500 xl:flex xl:items-center xl:justify-end xl:gap-1.5 uppercase tracking-wider text-[10px]">Luas (km²)</th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500 xl:flex xl:items-center xl:justify-end xl:gap-1.5 uppercase tracking-wider text-[10px]">Koef. C <HelpTooltip content="Koefisien Pengaliran (C) untuk Metode Rasional (0-1)" /></th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500 xl:flex xl:items-center xl:justify-end xl:gap-1.5 uppercase tracking-wider text-[10px]">CN <HelpTooltip content="Curve Number untuk Metode SCS (0-100)" /></th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">Luas (km²)</th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                  <div className="flex items-center justify-end gap-1.5 min-w-[80px]">
+                    Koef. C 
+                    <HelpTooltip content="Koefisien Pengaliran (C) untuk Metode Rasional (0-1)" />
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                  <div className="flex items-center justify-end gap-1.5 min-w-[50px]">
+                    CN 
+                    <HelpTooltip content="Curve Number untuk Metode SCS (0-100)" />
+                  </div>
+                </th>
                 <th className="px-4 py-3 text-center font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aksi</th>
               </tr>
             </thead>
