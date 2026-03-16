@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  CloudRain,
   Save,
   CheckCircle,
   AlertCircle,
   Info
 } from 'lucide-react';
 import { AssistantContainer } from '@/components/ui/govtech';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig, type DataHujan } from '@/stores/useHydrologyStore';
 import { calculateAlgebraicMean, calculateThiessenPolygon, calculateIsohyet } from '@/lib/utils/hydrology/arealRainfall';
@@ -18,11 +16,16 @@ import { useOnboarding } from '@/providers/OnboardingProvider';
 import { SuccessCelebration } from '@/components/ui/feedback/SuccessCelebration';
 
 export const HujanWilayahCard: React.FC = () => {
- const {
- curahHujanWilayah, setCurahHujanWilayah, stasiunList, morfometriDAS,
- fetchMultipleStationsData, setArealRainfallData, setActiveRainfallSource,
- lastResetAt
- } = useHydrologyStore();
+  const {
+    curahHujanWilayah, setCurahHujanWilayah, stasiunList, morfometriDAS,
+    fetchMultipleStationsData, setArealRainfallData, setActiveRainfallSource,
+    lastResetAt, projectStationIds
+  } = useHydrologyStore();
+
+  // 1. Filter stasiunList based on projectStationIds to only use officially selected stations
+  const selectedStasiunList = useMemo(() => {
+    return stasiunList.filter(s => projectStationIds.includes(s.id));
+  }, [stasiunList, projectStationIds]);
 
  const [metode, setMetode] = useState<'aljabar' | 'thiessen' | 'isohyet'>(curahHujanWilayah?.metode || 'aljabar');
  const [configs, setConfigs] = useState<ThiessenStasiunConfig[]>(
@@ -34,12 +37,12 @@ export const HujanWilayahCard: React.FC = () => {
  const [isSaved, setIsSaved] = useState(false);
  const isResetting = React.useRef(false);
 
- const [params, setParams] = useState<MethodParams>({
- hasCoordinates: true,
- topography: 'flat',
- distribution: 'uniform',
- stationCount: stasiunList.length,
- });
+  const [params, setParams] = useState<MethodParams>({
+    hasCoordinates: true,
+    topography: 'flat',
+    distribution: 'uniform',
+    stationCount: selectedStasiunList.length,
+  });
 
  const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
  const [showCelebration, setShowCelebration] = useState(false);
@@ -84,30 +87,30 @@ export const HujanWilayahCard: React.FC = () => {
  }
  }, [lastResetAt]);
 
- useEffect(() => {
- if (stasiunList.length > 0) {
- setParams(prev => ({ ...prev, stationCount: stasiunList.length }));
- setConfigs(prevConfigs => {
- // Sinkronisasi configs dengan stasiunList terbaru
- const newConfigs = stasiunList.map(s => {
- const existing = prevConfigs.find(c => c.stasiunId === s.id);
- if (existing) {
- return { ...existing, namaStasiun: s.nama_stasiun };
- }
- return {
- stasiunId: s.id,
- namaStasiun: s.nama_stasiun,
- luasPengaruh: 0,
- bobot: 0,
- };
- });
- return newConfigs;
- });
- } else {
- setParams(prev => ({ ...prev, stationCount: 0 }));
- setConfigs([]);
- }
- }, [stasiunList]);
+  useEffect(() => {
+    if (selectedStasiunList.length > 0) {
+      setParams(prev => ({ ...prev, stationCount: selectedStasiunList.length }));
+      setConfigs(prevConfigs => {
+        // Sinkronisasi configs dengan selectedStasiunList terbaru
+        const newConfigs = selectedStasiunList.map(s => {
+          const existing = prevConfigs.find(c => c.stasiunId === s.id);
+          if (existing) {
+            return { ...existing, namaStasiun: s.nama_stasiun };
+          }
+          return {
+            stasiunId: s.id,
+            namaStasiun: s.nama_stasiun,
+            luasPengaruh: 0,
+            bobot: 0,
+          };
+        });
+        return newConfigs;
+      });
+    } else {
+      setParams(prev => ({ ...prev, stationCount: 0 }));
+      setConfigs([]);
+    }
+  }, [selectedStasiunList]);
 
  useEffect(() => {
  setRecommendation(determineRainfallMethod(params));
@@ -250,10 +253,10 @@ export const HujanWilayahCard: React.FC = () => {
  setActiveRainfallSource('isohyet');
  toast.success(`Hujan Kawasan Isohyet berhasil dihitung (Rata-rata: ${avgValue.toFixed(2)} mm).`);
 
- } else if (metode === 'aljabar') {
- const stasiunIds = stasiunList.map(s => s.id);
- if (stasiunIds.length > 0) {
- await fetchMultipleStationsData(stasiunIds);
+    } else if (metode === 'aljabar') {
+      const stasiunIds = selectedStasiunList.map(s => s.id);
+      if (stasiunIds.length > 0) {
+        await fetchMultipleStationsData(stasiunIds);
  const currentData = useHydrologyStore.getState().dataHujan;
 
  const yearsAvailable = new Set<number>();
@@ -323,16 +326,11 @@ export const HujanWilayahCard: React.FC = () => {
           onComplete={() => setShowCelebration(false)}
         />
       )}
-      <Card className="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden shadow-none border-l-4 border-l-pupr-blue">
-        <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-pupr-blue rounded-sm">
-              <CloudRain className="w-5 h-5 text-pupr-yellow" />
-            </div>
-            <div>
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curah Hujan Wilayah</h3>
-              <p className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Metode rata-rata spasial</p>
-            </div>
+      <div className="border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900">
+        <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
+            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Curah Hujan Wilayah</h3>
           </div>
         </div>
 
@@ -396,7 +394,7 @@ export const HujanWilayahCard: React.FC = () => {
                     onChange={(e) => setParams({ ...params, stationCount: parseInt(e.target.value) || 0 })}
                     className="w-24 h-11 px-3 text-sm font-semibold border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-2 focus:ring-pupr-blue/20 tabular-nums text-center"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">(Terdeteksi: {stasiunList.length})</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">(Terdeteksi: {selectedStasiunList.length})</span>
                 </div>
               </div>
             </div>
@@ -472,10 +470,12 @@ export const HujanWilayahCard: React.FC = () => {
           {
             metode === 'thiessen' && (
               <>
-                {stasiunList.length === 0 ? (
+                {selectedStasiunList.length === 0 ? (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-sm flex items-center gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                    <p className="text-xs font-semibold text-amber-800">Belum ada stasiun hujan. Tambahkan stasiun terlebih dahulu.</p>
+                    <p className="text-xs font-semibold text-amber-800">
+                      Tidak ada stasiun terpilih. Silakan tentukan stasiun di bagian "Seleksi Stasiun Project" di atas.
+                    </p>
                   </div>
                 ) : (
                   <>
@@ -647,16 +647,26 @@ export const HujanWilayahCard: React.FC = () => {
                 <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <p className="text-xs font-semibold text-blue-800 leading-relaxed">
                   Semua stasiun memiliki bobot yang sama.
-                  Hujan wilayah dihitung dengan rata-rata aritmatik dari semua stasiun pengamatan yang tersedia.
+                  Hujan wilayah dihitung dengan rata-rata aritmatik dari {selectedStasiunList.length} stasiun pengamatan terpilih.
                 </p>
               </div>
             )
           }
 
+          {selectedStasiunList.length === 0 && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-sm flex gap-3 items-start">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <p className="text-xs font-semibold text-amber-800">
+                Peringatan: Tidak ada stasiun yang dipilih untuk perhitungan ini. 
+                Silakan pilih stasiun di bagian "Seleksi Stasiun Project" terlebih dahulu agar perhitungan dapat berjalan.
+              </p>
+            </div>
+          )}
+
           <button
             onClick={handleSave}
-            disabled={hasError}
-            className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-sm transition-all flex items-center justify-center gap-2 ${hasError
+            disabled={hasError || selectedStasiunList.length === 0}
+            className={`w-full h-11 uppercase tracking-wider text-[10px] font-bold rounded-sm transition-all flex items-center justify-center gap-2 ${hasError || selectedStasiunList.length === 0
               ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-500'
               : isSaved
               ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-none'
@@ -667,7 +677,7 @@ export const HujanWilayahCard: React.FC = () => {
             {hasError ? 'Perbaiki Selisih Luas Terlebih Dahulu' : isSaved ? 'Tersimpan ✓' : 'Simpan Konfigurasi'}
           </button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

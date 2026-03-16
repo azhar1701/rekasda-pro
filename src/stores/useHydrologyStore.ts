@@ -3,12 +3,13 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { ProjectSlice, createProjectSlice } from './slices/projectSlice';
 import { RainfallSlice, createRainfallSlice } from './slices/rainfallSlice';
 import { AnalysisSlice, createAnalysisSlice } from './slices/analysisSlice';
+import { SpatialSlice, createSpatialSlice } from './slices/spatialSlice';
 import { toast } from '@/hooks/useToast';
 
 // Re-export types for backward compatibility
 export * from '@/types/hydrology.types';
 
-export type HydrologyStore = ProjectSlice & RainfallSlice & AnalysisSlice & {
+export type HydrologyStore = ProjectSlice & RainfallSlice & AnalysisSlice & SpatialSlice & {
  // Add any legacy fields that were missed or are computed
  distribusiHujanJamJaman: number[];
  hujanEfektif: any;
@@ -33,6 +34,7 @@ export const useHydrologyStore = create<HydrologyStore>()(
  ...createProjectSlice(...a),
  ...createRainfallSlice(...a),
  ...createAnalysisSlice(...a),
+ ...createSpatialSlice(...a),
  
  // Extra state
  distribusiHujanJamJaman: [],
@@ -64,6 +66,7 @@ export const useHydrologyStore = create<HydrologyStore>()(
  // 1. Reset project-specific parameters
  get().resetProject();
  get().resetAnalysis();
+ get().resetSpatial();
  
  // 2. Reset Project-specific Rainfall Config (Selection & Results)
  // BUT: Keep stasiunList and raw dataHujan (The Master Database)

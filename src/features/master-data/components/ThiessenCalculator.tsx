@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { Layers, Plus, Trash2, Search, CheckCircle2, Database } from 'lucide-react';
+import { Layers, Plus, Trash2, Search, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
@@ -49,24 +49,24 @@ export const ThiessenCalculator: React.FC = () => {
  toast.success(`${projectStationIds.length} stasiun berhasil didaftarkan ke project.`);
  };
 
- return (
- <div className="border border-slate-300 dark:border-slate-600 rounded-sm bg-white dark:bg-slate-900 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-75">
- {/* Header */}
- <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
- <div className="flex items-center gap-2">
- <Database className="w-4 h-4 text-pupr-yellow" />
- <h4 className="text-xs font-black uppercase tracking-[0.2em]">Tahap 1: Seleksi Stasiun Project</h4>
- </div>
- <div className="flex items-center gap-2">
- <span className="text-[9px] font-bold opacity-60 uppercase tracking-widest mr-2">Status: {projectStationIds.length} Aktif</span>
- <button 
- onClick={() => setIsExpanded(!isExpanded)} 
- className="text-[10px] font-bold bg-white dark:bg-slate-900 hover:bg-white dark:bg-slate-900 px-2 py-1 rounded transition-colors"
- >
- {isExpanded ? 'Minimize' : 'Buka Tool'}
- </button>
- </div>
- </div>
+  return (
+    <div className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-75">
+      {/* Header — Rebuilt to standard dot pattern */}
+      <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
+          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Seleksi Stasiun Project</h3>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Status: {projectStationIds.length} Aktif</span>
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)} 
+            className="text-[9px] font-bold text-pupr-blue hover:text-slate-900 dark:text-slate-400 dark:hover:text-white uppercase tracking-widest transition-colors"
+          >
+            {isExpanded ? 'Sembunyikan' : 'Buka Tool'}
+          </button>
+        </div>
+      </div>
 
  {isExpanded && (
  <div className="p-4 space-y-4">
@@ -168,12 +168,12 @@ export const ThiessenCalculator: React.FC = () => {
  </table>
  </div>
 
- <button
- onClick={handleSyncAndCalculate}
- className="w-full py-3 bg-pupr-blue text-white rounded font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all "
- >
- Simpan Seleksi Stasiun
- </button>
+          <button
+            onClick={handleSyncAndCalculate}
+            className="w-full h-11 bg-pupr-blue text-white font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-colors shadow-none rounded-none"
+          >
+            Simpan Seleksi Stasiun
+          </button>
  </div>
  ) : (
  <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-sm border border-dashed border-slate-300 dark:border-slate-600">
