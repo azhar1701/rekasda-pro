@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { useHydrologyStore, type ThiessenStasiunConfig } from '@/stores/useHydrologyStore';
-import { Layers, Plus, Trash2, AlertTriangle, Search, CheckCircle2, Database, Info } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { Layers, Plus, Trash2, Search, CheckCircle2, Database } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
-import { checkWMODensity, WMODensityResult } from '@/lib/utils/qc/spatialHeuristics';
 
 /**
  * ThiessenCalculator — Professional Station Selection & weight-average tool.

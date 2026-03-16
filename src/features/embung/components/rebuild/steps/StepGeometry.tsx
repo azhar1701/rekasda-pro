@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { useEmbungStore } from '../../../hooks/useEmbungStore';
 import { Plus, Trash2, Info, AreaChart as ChartIcon, Table as TableIcon } from 'lucide-react';
+import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Area, Line } from 'recharts';
 
 interface CurveRow {
@@ -26,7 +27,7 @@ export const StepGeometry: React.FC = () => {
  const { state, dispatch } = useEmbungStore();
  const [rows, setRows] = useState<CurveRow[]>(
  state.stageStorageCurve ?
- state.stageStorageCurve.elevation.map((e, i) => ({
+ state.stageStorageCurve.elevation.map((e: number, i: number) => ({
  id: String(i),
  elevation: e,
  storage: state.stageStorageCurve!.storage[i],
