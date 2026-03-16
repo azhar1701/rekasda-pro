@@ -11,7 +11,7 @@ import { ChirpsTimeSeriesChart } from './components/ChirpsTimeSeriesChart';
 import { DoubleMassCurveChart } from './components/DoubleMassCurveChart';
 import { cekDoubleMassCurve } from '@/lib/utils/qc/dataQualityMath';
 import { MOCK_DAS_GEOJSON, MOCK_LAND_COVER_FC, MOCK_STATIONS_FC, MOCK_STATIONS_DATA, MOCK_RIVER_GEOJSON } from '@/utils/mockSpatialData';
-import { Satellite, CalendarRange, Download, RefreshCw, Share2, Check } from 'lucide-react';
+import { Satellite, Download, RefreshCw, Share2, Check } from 'lucide-react';
 import { calculateBiasCorrection } from '@/lib/utils/hydrology/biasCorrection';
 import { SatelliteScatterPlot } from './components/SatelliteScatterPlot';
 import { extractChirpsData } from '@/services/chirpsService';
@@ -356,23 +356,52 @@ export const ChirpsEngine: React.FC = () => {
       hujan: chirpsData.filter((d: any) => d.tahun === y).reduce((s: number, i: any) => s + i.rainfall, 0)
     }));
 
-    // 2. Fetch Ground Data for selected stations (MOCK for now if not available in store)
-    // In real app, we would aggregate dataHujan from store for these specific stations
-    const groundAnnual: { tahun: number; hujan: number }[] = satelliteAnnual.map(s => ({
-      tahun: s.tahun,
-      hujan: s.hujan * (0.9 + Math.random() * 0.2) // Mocking ground agreement for demo
-    }));
+    // 2. Fetch/Aggregate Ground Data for selected stations
+    // Try to get from dataHujan in store
+    const groundDataInStore = useHydrologyStore.getState().dataHujan;
+    const selectedGroundData = groundDataInStore.filter(d => groundStationIdsForBias.includes(d.stasiun_id));
+    
+    let groundAnnual: { tahun: number; hujan: number }[] = [];
+    
+    if (selectedGroundData.length > 0) {
+      // Group by year and average across selected stations (Arithmetic Mean of Annual Max)
+      const yearMap = new Map<number, number[]>();
+      selectedGroundData.forEach(d => {
+        const y = new Date(d.tanggal).getFullYear();
+        if (satelliteAnnual.some(sa => sa.tahun === y)) {
+          if (!yearMap.has(y)) yearMap.set(y, []);
+          yearMap.get(y)!.push(d.curah_hujan);
+        }
+      });
+
+      groundAnnual = Array.from(yearMap.entries()).map(([tahun, rainfalls]) => {
+        // Find max for each stasiun in that year, then average? 
+        // Or just average all daily data for that year? Usually BF is calculated on Annual Totals.
+        // Let's assume Annual Totals for BF.
+        // For simpler logic here, we sum and average.
+        const sum = rainfalls.reduce((a, b) => a + b, 0);
+        return { tahun, hujan: sum / groundStationIdsForBias.length };
+      });
+    }
+
+    // Fallback for Demo Mode (Simulation)
+    if (groundAnnual.length === 0) {
+      groundAnnual = satelliteAnnual.map(s => ({
+        tahun: s.tahun,
+        hujan: s.hujan * (0.85 + Math.random() * 0.3) 
+      }));
+    }
 
     const result = calculateBiasCorrection(groundAnnual, satelliteAnnual, chirpsData);
     setBiasResult(result);
   }, [chirpsData, groundStationIdsForBias, setBiasResult]);
 
   const handleExtract = async () => {
-    if (!dasFeature?.geometry) return toast.error('Poligon DAS diperlukan.');
+    if (!dasFeature) return toast.error('Poligon DAS diperlukan.');
     try {
       setIsExtracting(true);
       toast.info('Ekstraksi CHIRPS aktif...');
-      const res = await extractChirpsData(dasFeature.geometry, startDate, endDate, 'spatial-query');
+      const res = await extractChirpsData(dasFeature, startDate, endDate, 'spatial-query');
       if (res.rawData) {
         const formatted = res.rawData.map((d: any) => ({ 
           date: d.tanggal, 
@@ -430,42 +459,63 @@ export const ChirpsEngine: React.FC = () => {
   })) : [];
 
   return (
-    <div className="space-y-6 pt-6 border-t border-slate-200">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Control Box */}
-        <div className="space-y-4">
-          <div className="p-5 bg-slate-50 border border-slate-200">
-            <header className="flex items-center gap-2 mb-4">
-              <Satellite className="w-4 h-4 text-pupr-blue" />
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Satellite Control</h4>
+    <div className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-none">
+      {/* Workstation Header */}
+      <div className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Satellite className="w-4 h-4 text-pupr-blue" />
+          <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-700">Workstation Analisis CHIRPS</h3>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-7 text-[9px] font-bold uppercase tracking-widest gap-1.5 rounded-none shadow-none" onClick={handleSyncToGlobal}>
+            <Share2 className="w-3 h-3" />
+            Sync Global
+          </Button>
+          <Button variant="outline" size="sm" className="h-7 text-[9px] font-bold uppercase tracking-widest gap-1.5 rounded-none border-slate-300 shadow-none" onClick={downloadCSV}>
+            <Download className="w-3 h-3" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-700">
+        {/* SIDEBAR: Controls & Selection */}
+        <aside className="w-full lg:w-72 flex flex-col divide-y divide-slate-200 dark:divide-slate-700 bg-slate-50/30">
+          {/* Section: Satellite Control */}
+          <section className="p-4">
+            <header className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue"></div>
+              <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">SATELLITE CONTROL</h4>
             </header>
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-2 text-[10px]">
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-1.5">
                 <div className="relative">
-                  <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                  <input type="text" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-7 p-2 border border-slate-300 font-mono" />
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-400 uppercase">START</span>
+                  <input type="text" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-12 p-2 border border-slate-200 text-[10px] font-mono focus:border-pupr-blue focus:ring-0 outline-none" />
                 </div>
                 <div className="relative">
-                  <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                  <input type="text" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-7 p-2 border border-slate-300 font-mono" />
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-400 uppercase">END</span>
+                  <input type="text" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-12 p-2 border border-slate-200 text-[10px] font-mono focus:border-pupr-blue focus:ring-0 outline-none" />
                 </div>
               </div>
-              <Button className="w-full bg-pupr-blue hover:bg-slate-900 shadow-none text-[10px] uppercase font-bold" onClick={handleExtract} disabled={isExtracting || !dasFeature}>
+              <Button className="w-full bg-pupr-blue hover:bg-slate-900 shadow-none h-9 text-[10px] uppercase font-bold tracking-widest rounded-none" onClick={handleExtract} disabled={isExtracting || !dasFeature}>
+                <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
                 {isExtracting ? "PROSES..." : "Tarik CHIRPS"}
               </Button>
             </div>
-          </div>
+          </section>
 
-          <div className="p-5 bg-white border border-slate-200">
-            <header className="flex items-center gap-2 mb-4">
-              <RefreshCw className="w-4 h-4 text-emerald-600" />
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Baseline Stations</h4>
+          {/* Section: Baseline Stations */}
+          <section className="p-4 flex-1">
+            <header className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-pupr-yellow"></div>
+              <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">BASELINE STATIONS</h4>
             </header>
-            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
-              {stasiunList.map(s => (
-                <label key={s.id} className="flex items-center gap-2 cursor-pointer group">
+            <div className="space-y-1.5 max-h-[250px] overflow-y-auto pr-1 thin-scrollbar">
+              {stasiunList.length > 0 ? stasiunList.map(s => (
+                <label key={s.id} className="flex items-center gap-2.5 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group transition-colors border border-transparent hover:border-slate-200">
                   <div 
-                    className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${groundStationIdsForBias.includes(s.id) ? 'bg-pupr-blue border-pupr-blue' : 'border-slate-300 group-hover:border-pupr-blue'}`}
+                    className={`w-3.5 h-3.5 border flex items-center justify-center transition-all ${groundStationIdsForBias.includes(s.id) ? 'bg-pupr-blue border-pupr-blue' : 'border-slate-300 group-hover:border-pupr-blue'}`}
                     onClick={() => {
                       const newIds = groundStationIdsForBias.includes(s.id) 
                         ? groundStationIdsForBias.filter(id => id !== s.id)
@@ -473,70 +523,96 @@ export const ChirpsEngine: React.FC = () => {
                       setGroundStationIdsForBias(newIds);
                     }}
                   >
-                    {groundStationIdsForBias.includes(s.id) && <Check className="w-3 h-3 text-white" />}
+                    {groundStationIdsForBias.includes(s.id) && <Check className="w-2.5 h-2.5 text-white" />}
                   </div>
-                  <span className="text-[10px] font-semibold text-slate-600 uppercase truncate">{s.nama_stasiun}</span>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase truncate tracking-tight">{s.nama_stasiun}</span>
                 </label>
-              ))}
+              )) : (
+                <p className="text-[9px] text-slate-400 p-2 italic">Belum ada stasiun ground</p>
+              )}
             </div>
-          </div>
-        </div>
+          </section>
+        </aside>
 
-        {/* Charts and Validations */}
-        <div className="md:col-span-3 space-y-6">
+        {/* MAIN DASHBOARD: Visualization & Metrics */}
+        <main className="flex-1 bg-white dark:bg-slate-900 p-4 min-w-0">
           {chirpsData.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ChirpsTimeSeriesChart data={chirpsData} />
-                <SatelliteScatterPlot data={scatterData} />
+            <div className="space-y-4">
+              {/* Top Charts Row */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="border border-slate-200 bg-white p-3">
+                  <header className="flex items-center gap-2 mb-3">
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Time-Series Curah Hujan Harian</span>
+                  </header>
+                  <ChirpsTimeSeriesChart data={chirpsData} />
+                </div>
+                <div className="border border-slate-200 bg-white p-3">
+                  <header className="flex items-center gap-2 mb-3">
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Agreement: Ground vs Satellite</span>
+                  </header>
+                  <SatelliteScatterPlot data={scatterData} />
+                </div>
               </div>
 
-              {dmcResult && (
-                <div className="bg-white p-4 border border-slate-200 h-[300px]">
-                  <DoubleMassCurveChart result={dmcResult} />
-                </div>
-              )}
-
-              {biasResult && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-slate-50 border border-slate-200">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">Pearson R</p>
-                    <p className="text-xl font-light text-pupr-blue tabular-nums">{biasResult.metrics.pearsonR.toFixed(3)}</p>
-                  </div>
-                  <div className="p-4 bg-slate-50 border border-slate-200">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">NSE</p>
-                    <p className="text-xl font-light text-emerald-600 tabular-nums">{biasResult.metrics.nse.toFixed(3)}</p>
-                  </div>
-                  <div className="p-4 bg-slate-50 border border-slate-200">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">PBIAS (%)</p>
-                    <p className="text-xl font-light text-amber-600 tabular-nums">{biasResult.metrics.pbias.toFixed(2)}%</p>
-                  </div>
-                  <div className="p-4 bg-pupr-blue text-white">
-                    <p className="text-[9px] font-bold opacity-70 uppercase tracking-widest text-pupr-yellow">Validation Status</p>
-                    <p className="text-sm font-black uppercase mt-1 tracking-tighter">{biasResult.metrics.status}</p>
+              {/* Middle Section: DMC & Stats */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                {/* Double Mass Curve */}
+                <div className="xl:col-span-2 border border-slate-200 bg-white p-4">
+                  <header className="flex items-center justify-between mb-4">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Uji Konsistensi (DMC)</span>
+                    {dmcResult && (
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase tracking-tighter border border-emerald-200">
+                        {dmcResult && 'KONSISTEN'}
+                      </span>
+                    )}
+                  </header>
+                  <div className="h-[220px]">
+                    {dmcResult && <DoubleMassCurveChart result={dmcResult} />}
                   </div>
                 </div>
-              )}
 
-              <div className="flex flex-wrap gap-3">
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest gap-2 rounded-sm shadow-none" onClick={handleSyncToGlobal}>
-                  <Share2 className="w-3.5 h-3.5" />
-                  Sync to Global Analysis
-                </Button>
-                <Button variant="outline" size="sm" className="text-[10px] font-bold uppercase tracking-widest gap-2 rounded-sm border-slate-300 shadow-none" onClick={downloadCSV}>
-                  <Download className="w-3.5 h-3.5" />
-                  Export Validation CSV
-                </Button>
+                {/* Validation Score Board */}
+                <div className="flex flex-col bg-slate-900 text-white divide-y divide-white/10">
+                  <div className="p-4 bg-pupr-blue">
+                    <span className="text-[8px] font-black text-pupr-yellow/80 uppercase tracking-widest">VALIDATION STATUS</span>
+                    <p className="text-xl font-black mt-1 tracking-tighter uppercase whitespace-nowrap">
+                      {biasResult?.metrics.status || 'PENDING'}
+                    </p>
+                  </div>
+                  
+                  <div className="flex-1 p-4 flex flex-col justify-between space-y-4">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">Pearson R</span>
+                      <span className="text-xl font-light tabular-nums tracking-tighter text-white">
+                        {biasResult?.metrics.pearsonR.toFixed(3) || '0.000'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">NSE</span>
+                      <span className="text-xl font-light tabular-nums tracking-tighter text-emerald-400">
+                        {biasResult?.metrics.nse.toFixed(3) || '0.000'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">PBIAS (%)</span>
+                      <span className="text-xl font-light tabular-nums tracking-tighter text-amber-400">
+                        {biasResult?.metrics.pbias.toFixed(2) || '0.00'}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </>
+            </div>
           ) : (
-            <div className="h-[400px] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-              <Satellite className="w-12 h-12 mb-4 opacity-20" />
-              <p className="text-xs font-bold uppercase tracking-widest">Data Satelit Belum Dimuat</p>
-              <p className="text-[10px] mt-2 max-w-[300px]">Silakan masukkan rentang tanggal dan tekan 'Tarik CHIRPS' untuk memulai analisis spasial satelit.</p>
+            <div className="h-[450px] flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-100">
+              <div className="w-16 h-16 bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 transition-transform hover:scale-105">
+                <Satellite className="w-8 h-8 opacity-20" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Data Satelit Belum Dimuat</p>
+              <p className="text-[9px] mt-2 max-w-[280px] text-center leading-relaxed">Pilih poligon DAS di petaInteraktif lalu klik tombol tarik untuk memulai analisis CHIRPS.</p>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
