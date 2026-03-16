@@ -8,6 +8,8 @@ export interface SpatialSlice {
   dmcResult: any | null;
   slopeResult: { upstream: number; downstream: number; slope: number } | null;
   
+  groundStationIdsForBias: string[];
+  
   // Actions
   setDasFeature: (feature: any | null) => void;
   setRiverFeature: (feature: any | null) => void;
@@ -15,6 +17,7 @@ export interface SpatialSlice {
   setBiasResult: (result: any | null) => void;
   setDmcResult: (result: any | null) => void;
   setSlopeResult: (result: { upstream: number; downstream: number; slope: number } | null) => void;
+  setGroundStationIdsForBias: (ids: string[]) => void;
   resetSpatial: () => void;
 }
 
@@ -23,6 +26,7 @@ export const createSpatialSlice: StateCreator<SpatialSlice> = (set) => ({
   riverFeature: null,
   chirpsData: [],
   biasResult: null,
+  groundStationIdsForBias: [],
   dmcResult: null,
   slopeResult: null,
 
@@ -32,6 +36,7 @@ export const createSpatialSlice: StateCreator<SpatialSlice> = (set) => ({
   setBiasResult: (biasResult) => set({ biasResult }),
   setDmcResult: (dmcResult) => set({ dmcResult }),
   setSlopeResult: (slopeResult) => set({ slopeResult }),
+  setGroundStationIdsForBias: (groundStationIdsForBias) => set({ groundStationIdsForBias }),
   
   resetSpatial: () => set({
     dasFeature: null,
@@ -39,6 +44,7 @@ export const createSpatialSlice: StateCreator<SpatialSlice> = (set) => ({
     chirpsData: [],
     biasResult: null,
     dmcResult: null,
-    slopeResult: null
+    slopeResult: null,
+    groundStationIdsForBias: []
   }),
 });

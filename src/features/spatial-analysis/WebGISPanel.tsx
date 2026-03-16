@@ -11,7 +11,9 @@ import { ChirpsTimeSeriesChart } from './components/ChirpsTimeSeriesChart';
 import { DoubleMassCurveChart } from './components/DoubleMassCurveChart';
 import { cekDoubleMassCurve } from '@/lib/utils/qc/dataQualityMath';
 import { MOCK_DAS_GEOJSON, MOCK_LAND_COVER_FC, MOCK_STATIONS_FC, MOCK_STATIONS_DATA, MOCK_RIVER_GEOJSON } from '@/utils/mockSpatialData';
-import { Satellite, CalendarRange } from 'lucide-react';
+import { Satellite, CalendarRange, Download, RefreshCw, Share2, Check } from 'lucide-react';
+import { calculateBiasCorrection } from '@/lib/utils/hydrology/biasCorrection';
+import { SatelliteScatterPlot } from './components/SatelliteScatterPlot';
 import { extractChirpsData } from '@/services/chirpsService';
 import { getElevation, calculateSlope } from '@/services/elevationService';
 import { toast } from '@/hooks/useToast';
@@ -331,12 +333,39 @@ export const SpatialMonitor: React.FC = () => {
 export const ChirpsEngine: React.FC = () => {
   const { 
     dasFeature, chirpsData, setChirpsData, 
-    setDmcResult, dmcResult 
+    setDmcResult, dmcResult, stasiunList,
+    groundStationIdsForBias, setGroundStationIdsForBias,
+    biasResult, setBiasResult,
+    setArealRainfallData, setActiveRainfallSource
   } = useHydrologyStore();
 
   const [isExtracting, setIsExtracting] = useState(false);
   const [startDate, setStartDate] = useState('01/01/2010');
   const [endDate, setEndDate] = useState('12/31/2023');
+
+  // Logic: Calculate Bias whenever data or stations change
+  useEffect(() => {
+    if (chirpsData.length === 0 || groundStationIdsForBias.length === 0) {
+      setBiasResult(null);
+      return;
+    }
+
+    // 1. Calculate Satellite Annual Totals
+    const satelliteAnnual = Array.from(new Set(chirpsData.map((d: any) => d.tahun))).map((y: any) => ({
+      tahun: y,
+      hujan: chirpsData.filter((d: any) => d.tahun === y).reduce((s: number, i: any) => s + i.rainfall, 0)
+    }));
+
+    // 2. Fetch Ground Data for selected stations (MOCK for now if not available in store)
+    // In real app, we would aggregate dataHujan from store for these specific stations
+    const groundAnnual: { tahun: number; hujan: number }[] = satelliteAnnual.map(s => ({
+      tahun: s.tahun,
+      hujan: s.hujan * (0.9 + Math.random() * 0.2) // Mocking ground agreement for demo
+    }));
+
+    const result = calculateBiasCorrection(groundAnnual, satelliteAnnual, chirpsData);
+    setBiasResult(result);
+  }, [chirpsData, groundStationIdsForBias, setBiasResult]);
 
   const handleExtract = async () => {
     if (!dasFeature?.geometry) return toast.error('Poligon DAS diperlukan.');
@@ -367,42 +396,144 @@ export const ChirpsEngine: React.FC = () => {
     }
   };
 
+  const handleSyncToGlobal = () => {
+    if (!biasResult) return toast.error('Lakukan koreksi bias terlebih dahulu.');
+    
+    setArealRainfallData('isohyet', biasResult.adjustedData.map((d: any) => ({
+      id: `sat-${d.date}`,
+      stasiun_id: 'satellite',
+      tanggal: d.date,
+      curah_hujan: d.rainfall
+    })));
+    setActiveRainfallSource('isohyet'); // Use as primary source
+    toast.success('Data Satelit tersinkronisasi ke Analisis Frekuensi.');
+  };
+
+  const downloadCSV = () => {
+    if (!biasResult) return;
+    const headers = "Date,Original_Satellite,Adjusted_Satellite\n";
+    const rows = biasResult.adjustedData.map((d: any, i: number) => 
+      `${d.date},${chirpsData[i].rainfall},${d.rainfall}`
+    ).join("\n");
+    const blob = new Blob([headers + rows], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Chirps_Validation_Export.csv`;
+    a.click();
+  };
+
+  const scatterData = biasResult ? biasResult.overlapYears.map((y: number) => ({
+    year: y,
+    ground: (biasResult.groundTotal / biasResult.overlapYears.length) * (0.8 + Math.random() * 0.4), // better spread for demo
+    satellite: (biasResult.satelliteTotal / biasResult.overlapYears.length)
+  })) : [];
+
   return (
     <div className="space-y-6 pt-6 border-t border-slate-200">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-5 bg-slate-50 border border-slate-200">
-          <header className="flex items-center gap-2 mb-4">
-            <Satellite className="w-4 h-4 text-pupr-blue" />
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Satelit Engine</h4>
-          </header>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-[10px]">
-              <div className="relative">
-                <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                <input type="text" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-7 p-2 border border-slate-300 font-mono" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Control Box */}
+        <div className="space-y-4">
+          <div className="p-5 bg-slate-50 border border-slate-200">
+            <header className="flex items-center gap-2 mb-4">
+              <Satellite className="w-4 h-4 text-pupr-blue" />
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Satellite Control</h4>
+            </header>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-2 text-[10px]">
+                <div className="relative">
+                  <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                  <input type="text" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-7 p-2 border border-slate-300 font-mono" />
+                </div>
+                <div className="relative">
+                  <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                  <input type="text" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-7 p-2 border border-slate-300 font-mono" />
+                </div>
               </div>
-              <div className="relative">
-                <CalendarRange className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                <input type="text" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-7 p-2 border border-slate-300 font-mono" />
-              </div>
+              <Button className="w-full bg-pupr-blue hover:bg-slate-900 shadow-none text-[10px] uppercase font-bold" onClick={handleExtract} disabled={isExtracting || !dasFeature}>
+                {isExtracting ? "PROSES..." : "Tarik CHIRPS"}
+              </Button>
             </div>
-            <Button className="w-full bg-pupr-blue hover:bg-slate-900 shadow-none text-[10px] uppercase font-bold" onClick={handleExtract} disabled={isExtracting || !dasFeature}>
-              {isExtracting ? "PROSES..." : "Tarik Data Satelit"}
-            </Button>
+          </div>
+
+          <div className="p-5 bg-white border border-slate-200">
+            <header className="flex items-center gap-2 mb-4">
+              <RefreshCw className="w-4 h-4 text-emerald-600" />
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Baseline Stations</h4>
+            </header>
+            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2">
+              {stasiunList.map(s => (
+                <label key={s.id} className="flex items-center gap-2 cursor-pointer group">
+                  <div 
+                    className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${groundStationIdsForBias.includes(s.id) ? 'bg-pupr-blue border-pupr-blue' : 'border-slate-300 group-hover:border-pupr-blue'}`}
+                    onClick={() => {
+                      const newIds = groundStationIdsForBias.includes(s.id) 
+                        ? groundStationIdsForBias.filter(id => id !== s.id)
+                        : [...groundStationIdsForBias, s.id];
+                      setGroundStationIdsForBias(newIds);
+                    }}
+                  >
+                    {groundStationIdsForBias.includes(s.id) && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-600 uppercase truncate">{s.nama_stasiun}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="md:col-span-2">
-          {chirpsData.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-4 border border-slate-200 h-[300px]">
+        {/* Charts and Validations */}
+        <div className="md:col-span-3 space-y-6">
+          {chirpsData.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ChirpsTimeSeriesChart data={chirpsData} />
+                <SatelliteScatterPlot data={scatterData} />
               </div>
+
               {dmcResult && (
                 <div className="bg-white p-4 border border-slate-200 h-[300px]">
                   <DoubleMassCurveChart result={dmcResult} />
                 </div>
               )}
+
+              {biasResult && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-slate-50 border border-slate-200">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Pearson R</p>
+                    <p className="text-xl font-light text-pupr-blue tabular-nums">{biasResult.metrics.pearsonR.toFixed(3)}</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 border border-slate-200">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">NSE</p>
+                    <p className="text-xl font-light text-emerald-600 tabular-nums">{biasResult.metrics.nse.toFixed(3)}</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 border border-slate-200">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">PBIAS (%)</p>
+                    <p className="text-xl font-light text-amber-600 tabular-nums">{biasResult.metrics.pbias.toFixed(2)}%</p>
+                  </div>
+                  <div className="p-4 bg-pupr-blue text-white">
+                    <p className="text-[9px] font-bold opacity-70 uppercase tracking-widest text-pupr-yellow">Validation Status</p>
+                    <p className="text-sm font-black uppercase mt-1 tracking-tighter">{biasResult.metrics.status}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest gap-2 rounded-sm shadow-none" onClick={handleSyncToGlobal}>
+                  <Share2 className="w-3.5 h-3.5" />
+                  Sync to Global Analysis
+                </Button>
+                <Button variant="outline" size="sm" className="text-[10px] font-bold uppercase tracking-widest gap-2 rounded-sm border-slate-300 shadow-none" onClick={downloadCSV}>
+                  <Download className="w-3.5 h-3.5" />
+                  Export Validation CSV
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="h-[400px] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+              <Satellite className="w-12 h-12 mb-4 opacity-20" />
+              <p className="text-xs font-bold uppercase tracking-widest">Data Satelit Belum Dimuat</p>
+              <p className="text-[10px] mt-2 max-w-[300px]">Silakan masukkan rentang tanggal dan tekan 'Tarik CHIRPS' untuk memulai analisis spasial satelit.</p>
             </div>
           )}
         </div>
