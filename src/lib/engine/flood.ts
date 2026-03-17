@@ -119,7 +119,7 @@ export const calculateHSSSnyder = (input: HSSSnyderInput): HSSSnyderOutput => {
  const tr = tpR / 5.5;
  const Tp = tpR + 0.25 * tr;
  const Qp = (2.78 * Cp * A * Ro) / Tp;
- const Tb = Tp + (3 + 0.125 * (Tp / 24)) * 24; 
+ const Tb = 5.56 * Tp; // Standard Snyder: Tb ≈ 5.56 * Tp
 
  const hydrograph: Array<{ time: number; discharge: number }> = [];
  const dt = 0.2;
@@ -211,19 +211,37 @@ export const calculateWeduwen = (input: DerWeduwenInput): DerWeduwenOutput => {
  return { Qp: parseFloat(Qp.toFixed(3)), Alpha: parseFloat(Alpha.toFixed(3)), tc: parseFloat(tc.toFixed(2)) };
 };
 
-export const calculateConvolution = (input: ConvolutionInput): ConvolutionOutput => {
- const { effectiveRainfall, unitHydrograph } = input;
- const floodHydrograph: Array<{ time: number; discharge: number }> = [];
- const dt = unitHydrograph[1]?.time - unitHydrograph[0]?.time || 1;
- for (let tIdx = 0; tIdx < effectiveRainfall.length + unitHydrograph.length - 1; tIdx++) {
- let Q = 0;
- for (let i = 0; i < effectiveRainfall.length; i++) {
- const idxUH = tIdx - i;
- if (idxUH >= 0 && idxUH < unitHydrograph.length) Q += effectiveRainfall[i] * unitHydrograph[idxUH].discharge;
- }
- floodHydrograph.push({ time: parseFloat((tIdx * dt).toFixed(2)), discharge: parseFloat(Q.toFixed(4)) });
- }
- const Qp = Math.max(...floodHydrograph.map(f => f.discharge));
- const peak = floodHydrograph.find(f => f.discharge === Qp);
- return { hydrograph: floodHydrograph, Qp: parseFloat(Qp.toFixed(3)), Tp: peak?.time || 0 };
+export const calculateConvolution = (input: ConvolutionInput & { rainfallInterval?: number; baseflow?: number }): ConvolutionOutput => {
+  const { effectiveRainfall, unitHydrograph, rainfallInterval = 1.0, baseflow = 0 } = input;
+  const floodHydrograph: Array<{ time: number; discharge: number }> = [];
+  
+  if (unitHydrograph.length < 2) return { hydrograph: [], Qp: 0, Tp: 0 };
+
+  const dtUH = unitHydrograph[1].time - unitHydrograph[0].time;
+  const uhMaxTime = unitHydrograph[unitHydrograph.length - 1].time;
+  const totalDuration = uhMaxTime + (effectiveRainfall.length * rainfallInterval);
+
+  for (let t = 0; t <= totalDuration; t += dtUH) {
+    let Q_conv = 0;
+    for (let j = 0; j < effectiveRainfall.length; j++) {
+      const timeInUH = t - (j * rainfallInterval);
+      if (timeInUH >= 0 && timeInUH <= uhMaxTime) {
+        // Find nearest ordinate in UH using binary search or simple find
+        // Since HSS is usually generated with fixed dt, we can use indexing
+        const idx = Math.round(timeInUH / dtUH);
+        if (unitHydrograph[idx]) {
+          Q_conv += effectiveRainfall[j] * unitHydrograph[idx].discharge;
+        }
+      }
+    }
+    floodHydrograph.push({ 
+      time: parseFloat(t.toFixed(2)), 
+      // Q_total = Q_conv + Q_baseflow
+      discharge: parseFloat((Q_conv + baseflow).toFixed(4)) 
+    });
+  }
+
+  const Qp = Math.max(...floodHydrograph.map(f => f.discharge));
+  const peak = floodHydrograph.find(f => f.discharge === Qp);
+  return { hydrograph: floodHydrograph, Qp: parseFloat(Qp.toFixed(3)), Tp: peak?.time || 0 };
 };

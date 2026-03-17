@@ -115,14 +115,14 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
  </div>
  <div className="flex items-center gap-2">
  {health && (
- <div className={`px-2 py-0.5 rounded-sm text-[9px] font-black border ${
- health.healthScore >= 80 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 
- health.healthScore >= 50 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-rose-50 border-rose-200 text-rose-700'
+ <div className={`px-2 py-0.5 rounded-sm text-[9px] font-black border transition-colors ${
+ isHealthy ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 
+ health.healthScore >= 60 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-rose-50 border-rose-200 text-rose-700'
  }`}>
  SCORE: {health.healthScore}
  </div>
  )}
- <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
+ <span className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${
  isHealthy ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
  }`}>
  {isHealthy ? 'PASSED' : 'FAILED'}

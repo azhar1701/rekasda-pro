@@ -373,26 +373,40 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
  }
  },
  
- deleteDataHujanByYear: async (stasiunId, year) => {
- if (!supabase) return;
- try {
- const startDate = `${year}-01-01`;
- const endDate = `${year}-12-31`;
- const { error } = await supabase
- .from('master_data_hujan')
- .delete()
- .eq('stasiun_id', stasiunId)
- .gte('tanggal', startDate)
- .lte('tanggal', endDate);
- if (error) throw error;
- set((state) => ({
- dataHujan: state.dataHujan.filter(d => d.stasiun_id !== stasiunId || new Date(d.tanggal).getFullYear() !== year)
- }));
- toast.success(`Data hujan tahun ${year} berhasil dihapus.`);
- } catch (err: any) {
- toast.error(err.message);
- }
- },
+  deleteDataHujanByYear: async (stasiunId, year) => {
+    if (!supabase) return;
+    try {
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      
+      console.log(`[RainfallStore] Attempting to delete data for station ${stasiunId} year ${year}`);
+      
+      const { error, count } = await supabase
+        .from('master_data_hujan')
+        .delete({ count: 'exact' })
+        .eq('stasiun_id', stasiunId)
+        .gte('tanggal', startDate)
+        .lte('tanggal', endDate);
+
+      if (error) throw error;
+      
+      console.log(`[RainfallStore] Successfully deleted ${count} rows for ${year}`);
+      
+      if (count === 0) {
+        toast.warning(`Tidak ada data yang dihapus untuk tahun ${year}. Pastikan data tersedia atau Anda memiliki izin akses.`);
+      } else {
+        set((state) => ({
+          dataHujan: state.dataHujan.filter(d => d.stasiun_id !== stasiunId || d.tanggal.split('-')[0] !== year.toString())
+        }));
+        toast.success(`Berhasil menghapus ${count} data hujan tahun ${year}.`);
+      }
+    } catch (err: any) {
+      console.error('[RainfallStore] Delete error:', err);
+      const isRlsError = err.message?.includes('policy') || err.code === '42501';
+      toast.error(isRlsError ? 'Gagal: Anda tidak memiliki izin Admin untuk menghapus data.' : `Gagal menghapus data: ${err.message}`);
+      throw err;
+    }
+  },
  
  updateDataHujanSingle: async (stasiunId, date, val, metadata = {}) => {
  if (!supabase) return;

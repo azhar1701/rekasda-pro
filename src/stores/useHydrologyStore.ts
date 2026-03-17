@@ -21,8 +21,14 @@ export type HydrologyStore = ProjectSlice & RainfallSlice & AnalysisSlice & Spat
  getDesignRainfall: (tr: number) => number;
  getDesignDischarge: (type?: 'flood' | 'irrigation') => number;
  
- // Global Action
- resetAll: () => void;
+  // Expert Parameters
+  baseflow: number;
+  tcManual: number;
+  biasFactor: number;
+  setExpertParams: (params: { baseflow?: number; tcManual?: number; biasFactor?: number }) => void;
+
+  // Global Action
+  resetAll: () => void;
  lastResetAt: number;
 };
 
@@ -39,6 +45,10 @@ export const useHydrologyStore = create<HydrologyStore>()(
  // Extra state
  distribusiHujanJamJaman: [],
  hujanEfektif: null,
+ baseflow: 0,
+ tcManual: 0,
+ biasFactor: 1.0,
+ setExpertParams: (params) => set((state) => ({ ...state, ...params })),
  setEffectiveRainfall: (hujanEfektif) => set({ hujanEfektif }),
  setDistribusiHujanJamJaman: (distribusiHujanJamJaman) => set({ distribusiHujanJamJaman: distribusiHujanJamJaman || [] }),
  
@@ -89,8 +99,11 @@ export const useHydrologyStore = create<HydrologyStore>()(
  hasilAnalisisFrekuensi: null,
  curahHujanRencana: [],
  selectedKalaUlang: null,
- distribusiHujanJamJaman: [], 
+ distribusiHujanJamJaman: [],
  hujanEfektif: null,
+ baseflow: 0,
+ tcManual: 0,
+ biasFactor: 1.0,
  lastResetAt: Date.now() 
  });
 

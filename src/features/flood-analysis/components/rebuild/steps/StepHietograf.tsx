@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
+
 import { CloudRain, Droplets, Calculator, TrendingUp } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { useFrequencyAnalysis } from '@/hooks/useFrequencyAnalysis';
@@ -28,6 +28,8 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  const [durasi, setLocalDurasi] = useState(storeDurasi || 6);
  const [lossMethod, setLossMethod] = useState<'C' | 'CN'>('C');
  const [calculated, setCalculated] = useState(!!storeHujanEfektif);
+ const [isManualMode, setIsManualMode] = useState(false);
+ const [manualEffective, setManualEffective] = useState<number[]>([]);
 
  const R24 = getR24(returnPeriod) || 0;
  const C = tutupanLahan?.koefisienPengaliranGabungan || 0.65;
@@ -52,23 +54,42 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  const hyetograph = abmTable.map(row => row.hyetograph);
  let effective: number[] = [];
 
+ if (isManualMode && manualEffective.length === durasi) {
+ effective = manualEffective;
+ } else {
  if (lossMethod === 'C') {
  effective = hyetograph.map(p => calculateEffectiveRainfallByC(p, C));
  } else {
  effective = hyetograph.map(p => calculateEffectiveRainfallByCN(p, CN));
  }
+ }
 
- const losses = hyetograph.map((p, i) => p - effective[i]);
+ const losses = hyetograph.map((p, i) => Math.max(0, p - (effective[i] || 0)));
 
  return { hyetograph, effective, losses };
- }, [abmTable, lossMethod, C, CN]);
+ }, [abmTable, lossMethod, C, CN, isManualMode, manualEffective, durasi]);
+
+ // Initialize manual values when switching modes or duration changes
+ useEffect(() => {
+ if (isManualMode && manualEffective.length !== durasi) {
+ // Initialize with calculated values if empty or size mismatch
+ const hyetograph = abmTable.map(row => row.hyetograph);
+ let calcEffective: number[] = [];
+ if (lossMethod === 'C') {
+ calcEffective = hyetograph.map(p => calculateEffectiveRainfallByC(p, C));
+ } else {
+ calcEffective = hyetograph.map(p => calculateEffectiveRainfallByCN(p, CN));
+ }
+ setManualEffective(calcEffective);
+ }
+ }, [isManualMode, durasi, abmTable, lossMethod, C, CN]);
 
  const chartData = useMemo(() => {
  return calculationResults.hyetograph.map((p, i) => ({
  jam: i + 1,
  total: Number(p.toFixed(2)),
- efektif: Number(calculationResults.effective[i].toFixed(2)),
- losses: Number(calculationResults.losses[i].toFixed(2))
+ efektif: Number((calculationResults.effective[i] || 0).toFixed(2)),
+ losses: Number((calculationResults.losses[i] || 0).toFixed(2))
  }));
  }, [calculationResults]);
 
@@ -78,7 +99,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  return;
  }
  setCalculated(true);
- toast.success(`Hietograf hasil ABM (Q${returnPeriod}) berhasil dihitung`);
+ toast.success(isManualMode ? 'Hujan manual diterapkan' : `Hietograf hasil ABM (Q${returnPeriod}) berhasil dihitung`);
  };
 
  const handleComplete = () => {
@@ -88,10 +109,17 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  onComplete();
  };
 
+ const handleManualChange = (index: number, val: string) => {
+ const newVal = parseFloat(val) || 0;
+ const updated = [...manualEffective];
+ updated[index] = newVal;
+ setManualEffective(updated);
+ };
+
  return (
  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-75">
  {/* Contextual Header */}
- <div className="bg-pupr-blue/5 border border-pupr-blue/20 rounded-sm p-4 flex items-center justify-between">
+ <div className="bg-pupr-blue/5 border border-pupr-blue/20 p-4 flex items-center justify-between">
  <div className="flex items-center gap-3">
  <CloudRain className="w-5 h-5 text-pupr-blue" />
  <div>
@@ -99,70 +127,98 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Q{returnPeriod} = {R24.toFixed(2)} mm</p>
  </div>
  </div>
- <div className="flex items-center gap-2">
- <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">SNI 2415:2016</span>
+ <div className="flex items-center gap-3">
+ <button
+ onClick={() => setIsManualMode(!isManualMode)}
+ className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all border ${isManualMode ? 'bg-pupr-blue text-white border-pupr-blue' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+ }`}
+ >
+ {isManualMode ? 'Mode Manual: Aktif' : 'Gunakan Input Manual'}
+ </button>
+ <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1">SNI 2415:2016</span>
  </div>
  </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- <Card className="p-5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm lg:col-span-1">
+ <div className="p-5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 lg:col-span-1">
  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
  <Calculator className="w-4 h-4 text-pupr-blue" />
  Parameter Distribusi
  </h3>
 
- <div className="space-y-4">
- <div>
- <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Durasi Hujan (jam)</label>
- <input
- type="number"
- value={durasi}
- onChange={(e) => setLocalDurasi(Number(e.target.value))}
- className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-sm font-bold focus:ring-1 focus:ring-pupr-blue focus:outline-none"
- min="1"
- max="24"
- />
- </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Durasi Hujan (jam)</label>
+            <input
+              type="number"
+              value={durasi}
+              onChange={(e) => setLocalDurasi(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 font-bold focus:ring-1 focus:ring-pupr-blue focus:outline-none"
+              min="1"
+              max="24"
+            />
+          </div>
 
- <div>
- <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Metode Reduksi (Losses)</label>
- <div className="grid grid-cols-2 gap-2">
- <button
- onClick={() => setLossMethod('C')}
- className={`py-2 text-xs font-bold rounded-sm border-2 transition-all ${lossMethod === 'C' ? 'border-pupr-blue bg-pupr-blue/5 text-pupr-blue' : 'border-slate-200 dark:border-slate-700 text-slate-500'
- }`}
- >
- Koef. C ({C.toFixed(2)})
- </button>
- <button
- onClick={() => setLossMethod('CN')}
- className={`py-2 text-xs font-bold rounded-sm border-2 transition-all ${lossMethod === 'CN' ? 'border-green-600 bg-green-50 text-green-700' : 'border-slate-200 dark:border-slate-700 text-slate-500'
- }`}
- >
- SCS-CN ({CN.toFixed(0)})
- </button>
- </div>
- </div>
+          {isManualMode ? (
+            <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Input Hujan Efektif (mm)</label>
+              <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                {Array.from({ length: durasi }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-400 w-4">H{i + 1}</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={manualEffective[i] || 0}
+                      onChange={(e) => handleManualChange(i, e.target.value)}
+                      className="flex-1 px-2 py-1.5 border border-slate-200 text-[11px] font-bold tabular-nums"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-slate-500 mt-2 italic">* Total hujan rencana tetap {R24.toFixed(2)} mm</p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Metode Reduksi (Losses)</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setLossMethod('C')}
+                  className={`py-2 text-xs font-bold border-2 transition-all ${lossMethod === 'C' ? 'border-pupr-blue bg-pupr-blue/5 text-pupr-blue' : 'border-slate-200 dark:border-slate-700 text-slate-500'
+                    }`}
+                >
+                  Koef. C ({C.toFixed(2)})
+                </button>
+                <button
+                  onClick={() => setLossMethod('CN')}
+                  className={`py-2 text-xs font-bold border-2 transition-all ${lossMethod === 'CN' ? 'border-green-600 bg-green-50 text-green-700' : 'border-slate-200 dark:border-slate-700 text-slate-500'
+                    }`}
+                >
+                  SCS-CN ({CN.toFixed(0)})
+                </button>
+              </div>
+            </div>
+          )}
 
  <button
  onClick={handleCalculate}
- className="w-full py-3 bg-pupr-blue hover:bg-pupr-blue text-white font-bold rounded-sm transition-all flex items-center justify-center gap-2 mt-4"
+ className="w-full py-3 bg-pupr-blue hover:bg-pupr-blue text-white font-bold transition-all flex items-center justify-center gap-2 mt-4"
  >
  <TrendingUp className="w-4 h-4" />
  Hitung Hietograf
  </button>
  </div>
- </Card>
+ </div>
 
- <Card className="p-5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm lg:col-span-2">
+ <div className="p-5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 lg:col-span-2">
  <div className="flex items-center justify-between mb-4">
  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
  <Droplets className="w-4 h-4 text-pupr-blue" />
  Hyetograph (Distribusi Jam-jaman)
  </h3>
  <div className="flex items-center gap-4 text-[10px] font-bold">
- <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-slate-400" /> LOSSES</div>
- <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-pupr-blue" /> EFEKTIF</div>
+ <div className="flex items-center gap-1"><div className="w-2 h-2 bg-slate-400" /> LOSSES</div>
+ <div className="flex items-center gap-1"><div className="w-2 h-2 bg-pupr-blue" /> EFEKTIF</div>
  </div>
  </div>
 
@@ -174,18 +230,18 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600 }} />
  <Tooltip
  cursor={{ fill: '#f8fafc' }}
- contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '11px' }}
+ contentStyle={{ border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '11px' }}
  />
- <Bar dataKey="losses" stackId="a" fill="#cbd5e1" radius={[0, 0, 0, 0]} />
- <Bar dataKey="efektif" stackId="a" fill="#0c3a66" radius={[2, 2, 0, 0]} />
+ <Bar dataKey="losses" stackId="a" fill="#cbd5e1" />
+ <Bar dataKey="efektif" stackId="a" fill="#0c3a66" />
  </BarChart>
  </ResponsiveContainer>
  </div>
- </Card>
+ </div>
  </div>
 
  {calculated && (
- <Card className="p-4 bg-green-50 border border-green-200 flex justify-between items-center rounded-sm">
+ <div className="p-4 bg-green-50 border border-green-200 flex justify-between items-center">
  <div>
  <p className="text-xs font-bold text-green-700 uppercase">Hujan Efektif Kumulatif</p>
  <p className="text-xl font-extrabold text-green-900 tabular-nums">
@@ -194,11 +250,11 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
  </div>
  <button
  onClick={handleComplete}
- className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-sm hover: transition-all"
+ className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold transition-all"
  >
  Terapkan & Lanjut ke HSS →
  </button>
- </Card>
+ </div>
  )}
  </div>
  );

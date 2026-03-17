@@ -23,7 +23,7 @@ export const calculateHSSSnyder = (input: HSSSnyderInput): HSSSnyderOutput => {
   const tr = tpR / 5.5;
   const Tp = tpR + 0.25 * tr;
   const Qp = (2.78 * Cp * A * Ro) / Tp;
-  const Tb = Tp + (3 + 0.125 * (Tp / 24)) * 24; 
+  const Tb = 5.56 * Tp; // Standard Snyder: Tb ≈ 5.56 * Tp
 
   const hydrograph: Array<{ time: number; discharge: number }> = [];
   const dt = 0.2;

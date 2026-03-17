@@ -29,8 +29,7 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
 
  let maxRainfall = 0;
  data.forEach(row => {
- const [yyyy] = row.tanggal.split('-');
- if (parseInt(yyyy, 10) === year && row.curah_hujan > maxRainfall) {
+ if (row.tanggal.split('-')[0] === year.toString() && row.curah_hujan > maxRainfall) {
  maxRainfall = row.curah_hujan;
  }
  });

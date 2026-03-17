@@ -1,21 +1,21 @@
 import React from 'react';
 import { ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { WaterBalanceResult } from '@/services/waterBalanceEngine';
+import { NeracaFinalRow } from '@/types/hydrology.types';
 import { CHART_COLORS } from '@/lib/constants/chartColors';
 
 interface Props {
- data: WaterBalanceResult[];
+  data: NeracaFinalRow[];
 }
 
 export const WaterBalanceChart: React.FC<Props> = ({ data }) => {
  // Transform data for chart
- const chartData = data.map(item => ({
- month: item.month,
- 'Ketersediaan Air (Q80)': item.supply,
- 'Total Kebutuhan': item.totalDemand,
- 'Surplus/Defisit': item.balance,
- status: item.status
- }));
+  const chartData = (data || []).map(item => ({
+    month: item.month,
+    'Ketersediaan Air (Q80)': item.ketersediaan,
+    'Total Kebutuhan': item.totalKebutuhan,
+    'Surplus/Defisit': item.neraca,
+    status: item.status
+  }));
 
  const CustomTooltip = ({ active, payload }: any) => {
  if (active && payload && payload.length) {

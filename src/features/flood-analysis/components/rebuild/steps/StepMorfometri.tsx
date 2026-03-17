@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/Card';
 import { Mountain, Droplets, Info, Save } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { toast } from '@/hooks/useToast';
@@ -49,7 +48,7 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
 
  return (
  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-75">
- <div className="bg-pupr-surface border border-pupr-border rounded-sm p-4 flex items-start gap-3">
+  <div className="bg-pupr-surface border border-pupr-border p-4 flex items-start gap-3">
  <Info className="w-5 h-5 text-pupr-blue mt-0.5" />
  <div className="text-sm text-slate-700 dark:text-slate-300">
  <p className="font-bold mb-1 text-pupr-blue">Informasi Morfometri DAS</p>
@@ -58,9 +57,9 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm">
+  <div className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600">
  <div className="flex items-center gap-3 mb-5">
- <div className="p-2 bg-slate-100 rounded-sm">
+  <div className="p-2 bg-slate-100">
  <Mountain className="w-5 h-5 text-slate-600 dark:text-slate-500" />
  </div>
  <h3 className="font-bold text-slate-900 dark:text-slate-100">Dimensi Utama DAS</h3>
@@ -70,13 +69,13 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  <div>
  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Luas DAS (A)</label>
  <div className="relative">
- <input
- type="number"
- value={localA}
- onChange={(e) => setLocalA(e.target.value)}
- className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-sm font-bold tabular-nums focus:ring-1 focus:ring-pupr-blue focus:outline-none"
- placeholder="0.00"
- />
+  <input
+  type="number"
+  value={localA}
+  onChange={(e) => setLocalA(e.target.value)}
+  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 font-bold tabular-nums focus:ring-1 focus:ring-pupr-blue focus:outline-none"
+  placeholder="0.00"
+  />
  <span className="absolute right-3 top-2 text-slate-500 font-semibold text-sm">km²</span>
  </div>
  </div>
@@ -84,13 +83,13 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  <div>
  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Panjang Sungai Utama (L)</label>
  <div className="relative">
- <input
- type="number"
- value={localL}
- onChange={(e) => setLocalL(e.target.value)}
- className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-sm font-bold tabular-nums focus:ring-1 focus:ring-pupr-blue focus:outline-none"
- placeholder="0.00"
- />
+  <input
+  type="number"
+  value={localL}
+  onChange={(e) => setLocalL(e.target.value)}
+  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 font-bold tabular-nums focus:ring-1 focus:ring-pupr-blue focus:outline-none"
+  placeholder="0.00"
+  />
  <span className="absolute right-3 top-2 text-slate-500 font-semibold text-sm">km</span>
  </div>
  </div>
@@ -98,35 +97,35 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  <div>
  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Kemiringan Sungai (S)</label>
  <div className="relative">
- <input
- type="number"
- value={localS}
- onChange={(e) => setLocalS(e.target.value)}
- className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-sm font-bold tabular-nums focus:ring-1 focus:ring-pupr-blue focus:outline-none"
- placeholder="0.01"
- step="0.001"
- />
+  <input
+  type="number"
+  value={localS}
+  onChange={(e) => setLocalS(e.target.value)}
+  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 font-bold tabular-nums focus:ring-1 focus:ring-pupr-blue focus:outline-none"
+  placeholder="0.01"
+  step="0.001"
+  />
  <span className="absolute right-3 top-2 text-slate-500 font-semibold text-sm">m/m</span>
  </div>
  </div>
  </div>
- </Card>
+ </div>
 
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm">
+ <div className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600">
  <div className="flex items-center gap-3 mb-5">
- <div className="p-2 bg-green-50 rounded-sm">
+  <div className="p-2 bg-green-50">
  <Droplets className="w-5 h-5 text-green-600" />
  </div>
  <h3 className="font-bold text-slate-900 dark:text-slate-100">Koefisien Runoff (Composite)</h3>
  </div>
 
  <div className="space-y-4">
- <div className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
+ <div className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
  <div className="flex justify-between items-center mb-1">
  <span className="text-xs font-bold text-slate-500 uppercase">Koefisien C Gabungan</span>
  <span className="text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">{compositeC.toFixed(3)}</span>
  </div>
- <div className="w-full bg-slate-200 h-1.5 rounded-sm overflow-hidden">
+ <div className="w-full bg-slate-200 h-1.5 overflow-hidden">
  <div
  className="bg-pupr-blue h-full"
  style={{ width: `${compositeC * 100}%` }}
@@ -135,12 +134,12 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  <p className="text-[10px] text-slate-500 mt-2 italic">Dikalibrasi berdasarkan tutupan lahan DAS</p>
  </div>
 
- <div className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
+ <div className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
  <div className="flex justify-between items-center mb-1">
  <span className="text-xs font-bold text-slate-500 uppercase">Curve Number (CN)</span>
  <span className="text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">{compositeCN.toFixed(1)}</span>
  </div>
- <div className="w-full bg-slate-200 h-1.5 rounded-sm overflow-hidden">
+ <div className="w-full bg-slate-200 h-1.5 overflow-hidden">
  <div
  className="bg-green-600 h-full"
  style={{ width: `${compositeCN}%` }}
@@ -154,14 +153,14 @@ export const StepMorfometri: React.FC<StepMorfometriProps> = ({ onComplete }) =>
  <Save className="w-3 h-3" />
  <span>Perubahan di sini akan mempengaruhi seluruh tahap analisis banjir.</span>
  </div>
- </Card>
+ </div>
  </div>
 
  <div className="flex justify-end">
- <button
- onClick={handleSave}
- className="px-8 py-3 bg-pupr-blue hover:bg-pupr-blue text-white font-bold rounded-sm hover: transition-all flex items-center gap-2"
- >
+  <button
+  onClick={handleSave}
+  className="px-8 py-3 bg-pupr-blue hover:bg-pupr-blue text-white font-bold transition-all flex items-center gap-2"
+  >
  Simpan Karakteristik & Lanjut →
  </button>
  </div>

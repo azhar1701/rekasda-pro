@@ -30,98 +30,97 @@ export interface WaterBalanceData {
  * - Q = A × V (m³/s)
  */
 export const calculateManning = (inputs: ManningInputs) => {
- const { shape, roughness, slope, width, diameter, depth, sideSlope, totalDepth } = inputs;
- const n = roughness || 0.013; // Default beton halus
- const S = Math.max(0.000001, slope); 
- const g = 9.81; // Gravitasi (m/s²)
- const gamma = 9810; // Berat jenis air (N/m³)
- const nu = 1.004e-6; // Viskositas kinematik air 20°C (m²/s)
- 
- let A = 0; // Luas penampang basah (m²)
- let P = 0; // Keliling basah (m)
- let T = 0; // Lebar permukaan (m)
+  const { shape, roughness, slope, width, diameter, depth, sideSlope, totalDepth } = inputs;
+  const n = roughness || 0.013; // Default beton halus
+  const S = Math.max(0.000001, slope); 
+  const g = 9.81; // Gravitasi (m/s²)
+  const gamma = 9810; // Berat jenis air (N/m³)
+  const nu = 1.004e-6; // Viskositas kinematik air 20°C (m²/s)
+  
+  let A = 0; // Luas penampang basah (m²)
+  let P = 0; // Keliling basah (m)
+  let T = 0; // Lebar permukaan (m)
 
- // Perhitungan geometri saluran
- if (shape === ChannelShape.CIRCULAR) {
- const D = diameter;
- const h = Math.min(depth, D);
- const theta = 2 * Math.acos(1 - (2 * h) / D); // Sudut sentral (radian)
- A = (D * D / 8) * (theta - Math.sin(theta));
- P = (theta * D) / 2;
- T = D * Math.sin(theta / 2);
- } else {
- // Trapesium atau persegi (z=0)
- const b = width;
- const h = depth;
- const z = sideSlope || 0;
- A = (b + z * h) * h;
- P = b + 2 * h * Math.sqrt(1 + z * z);
- T = b + 2 * z * h;
- }
+  // Perhitungan geometri saluran
+  if (shape === ChannelShape.CIRCULAR) {
+    const D = diameter;
+    const h = Math.min(depth, D);
+    const theta = 2 * Math.acos(1 - (2 * h) / D); // Sudut sentral (radian)
+    A = (D * D / 8) * (theta - Math.sin(theta));
+    P = (theta * D) / 2;
+    T = D * Math.sin(theta / 2);
+  } else {
+    // Trapesium atau persegi (z=0)
+    const b = width;
+    const h = depth;
+    const z = sideSlope || 0;
+    A = (b + z * h) * h;
+    P = b + 2 * h * Math.sqrt(1 + z * z);
+    T = b + 2 * z * h;
+  }
 
- // Jari-jari hidrolik (SNI 2415:2016)
- const R = P > 0 ? A / P : 0;
- 
- // Kecepatan aliran - Manning Formula
- const V = (1 / n) * Math.pow(R, 2 / 3) * Math.pow(S, 1 / 2);
- 
- // Debit (m³/s)
- const Q = A * V;
+  // Jari-jari hidrolis (SNI 2415:2016)
+  const R = P > 0 ? A / P : 0;
+  
+  // Kecepatan aliran - Manning Formula
+  const V = (1 / n) * Math.pow(R, 2 / 3) * Math.pow(S, 1 / 2);
+  
+  // Debit (m³/s)
+  const Q = A * V;
 
- // Kedalaman hidrolik
- const Dh = T > 0 ? A / T : 0;
- 
- // Bilangan Froude (Fr = V / √(g × Dh))
- const Fr = Dh > 0 ? V / Math.sqrt(g * Dh) : 0;
+  // Kedalaman hidrolik
+  // Untuk lingkaran, T -> 0 saat h -> D atau h -> 0. Gunakan limit untuk stabilitas numerik.
+  const Dh = T > 0.0001 ? A / T : (shape === ChannelShape.CIRCULAR ? (depth > 0 ? depth : 0) : 0);
+  
+  // Bilangan Froude (Fr = V / √(g × Dh))
+  const Fr = Dh > 0 ? V / Math.sqrt(g * Dh) : 0;
 
- // Bilangan Reynolds (Re = V × R / ν)
- const Re = (V * R) / nu;
- let regime = "Laminar";
- if (Re > 4000) regime = "Turbulen";
- else if (Re > 2000) regime = "Transisi";
+  // Bilangan Reynolds (Re = V × R / ν)
+  const Re = (V * R) / nu;
+  let regime = "Laminar";
+  if (Re > 4000) regime = "Turbulen";
+  else if (Re > 2000) regime = "Transisi";
 
- // Kedalaman kritis (hc) - Iterasi sederhana
- let hc = 0;
- if (Q > 0 && T > 0) {
- hc = Math.pow(Q * Q / (g * T * T), 1/3);
- }
+  // Kedalaman kritis (hc) - Iterasi sederhana
+  let hc = 0;
+  if (Q > 0 && T > 0.0001) {
+    hc = Math.pow(Q * Q / (g * T * T), 1/3);
+  }
 
- // Kemiringan kritis (Sc)
- const Sc = R > 0 && T > 0 ? (n * n * g * A) / (T * Math.pow(R, 4/3)) : 0;
+  // Kemiringan kritis (Sc)
+  const Sc = R > 0 && T > 0.0001 ? (n * n * g * A) / (T * Math.pow(R, 4/3)) : 0;
 
- // Parameter hidrolik tambahan
- const velocityHead = V * V / (2 * g); // Tinggi kecepatan (m)
- const specificEnergy = depth + velocityHead; // Energi spesifik (m)
- const conveyance = (1 / n) * A * Math.pow(R, 2 / 3); // Daya hantar (m³/s)
- const shearStress = gamma * R * S; // Tegangan geser (N/m²)
- const streamPower = gamma * Q * S; // Daya aliran (W)
+  // Parameter hidrolik tambahan
+  const velocityHead = V * V / (2 * g); // Tinggi kecepatan (m)
+  const specificEnergy = depth + velocityHead; // Energi spesifik (m)
+  const conveyance = (1 / n) * A * Math.pow(R, 2 / 3); // Daya hantar (m³/s)
+  const shearStress = gamma * R * S; // Tegangan geser (N/m²)
 
- // Tinggi jagaan (freeboard)
- const H_physical = shape === ChannelShape.CIRCULAR ? diameter : (totalDepth || depth * 1.5);
- const freeboard = H_physical - depth;
- 
- return {
- Area: A.toFixed(4),
- Perimeter: P.toFixed(4),
- Radius: R.toFixed(4),
- Velocity: V.toFixed(3),
- Discharge: Q.toFixed(3),
- Froude: Fr.toFixed(3),
- FlowType: Fr < 1.0 ? "Sub-kritis" : Fr > 1.0 ? "Super-kritis" : "Kritis",
- Freeboard: freeboard.toFixed(3),
- SafetyStatus: freeboard < 0 ? "MELUAP" : freeboard < 0.3 ? "Waspada" : "Aman",
- TopWidth: T.toFixed(3),
- HydraulicDepth: Dh.toFixed(3),
- SpecificEnergy: specificEnergy.toFixed(3),
- Conveyance: conveyance.toFixed(2),
- ShearStress: shearStress.toFixed(2),
- StreamPower: streamPower.toFixed(2),
- Reynolds: Math.round(Re).toLocaleString(),
- Regime: regime,
- CriticalDepth: hc.toFixed(3),
- CriticalSlope: Sc.toFixed(6),
- WettedRatio: (depth / H_physical).toFixed(2)
- };
+  // Tinggi jagaan (freeboard)
+  const H_physical = shape === ChannelShape.CIRCULAR ? diameter : (totalDepth || depth * 1.5);
+  const freeboard = H_physical - depth;
+  
+  return {
+    Area: A.toFixed(4),
+    Perimeter: P.toFixed(4),
+    Radius: R.toFixed(4),
+    Velocity: V.toFixed(3),
+    Discharge: Q.toFixed(3),
+    Froude: Fr.toFixed(3),
+    FlowType: Fr < 1.0 ? "Sub-kritis" : Fr > 1.0 ? "Super-kritis" : "Kritis",
+    Freeboard: freeboard.toFixed(3),
+    SafetyStatus: freeboard < 0 ? "MELUAP" : freeboard < 0.3 ? "Waspada" : "Aman",
+    TopWidth: T.toFixed(3),
+    HydraulicDepth: Dh.toFixed(3),
+    SpecificEnergy: specificEnergy.toFixed(3),
+    Conveyance: conveyance.toFixed(2),
+    ShearStress: shearStress.toFixed(2),
+    Reynolds: Math.round(Re).toLocaleString(),
+    Regime: regime,
+    CriticalDepth: hc.toFixed(3),
+    CriticalSlope: Sc.toFixed(6),
+    WettedRatio: (depth / H_physical).toFixed(2)
+  };
 };
 
 /**

@@ -3,9 +3,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { AuthModal } from './AuthModal';
 import { User, LogOut } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const UserNav: React.FC = () => {
- const { user, isAuthenticated, signOut, loading } = useAuth();
+ const { user, profile, isAuthenticated, signOut, loading } = useAuth();
  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
  if (loading) {
@@ -31,14 +32,20 @@ export const UserNav: React.FC = () => {
  );
  }
 
+ const userRole = profile?.role || 'User';
+
  return (
  <div className="flex items-center gap-3">
  <div className="flex flex-col items-end hidden sm:flex">
  <span className="text-xs font-semibold text-neutral-900 truncate max-w-[120px]">
  {user?.email?.split('@')[0]}
  </span>
- <span className="text-[10px] text-neutral-500 uppercase tracking-wider">
- Engineer
+ <span className={cn(
+ "text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-sm",
+ userRole === 'admin' ? "bg-red-50 text-red-600" :
+ userRole === 'engineer' ? "bg-pupr-blue/10 text-pupr-blue" : "bg-slate-100 text-slate-500"
+ )}>
+ {userRole}
  </span>
  </div>
 

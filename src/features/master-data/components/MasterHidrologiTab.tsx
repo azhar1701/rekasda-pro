@@ -6,6 +6,7 @@ import { CloudRain, Plus, Upload, Calendar, Activity, ChevronDown, X, Download, 
 import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
+import { ConfirmDeleteModal } from '@/components/ui/ConfirmDeleteModal';
 import { Wand2 } from 'lucide-react';
 import { detectAnomalies, infillRainfallData } from '@/services/qualityControlService';
 import { extractRainfallFromPdf } from '@/services/geminiService';
@@ -77,6 +78,8 @@ export const MasterHidrologiTab: React.FC = () => {
 
   // QC Modal States
   const [showModalQC, setShowModalQC] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
   const [qcProgress, setQCProgress] = useState<{ current: number, total: number, station: string } | null>(null);
   const [qcSummary, setQcSummary] = useState<Record<string, any> | null>(null);
@@ -202,11 +205,8 @@ export const MasterHidrologiTab: React.FC = () => {
     }
   }, [selectedStasiun, fetchMultipleStationsData, dataHujan.length]);
 
-  useEffect(() => {
-    if (dataHujan.length >= 10) {
-      updateDataHujanManual(dataHujan);
-    }
-  }, [dataHujan, updateDataHujanManual]);
+  // Removed the updateDataHujanManual effect loop as it causes infinite re-renders
+  // and redundant math. Let the individual actions handle health/QC updates if needed.
 
   const displayData = React.useMemo(() => {
     if (activeRainfallSource === 'aljabar') return arealRainfallAlgebraic || [];
@@ -217,13 +217,9 @@ export const MasterHidrologiTab: React.FC = () => {
   }, [activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet, dataHujan, selectedStasiun]);
 
   const availableYears = React.useMemo(() => {
-    const years = new Set(displayData.map(d => {
-      const y = parseInt(d.tanggal.split('-')[0], 10);
-      return y;
-    }));
-    const yearList = Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
-    if (yearList.length === 0) return [new Date().getFullYear()];
-    return yearList;
+    if (!displayData || displayData.length === 0) return [new Date().getFullYear()];
+    const years = new Set(displayData.map(d => parseInt(d.tanggal.split('-')[0], 10)));
+    return Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
   }, [displayData]);
 
   useEffect(() => {
@@ -337,36 +333,54 @@ export const MasterHidrologiTab: React.FC = () => {
 
   const handleDeleteYear = async () => {
     if (!selectedStasiun) return;
-    const confirmed = window.confirm(`⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?
-Tindakan ini tidak dapat dibatalkan!`);
-    if (confirmed) {
-      try {
-        await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
-        const { dataHujan: updatedData } = useHydrologyStore.getState();
-        const filteredData = updatedData.filter(d => d.stasiun_id === selectedStasiun.id);
-        const newHealth = { ...stationHealth };
-        const newAmsData = { ...stasiunAmsData };
-        if (filteredData.length > 0) {
-          newHealth[selectedStasiun.id] = calculateStationHealth(filteredData);
-          const maxByYear: Record<number, number> = {};
-          filteredData.forEach(row => {
-            const y = parseInt(row.tanggal.split('-')[0], 10);
-            if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) maxByYear[y] = row.curah_hujan;
-          });
-          newAmsData[selectedStasiun.id] = Object.entries(maxByYear)
-            .map(([year, hujan]) => ({ tahun: parseInt(year), hujan }))
-            .sort((a, b) => a.tahun - b.tahun);
-        } else {
-          delete newHealth[selectedStasiun.id];
-          delete newAmsData[selectedStasiun.id];
-        }
-        setStationHealth(newHealth);
-        setStasiunAmsData(newAmsData);
-        toast.success(`Data tahun ${selectedYear} berhasil dihapus dan status stasiun diperbarui.`);
-      } catch (err) {
-        console.error(err);
-        toast.error('Gagal menghapus data.');
+    try {
+      setIsDeleting(true);
+      await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
+      
+      // Get the latest state from store after deletion attempt
+      const latestDataHujan = useHydrologyStore.getState().dataHujan;
+      const updatedData = latestDataHujan.filter(d => d.stasiun_id === selectedStasiun.id);
+      
+      // Verify if data for that year actually disappeared from local state
+      const yearStillExists = updatedData.some(d => d.tanggal.split('-')[0] === selectedYear.toString());
+      
+      if (yearStillExists) {
+        console.warn(`[MasterData] Deletion reported success (or was skipped by count=0) but year ${selectedYear} still exists in local state. Skipping UI update.`);
+        return;
       }
+
+      const newHealth = { ...stationHealth };
+      const newAmsData = { ...stasiunAmsData };
+      
+      if (updatedData.length > 0) {
+        // Recalculate EVERYTHING for this station, PRESERVING QC penalties if they exist
+        const currentQc = useHydrologyStore.getState().qcStatus?.[selectedStasiun.id];
+        newHealth[selectedStasiun.id] = calculateStationHealth(updatedData, currentQc);
+        
+        const maxByYear: Record<number, number> = {};
+        updatedData.forEach(row => {
+          const y = parseInt(row.tanggal.split('-')[0], 10);
+          const val = row.curah_hujan || 0;
+          if (!maxByYear[y] || val > maxByYear[y]) maxByYear[y] = val;
+        });
+
+        newAmsData[selectedStasiun.id] = Object.entries(maxByYear)
+          .map(([year, hujan]) => ({ tahun: parseInt(year), hujan }))
+          .sort((a, b) => a.tahun - b.tahun);
+      } else {
+        delete newHealth[selectedStasiun.id];
+        delete newAmsData[selectedStasiun.id];
+      }
+      
+      setStationHealth(newHealth);
+      setStasiunAmsData(newAmsData);
+      setShowDeleteModal(false);
+      toast.success(`Data tahun ${selectedYear} berhasil dihapus dan status stasiun diperbarui.`);
+    } catch (err) {
+      console.error('[MasterData] Delete failed:', err);
+      toast.error('Gagal menghapus data.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -493,53 +507,54 @@ Tindakan ini tidak dapat dibatalkan!`);
           </div>
         ) : (
           stasiunList.map((stasiun) => {
-            const isActive = selectedStasiun?.id === stasiun.id;
-            const status = useHydrologyStore.getState().qcStatus?.[stasiun.id];
-            const health = useHydrologyStore.getState().stationHealth?.[stasiun.id];
-            
-            let healthColor = 'text-slate-400';
-            let healthLabel = 'STANDBY';
-            
-            if (status) {
-              const passedCount = [status.konsisten, status.bebasOutlier, status.homogen].filter(Boolean).length;
-              if (passedCount === 3) {
-                healthColor = 'text-emerald-500';
-                healthLabel = 'HEALTHY';
-              } else if (passedCount >= 1) {
-                healthColor = 'text-amber-500';
-                healthLabel = 'CAUTION';
-              } else {
-                healthColor = 'text-red-500';
-                healthLabel = 'UNSTABLE';
+              const isActive = selectedStasiun?.id === stasiun.id;
+              // Use direct slice values or selector for health/status to avoid stale closures
+              const currentStatus = useHydrologyStore.getState().qcStatus?.[stasiun.id];
+              const currentHealth = useHydrologyStore.getState().stationHealth?.[stasiun.id];
+              
+              let healthColor = 'text-slate-400';
+              let healthLabel = 'STANDBY';
+              
+              if (currentStatus) {
+                const passedCount = [currentStatus.konsisten, currentStatus.bebasOutlier, currentStatus.homogen].filter(Boolean).length;
+                if (passedCount === 3) {
+                  healthColor = 'text-emerald-500';
+                  healthLabel = 'HEALTHY';
+                } else if (passedCount >= 1) {
+                  healthColor = 'text-amber-500';
+                  healthLabel = 'CAUTION';
+                } else {
+                  healthColor = 'text-red-500';
+                  healthLabel = 'UNSTABLE';
+                }
               }
-            }
 
-            return (
-              <div
-                key={stasiun.id}
-                onClick={() => selectStasiun(stasiun)}
-                className={`group px-5 py-4 cursor-pointer transition-all border-l-4 ${isActive
-                  ? 'bg-slate-50 dark:bg-slate-800/50 border-pupr-blue'
-                  : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30 border-transparent'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex flex-col gap-0.5">
-                    <h4 className={`font-bold text-sm tracking-tight leading-tight ${isActive ? 'text-pupr-blue' : 'text-slate-800 dark:text-slate-200'}`}>
-                      {stasiun.nama_stasiun}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[9px] font-black tracking-tighter flex items-center gap-1 ${healthColor}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${healthColor.replace('text', 'bg')}`}></span>
-                        {healthLabel}
-                      </span>
-                      {health && (
-                        <span className="text-[9px] font-bold text-slate-400 tabular-nums">
-                          SCORE: {health.healthScore}
+              return (
+                <div
+                  key={stasiun.id}
+                  onClick={() => selectStasiun(stasiun)}
+                  className={`group px-5 py-4 cursor-pointer transition-all border-l-4 ${isActive
+                    ? 'bg-slate-50 dark:bg-slate-800/50 border-pupr-blue shadow-inner'
+                    : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/30 border-transparent shadow-none'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex flex-col gap-0.5">
+                      <h4 className={`font-bold text-sm tracking-tight leading-tight ${isActive ? 'text-pupr-blue' : 'text-slate-800 dark:text-slate-200'}`}>
+                        {stasiun.nama_stasiun}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] font-black tracking-tighter flex items-center gap-1 ${healthColor}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${healthColor.replace('text', 'bg')}`}></span>
+                          {healthLabel}
                         </span>
-                      )}
+                        {currentHealth && (
+                          <span className="text-[9px] font-bold text-slate-400 tabular-nums">
+                            SCORE: {currentHealth.healthScore}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
                   <div className="flex gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => {
@@ -579,7 +594,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                   </div>
                   <div className="flex flex-col text-right">
                     <span className="text-[8px] text-slate-400 uppercase tracking-tighter">GAP</span>
-                    <span className="tabular-nums font-bold text-slate-600">{health?.missingPercentage || 0}%</span>
+                    <span className="tabular-nums font-bold text-slate-600">{currentHealth?.missingPercentage || 0}%</span>
                   </div>
                 </div>
               </div>
@@ -655,10 +670,10 @@ Tindakan ini tidak dapat dibatalkan!`);
  <Wand2 className={`w-4 h-4 mr-1 ${isInfilling ? 'animate-pulse' : ''}`} />
  <span className="hidden sm:inline">{isInfilling ? 'Memproses...' : 'Isi Kosong'}</span>
  </Button>
- <Button onClick={handleDeleteYear} disabled={!selectedStasiun || dataHujan.length === 0} size="sm" variant="outline" className="rounded-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
- <Trash2 className="w-4 h-4 mr-1" />
- <span className="hidden sm:inline">Hapus Data Tahun Ini</span>
- </Button>
+  <Button onClick={() => setShowDeleteModal(true)} disabled={isDeleting || !selectedStasiun} size="sm" variant="outline" className="rounded-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:bg-red-900/10 dark:hover:bg-red-900/20 shadow-none h-9">
+    <Trash2 className="w-4 h-4 mr-1.5" />
+    <span className="hidden sm:inline">Hapus Data Tahun Ini</span>
+  </Button>
  <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-sm bg-pupr-blue hover:bg-teal-700">
  <Plus className="w-4 h-4 mr-1" />
  <span className="hidden sm:inline">Tambah Data</span>
@@ -1177,30 +1192,35 @@ Tindakan ini tidak dapat dibatalkan!`);
  }
 
  if (allData.length > 0) {
- newHealth[stasiunId] = calculateStationHealth(allData);
- const maxByYear: Record<number, number> = {};
- allData.forEach(row => {
- const y = parseInt(row.tanggal.split('-')[0], 10);
- const val = row.curah_hujan || 0;
- if (!maxByYear[y] || val > maxByYear[y]) maxByYear[y] = val;
- });
+    const maxByYear: Record<number, number> = {};
+    allData.forEach(row => {
+      const y = parseInt(row.tanggal.split('-')[0], 10);
+      const val = row.curah_hujan || 0;
+      if (!maxByYear[y] || val > maxByYear[y]) maxByYear[y] = val;
+    });
 
- const annualMax = Object.entries(maxByYear)
- .map(([year, hujan]) => ({ tahun: parseInt(year), hujan }))
- .sort((a, b) => a.tahun - b.tahun);
- 
- newAmsData[stasiunId] = annualMax;
+    const annualMax = Object.entries(maxByYear)
+      .map(([year, hujan]) => ({ tahun: parseInt(year), hujan: hujan as number }))
+      .sort((a, b) => a.tahun - b.tahun);
+    
+    newAmsData[stasiunId] = annualMax;
 
- if (annualMax.length >= 10) {
- const result = runFullQC(annualMax);
- newQcStatus[stasiunId] = {
- konsisten: result.isKonsisten,
- bebasOutlier: result.isBebasOutlier,
- homogen: result.isHomogen,
- };
- newQcResults[stasiunId] = result;
- }
- }
+    if (annualMax.length >= 10) {
+      const result = runFullQC(annualMax);
+      newQcStatus[stasiunId] = {
+        konsisten: result.isKonsisten,
+        bebasOutlier: result.isBebasOutlier,
+        homogen: result.isHomogen,
+      };
+      newQcResults[stasiunId] = result;
+      
+      // Calculate health with QC penalties
+      newHealth[stasiunId] = calculateStationHealth(allData, newQcStatus[stasiunId]);
+    } else {
+      // Not enough data for statistical QC, just normal health
+      newHealth[stasiunId] = calculateStationHealth(allData);
+    }
+  }
  }));
 
  setQCStatus(newQcStatus);
@@ -1238,6 +1258,15 @@ Tindakan ini tidak dapat dibatalkan!`);
  </div>
  </div>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteYear}
+        isLoading={isDeleting}
+        title={`Hapus Data ${selectedStasiun?.nama_stasiun}`}
+        description={`Apakah Anda yakin ingin menghapus seluruh data curah hujan tahun ${selectedYear} untuk stasiun ${selectedStasiun?.nama_stasiun}? Tindakan ini akan menghapus data secara permanen dari database cloud.`}
+      />
     </div>
   );
 };

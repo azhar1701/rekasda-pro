@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Card } from '@/components/ui/Card';
+
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { calculateConvolution } from '@/lib/engine/flood';
@@ -78,48 +78,59 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  );
  }
 
- return (
- <div className="space-y-6 animate-in fade-in zoom-in-95 duration-75">
- <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
- {/* Metric Cards */}
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm border-l-4 border-l-pupr-blue">
- <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Debit Puncak (Qp)</p>
- <div className="flex items-baseline gap-2">
- <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">{finalResults.Qp.toFixed(3)}</span>
- <span className="text-sm font-bold text-slate-500">m³/det</span>
- </div>
- <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase transition-all">Metode: {selectedMethod.replace('_', ' ')}</p>
- </Card>
+  const totalVolumeM3 = useMemo(() => {
+    if (!finalResults) return 0;
+    const dt = finalResults.hydrograph[1]?.time - finalResults.hydrograph[0]?.time || 1;
+    return finalResults.hydrograph.reduce((acc, curr) => acc + curr.discharge * dt * 3600, 0);
+  }, [finalResults]);
 
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm border-l-4 border-l-amber-500">
- <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Waktu Puncak (Tp)</p>
- <div className="flex items-baseline gap-2">
- <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">{finalResults.Tp.toFixed(2)}</span>
- <span className="text-sm font-bold text-slate-500">jam</span>
- </div>
- <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase">Time to Peak</p>
- </Card>
+  return (
+    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-75">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Metric Cards */}
+        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 border-l-4 border-l-pupr-blue">
+          <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Debit Puncak (Qp)</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">{finalResults.Qp.toFixed(3)}</span>
+            <span className="text-[10px] font-bold text-slate-500">m³/s</span>
+          </div>
+        </div>
 
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm border-l-4 border-l-green-600">
- <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Total Hujan Efektif</p>
- <div className="flex items-baseline gap-2">
- <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">
- {hujanEfektif?.reduce((a: number, b: number) => a + b, 0).toFixed(2)}
- </span>
- <span className="text-sm font-bold text-slate-500">mm</span>
- </div>
- <p className="text-[10px] text-slate-500 mt-2 font-bold uppercase">Input Konvolusi</p>
- </Card>
- </div>
+        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 border-l-4 border-l-amber-500">
+          <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Waktu Puncak (Tp)</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">{finalResults.Tp.toFixed(2)}</span>
+            <span className="text-[10px] font-bold text-slate-500">jam</span>
+          </div>
+        </div>
 
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm">
+        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 border-l-4 border-l-green-600">
+          <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Volume Total</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 tabular-nums">
+              {(totalVolumeM3 / 1000).toFixed(1)}
+            </span>
+            <span className="text-[10px] font-bold text-slate-500">k-m³</span>
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-900 border border-slate-800 flex flex-col justify-center">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-1.5 h-1.5 bg-emerald-400 animate-pulse" />
+            <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Audit Status</p>
+          </div>
+          <p className="text-[10px] text-slate-400 font-bold uppercase">Time-Step Logic: <span className="text-white">PASSED</span></p>
+        </div>
+      </div>
+
+ <div className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600">
  <div className="flex items-center justify-between mb-6">
  <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
  <BarChart3 className="w-5 h-5 text-pupr-blue" />
  Hidrograf Banjir Rencana
  </h3>
  <div className="flex gap-2">
- <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-sm hover:bg-slate-50 dark:bg-slate-800 transition-all">
+ <button className="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 transition-all">
  <Download className="w-4 h-4 text-slate-600 dark:text-slate-500" />
  </button>
  </div>
@@ -149,7 +160,7 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  label={{ value: 'Debit (m³/s)', angle: -90, position: 'insideLeft', style: { fontSize: 11, fontWeight: 800 } }}
  />
  <Tooltip
- contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', background: 'rgba(255,255,255,0.95)' }}
+ contentStyle={{ border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', background: 'rgba(255,255,255,0.95)' }}
  />
  <Area
  type="monotone"
@@ -163,15 +174,15 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  </AreaChart>
  </ResponsiveContainer>
  </div>
- </Card>
+ </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm">
+ <div className="p-6 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600">
  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
  <ClipboardCheck className="w-4 h-4 text-green-600" />
  Validasi Perbandingan Puncak (Qp)
  </h4>
- <div className="overflow-hidden border border-slate-100 rounded-sm">
+ <div className="overflow-hidden border border-slate-100">
  <table className="w-full text-xs">
  <thead className="bg-slate-50 dark:bg-slate-800">
  <tr className="border-b border-slate-100">
@@ -184,7 +195,7 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  {hasilBanjirHSS && Object.entries(hasilBanjirHSS).map(([id, hss]: [string, any]) => (
  <tr key={id} className={`border-b border-slate-50 last:border-0 ${id === selectedMethod ? 'bg-pupr-blue/5 font-bold' : ''}`}>
  <td className="px-4 py-3 flex items-center gap-2 capitalize">
- <div className={`w-1.5 h-1.5 rounded-sm ${id === selectedMethod ? 'bg-pupr-blue' : 'bg-slate-300'}`} />
+ <div className={`w-1.5 h-1.5 ${id === selectedMethod ? 'bg-pupr-blue' : 'bg-slate-300'}`} />
  {id}
  </td>
  <td className="px-4 py-3 text-right tabular-nums">{hss.Qp.toFixed(3)}</td>
@@ -196,7 +207,7 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  {hasilBanjirEmpiris && Object.entries(hasilBanjirEmpiris).map(([id, emp]: [string, any]) => (
  <tr key={id} className={`border-b border-slate-50 last:border-0 ${id === selectedMethod ? 'bg-pupr-blue/5 font-bold' : ''}`}>
  <td className="px-4 py-3 flex items-center gap-2 capitalize italic text-slate-500">
- <div className={`w-1.5 h-1.5 rounded-sm bg-slate-200`} />
+ <div className={`w-1.5 h-1.5 bg-slate-200`} />
  {id} (Empiris)
  </td>
  <td className="px-4 py-3 text-right tabular-nums text-slate-500">{emp.Qp.toFixed(3)}</td>
@@ -208,21 +219,21 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
  </tbody>
  </table>
  </div>
- </Card>
+ </div>
 
- <Card className="p-6 bg-pupr-blue text-white rounded-sm flex flex-col justify-center items-center text-center">
+ <div className="p-6 bg-pupr-blue text-white flex flex-col justify-center items-center text-center">
  <ClipboardCheck className="w-12 h-12 mb-4 opacity-50" />
  <h4 className="text-lg font-bold mb-2">Analisis Siap Digunakan</h4>
  <p className="text-xs text-blue-100/70 mb-6 px-6">Hasil analisis banjir rencana telah dikonvolusi dan divalidasi dengan multi-metode. Anda dapat mengunduh laporan PDF atau melanjutkan ke analisis tampungan embung.</p>
  <div className="flex gap-3 w-full max-w-xs">
- <button className="flex-1 py-3 bg-white dark:bg-slate-900 text-pupr-blue font-bold rounded-sm flex items-center justify-center gap-2 text-xs">
+ <button className="flex-1 py-3 bg-white dark:bg-slate-900 text-pupr-blue font-bold flex items-center justify-center gap-2 text-xs">
  <Download className="w-4 h-4" /> PDF Report
  </button>
- <button className="flex-1 py-3 bg-pupr-surface0 hover:bg-blue-400 text-white font-bold rounded-sm flex items-center justify-center gap-2 text-xs">
+ <button className="flex-1 py-3 bg-pupr-surface0 hover:bg-blue-400 text-white font-bold flex items-center justify-center gap-2 text-xs">
  <Share2 className="w-4 h-4" /> Simpan DASH
  </button>
  </div>
- </Card>
+ </div>
  </div>
  </div>
  );

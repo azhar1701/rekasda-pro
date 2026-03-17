@@ -1,457 +1,377 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '@/services/allCalculationsService';
 import { HistoryMap } from './HistoryMap';
 import { CalculationType, ChannelShape } from '@/types/types';
-import { manningPilotData } from '@/data/manningPilotData';
-import { rationalPilotData } from '@/data/floodPilotData';
-import { waterBalancePilotData } from '@/data/waterBalancePilotData';
 import { Button } from '@/components/ui/Button';
 import { apiService } from '@/services/api.service';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { Database, MapPin, Eye, Bot, Trash2 } from 'lucide-react';
+import { Database, MapPin, Eye, Bot, Trash2, List, Search, Clock, Map as MapIcon, RefreshCw } from 'lucide-react';
 import { TableGovTech } from '@/components/ui/TableGovTech';
 import { toast } from '@/hooks/useToast';
+import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 
 type ViewMode = 'LIST' | 'MAP';
 
 interface Props {
- onViewDetail?: (item: AllCalculationsData) => void;
- onConsultAI?: (item: AllCalculationsData) => void;
- onMapDetail?: (item: any) => void;
+  onViewDetail?: (item: AllCalculationsData) => void;
+  onConsultAI?: (item: AllCalculationsData) => void;
+  onMapDetail?: (item: any) => void;
 }
 
-export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail }) => {
- const [data, setData] = useState<AllCalculationsData[]>([]);
- const [loading, setLoading] = useState(true);
- const [isSearchingNearby, setIsSearchingNearby] = useState(false);
- const [viewMode, setViewMode] = useState<ViewMode>('LIST');
- const [focusItemId, setFocusItemId] = useState<string | undefined>(undefined);
+export const AllDataTab: React.FC<Props> = ({ onViewDetail, onMapDetail }) => {
+  const [data, setData] = useState<AllCalculationsData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSearchingNearby, setIsSearchingNearby] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('LIST');
+  const [focusItemId, setFocusItemId] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
 
- useEffect(() => {
- loadData();
- }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
- const loadData = async () => {
- setLoading(true);
- const result = await getAllCalculations();
- setData(result);
- setLoading(false);
- };
+  const loadData = async () => {
+    setLoading(true);
+    const result = await getAllCalculations();
+    setData(result);
+    setLoading(false);
+  };
 
- const handleSearchNearby = async () => {
- setIsSearchingNearby(true);
- try {
- const pos = await getCurrentLocation();
- const response = await apiService.findNearbyCalculations(pos.latitude, pos.longitude, 10000); // 10km radius
+  // --- Derived Metrics for Top Strip ---
+  const stats = useMemo(() => {
+    if (data.length === 0) return null;
+    const types = data.map(d => d.type);
+    const manningCount = types.filter(t => t === 'manning').length;
+    const floodCount = types.filter(t => t === 'flood').length;
+    const wbCount = types.filter(t => t === 'water_balance').length;
+    
+    const dates = data.map(d => new Date(d.created_at).getTime());
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
 
- if (response.status === 'success' && response.data) {
- // Map new schema to display format
- const nearbyItems: AllCalculationsData[] = response.data.map((item: any) => ({
- id: item.id,
- type: item.calculation_type === 'manning' ? 'manning' : 'flood',
- project_name: item.site_name,
- created_at: item.created_at,
- data: {
- inputs: item.input_data,
- results: item.result_data
- },
- location: item.location
- }));
+    return {
+      total: data.length,
+      manningCount,
+      floodCount,
+      wbCount,
+      dateRange: `${minDate.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })} - ${maxDate.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}`
+    };
+  }, [data]);
 
- if (nearbyItems.length === 0) {
- toast.info('Tidak ditemukan perhitungan lain dalam radius 10km.');
- } else {
- setData(nearbyItems);
- }
- }
- } catch (error) {
- console.error('Search nearby failed', error);
- toast.error('Gagal mencari lokasi. Pastikan izin lokasi aktif.');
- } finally {
- setIsSearchingNearby(false);
- }
- };
+  const filteredData = useMemo(() => {
+    if (!searchQuery) return data;
+    return data.filter(item => 
+      item.project_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.type.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [data, searchQuery]);
 
- const handleDelete = async (type: string, id: string) => {
- if (!window.confirm('Hapus data ini?')) return;
+  // Rest of helper functions (getTypeLabel, getTypeColor, getMainValue, etc.) kept for logic
+  const getTypeLabel = (type: string) => {
+    if (type === 'manning') return 'Saluran';
+    if (type === 'flood') return 'Banjir';
+    if (type === 'water_balance') return 'Neraca';
+    return type;
+  };
 
- const { error } = await deleteCalculationById(type, id);
- if (error) {
- toast.error('Gagal menghapus: ' + error.message);
- } else {
- loadData();
- }
- };
+  const getTypeColor = (type: string) => {
+    if (type === 'manning') return 'text-pupr-blue border-blue-200 bg-blue-50';
+    if (type === 'flood') return 'text-rose-600 border-rose-200 bg-rose-50';
+    if (type === 'water_balance') return 'text-emerald-600 border-emerald-200 bg-emerald-50';
+    return 'text-slate-500 border-slate-200 bg-slate-50';
+  };
 
- const handleShowOnMap = (item: AllCalculationsData) => {
- setViewMode('MAP');
- // Set focus after view mode changes
- setTimeout(() => {
- setFocusItemId(item.id);
- }, 100);
- };
+  const getMainValue = (item: AllCalculationsData) => {
+    if (item.type === 'manning') {
+      return item.data.results?.Discharge || '-';
+    } else if (item.type === 'flood') {
+      return item.data.results?.qPeak?.toFixed(2) || '-';
+    } else if (item.type === 'water_balance') {
+      const totalSupply = item.data.monthly_inputs?.monthlySupply?.reduce((a: number, b: number) => a + b, 0);
+      return totalSupply?.toFixed(1) || '-';
+    }
+    return '-';
+  };
 
- const getTypeLabel = (type: string) => {
- if (type === 'manning') return 'Saluran';
- if (type === 'flood') return 'Banjir';
- if (type === 'water_balance') return 'Neraca Air';
- return type;
- };
+  const handleSearchNearby = async () => {
+    setIsSearchingNearby(true);
+    try {
+      const pos = await getCurrentLocation();
+      const response = await apiService.findNearbyCalculations(pos.latitude, pos.longitude, 10000);
+      if (response.status === 'success' && response.data) {
+        const nearbyItems: AllCalculationsData[] = response.data.map((item: any) => ({
+          id: item.id,
+          type: item.calculation_type === 'manning' ? 'manning' : 'flood',
+          project_name: item.site_name,
+          created_at: item.created_at,
+          data: { inputs: item.input_data, results: item.result_data },
+          location: item.location
+        }));
+        if (nearbyItems.length === 0) {
+          toast.info('Tidak ditemukan perhitungan lain dalam radius 10km.');
+        } else {
+          setData(nearbyItems);
+        }
+      }
+    } catch (error) {
+      toast.error('Gagal mencari lokasi. Pastikan izin lokasi aktif.');
+    } finally { setIsSearchingNearby(false); }
+  };
 
- const getTypeColor = (type: string) => {
- if (type === 'manning') return 'bg-blue-100 text-pupr-blue';
- if (type === 'flood') return 'bg-red-100 text-red-700';
- if (type === 'water_balance') return 'bg-green-100 text-green-700';
- return 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
- };
+  const handleDelete = async (type: string, id: string) => {
+    if (!window.confirm('Hapus data ini?')) return;
+    const { error } = await deleteCalculationById(type, id);
+    if (error) toast.error('Gagal menghapus: ' + error.message);
+    else loadData();
+  };
 
- const getMainValue = (item: AllCalculationsData) => {
- if (item.type === 'manning') {
- return item.data.results?.Discharge || '-';
- } else if (item.type === 'flood') {
- return item.data.results?.qPeak?.toFixed(2) || '-';
- } else if (item.type === 'water_balance') {
- const totalSupply = item.data.monthly_inputs?.monthlySupply?.reduce((a: number, b: number) => a + b, 0);
- return totalSupply?.toFixed(1) || '-';
- }
- return '-';
- };
+  // --- Map Data Processing (Corrected to match CalculationResult type) ---
+  const mapData = useMemo(() => {
+    return data.filter(item => {
+      let loc = item.location || (item.type === 'manning' && item.data?.inputs?.site?.location) || 
+                (item.type === 'flood' && (item.data?.inputs?.location || item.data?.inputs?.site?.location)) ||
+                (item.type === 'water_balance' && item.data?.monthly_inputs?.location);
+      return loc && loc.latitude && loc.longitude;
+    }).map(item => {
+      const loc = item.location || (item.type === 'manning' && item.data?.inputs?.site?.location) || 
+                  (item.type === 'flood' && (item.data?.inputs?.location || item.data?.inputs?.site?.location)) ||
+                  (item.type === 'water_balance' && item.data?.monthly_inputs?.location);
+      
+      const calcType: CalculationType = item.type === 'manning' ? CalculationType.MANNING : 
+                        item.type === 'water_balance' ? CalculationType.WATER_BALANCE : 
+                        CalculationType.RATIONAL;
 
- // Convert to CalculationResult format for map - ONLY items with valid GPS
- const dbMapData = data
- .filter(item => {
- // Check if item has valid location
- let location = item.location;
+      return {
+        id: item.id,
+        type: calcType,
+        date: item.created_at,
+        inputs: { 
+          site: { channelName: item.project_name },
+          // Fill required properties to satisfy type system
+          shape: ChannelShape.TRAPEZOID,
+          roughness: 0,
+          slope: 0,
+          width: 0,
+          topWidth: 0,
+          diameter: 0,
+          depth: 0,
+          totalDepth: 0,
+          sideSlope: 0,
+          // Rational specific
+          runoffCoefficient: 0,
+          area: 0,
+          rainfallDesign: 0,
+          flowLength: 0,
+          catchmentSlope: 0
+        } as any, // Cast to any temporarily to bypass the strict union check while maintaining enough structure for the map
+        outputs: { Discharge: getMainValue(item) },
+        location: { latitude: loc.latitude, longitude: loc.longitude, accuracy: 10, timestamp: Date.now() }
+      };
+    });
+  }, [data]);
 
- if (!location && item.type === 'manning' && item.data?.inputs?.site?.location) {
- location = item.data.inputs.site.location;
- }
+  const tableColumns = [
+    { key: 'date', label: 'Tanggal', align: 'left' as const },
+    { key: 'project', label: 'Identitas Proyek', align: 'left' as const },
+    { key: 'type', label: 'Modul', align: 'center' as const },
+    { key: 'value', label: 'Nilai Utama', align: 'right' as const, numeric: true },
+    { key: 'actions', label: 'Aksi', align: 'center' as const }
+  ];
 
- if (!location && item.type === 'flood') {
- location = item.data?.inputs?.location || item.data?.inputs?.site?.location;
- }
+  const tableData = filteredData.map((item) => ({
+    date: (
+      <div className="flex flex-col">
+        <span className="text-[11px] font-bold text-slate-900 tabular-nums">
+          {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+        </span>
+        <span className="text-[9px] text-slate-400 font-medium tabular-nums">
+          {new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+        </span>
+      </div>
+    ),
+    type: (
+      <span className={`inline-flex px-2 py-0.5 rounded-sm text-[9px] font-black tracking-widest uppercase border ${getTypeColor(item.type)}`}>
+        {getTypeLabel(item.type)}
+      </span>
+    ),
+    project: (
+      <div className="flex flex-col max-w-[280px]">
+        <span className="font-bold text-slate-800 truncate leading-tight tracking-tight" title={item.project_name}>{item.project_name}</span>
+        <span className="text-[9px] text-slate-400 uppercase font-black tracking-tighter truncate mt-0.5">ID: {item.id.split('-')[0]}</span>
+      </div>
+    ),
+    value: (
+      <div className="flex items-baseline justify-end gap-1.5">
+        <span className="font-black text-slate-900 tabular-nums text-sm">{getMainValue(item)}</span>
+        <span className="text-[8px] text-slate-500 font-black uppercase tracking-widest">m³/s</span>
+      </div>
+    ),
+    actions: (
+      <div className="flex items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => { setViewMode('MAP'); setTimeout(() => setFocusItemId(item.id), 100); }} className="p-1.5 text-slate-400 hover:text-pupr-blue hover:bg-white border border-transparent hover:border-slate-200 transition-all" title="Lihat Peta">
+          <MapPin className="w-3.5 h-3.5" />
+        </button>
+        <button onClick={() => onViewDetail?.(item)} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-white border border-transparent hover:border-slate-200 transition-all" title="Detail">
+          <Eye className="w-3.5 h-3.5" />
+        </button>
+        <button onClick={() => handleDelete(item.type, item.id)} className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all" title="Hapus">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    )
+  }));
 
- if (!location && item.type === 'water_balance' && item.data?.monthly_inputs?.location) {
- location = item.data.monthly_inputs.location;
- }
+  return (
+    <ModuleLayout
+      title="Riwayat Audit"
+      description="Database hasil perhitungan dan pemodelan hidrologi"
+      icon={<Clock className="w-6 h-6" />}
+    >
+      <div className="space-y-8 pb-12 page-enter relative z-10">
+        <ProjectContextBanner />
 
- // Only include if has valid GPS coordinates
- return location && location.latitude && location.longitude;
- })
- .map((item) => {
- const location = item.location ||
- (item.type === 'manning' && item.data?.inputs?.site?.location) ||
- (item.type === 'flood' && (item.data?.inputs?.location || item.data?.inputs?.site?.location)) ||
- (item.type === 'water_balance' && item.data?.monthly_inputs?.location);
+        {/* --- Top Metrics Summary Strip --- */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-b border-slate-200 dark:border-slate-800 pb-8">
+            <div className="space-y-1">
+              <p className="text-4xl font-light text-slate-900 tracking-tighter tabular-nums">{stats.total}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Catatan</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-4xl font-light text-pupr-blue tracking-tighter tabular-nums">{stats.manningCount}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Model Saluran</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-4xl font-light text-rose-600 tracking-tighter tabular-nums">{stats.floodCount}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Analisis Banjir</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-slate-800 mt-2">{stats.dateRange}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rentang Data</p>
+            </div>
+          </div>
+        )}
 
- const calcType: CalculationType = item.type === 'manning' ? CalculationType.MANNING :
- item.type === 'water_balance' ? CalculationType.WATER_BALANCE :
- CalculationType.RATIONAL;
+        {/* --- Main Workstation Body --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          
+          {/* Sidebar Controls */}
+          <aside className="lg:col-span-1 space-y-10">
+            {/* View Selection */}
+            <section className="space-y-4">
+              <header className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue" />
+                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tampilan</h3>
+              </header>
+              <div className="flex flex-col gap-1">
+                <button 
+                  onClick={() => setViewMode('LIST')}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-all rounded-sm border ${viewMode === 'LIST' ? 'bg-pupr-blue text-white border-pupr-blue shadow-lg shadow-blue-500/10' : 'text-slate-600 border-transparent hover:bg-slate-100'}`}
+                >
+                  <List className="w-4 h-4" />
+                  Daftar Tabel
+                </button>
+                <button 
+                  onClick={() => setViewMode('MAP')}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-all rounded-sm border ${viewMode === 'MAP' ? 'bg-pupr-blue text-white border-pupr-blue shadow-lg shadow-blue-500/10' : 'text-slate-600 border-transparent hover:bg-slate-100'}`}
+                >
+                  <MapIcon className="w-4 h-4" />
+                  Peta Spasial
+                </button>
+              </div>
+            </section>
 
- // Extract location details based on type
- let regency = '';
- let district = '';
- let village = '';
+            {/* Filter/Search */}
+            <section className="space-y-4">
+              <header className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-pupr-blue" />
+                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pencarian</h3>
+              </header>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input 
+                  type="text"
+                  placeholder="Nama Proyek..."
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-slate-200 focus:outline-none focus:border-pupr-blue transition-colors rounded-sm font-medium"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="outline" 
+                  fullWidth 
+                  className="justify-start gap-3 rounded-sm text-xs font-bold border-slate-200"
+                  onClick={loadData}
+                  disabled={loading}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                  Segarkan Database
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  fullWidth 
+                  className="justify-start gap-3 rounded-sm text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
+                  onClick={handleSearchNearby}
+                  disabled={isSearchingNearby}
+                >
+                  <MapPin className={`w-3.5 h-3.5 ${isSearchingNearby ? 'animate-pulse' : ''}`} />
+                  {isSearchingNearby ? 'Mencari...' : 'Cari di Sekitar'}
+                </Button>
+              </div>
+            </section>
 
- if (item.type === 'manning') {
- regency = item.data?.inputs?.site?.regency || item.data?.inputs?.site?.kabupaten || '';
- district = item.data?.inputs?.site?.district || item.data?.inputs?.site?.kecamatan || '';
- village = item.data?.inputs?.site?.village || item.data?.inputs?.site?.desa || '';
- } else if (item.type === 'flood') {
- regency = item.data?.inputs?.regency || item.data?.inputs?.kabupaten || '';
- district = item.data?.inputs?.district || item.data?.inputs?.kecamatan || '';
- village = item.data?.inputs?.village || item.data?.inputs?.desa || '';
- } else if (item.type === 'water_balance') {
- regency = item.data?.monthly_inputs?.regency || item.data?.monthly_inputs?.kabupaten || '';
- district = item.data?.monthly_inputs?.district || item.data?.monthly_inputs?.kecamatan || '';
- village = item.data?.monthly_inputs?.village || item.data?.monthly_inputs?.desa || '';
- }
+            {/* AI Insight Shortcut */}
+            <section className="bg-indigo-50 border border-indigo-100 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-indigo-600" />
+                <span className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">AI Consultant</span>
+              </div>
+              <p className="text-[11px] text-indigo-700 leading-relaxed font-medium">Klik icon robot pada baris data untuk melakukan audit otomatis berbasis regulasi SNI.</p>
+            </section>
+          </aside>
 
- return {
- id: item.id,
- type: calcType,
- date: item.created_at,
- inputs: {
- site: {
- channelName: item.project_name,
- regency,
- district,
- village
- },
- shape: ChannelShape.TRAPEZOID,
- roughness: 0,
- slope: 0,
- width: 0,
- topWidth: 0,
- diameter: 0,
- depth: 0,
- totalDepth: 0,
- sideSlope: 0
- },
- outputs: { Discharge: getMainValue(item) },
- location: {
- latitude: location.latitude,
- longitude: location.longitude,
- accuracy: 10,
- timestamp: Date.now()
- }
- };
- });
-
- // Helper function to calculate Manning discharge
- const calculateManningDischarge = (inputs: any) => {
- const { width, depth, slope, roughness, sideSlope } = inputs;
- const area = width * depth + sideSlope * depth * depth;
- const wettedPerimeter = width + 2 * depth * Math.sqrt(1 + sideSlope * sideSlope);
- const hydraulicRadius = area / wettedPerimeter;
- const velocity = (1 / roughness) * Math.pow(hydraulicRadius, 2 / 3) * Math.pow(slope, 0.5);
- const discharge = area * velocity;
- return discharge.toFixed(2);
- };
-
- // Helper function to calculate Rational discharge
- const calculateRationalDischarge = (inputs: any) => {
- const { C, A, I } = inputs;
- const discharge = (0.00278 * C * I * A);
- return discharge.toFixed(2);
- };
-
- // Add pilot data to map
- const pilotMapData = [
- ...manningPilotData.map((pilot, idx) => {
- const discharge = calculateManningDischarge(pilot.inputs);
- return {
- id: `pilot-manning-${idx}`,
- type: CalculationType.MANNING,
- date: new Date().toISOString(),
- inputs: {
- site: {
- channelName: pilot.location.channelName,
- regency: pilot.location.kabupaten,
- district: pilot.location.kecamatan,
- village: pilot.location.desa
- },
- ...pilot.inputs
- },
- outputs: { Discharge: discharge },
- location: pilot.location.coordinates ? {
- latitude: pilot.location.coordinates.lat,
- longitude: pilot.location.coordinates.lng,
- accuracy: 10,
- timestamp: Date.now()
- } : undefined
- };
- }),
- ...rationalPilotData.map((pilot, idx) => {
- const discharge = calculateRationalDischarge(pilot.inputs);
- return {
- id: `pilot-rational-${idx}`,
- type: CalculationType.RATIONAL,
- date: new Date().toISOString(),
- inputs: {
- site: {
- channelName: pilot.location.channelName,
- regency: pilot.location.kabupaten,
- district: pilot.location.kecamatan,
- village: pilot.location.desa
- },
- shape: ChannelShape.TRAPEZOID,
- roughness: 0,
- slope: 0,
- width: 0,
- topWidth: 0,
- diameter: 0,
- depth: 0,
- totalDepth: 0,
- sideSlope: 0
- },
- outputs: { Discharge: discharge },
- location: pilot.location.coordinates ? {
- latitude: pilot.location.coordinates.lat,
- longitude: pilot.location.coordinates.lng,
- accuracy: 10,
- timestamp: Date.now()
- } : undefined
- };
- }),
- ...waterBalancePilotData.map((pilot, idx) => {
- const totalSupply = pilot.inputs.monthlySupply.reduce((a, b) => a + b, 0);
- return {
- id: `pilot-water-${idx}`,
- type: CalculationType.WATER_BALANCE,
- date: new Date().toISOString(),
- inputs: {
- site: {
- channelName: pilot.location.channelName,
- regency: pilot.location.kabupaten,
- district: pilot.location.kecamatan,
- village: pilot.location.desa
- },
- shape: ChannelShape.TRAPEZOID,
- roughness: 0,
- slope: 0,
- width: 0,
- topWidth: 0,
- diameter: 0,
- depth: 0,
- totalDepth: 0,
- sideSlope: 0
- },
- outputs: { Discharge: totalSupply.toFixed(1) },
- location: pilot.location.coordinates ? {
- latitude: pilot.location.coordinates.lat,
- longitude: pilot.location.coordinates.lng,
- accuracy: 10,
- timestamp: Date.now()
- } : undefined
- };
- })
- ].filter(item => item.location);
-
- const mapData = [...dbMapData, ...pilotMapData];
- const tableColumns = [
- { key: 'date', label: 'Tanggal', align: 'left' as const },
- { key: 'type', label: 'Modul', align: 'left' as const },
- { key: 'project', label: 'Nama Proyek', align: 'left' as const },
- { key: 'value', label: 'Kapasitas / Debit', align: 'right' as const, numeric: true },
- { key: 'actions', label: 'Aksi', align: 'center' as const }
- ];
-
- const tableData = data.map((item) => ({
- date: new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
- type: (
- <span className={`inline-flex px-2 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase border ${getTypeColor(item.type).replace('text-', 'border-').replace('100', '200')} ${getTypeColor(item.type)}`}>
- {getTypeLabel(item.type)}
- </span>
- ),
- project: (
- <div className="max-w-[200px] truncate" title={item.project_name}>
- <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">{item.project_name}</span>
- </div>
- ),
- value: (
- <div className="flex items-baseline justify-end gap-1.5">
- <span className="font-bold text-slate-900 dark:text-slate-100">{getMainValue(item)}</span>
- <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">m³/s</span>
- </div>
- ),
- actions: (
- <div className="flex items-center justify-center gap-1.5">
- <button onClick={() => handleShowOnMap(item)} className="p-1.5 text-pupr-blue hover:bg-pupr-surface hover:text-pupr-blue rounded-sm transition-colors" title="Lihat di Peta">
- <MapPin className="w-4 h-4" />
- </button>
- <button onClick={() => onViewDetail?.(item)} className="p-1.5 text-slate-600 dark:text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-200 rounded-sm transition-colors" title="Lihat Detail">
- <Eye className="w-4 h-4" />
- </button>
- <button onClick={() => onConsultAI?.(item)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-sm transition-colors" title="Konsultasi AI">
- <Bot className="w-4 h-4" />
- </button>
- <button onClick={() => handleDelete(item.type, item.id)} className="p-1.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-sm transition-colors" title="Hapus Data">
- <Trash2 className="w-4 h-4" />
- </button>
- </div>
- )
- }));
-
- return (
- <ModuleLayout
- title="Daftar Proyek"
- description="Database riwayat perhitungan RekaSDA"
- icon={<Database className="w-6 h-6" />}
- 
- >
- <div className="space-y-6 pb-6 page-enter relative z-10">
-
- {/* Toolbar */}
- <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
- <div className="flex gap-2">
- <Button
- variant="outline"
- size="sm"
- onClick={loadData}
- disabled={loading || isSearchingNearby}
- className="rounded-sm font-bold text-xs"
- >
- <svg className="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
- Refresh
- </Button>
- <Button
- variant="secondary"
- size="sm"
- onClick={handleSearchNearby}
- disabled={loading || isSearchingNearby}
- className="rounded-sm font-bold text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
- >
- <svg className="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
- {isSearchingNearby ? 'Mencari...' : 'Cari di Sekitar'}
- </Button>
- </div>
-
- <div className="flex gap-0 border-b border-slate-300 dark:border-slate-700 w-full sm:w-auto">
- <button
- onClick={() => setViewMode('LIST')}
- className={`flex-1 sm:flex-none py-2 px-6 font-bold text-xs uppercase tracking-widest transition-all border-b-4 ${viewMode === 'LIST' ? 'text-pupr-blue border-pupr-yellow bg-slate-50 dark:bg-slate-800' : 'text-slate-500 border-transparent hover:text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'}`}
- >
- Daftar
- </button>
- <button
- onClick={() => setViewMode('MAP')}
- className={`flex-1 sm:flex-none py-2 px-6 font-bold text-xs uppercase tracking-widest transition-all border-b-4 ${viewMode === 'MAP' ? 'text-pupr-blue border-pupr-yellow bg-slate-50 dark:bg-slate-800' : 'text-slate-500 border-transparent hover:text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'}`}
- >
- Peta
- </button>
- </div> </div>
-
- {loading ? (
- <div className="flex justify-center items-center py-24">
- <div className="animate-pulse bg-slate-200 rounded-sm rounded-sm h-12 w-12 border-b-2 border-indigo-600"></div>
- </div>
- ) : data.length === 0 ? (
- <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-sm border border-white/60 text-center">
- <div className="w-20 h-20 bg-indigo-50 rounded-sm flex items-center justify-center mb-5 rotate-3 border border-white">
- <Database className="w-10 h-10 text-pupr-blue -rotate-3" />
- </div>
- <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">Database Kosong</h3>
- <p className="text-sm text-slate-500 max-w-sm">Belum ada riwayat perhitungan yang tersimpan. Mulai buat perhitungan di modul terkait untuk melihat datanya di sini.</p>
- </div>
- ) : (
- <>
- {viewMode === 'MAP' ? (
- <div className="bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-700 p-3 sm:p-5">
- <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide mb-3 sm:mb-4">Peta Lokasi Proyek</h2>
- <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
- <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
- <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
- <div className="flex gap-3 text-[10px] sm:text-xs">
- <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-500">
- <span className="w-2.5 h-2.5 rounded-sm bg-[#2563eb]"></span>
- Saluran Manning
- </span>
- <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-500">
- <span className="w-2.5 h-2.5 rounded-sm bg-[#dc2626]"></span>
- Banjir Rasional
- </span>
- <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-500">
- <span className="w-2.5 h-2.5 rounded-sm bg-[#059669]"></span>
- Neraca Air
- </span>
- </div>
- </div>
- </div>
- ) : (
- <div className="bg-white dark:bg-slate-900 rounded-sm ">
- <TableGovTech
- columns={tableColumns}
- data={tableData}
- stickyHeader={true}
- zebraStripe={true}
- />
- </div>
- )}
- </>
- )}
- </div>
- </ModuleLayout>
- );
+          {/* Main Content Area */}
+          <main className="lg:col-span-3 min-h-[500px]">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                <div className="w-10 h-10 border-4 border-slate-100 border-t-pupr-blue rounded-full animate-spin" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinkronisasi Data...</p>
+              </div>
+            ) : filteredData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32 bg-slate-50/50 border border-dashed border-slate-200 text-center rounded-sm">
+                <Database className="w-12 h-12 text-slate-300 mb-4" />
+                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Database Nihil</h3>
+                <p className="text-xs text-slate-500 max-w-[240px] mt-2">Belum ada catatan yang sesuai dengan filter atau database masih kosong.</p>
+              </div>
+            ) : viewMode === 'LIST' ? (
+              <div className="bg-white border border-slate-200 shadow-sm animate-in fade-in duration-300">
+                <TableGovTech
+                  columns={tableColumns}
+                  data={tableData}
+                  stickyHeader={true}
+                  zebraStripe={false}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="bg-white border border-slate-200 p-4 shadow-sm h-[600px]">
+                  <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+                  <span>Legend: GIS Analysis Plot</span>
+                  <div className="flex gap-4">
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500" /> Manning</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500" /> Flood</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Balance</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </ModuleLayout>
+  );
 };

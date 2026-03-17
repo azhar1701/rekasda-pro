@@ -204,7 +204,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
  <div className="flex items-center gap-3">
  <div className="relative">
  <div className="w-10 h-10 rounded-sm bg-white dark:bg-slate-900 flex items-center justify-center border border-white/20">
- <Sparkles className="w-5 h-5 text-white" />
+ <Sparkles className="w-5 h-5 text-pupr-blue" />
  </div>
  {hasIssues && (
  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-sm border-2 border-pupr-blue animate-pulse" />
@@ -216,10 +216,10 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
  </div>
  </div>
  <div className="flex items-center gap-1.5">
- <button onClick={() => setIsFullScreen(!isFullScreen)} className="w-8 h-8 rounded-sm bg-white dark:bg-slate-900 hover:bg-white dark:bg-slate-900 flex items-center justify-center text-white transition-all">
+ <button onClick={() => setIsFullScreen(!isFullScreen)} className="w-8 h-8 rounded-sm bg-white dark:bg-slate-900 hover:bg-slate-50 flex items-center justify-center text-pupr-blue transition-all">
  {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
  </button>
- <button onClick={onClose} className="w-8 h-8 rounded-sm bg-white dark:bg-slate-900 hover:bg-white dark:bg-slate-900 flex items-center justify-center text-white transition-all">
+ <button onClick={onClose} className="w-8 h-8 rounded-sm bg-white dark:bg-slate-900 hover:bg-slate-50 flex items-center justify-center text-pupr-blue transition-all">
  <X className="w-4 h-4" />
  </button>
  </div>

@@ -255,7 +255,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
  <div className="space-y-4 animate-in fade-in duration-75">
  {isAutofilled && (
  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-3 ">
- <h4 className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+ <h4 className="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
  <CheckCircle className="w-3 h-3 text-emerald-500" />
  Summary Puncak Tahunan ({sourceName})
  </h4>
@@ -343,7 +343,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm p-4">
  <div className="flex items-center justify-between mb-3">
  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Metode Distribusi</h3>
- <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
+ <span className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded">
  {method === 'logpearson3' ? 'Log-Pearson III' : method === 'gumbel' ? 'Gumbel' : method === 'lognormal' ? 'Log-Normal' : 'Normal'}
  </span>
  </div>
@@ -365,7 +365,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
  <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
  <div className="flex items-center justify-between">
  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Hasil Analisis Frekuensi</h3>
- <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{results.designValues.length} nilai</span>
+ <span className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded">{results.designValues.length} nilai</span>
  </div>
  </div>
  <div className="overflow-x-auto">
@@ -384,8 +384,8 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Q{item.returnPeriod}</span>
  </td>
  <td className="px-3 py-2 text-right">
- <span className="font-semibold text-teal-600">{item.designValue.toFixed(2)}</span>
- <span className="text-slate-500 ml-1">mm</span>
+ <span className="font-semibold font-mono tabular-nums tracking-tight text-teal-600">{item.designValue.toFixed(2)}</span>
+ <span className="text-slate-600 ml-1">mm</span>
  </td>
  <td className="px-3 py-2 text-center">
  <button onClick={() => { onSelectValue?.(item.returnPeriod, item.designValue); onClose(); }} className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-teal-600 hover:bg-teal-50 rounded border border-teal-200 hover:border-teal-300">
@@ -408,7 +408,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
  <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 px-6 py-4 flex-shrink-0">
  <div className="flex items-center justify-between">
- <div className="text-xs text-slate-500">Pilih nilai untuk digunakan dalam perhitungan</div>
+ <div className="text-xs text-slate-600">Pilih nilai untuk digunakan dalam perhitungan</div>
  <div className="flex items-center gap-3">
  <button onClick={handleSaveToStore} disabled={!canProceedToAnalysis || !results || !goodnessOfFit} className={`flex items-center gap-2 px-5 py-2.5 font-bold rounded-sm text-sm transition-all ${canProceedToAnalysis && results && goodnessOfFit ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/40' : 'bg-slate-100 text-slate-500 cursor-not-allowed'}`}>
  <Save className="w-4 h-4" />
