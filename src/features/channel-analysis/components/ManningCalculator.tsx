@@ -11,10 +11,10 @@ interface Props {
  * ManningCalculator - Entry point for Channel Analysis
  * Refactored to use the high-density ChannelWorkstation
  */
-export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
+export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
   return (
     <div className="h-full">
-      <ChannelWorkstation />
+      <ChannelWorkstation onSave={onSave} onConsultAI={onConsultAI} />
     </div>
   );
 };

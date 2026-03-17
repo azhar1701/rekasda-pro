@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Waves, RefreshCw, Calculator, Zap, Maximize2, Activity, Info, ArrowDownRight } from 'lucide-react';
 import { useHydraulicCalculations } from '@/hooks/useHydraulicCalculations';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-import { ManningInputs, ChannelShape } from '@/types/types';
+import { ManningInputs, ChannelShape, CalculationType } from '@/types/types';
 import { MANNING_ROUGHNESS } from '@/constants';
 import { toast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +16,12 @@ import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { saveManningCalculation } from '@/services/calculationService';
 import { cn } from '@/lib/utils';
 
-export const ChannelWorkstation: React.FC = () => {
+interface Props {
+    onSave?: (type: CalculationType, inputs: ManningInputs, outputs: any) => void;
+    onConsultAI?: (inputs: ManningInputs, outputs: any) => void;
+}
+
+export const ChannelWorkstation: React.FC<Props> = ({ onSave, onConsultAI }) => {
     const { calculateManningChannel, manningResults } = useHydraulicCalculations();
     const { getDesignDischarge, identitasLokasi } = useHydrologyStore();
     
@@ -60,20 +65,24 @@ export const ChannelWorkstation: React.FC = () => {
     }, [inputs, calculateManningChannel]);
 
     const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            const { error } = await saveManningCalculation({
-                projectName: identitasLokasi.namaPekerjaan || 'Untitled Project',
-                inputs,
-                results: manningResults
-            });
-            if (error) throw error;
-            console.log("SAVE_SUCCESS: Result saved successfully.");
-            toast.success("Hasil perhitungan berhasil disimpan!");
-        } catch (err: any) {
-            toast.error(`Gagal menyimpan: ${err.message}`);
-        } finally {
-            setIsSaving(false);
+        if (onSave) {
+            onSave(CalculationType.MANNING, inputs, manningResults);
+        } else {
+            setIsSaving(true);
+            try {
+                const { error } = await saveManningCalculation({
+                    projectName: identitasLokasi.namaPekerjaan || 'Untitled Project',
+                    inputs,
+                    results: manningResults
+                });
+                if (error) throw error;
+                console.log("SAVE_SUCCESS: Result saved successfully.");
+                toast.success("Hasil perhitungan berhasil disimpan!");
+            } catch (err: any) {
+                toast.error(`Gagal menyimpan: ${err.message}`);
+            } finally {
+                setIsSaving(false);
+            }
         }
     };
 
@@ -99,6 +108,16 @@ export const ChannelWorkstation: React.FC = () => {
                     >
                         <RefreshCw className="w-3 h-3 mr-2" /> Reset
                     </Button>
+                    {onConsultAI && (
+                        <Button 
+                            variant="outline"
+                            size="sm" 
+                            onClick={() => onConsultAI(inputs, manningResults)}
+                            className="h-8 text-[10px] font-black uppercase tracking-widest rounded-none border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        >
+                            <Activity className="w-3 h-3 mr-2" /> Konsultasi AI
+                        </Button>
+                    )}
                     <Button 
                         size="sm" 
                         disabled={isSaving}
