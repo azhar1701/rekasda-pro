@@ -131,7 +131,6 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
     const BPx = B * scale;
     const HPx = H * scale;
     const hPx = Math.min(h, H) * scale;
-    const zhPx = (z * Math.min(h, H)) * scale;
 
     const xBL = centerX - bPx / 2;
     const xBR = centerX + bPx / 2;
@@ -139,8 +138,9 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results }) => {
     const xTR = centerX + BPx / 2;
     const yTop = bottomY - HPx;
 
-    const xWL = xBL - zhPx;
-    const xWR = xBR + zhPx;
+    const actualHPx = HPx > 0 ? HPx : 1;
+    const xWL = xBL - ((xBL - xTL) / actualHPx) * hPx;
+    const xWR = xBR + ((xTR - xBR) / actualHPx) * hPx;
     const yWater = bottomY - hPx;
     const freeboard = H - h;
     const isOverflow = h > H;
