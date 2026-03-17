@@ -23,21 +23,21 @@ export const ModuleLayout = ({
  return (
  <div className="w-full h-full flex flex-col bg-slate-50 dark:bg-[#0f172a] rounded-none  min-h-[85vh]">
  {/* Dashboard Header */}
- <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] z-10 shrink-0 flex items-center justify-between">
- <div className="flex items-center gap-3 mb-1">
- <div className={`p-2 rounded-sm shrink-0 ${iconColorClass}`}>
+ <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] shrink-0 flex items-center justify-between">
+ <div className="flex items-center gap-4">
+ <div className={`p-2.5 rounded-sm shrink-0 shadow-sm ${iconColorClass}`}>
  {icon}
  </div>
  <div>
- <div className="flex items-center gap-3">
- <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{title}</h1>
+ <div className="flex items-center gap-3 leading-none">
+ <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">{title}</h1>
  {sniCode && (
- <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-sm tracking-widest uppercase border border-slate-200 dark:border-slate-700">
+ <span className="text-[9px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-sm tracking-widest uppercase border border-slate-200 dark:border-slate-700">
  {sniCode}
  </span>
  )}
  </div>
- <p className="text-sm text-slate-500 mt-1">{description}</p>
+ <p className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wider">{description}</p>
  </div>
  </div>
  {actions && <div className="hidden sm:block">{actions}</div>}

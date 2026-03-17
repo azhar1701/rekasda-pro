@@ -371,11 +371,47 @@ export const WaterBalanceRebuild: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-6">
-                  <div className="p-12 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 gap-4">
-                    <AlertTriangle className="w-12 h-12" />
-                    <p className="text-[11px] font-black uppercase tracking-[0.2em]">Kebutuhan Diformulasikan Otomatis</p>
-                    <p className="text-[10px] text-slate-400 font-bold max-w-xs text-center uppercase tracking-wider">Kebutuhan domestik dan irigasi dihitung secara volumetrik berdasarkan parameter navigator.</p>
-                  </div>
+                  {neracaFinal && neracaFinal.length > 0 ? (
+                    <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-sm">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 dark:border-slate-800">Bulan</th>
+                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right border-r border-slate-200 dark:border-slate-800">Air Baku (m³/s)</th>
+                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right border-r border-slate-200 dark:border-slate-800">Irigasi (m³/s)</th>
+                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right border-r border-slate-200 dark:border-slate-800">Pemeliharaan (m³/s)</th>
+                            <th className="px-4 py-3 text-[10px] font-black text-orange-600 uppercase tracking-widest text-right bg-orange-50 dark:bg-orange-900/10">Total (m³/s)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {neracaFinal.map((row) => (
+                            <tr key={row.month} className="hover:bg-orange-50/50 dark:hover:bg-orange-900/10 transition-colors tabular-nums">
+                              <td className="px-4 py-2.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase border-r border-slate-100 dark:border-slate-800">{row.month}</td>
+                              <td className="px-4 py-2.5 text-[11px] text-slate-600 dark:text-slate-400 text-right border-r border-slate-100 dark:border-slate-800">{Number(row.airBaku || 0).toFixed(3)}</td>
+                              <td className="px-4 py-2.5 text-[11px] text-slate-600 dark:text-slate-400 text-right border-r border-slate-100 dark:border-slate-800">{Number(row.irigasi || 0).toFixed(3)}</td>
+                              <td className="px-4 py-2.5 text-[11px] text-slate-600 dark:text-slate-400 text-right border-r border-slate-100 dark:border-slate-800">{Number(row.lingkungan || 0).toFixed(3)}</td>
+                              <td className="px-4 py-2.5 text-[11px] font-black text-orange-600 text-right bg-orange-50/30 dark:bg-orange-900/5">{Number(row.totalKebutuhan || 0).toFixed(3)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="bg-slate-50 dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-800">
+                           <tr className="tabular-nums">
+                             <td className="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest border-r border-slate-200 dark:border-slate-800">Rata-Rata</td>
+                             <td className="px-4 py-3 text-[11px] font-black text-slate-600 dark:text-slate-300 text-right border-r border-slate-200 dark:border-slate-800">{(neracaFinal.reduce((acc, r) => acc + (r.airBaku || 0), 0) / 12).toFixed(3)}</td>
+                             <td className="px-4 py-3 text-[11px] font-black text-slate-600 dark:text-slate-300 text-right border-r border-slate-200 dark:border-slate-800">{(neracaFinal.reduce((acc, r) => acc + (r.irigasi || 0), 0) / 12).toFixed(3)}</td>
+                             <td className="px-4 py-3 text-[11px] font-black text-slate-600 dark:text-slate-300 text-right border-r border-slate-200 dark:border-slate-800">{(neracaFinal.reduce((acc, r) => acc + (r.lingkungan || 0), 0) / 12).toFixed(3)}</td>
+                             <td className="px-4 py-3 text-[11px] font-black text-orange-600 text-right bg-orange-50/50 dark:bg-orange-900/10">{(neracaFinal.reduce((acc, r) => acc + (r.totalKebutuhan || 0), 0) / 12).toFixed(3)}</td>
+                           </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-12 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-300 gap-4">
+                      <AlertTriangle className="w-12 h-12" />
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em]">Kebutuhan Belum Diproses</p>
+                      <p className="text-[10px] text-slate-400 font-bold max-w-xs text-center uppercase tracking-wider">Klik "Proses" pada navigator untuk menghitung kebutuhan domestik dan irigasi secara volumetrik.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -63,7 +63,7 @@ export const MasterDataPage: React.FC = () => {
   id="panel-dashboard"
   role="tabpanel"
   aria-labelledby="tab-dashboard"
-  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  className="animate-in fade-in duration-75"
   >
   <MasterDataDashboard
   onNavigateToSection={(section) => {
@@ -79,7 +79,7 @@ export const MasterDataPage: React.FC = () => {
   id="panel-identitas"
   role="tabpanel"
   aria-labelledby="tab-identitas"
-  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  className="animate-in fade-in duration-75"
   >
   <FormIdentitasLokasi />
   </div>
@@ -90,7 +90,7 @@ export const MasterDataPage: React.FC = () => {
   id="panel-data-hujan"
   role="tabpanel"
   aria-labelledby="tab-data-hujan"
-  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  className="animate-in fade-in duration-75"
   >
   <MasterHidrologiTab />
   </div>
@@ -101,7 +101,7 @@ export const MasterDataPage: React.FC = () => {
   id="panel-parameter-spasial"
   role="tabpanel"
   aria-labelledby="tab-parameter-spasial"
-  className="animate-in fade-in slide-in-from-right-2 duration-75"
+  className="animate-in fade-in duration-75"
   >
   <ParameterSpasial />
   </div>

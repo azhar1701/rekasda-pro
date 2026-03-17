@@ -117,7 +117,7 @@ const AppLayout: React.FC = () => {
           setIsMobileOverflowOpen={setIsMobileOverflowOpen}
         />
 
-        <main className="flex-1 w-full flex flex-col pb-24 md:pb-8 pt-4 md:pt-[120px]">
+        <main className="flex-1 w-full flex flex-col pb-24 md:pb-8 pt-20 md:pt-[120px]">
           <div className="transition-opacity flex-1 flex flex-col duration-75 max-w-[1440px] mx-auto w-full px-4 md:px-6 lg:px-8">
             <React.Suspense fallback={<TabFallback />}>
               <Routes>
