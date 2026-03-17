@@ -393,7 +393,13 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       console.log(`[RainfallStore] Successfully deleted ${count} rows for ${year}`);
       
       if (count === 0) {
-        toast.warning(`Tidak ada data yang dihapus untuk tahun ${year}. Pastikan data tersedia atau Anda memiliki izin akses.`);
+        // Special diagnostic: if count is 0, it's either no data or RLS block
+        // We'll check if the user is even an engineer/admin in the frontend state
+        // This is a "best effort" check
+        toast.warning(
+          `Tidak ada data yang dihapus untuk tahun ${year}. ` + 
+          `Hal ini mungkin karena data memang tidak ada (sudah terhapus), atau profil Anda tidak memiliki izin Engineer/Admin.`
+        );
       } else {
         set((state) => ({
           dataHujan: state.dataHujan.filter(d => d.stasiun_id !== stasiunId || d.tanggal.split('-')[0] !== year.toString())
@@ -402,7 +408,7 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       }
     } catch (err: any) {
       console.error('[RainfallStore] Delete error:', err);
-      const isRlsError = err.message?.includes('policy') || err.code === '42501';
+      const isRlsError = err.message?.includes('policy') || err.code === '42501' || err.status === 403;
       toast.error(isRlsError ? 'Gagal: Anda tidak memiliki izin Admin untuk menghapus data.' : `Gagal menghapus data: ${err.message}`);
       throw err;
     }
