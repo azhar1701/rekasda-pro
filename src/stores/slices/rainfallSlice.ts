@@ -379,8 +379,20 @@ export const createRainfallSlice: StateCreator<RainfallSlice> = (set, get) => ({
       const startDate = `${year}-01-01`;
       const endDate = `${year}-12-31`;
       
-      console.log(`[RainfallStore] Attempting to delete data for station ${stasiunId} year ${year}`);
+      // DIAGNOSTIC: Check local state first
+      const localData = get().dataHujan.filter(d => 
+        d.stasiun_id === stasiunId && 
+        d.tanggal >= startDate && 
+        d.tanggal <= endDate
+      );
       
+      console.log(`[RainfallStore] Attempting delete. Year: ${year}, Station: ${stasiunId}`);
+      console.log(`[RainfallStore] Local records found for this year: ${localData.length}`);
+      
+      if (localData.length === 0) {
+        console.warn(`[RainfallStore] No data found in local state for year ${year}. Deletion might be redundant.`);
+      }
+
       const { error, count } = await supabase
         .from('master_data_hujan')
         .delete({ count: 'exact' })

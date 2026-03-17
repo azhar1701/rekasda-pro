@@ -11,9 +11,9 @@ import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useAIContext } from '@/hooks/useAIContext';
 import { 
  Bot, User, Send, Paperclip, 
-  Database, AlertCircle, CheckCircle2, Clock, 
+  AlertCircle, CheckCircle2, Clock, 
   Trash2, BookOpen, BrainCircuit, X,
-  Shield, Zap, Activity, Sparkles, Plus, Maximize2
+  Shield, Zap, Activity, Sparkles, Plus
 } from 'lucide-react';
 import { 
  PieChart, Pie, Cell, ResponsiveContainer

@@ -11,6 +11,7 @@ import { Wand2 } from 'lucide-react';
 import { detectAnomalies, infillRainfallData } from '@/services/qualityControlService';
 import { extractRainfallFromPdf } from '@/services/geminiService';
 import { toast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
 import { calculateStationHealth } from '@/lib/utils/qc/dataHealthMath';
 
@@ -52,6 +53,7 @@ export const MasterHidrologiTab: React.FC = () => {
     syncRainfallMetadata
   } = useHydrologyStore();
 
+  const { user, profile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [showModalStasiun, setShowModalStasiun] = useState(false);
@@ -335,6 +337,7 @@ export const MasterHidrologiTab: React.FC = () => {
     if (!selectedStasiun) return;
     try {
       setIsDeleting(true);
+      console.log(`[MasterData] User: ${user?.email}, Role: ${profile?.role}, ID: ${user?.id}`);
       await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
       
       // Get the latest state from store after deletion attempt
