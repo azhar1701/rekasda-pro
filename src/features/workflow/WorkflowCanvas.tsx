@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -20,40 +20,48 @@ import { GovTechNode, GovTechNodeData } from '../../components/GovTechNode';
 import { useWorkflowStore } from '../../stores/useWorkflowStore';
 import { useHydrologyStore } from '../../stores/useHydrologyStore';
 import { ModuleLayout } from '../../components/layout/ModuleLayout';
-import { Network } from 'lucide-react';
+import { Network, CheckCircle2, Layers, ShieldCheck, Activity } from 'lucide-react';
 
 const nodeTypes = {
   govtech: GovTechNode,
 };
 
-// Base Node Definition (Static Coordinates & Labels)
+// Base Node Definition (Optimized Routing Layout)
 const baseNodes: GovTechNodeData[] = [
-  // -- PHASE 1: INPUT (y=0) --
-  { id: 'I1', type: 'govtech', position: { x: 0, y: 0 }, data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas', tooltip: 'Langkah 1: Tentukan nama pekerjaan dan lokasi ordinat proyek.' } },
-  { id: 'I2', type: 'govtech', position: { x: 280, y: 0 }, data: { label: 'Data Hujan (Manual/Excel/OCR)', phase: 'input', moduleId: 'hujan' } },
-  { id: 'I3', type: 'govtech', position: { x: 560, y: 0 }, data: { label: 'Karakteristik & Spasial DAS', phase: 'input', moduleId: 'spasial' } },
-  { id: 'I4', type: 'govtech', position: { x: 840, y: 0 }, data: { label: 'Tutupan Lahan (Parameter C)', phase: 'input', moduleId: 'tutupan' } },
+  // -- ROW 1: INPUT (y=0) --
+  { id: 'I2', type: 'govtech', position: { x: 0, y: 0 }, data: { label: 'Data Hujan (Manual/Excel/OCR)', phase: 'input', moduleId: 'hujan' } },
+  { id: 'I3', type: 'govtech', position: { x: 300, y: 0 }, data: { label: 'Karakteristik & Spasial DAS', phase: 'input', moduleId: 'spasial' } },
+  { id: 'I4', type: 'govtech', position: { x: 600, y: 0 }, data: { label: 'Tutupan Lahan (Parameter C)', phase: 'input', moduleId: 'tutupan' } },
+  { id: 'I1', type: 'govtech', position: { x: 900, y: 0 }, data: { label: 'Identitas Proyek & Lokasi (Form)', phase: 'input', moduleId: 'identitas', tooltip: 'Langkah 1: Tentukan nama pekerjaan dan lokasi ordinat proyek.' } },
 
-  // -- PHASE 2: PRE-PROCESSING (y=200) --
-  { id: 'P1', type: 'govtech', position: { x: 140, y: 200 }, data: { label: 'Quality Control', phase: 'pre', moduleId: 'qc' } },
-  { id: 'P2', type: 'govtech', position: { x: 420, y: 200 }, data: { label: 'Curah Hujan Wilayah (Thiessen)', phase: 'pre', moduleId: 'thiessen', tooltip: 'Menghitung hujan rata-rata kawasan menggunakan bobot stasiun (Poligon Thiessen/Aljabar).' } },
-  { id: 'P3', type: 'govtech', position: { x: 700, y: 200 }, data: { label: 'Infilling Data (CHIRPS)', phase: 'pre', moduleId: 'satelit' } },
+  // -- ROW 2: PRE-PROCESSING (y=180) --
+  { id: 'P1', type: 'govtech', position: { x: 0, y: 180 }, data: { label: 'Quality Control', phase: 'pre', moduleId: 'qc' } },
+  { id: 'P3', type: 'govtech', position: { x: 300, y: 180 }, data: { label: 'Infilling Data (CHIRPS)', phase: 'pre', moduleId: 'satelit' } },
 
-  // -- PHASE 3: ANALYSIS ENGINE (y=400) --
-  { id: 'E1', type: 'govtech', position: { x: 140, y: 400 }, data: { label: 'Analisis Frekuensi', phase: 'engine', moduleId: 'frekuensi', tooltip: 'Distribusi probabilitas (Gumbel, Log Pearson, dsb) untuk menentukan hujan rencana berbagai kala ulang.' } },
-  { id: 'E2', type: 'govtech', position: { x: 420, y: 400 }, data: { label: 'Areal Reduction Factor', phase: 'engine', moduleId: 'arf' } },
-  { id: 'E3', type: 'govtech', position: { x: 700, y: 400 }, data: { label: 'Distribusi Jam-jaman & Hujan Efektif', phase: 'engine', moduleId: 'distribusi' } },
+  // -- ROW 3: AGGREGATION (y=360) --
+  { id: 'P2', type: 'govtech', position: { x: 150, y: 360 }, data: { label: 'Curah Hujan Wilayah (Thiessen)', phase: 'pre', moduleId: 'thiessen', tooltip: 'Menghitung hujan rata-rata kawasan menggunakan bobot stasiun (Poligon Thiessen/Aljabar).' } },
 
-  // -- PHASE 4: APPLICATION MODULES (y=600) --
-  { id: 'M1', type: 'govtech', position: { x: 0, y: 600 }, data: { label: 'Banjir Rencana (HSS)', phase: 'module', moduleId: 'banjir' } },
-  { id: 'M2', type: 'govtech', position: { x: 280, y: 600 }, data: { label: 'Neraca Air (FJ Mock)', phase: 'module', moduleId: 'neraca' } },
-  { id: 'M3', type: 'govtech', position: { x: 560, y: 600 }, data: { label: 'Perencanaan Embung', phase: 'module', moduleId: 'embung' } },
-  { id: 'M4', type: 'govtech', position: { x: 840, y: 600 }, data: { label: 'Kapasitas Saluran (Manning)', phase: 'module', moduleId: 'saluran' } },
+  // -- ROW 4: ENGINE (y=540) --
+  { id: 'E1', type: 'govtech', position: { x: 150, y: 540 }, data: { label: 'Analisis Frekuensi', phase: 'engine', moduleId: 'frekuensi', tooltip: 'Distribusi probabilitas (Gumbel, Log Pearson, dsb) untuk menentukan hujan rencana berbagai kala ulang.' } },
 
-  // -- PHASE 5: OUTPUT (y=800) --
-  { id: 'O1', type: 'govtech', position: { x: 140, y: 800 }, data: { label: 'Dashboard Eksekutif', phase: 'output', moduleId: 'dashboard', tooltip: 'Ringkasan kelayakan proyek, neraca air, dan reduksi banjir untuk keperluan pelaporan.' } },
-  { id: 'O2', type: 'govtech', position: { x: 420, y: 800 }, data: { label: 'AI Konsultan (Gemini)', phase: 'output', moduleId: 'ai' } },
-  { id: 'O3', type: 'govtech', position: { x: 700, y: 800 }, data: { label: 'Ekspor Laporan (PDF/Excel)', phase: 'output', moduleId: 'ekspor' } },
+  // -- ROW 5: ENGINE (y=720) --
+  { id: 'E2', type: 'govtech', position: { x: 300, y: 720 }, data: { label: 'Areal Reduction Factor', phase: 'engine', moduleId: 'arf' } },
+
+  // -- ROW 6: ENGINE (y=900) --
+  { id: 'E3', type: 'govtech', position: { x: 450, y: 900 }, data: { label: 'Distribusi Jam-jaman & Hujan Efektif', phase: 'engine', moduleId: 'distribusi' } },
+
+  // -- ROW 7: MODULES (y=1080) --
+  { id: 'M1', type: 'govtech', position: { x: 150, y: 1080 }, data: { label: 'Banjir Rencana (HSS)', phase: 'module', moduleId: 'banjir' } },
+  { id: 'M2', type: 'govtech', position: { x: 600, y: 1080 }, data: { label: 'Neraca Air (FJ Mock)', phase: 'module', moduleId: 'neraca' } },
+
+  // -- ROW 8: MODULES 2 (y=1260) --
+  { id: 'M4', type: 'govtech', position: { x: 0, y: 1260 }, data: { label: 'Kapasitas Saluran (Manning)', phase: 'module', moduleId: 'saluran' } },
+  { id: 'M3', type: 'govtech', position: { x: 450, y: 1260 }, data: { label: 'Perencanaan Embung', phase: 'module', moduleId: 'embung' } },
+
+  // -- ROW 9: OUTPUT (y=1440) --
+  { id: 'O2', type: 'govtech', position: { x: 0, y: 1440 }, data: { label: 'AI Konsultan (Gemini)', phase: 'output', moduleId: 'ai' } },
+  { id: 'O1', type: 'govtech', position: { x: 300, y: 1440 }, data: { label: 'Dashboard Eksekutif', phase: 'output', moduleId: 'dashboard', tooltip: 'Ringkasan kelayakan proyek, neraca air, dan reduksi banjir untuk keperluan pelaporan.' } },
+  { id: 'O3', type: 'govtech', position: { x: 600, y: 1440 }, data: { label: 'Ekspor Laporan (PDF/Excel)', phase: 'output', moduleId: 'ekspor' } },
 ];
 
 const edgeStyle = { strokeWidth: 2, stroke: '#94a3b8' };
@@ -151,18 +159,80 @@ export function WorkflowCanvas() {
     if (data.moduleId) setActiveModule(data.moduleId);
   }, [setActiveModule]);
 
+  // KPI Metrics
+  const kpiMetrics = useMemo(() => {
+    const allStatuses = baseNodes.map(n => computeStatus(n.data.moduleId || ''));
+    const completed = allStatuses.filter(s => s === 'Selesai' || s === 'Tersedia').length;
+    const total = baseNodes.length;
+    const complianceScore = Math.round((completed / total) * 100);
+
+    // Phase counts
+    const phases = { input: 0, pre: 0, engine: 0, module: 0, output: 0 };
+    baseNodes.forEach(n => {
+      if (n.data.phase) phases[n.data.phase]++;
+    });
+
+    return { completed, total, complianceScore, phases };
+  }, [hydroState]);
+
   return (
     <ModuleLayout
       title="Alur Analisis Hidrologi Terpadu v1.1"
       description="Pemetaan data-flow: Input → Pre-Processing → Engine → Modul → Output"
       icon={<Network className="w-6 h-6" />}
+      sniCode="SNI 2415:2016"
     >
-      <div className="space-y-6">
+      <div className="space-y-0">
         <ProjectContextBanner />
 
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-0 border border-slate-200 dark:border-slate-800 bg-white overflow-hidden">
+        {/* KPI Strip — Dashboard Style */}
+        <header className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-x divide-slate-100 dark:divide-slate-800">
+          <div className="p-5 space-y-1">
+            <p className="text-3xl font-light text-slate-900 dark:text-slate-100 tracking-tighter tabular-nums">
+              {kpiMetrics.total}
+              <span className="text-xs font-bold text-slate-400 ml-1.5 uppercase">node</span>
+            </p>
+            <div className="flex items-center gap-1.5">
+              <Layers className="w-3 h-3 text-slate-400" />
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Modul</p>
+            </div>
+          </div>
+          <div className="p-5 space-y-1">
+            <p className="text-3xl font-light text-emerald-600 tracking-tighter tabular-nums">
+              {kpiMetrics.completed}
+              <span className="text-xs font-bold text-slate-400 ml-1.5 uppercase">/ {kpiMetrics.total}</span>
+            </p>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Modul Selesai</p>
+            </div>
+          </div>
+          <div className="p-5 space-y-1">
+            <p className={`text-3xl font-light tracking-tighter tabular-nums ${kpiMetrics.complianceScore >= 60 ? 'text-pupr-blue' : kpiMetrics.complianceScore >= 30 ? 'text-amber-500' : 'text-rose-500'}`}>
+              {kpiMetrics.complianceScore}
+              <span className="text-xs font-bold text-slate-400 ml-0.5 uppercase">%</span>
+            </p>
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3 h-3 text-pupr-blue" />
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Compliance</p>
+            </div>
+          </div>
+          <div className="p-5 space-y-1">
+            <p className="text-3xl font-light text-slate-900 dark:text-slate-100 tracking-tighter tabular-nums">
+              {Object.keys(kpiMetrics.phases).length}
+              <span className="text-xs font-bold text-slate-400 ml-1.5 uppercase">fase</span>
+            </p>
+            <div className="flex items-center gap-1.5">
+              <Activity className="w-3 h-3 text-slate-400" />
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pipeline</p>
+            </div>
+          </div>
+        </header>
+
+        {/* Workstation Split-Pane */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-0 border-x border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           {/* Main Canvas Area */}
-          <div className="lg:col-span-8 h-[75vh] min-h-[600px] relative bg-slate-50">
+          <div className="lg:col-span-8 h-[72vh] min-h-[600px] relative bg-slate-50 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800">
             <ReactFlow 
               nodes={nodes} 
               edges={edges} 
@@ -172,11 +242,16 @@ export function WorkflowCanvas() {
               onNodeClick={onNodeClick} 
               nodeTypes={nodeTypes as any} 
               fitView 
-              fitViewOptions={{ padding: 0.2 }}
-              className="bg-[#f8fafc]"
+              fitViewOptions={{ padding: 0.3, minZoom: 0.3, maxZoom: 1.2 }}
+              minZoom={0.2}
+              maxZoom={1.5}
+              className="bg-[#f8fafc] dark:bg-slate-950"
             >
               <Background variant={BackgroundVariant.Lines} gap={40} size={1} color="#e2e8f0" />
-              <Controls showInteractive={false} className="bg-white border-slate-200 text-slate-500 rounded-none shadow-none" />
+              <Controls 
+                showInteractive={false} 
+                className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 rounded-none shadow-none [&>button]:rounded-none [&>button]:border-slate-200 dark:[&>button]:border-slate-700 [&>button]:shadow-none" 
+              />
               <MiniMap 
                 nodeColor={(n) => {
                   const data = (n as GovTechNodeData).data;
@@ -187,15 +262,32 @@ export function WorkflowCanvas() {
                   return phaseColors[data?.phase || ''] || '#0c3a66';
                 }} 
                 maskColor="rgba(248, 250, 252, 0.7)" 
-                className="bg-white border-slate-200 rounded-none" 
+                className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-none shadow-none" 
+                style={{ border: '1px solid #e2e8f0' }}
               />
             </ReactFlow>
           </div>
 
-          {/* Audit Sidebar Area */}
-          <div className="lg:col-span-4 border-l border-slate-200 bg-white">
+          {/* Audit Sidebar */}
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 overflow-y-auto h-[72vh] min-h-[600px]">
             <WorkflowAuditPanel />
           </div>
+        </div>
+
+        {/* Phase Legend — Dedicated Strip */}
+        <div className="flex items-center justify-center gap-6 bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 px-4 py-2.5">
+          {[
+            { label: 'Input', color: 'bg-sky-600' },
+            { label: 'Pre-Proses', color: 'bg-amber-600' },
+            { label: 'Engine', color: 'bg-red-600' },
+            { label: 'Modul', color: 'bg-purple-600' },
+            { label: 'Output', color: 'bg-green-600' },
+          ].map(phase => (
+            <div key={phase.label} className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 ${phase.color}`} />
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{phase.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </ModuleLayout>
