@@ -5,12 +5,12 @@ import AlphaParameterInput from './AlphaParameterInput';
 import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
-import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
-import { calculateRationalMethod, convertKm2ToHa } from '@/lib/engine';
 import { generateRationalHydrograph as generateRationalHydrographEngine, calculateMononobeIntensity } from '@/lib/engine/flood/hydrograph';
-import { useFloodWorker } from '@/hooks/useFloodWorker';
 import { useHydrologyStore, HasilKonvolusi } from '@/stores/useHydrologyStore';
 import { useSNI2415Workflow } from '@/hooks/useSNI2415Workflow';
+import { useFloodAnalysis, MethodType } from '../hooks/useFloodAnalysis';
+import { formatNumber } from '@/lib/utils/formatters';
+import { PRECISION } from '@/lib/constants/precision';
 import { LocationIdentity } from '@/components/common/LocationIdentity';
 import { PilotDataLoader } from '@/components/common/PilotDataLoader';
 import { PilotDataRational, PilotDataNakayasu } from '@/data/floodPilotData';
@@ -18,7 +18,6 @@ import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/Complian
 import { WhiteBoxFormula } from '@/components/ui/WhiteBoxFormula';
 import { Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { RETURN_PERIOD_GUIDANCE } from '@/constants/returnPeriodGuidance';
-import { useRasionalModifikasiMutation } from '@/hooks/api/useBanjirApi';
 
 type MethodType = 'RATIONAL' | 'NAKAYASU' | 'HASPERS' | 'DER_WEDUWEN' | 'MELCHIOR';
 
@@ -70,118 +69,46 @@ interface Props {
 }
 
 export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
-    const [method, setMethod] = useState<MethodType>('RATIONAL');
-    const [locationData, setLocationData] = useState<LocationData | null>(null);
-    const [rationalInputs, setRationalInputs] = useState<RationalInputs>({
-        C: 0.7,
-        A: 0.5,
-        tc: 30,
-        I: 100,
-        R24: 100,
-        L: 1.5,
-        S: 0.01
-    });
-    const [nakayasuInputs, setNakayasuInputs] = useState<NakayasuInputs>({
-        A: 50,
-        L: 15,
-        Ro: 10, // Hujan satuan 10 mm (bukan 100 mm)
-        Alpha: 2,
-        C: 0.7, // Koefisien limpasan default
-    });
-    const [returnPeriods, setReturnPeriods] = useState<ReturnPeriod[]>([
-        { period: 'Q2', rainfall: 80, qPeak: 0 },
-        { period: 'Q5', rainfall: 100, qPeak: 0 },
-        { period: 'Q10', rainfall: 120, qPeak: 0 },
-        { period: 'Q25', rainfall: 140, qPeak: 0 },
-        { period: 'Q50', rainfall: 160, qPeak: 0 },
-        { period: 'Q100', rainfall: 180, qPeak: 0 }
-    ]);
-    const [hydrographData, setHydrographData] = useState<any[]>([]);
-    const [qPeak, setQPeak] = useState<number>(0);
-    const [tPeak, setTPeak] = useState<number>(0);
-    const [volume, setVolume] = useState<number>(0);
-    const [showTcCalc, setShowTcCalc] = useState(false);
-    const [showFreqAnalysis, setShowFreqAnalysis] = useState(false);
-    const [rainfallDataSource, setRainfallDataSource] = useState<'manual' | 'frequency'>('manual');
+    const {
+        form,
+        values,
+        locationData,
+        setLocationData,
+        hydrographData,
+        unitHydrographData,
+        qPeak,
+        tPeak,
+        volume,
+        isCalculating,
+        engineWarnings,
+        sniWorkflow
+    } = useFloodAnalysis();
+
+    const { method, rational: rationalInputs, nakayasu: nakayasuInputs, returnPeriods } = values;
+    const { register, formState: { errors }, setValue } = form;
+
     const [isSaving, setIsSaving] = useState(false);
+    const [showFreqAnalysis, setShowFreqAnalysis] = useState(false);
+    const [rainfallDataSource, setRainfallDataSource] = useState<'manual' | 'freq_analysis'>('manual');
     const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [loadMessage, setLoadMessage] = useState<string | null>(null);
-    const [convolutionResult, setConvolutionResult] = useState<HasilKonvolusi | null>(null);
-    const [unitHydrographData, setUnitHydrographData] = useState<any[]>([]);
-    const [isCalculating, setIsCalculating] = useState(false);
     const [sidebarWidth, setSidebarWidth] = useState(35);
     const [isResizing, setIsResizing] = useState(false);
-    const [engineWarnings, setEngineWarnings] = useState<string[]>([]);
-    // FIX BUG-2: useRef to avoid stale closure in resize handler
-    const sidebarWidthRef = React.useRef(sidebarWidth);
-    React.useEffect(() => { sidebarWidthRef.current = sidebarWidth; }, [sidebarWidth]);
-    // FIX BUG-3: ref guard against re-entrant useEffect for return periods
-    const lastRainfallKeyRef = React.useRef('');
 
-    // Hydrology Store Integration
-    const { distribusiHujanJamJaman, setHasilKonvolusi } = useHydrologyStore();
-
-    // Web Worker Integration
-    const { isWorkerReady, calculateFloodAsync, calculateBatchFloodAsync } = useFloodWorker();
-
-    // SNI 2415:2016 Workflow Validation
-    const sniWorkflow = useMemo(() => {
-        const area = method === 'RATIONAL' ? rationalInputs.A : nakayasuInputs.A;
-        return useSNI2415Workflow(area);
-    }, [method, rationalInputs.A, nakayasuInputs.A]);
-
-    const rasionalMutation = useRasionalModifikasiMutation();
-    const [calculateRationalDischarge, setCalculateRationalDischarge] = useState({ qPeak: 0, warnings: [] as string[] });
-
-    useEffect(() => {
-        let active = true;
-        const fetchRational = async () => {
-            try {
-                if (method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
-                    const res = await rasionalMutation.mutateAsync({
-                        method: method === 'DER_WEDUWEN' ? 'der_weduwen' : method.toLowerCase() as any,
-                        A: rationalInputs.A,
-                        L: rationalInputs.L || 1.5,
-                        S: rationalInputs.S || 0.01,
-                        I: rationalInputs.I,
-                        C: method === 'MELCHIOR' ? rationalInputs.C : undefined
-                    });
-                    if (active) setCalculateRationalDischarge({ qPeak: res.qPeak, warnings: res.warnings || [] });
-                } else {
-                    const areaHa = convertKm2ToHa(rationalInputs.A);
-                    const result = calculateRationalMethod({
-                        C: rationalInputs.C,
-                        I: rationalInputs.I,
-                        A: areaHa
-                    });
-                    if (active) setCalculateRationalDischarge({ qPeak: result.Q, warnings: result.warnings || [] });
-                }
-            } catch {
-                if (active) setCalculateRationalDischarge({ qPeak: 0, warnings: ['Error: API gagal dihubungi'] });
-            }
-        };
-        fetchRational();
-        return () => { active = false; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [method, rationalInputs.C, rationalInputs.I, rationalInputs.A, rationalInputs.L, rationalInputs.S, rationalInputs.R24]);
-
-    // FIX BUG-1 (continued): Sync warnings from pure useMemo result via useEffect
-    React.useEffect(() => {
-        setEngineWarnings(calculateRationalDischarge.warnings);
-    }, [calculateRationalDischarge.warnings]);
-
+    // Sidebar width handler
     useEffect(() => {
         const saved = localStorage.getItem('flood-sidebar-width');
         if (saved) setSidebarWidth(parseFloat(saved));
     }, []);
 
-    // FIX BUG-2: Use ref to get latest sidebarWidth in mouseup, avoiding stale closure
+    const sidebarWidthRef = useRef(sidebarWidth);
+    useEffect(() => { sidebarWidthRef.current = sidebarWidth; }, [sidebarWidth]);
+
     useEffect(() => {
         if (!isResizing) return;
         const handleMouseMove = (e: MouseEvent) => {
             const newWidth = (e.clientX / window.innerWidth) * 100;
-            const clampedWidth = Math.min(Math.max(newWidth, 25), 50);
-            setSidebarWidth(clampedWidth);
+            setSidebarWidth(Math.min(Math.max(newWidth, 25), 50));
         };
         const handleMouseUp = () => {
             setIsResizing(false);
@@ -194,122 +121,6 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
             document.removeEventListener('mouseup', handleMouseUp);
         };
     }, [isResizing]);
-
-    const generateRationalHydrograph = (Q: number, tc: number) => {
-        const result = generateRationalHydrographEngine({ Q, tc });
-        return result.data.hydrograph;
-    };
-
-    const generateNakayasuHydrograph = (Qp: number, Tp: number, Tg: number, Alpha: number) => {
-        const T03 = Alpha * Tg;
-        return generateHydrograph(Qp, Tp, T03, 0.1);
-    };
-
-    useEffect(() => {
-        if (method === 'RATIONAL' || method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR') {
-            const Q = calculateRationalDischarge.qPeak;
-            const tcHours = rationalInputs.tc / 60;
-            const vol = Q * tcHours * 3600;
-            setQPeak(Q);
-            setTPeak(tcHours);
-            setVolume(vol);
-            setHydrographData(generateRationalHydrograph(Q, rationalInputs.tc));
-        } else {
-            // HSS Nakayasu - SNI 2415:2016 Pasal 6.3
-            const Tg = calculateTg(nakayasuInputs.L);
-            const Tp = calculateTp(Tg);
-            const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
-            const Q = calculateQp(nakayasuInputs.A, nakayasuInputs.Ro, Tp, T03);
-
-            const uhOrdinates = generateNakayasuHydrograph(Q, Tp, Tg, nakayasuInputs.Alpha);
-            setUnitHydrographData(uhOrdinates);
-
-            // PRODUCTION FEATURE F-04: Auto-Convolution with ABM via Web Worker
-            if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0 && isWorkerReady) {
-                setIsCalculating(true);
-                calculateFloodAsync({
-                    unitHydrograph: uhOrdinates,
-                    abmRainfall: distribusiHujanJamJaman,
-                    uhTimeStep: 0.1
-                }).then(conv => {
-                    setConvolutionResult(conv);
-                    setHasilKonvolusi(conv);
-                    setQPeak(conv.peakDischarge);
-                    setTPeak(conv.timeToPeak);
-                    setVolume(conv.totalVolume);
-                    setHydrographData(conv.floodHydrograph);
-                })
-                    .catch(console.error)
-                    .finally(() => setIsCalculating(false));
-            } else {
-                setConvolutionResult(null);
-                setHasilKonvolusi(null);
-                setQPeak(Q);
-                setTPeak(Tp);
-                setVolume(Q * Tp * 3600); // Simple volume estimate for UH
-                setHydrographData(uhOrdinates);
-            }
-        }
-    }, [method, rationalInputs, nakayasuInputs, calculateRationalDischarge, distribusiHujanJamJaman, setHasilKonvolusi, isWorkerReady]);
-
-    // FIX BUG-3: Stabilize dependency — use ref guard to prevent infinite re-trigger.
-    // The rainfall key only changes when the user edits rainfall values or loads pilot data.
-    useEffect(() => {
-        const rainfallKey = returnPeriods.map(r => r.rainfall).join(',');
-        if (rainfallKey === lastRainfallKeyRef.current) return;
-        lastRainfallKeyRef.current = rainfallKey;
-
-        if (method === 'RATIONAL') {
-            const updated = returnPeriods.map(rp => {
-                const tcHours = rationalInputs.tc / 60;
-                const I = (rp.rainfall / 24) * Math.pow(24 / tcHours, 2 / 3);
-                const areaHa = convertKm2ToHa(rationalInputs.A);
-                try {
-                    const result = calculateRationalMethod({ C: rationalInputs.C, I, A: areaHa });
-                    return { ...rp, qPeak: result.Q };
-                } catch {
-                    return { ...rp, qPeak: 0 };
-                }
-            });
-            setReturnPeriods(updated);
-        } else {
-            // HSS Nakayasu untuk berbagai kala ulang
-            const Tg = calculateTg(nakayasuInputs.L);
-            const Tp = calculateTp(Tg);
-            const T03 = calculateT03(nakayasuInputs.Alpha, Tg);
-
-            if (distribusiHujanJamJaman && distribusiHujanJamJaman.length > 0 && isWorkerReady) {
-                setIsCalculating(true);
-                const batchInputs = returnPeriods.map(rp => {
-                    const Qp = calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03);
-                    const uhOrdinates = generateNakayasuHydrograph(Qp, Tp, Tg, nakayasuInputs.Alpha);
-                    return {
-                        unitHydrograph: uhOrdinates,
-                        abmRainfall: distribusiHujanJamJaman,
-                        uhTimeStep: 0.1
-                    };
-                });
-
-                calculateBatchFloodAsync(batchInputs)
-                    .then(results => {
-                        const updated = returnPeriods.map((rp, idx) => ({
-                            ...rp,
-                            qPeak: results[idx].peakDischarge
-                        }));
-                        setReturnPeriods(updated);
-                    })
-                    .catch(console.error)
-                    .finally(() => setIsCalculating(false));
-            } else {
-                const updated = returnPeriods.map(rp => {
-                    const Qp = calculateQp(nakayasuInputs.A, rp.rainfall, Tp, T03);
-                    return { ...rp, qPeak: Qp };
-                });
-                setReturnPeriods(updated);
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [returnPeriods, method, rationalInputs.tc, rationalInputs.A, rationalInputs.C, nakayasuInputs.L, nakayasuInputs.A, nakayasuInputs.Alpha, isWorkerReady]);
 
     const handleSaveToDB = async () => {
         const projectName = locationData?.channelName;
@@ -325,7 +136,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
             const inputs = method === 'RATIONAL' || method === 'HASPERS' || method === 'DER_WEDUWEN' || method === 'MELCHIOR'
                 ? { ...rationalInputs, location: locationData }
                 : { ...nakayasuInputs, location: locationData };
-            const results = { qPeak, tPeak, volume, returnPeriods, hydrographData };
+            const results = { qPeak: qPeak || 0, tPeak: tPeak || 0, volume: volume || 0, returnPeriods, hydrographData };
 
             // Convert modified rational methods to RATIONAL for saving
             let saveMethod: 'RATIONAL' | 'NAKAYASU';
@@ -353,25 +164,25 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
     };
 
     const handleLoadRationalPilot = (data: PilotDataRational) => {
-        setRationalInputs(data.inputs);
+        setValue('rational', { ...data.inputs, R24: 100 }, { shouldValidate: true });
         setLocationData(data.location);
         const updated = returnPeriods.map((rp, idx) => ({
             ...rp,
             rainfall: data.returnPeriods[idx]?.rainfall || rp.rainfall
         }));
-        setReturnPeriods(updated);
+        setValue('returnPeriods', updated, { shouldValidate: true });
         setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
         setTimeout(() => setLoadMessage(null), 3000);
     };
 
     const handleLoadNakayasuPilot = (data: PilotDataNakayasu) => {
-        setNakayasuInputs(data.inputs);
+        setValue('nakayasu', { ...data.inputs, C: 0.7 }, { shouldValidate: true });
         setLocationData(data.location);
         const updated = returnPeriods.map((rp, idx) => ({
             ...rp,
             rainfall: data.returnPeriods[idx]?.rainfall || rp.rainfall
         }));
-        setReturnPeriods(updated);
+        setValue('returnPeriods', updated, { shouldValidate: true });
         setLoadMessage(`✓ Data pilot "${data.name}" berhasil dimuat`);
         setTimeout(() => setLoadMessage(null), 3000);
     };
@@ -411,7 +222,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         {/* Primary Methods */}
                         <div className="flex gap-2 p-2 bg-slate-100 rounded-sm">
                             <button
-                                onClick={() => setMethod('RATIONAL')}
+                                onClick={() => setValue('method', 'RATIONAL', { shouldValidate: true })}
                                 className={`flex-1 py-2.5 px-3 rounded-sm text-xs font-bold transition-all relative ${method === 'RATIONAL' ? 'bg-white dark:bg-slate-900 text-teal-600 ' : 'text-slate-500 hover:text-slate-700 dark:text-slate-300'
                                     }`}
                             >
@@ -419,7 +230,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                 {rationalInputs.A <= 3 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-1 right-1" />}
                             </button>
                             <button
-                                onClick={() => setMethod('NAKAYASU')}
+                                onClick={() => setValue('method', 'NAKAYASU', { shouldValidate: true })}
                                 className={`flex-1 py-2.5 px-3 rounded-sm text-xs font-bold transition-all ${method === 'NAKAYASU' ? 'bg-white dark:bg-slate-900 text-teal-600 ' : 'text-slate-500 hover:text-slate-700 dark:text-slate-300'
                                     }`}
                             >
@@ -430,7 +241,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                         {/* Modified Rational Methods */}
                         <div className="grid grid-cols-3 gap-2 p-2 bg-indigo-50 rounded-sm border border-indigo-200">
                             <button
-                                onClick={() => setMethod('HASPERS')}
+                                onClick={() => setValue('method', 'HASPERS', { shouldValidate: true })}
                                 className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'HASPERS' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-500 hover:text-indigo-700'
                                     }`}
                             >
@@ -438,7 +249,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                 {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
                             </button>
                             <button
-                                onClick={() => setMethod('DER_WEDUWEN')}
+                                onClick={() => setValue('method', 'DER_WEDUWEN', { shouldValidate: true })}
                                 className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'DER_WEDUWEN' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-500 hover:text-indigo-700'
                                     }`}
                             >
@@ -446,7 +257,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                 {rationalInputs.A > 3 && rationalInputs.A <= 100 && <CheckCircle2 className="w-3 h-3 text-emerald-500 absolute top-0.5 right-0.5" />}
                             </button>
                             <button
-                                onClick={() => setMethod('MELCHIOR')}
+                                onClick={() => setValue('method', 'MELCHIOR', { shouldValidate: true })}
                                 className={`py-2 px-2 rounded-sm text-[10px] font-bold transition-all relative ${method === 'MELCHIOR' ? 'bg-white dark:bg-slate-900 text-indigo-600 ' : 'text-slate-600 dark:text-slate-500 hover:text-indigo-700'
                                     }`}
                             >
@@ -552,8 +363,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                 <div className="relative">
                                                     <input
                                                         type="number"
-                                                        value={rationalInputs.A}
-                                                        onChange={e => setRationalInputs({ ...rationalInputs, A: parseFloat(e.target.value) || 0 })}
+                                                        {...register('rational.A', { valueAsNumber: true })}
+                                                        aria-invalid={errors.rational?.A ? 'true' : 'false'}
                                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-bold rounded-sm p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">km²</span>
@@ -570,7 +381,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                             <input
                                                                 type="number"
                                                                 value={rationalInputs.L || 1.5}
-                                                                onChange={e => setRationalInputs({ ...rationalInputs, L: parseFloat(e.target.value) || 0 })}
+                                                                /* Uses RHF register */
                                                                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-bold rounded-sm p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
                                                             />
                                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">km</span>
@@ -586,7 +397,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                                 type="number"
                                                                 step="0.001"
                                                                 value={rationalInputs.S || 0.01}
-                                                                onChange={e => setRationalInputs({ ...rationalInputs, S: parseFloat(e.target.value) || 0 })}
+                                                                /* Uses RHF register */
                                                                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-bold rounded-sm p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
                                                             />
                                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">m/m</span>
@@ -604,8 +415,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                         <div className="relative flex-1">
                                                             <input
                                                                 type="number"
-                                                                value={rationalInputs.tc}
-                                                                onChange={e => setRationalInputs({ ...rationalInputs, tc: parseFloat(e.target.value) || 0 })}
+                                                                
+                                                                /* Uses RHF register */
                                                                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-bold rounded-sm p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
                                                             />
                                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">menit</span>
@@ -640,7 +451,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                     />
                                                 </div>
                                                 <RunoffCoefficientInput
-                                                    value={rationalInputs.C}
+                                                    
                                                     onChange={(v) => setRationalInputs({ ...rationalInputs, C: v || 0 })}
                                                     required={true}
                                                 />
@@ -654,7 +465,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                 <div className="relative">
                                                     <input
                                                         type="number"
-                                                        value={rationalInputs.I}
+                                                        
                                                         readOnly
                                                         className="min-h-[44px] w-full bg-slate-100 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-sm p-3 pr-20 outline-none cursor-not-allowed"
                                                     />
@@ -744,8 +555,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                 <div className="relative">
                                                     <input
                                                         type="number"
-                                                        value={nakayasuInputs.A}
-                                                        onChange={e => setNakayasuInputs({ ...nakayasuInputs, A: parseFloat(e.target.value) || 0 })}
+                                                        
+                                                        /* Uses RHF register */
                                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-bold rounded-sm p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">km²</span>
@@ -759,8 +570,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                 <div className="relative">
                                                     <input
                                                         type="number"
-                                                        value={nakayasuInputs.L}
-                                                        onChange={e => setNakayasuInputs({ ...nakayasuInputs, L: parseFloat(e.target.value) || 0 })}
+                                                        
+                                                        /* Uses RHF register */
                                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-sm font-bold rounded-sm p-3 pr-16 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">km</span>
@@ -796,7 +607,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                 <div className="relative">
                                                     <input
                                                         type="number"
-                                                        value={nakayasuInputs.Ro}
+                                                        
                                                         readOnly
                                                         className="min-h-[44px] w-full bg-slate-100 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-sm p-3 pr-16 outline-none cursor-not-allowed"
                                                     />
@@ -811,7 +622,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                     sniCode="SNI 2415:2016"
                                                 />
                                                 <AlphaParameterInput
-                                                    value={nakayasuInputs.Alpha}
+                                                    
                                                     onChange={(v) => setNakayasuInputs({ ...nakayasuInputs, Alpha: v || 2.0 })}
                                                     required={true}
                                                 />
@@ -1091,14 +902,14 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                     <div className="flex items-center gap-3 mt-1">
                                         <p className="text-xs text-slate-500">
                                             Metode: <span className="font-bold text-indigo-600">{method.replace(/_/g, ' ')}</span> |
-                                            Debit Puncak: <span className="font-bold text-teal-600">{qPeak.toFixed(2)} m³/s</span>
+                                            Debit Puncak: <span className="font-bold text-teal-600">{formatNumber(qPeak, 'discharge')} m³/s</span>
                                         </p>
                                         {method === 'RATIONAL' && (
                                             <WhiteBoxFormula
                                                 title="Metode Rasional (SNI 2415:2016)"
                                                 theoretical="Q = 0.278 \times C \times I \times A"
                                                 substituted={`Q = 0.278 \times ${rationalInputs.C.toFixed(2)} \times ${rationalInputs.I.toFixed(1)} \times ${rationalInputs.A.toFixed(2)}`}
-                                                result={`Q = ${qPeak.toFixed(2)} \text{ m}^3/s`}
+                                                result={`Q = ${formatNumber(qPeak, 'discharge')} \text{ m}^3/s`}
                                                 variables={{ 'C': rationalInputs.C, 'I': rationalInputs.I, 'A': rationalInputs.A }}
                                             />
                                         )}
@@ -1107,7 +918,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                 title={`Metode ${method.replace(/_/g, ' ')} (Empiris)`}
                                                 theoretical="Q = \alpha \times \beta \times q \times A"
                                                 substituted={`Q = \text{API Calculated for } ${rationalInputs.A} \text{ km}^2`}
-                                                result={`Q = ${qPeak.toFixed(2)} \text{ m}^3/s`}
+                                                result={`Q = ${formatNumber(qPeak, 'discharge')} \text{ m}^3/s`}
                                                 variables={{ 'A': rationalInputs.A, 'L': rationalInputs.L || 0, 'S': rationalInputs.S || 0 }}
                                             />
                                         )}
@@ -1115,8 +926,8 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                             <WhiteBoxFormula
                                                 title="HSS Nakayasu (SNI 2415:2016)"
                                                 theoretical="Q_p = \frac{A \times R_o}{3.6 \times (0.3 T_p + T_{0.3})}"
-                                                substituted={`Q_p = \frac{${nakayasuInputs.A} \times ${nakayasuInputs.Ro.toFixed(1)}}{3.6 \times (0.3 \times ${tPeak.toFixed(2)} + ${(nakayasuInputs.Alpha * (tPeak / 1.8)).toFixed(2)})}`}
-                                                result={`Q_p = ${qPeak.toFixed(2)} \text{ m}^3/s`}
+                                                substituted={`Q_p = \frac{${nakayasuInputs.A} \times ${nakayasuInputs.Ro.toFixed(1)}}{3.6 \times (0.3 \times ${formatNumber(tPeak, 'time')} + ${(nakayasuInputs.Alpha * (tPeak / 1.8)).toFixed(2)})}`}
+                                                result={`Q_p = ${formatNumber(qPeak, 'discharge')} \text{ m}^3/s`}
                                                 variables={{ 'A': nakayasuInputs.A, 'R_o': nakayasuInputs.Ro, 'T_p': tPeak, '\alpha': nakayasuInputs.Alpha }}
                                             />
                                         )}
@@ -1195,12 +1006,12 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                                 onChange={e => {
                                                                     const updated = [...returnPeriods];
                                                                     updated[idx].rainfall = parseFloat(e.target.value) || 0;
-                                                                    setReturnPeriods(updated);
+                                                                    setValue('returnPeriods', updated, { shouldValidate: true });
                                                                 }}
                                                                 className="w-20 text-right bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm font-bold focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 outline-none"
                                                             />
                                                         </td>
-                                                        <td className="py-2.5 px-3 text-right font-bold text-teal-600 tabular-nums tracking-tight">{rp.qPeak.toFixed(2)}</td>
+                                                        <td className="py-2.5 px-3 text-right font-bold text-teal-600 tabular-nums tracking-tight">{rp.formatNumber(qPeak, 'discharge')}</td>
                                                     </tr>
                                                 );
                                             })}
@@ -1219,7 +1030,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                         <span className="text-base font-bold text-slate-900 dark:text-slate-100">{rp.period}</span>
                                                         <div className={`text-xs ${guidance?.color || 'text-slate-500'} font-medium mt-0.5`}>{guidance?.infrastructure}</div>
                                                     </div>
-                                                    <span className="text-lg font-bold text-teal-600">{rp.qPeak.toFixed(2)} m³/s</span>
+                                                    <span className="text-lg font-bold text-teal-600">{rp.formatNumber(qPeak, 'discharge')} m³/s</span>
                                                 </div>
                                                 <div>
                                                     <label className="text-xs text-slate-500 font-medium mb-1 block">Hujan (mm)</label>
@@ -1229,7 +1040,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                                         onChange={e => {
                                                             const updated = [...returnPeriods];
                                                             updated[idx].rainfall = parseFloat(e.target.value) || 0;
-                                                            setReturnPeriods(updated);
+                                                            setValue('returnPeriods', updated, { shouldValidate: true });
                                                         }}
                                                         className="w-full text-base bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm px-3 py-2 font-bold focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 outline-none"
                                                     />
@@ -1284,7 +1095,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                             ...rp,
                             rainfall: parseFloat(rainfalls[idx].toFixed(1))
                         }));
-                        setReturnPeriods(updated);
+                        setValue('returnPeriods', updated, { shouldValidate: true });
                     }}
                     onClose={() => setShowFreqAnalysis(false)}
                 />

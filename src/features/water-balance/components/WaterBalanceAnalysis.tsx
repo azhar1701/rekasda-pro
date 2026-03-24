@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { WaterBalanceChart } from './WaterBalanceChart';
 import { PageHeader, PageContent, Section } from '@/components/ui/layout/Layout';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,8 @@ import { HelpTooltip } from '@/components/ui/data-display/HelpTooltip';
 import { supabase } from '@/lib/api/supabase';
 import { toast } from '@/hooks/useToast';
 import { analyzeWaterBalance } from '@/lib/engine/waterBalance';
+import { useMemo } from 'react';
+import { formatNumber } from '@/lib/utils/formatters';
 
 interface WaterBalanceData {
     site: { channelName: string; regency: string; district: string; village: string };
@@ -35,7 +37,6 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
         monthlySupply: [150, 160, 180, 200, 220, 210, 180, 170, 160, 150, 140, 130]
     });
 
-    const [results, setResults] = useState<any>(null);
     const [projectName, setProjectName] = useState('');
     const [saving, setSaving] = useState(false);
 
@@ -51,31 +52,20 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
     };
 
     // Calculate water balance — delegated to engine layer
-  useEffect(() => {
-    const engineResult = analyzeWaterBalance({
-      demand: {
-        population: data.population,
-        domesticStandard: data.domesticStandard,
-        agricultureArea: data.agricultureArea,
-        irrigationDemand: data.irrigationDemand,
-      },
-      monthlySupply: data.monthlySupply,
-    });
+    const engineResults = useMemo(() => {
+        const result = analyzeWaterBalance({
+            demand: {
+                population: data.population,
+                domesticStandard: data.domesticStandard,
+                agricultureArea: data.agricultureArea,
+                irrigationDemand: data.irrigationDemand,
+            },
+            monthlySupply: data.monthlySupply,
+        });
 
-    const { demandBreakdown, monthlyBalance, avgBalance, minBalance, maxBalance, criticalMonths } = engineResult.data;
-
-    setResults({
-      domesticDemand: demandBreakdown.domesticDemand.toFixed(3),
-      agricultureDemand: demandBreakdown.agricultureDemand.toFixed(3),
-      irrigationDemand: demandBreakdown.irrigationDemand.toFixed(3),
-      totalDemand: demandBreakdown.totalDemand.toFixed(3),
-      monthlyBalance,
-      avgBalance: avgBalance.toFixed(3),
-      minBalance: minBalance.toFixed(3),
-      maxBalance: maxBalance.toFixed(3),
-      criticalMonths,
-    });
-  }, [data]);
+        if (result.metadata.error) return null;
+        return result.data;
+    }, [data]);
 
     const handleMonthlySupplyChange = (index: number, value: number) => {
         const newSupply = [...data.monthlySupply];
@@ -103,7 +93,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
             const { error } = await supabase.from('water_balance_analysis').insert({
                 project_name: projectName,
                 data: JSON.stringify(data),
-                results: JSON.stringify(results),
+                results: JSON.stringify(engineResults),
                 created_at: new Date().toISOString()
             });
 
@@ -111,7 +101,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
             toast.success(`Analisis "${projectName}" berhasil disimpan!`);
             setProjectName('');
-            onSave?.(data, results);
+            onSave?.(data, engineResults);
         } catch (error) {
             toast.error(`Gagal menyimpan: ${error}`);
         } finally {
@@ -260,12 +250,12 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
                     {/* RIGHT COLUMN - VISUALIZATION & RESULTS (67%) */}
                     <div className="lg:col-span-2 space-y-6">
-                        {results && (
+                        {engineResults && (
                             <div className="animate-fade-in space-y-6">
                                 {/* Chart */}
                                 <Card>
                                     <CardContent className="pt-6">
-                                        <WaterBalanceChart data={results.monthlyBalance} />
+                                        <WaterBalanceChart data={engineResults.monthlyBalance as any} />
                                     </CardContent>
                                 </Card>
 
@@ -283,7 +273,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata</span>
                                                     <HelpTooltip content="Rata-rata keseimbangan bulanan" />
                                                 </div>
-                                                <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{results.avgBalance}</span>
+                                                <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">{formatNumber(engineResults.avgBalance, 'discharge')}</span>
                                                 <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                                             </div>
 
@@ -292,8 +282,8 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Minimum</span>
                                                     <HelpTooltip content="Keseimbangan terendah" />
                                                 </div>
-                                                <span className={`text-3xl font-extrabold tabular-nums tracking-tight ${parseFloat(results.minBalance) < 0 ? 'text-red-500' : 'text-pupr-blue'}`}>
-                                                    {results.minBalance}
+                                                <span className={`text-3xl font-extrabold tabular-nums tracking-tight ${engineResults.minBalance < 0 ? 'text-red-500' : 'text-pupr-blue'}`}>
+                                                    {formatNumber(engineResults.minBalance, 'discharge')}
                                                 </span>
                                                 <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                                             </div>
@@ -303,7 +293,7 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Maksimum</span>
                                                     <HelpTooltip content="Keseimbangan tertinggi" />
                                                 </div>
-                                                <span className="text-3xl font-extrabold text-pupr-blue tabular-nums tracking-tight">{results.maxBalance}</span>
+                                                <span className="text-3xl font-extrabold text-pupr-blue tabular-nums tracking-tight">{formatNumber(engineResults.maxBalance, 'discharge')}</span>
                                                 <span className="text-xs font-bold text-slate-500 block">m³/s</span>
                                             </div>
                                         </div>
@@ -316,10 +306,10 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                                         <h3 className="font-bold text-lg mb-4 text-slate-800 dark:text-slate-200">Rincian Kebutuhan Air</h3>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
                                             {[
-                                                { label: 'Domestik', value: results.domesticDemand, unit: 'm³/s', color: 'bg-amber-50 border-amber-200' },
-                                                { label: 'Pertanian', value: results.agricultureDemand, unit: 'm³/s', color: 'bg-green-50 border-green-200' },
-                                                { label: 'Irigasi', value: results.irrigationDemand, unit: 'm³/s', color: 'bg-pupr-surface border-pupr-border' },
-                                                { label: 'Total', value: results.totalDemand, unit: 'm³/s', color: 'bg-slate-100 border-slate-300 dark:border-slate-600' }
+                                                { label: 'Domestik', value: formatNumber(engineResults.demandBreakdown.domesticDemand, 'discharge'), unit: 'm³/s', color: 'bg-amber-50 border-amber-200' },
+                                                { label: 'Pertanian', value: formatNumber(engineResults.demandBreakdown.agricultureDemand, 'discharge'), unit: 'm³/s', color: 'bg-green-50 border-green-200' },
+                                                { label: 'Irigasi', value: formatNumber(engineResults.demandBreakdown.irrigationDemand, 'discharge'), unit: 'm³/s', color: 'bg-pupr-surface border-pupr-border' },
+                                                { label: 'Total', value: formatNumber(engineResults.demandBreakdown.totalDemand, 'discharge'), unit: 'm³/s', color: 'bg-slate-100 border-slate-300 dark:border-slate-600' }
                                             ].map((item, i) => (
                                                 <div key={i} className={`p-4 rounded-sm border ${item.color}`}>
                                                     <div className="text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-2">{item.label}</div>
@@ -330,14 +320,14 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
                                         </div>
 
                                         {/* Critical months warning */}
-                                        {results.criticalMonths.length > 0 && (
+                                        {engineResults.criticalMonths.length > 0 && (
                                             <div className="bg-red-50 border border-red-200 rounded-sm p-4">
                                                 <h4 className="font-bold text-red-800 mb-2 flex items-center gap-2">
                                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                                                     Bulan Kritis Terdeteksi
                                                 </h4>
                                                 <p className="text-sm text-red-700">
-                                                    Keseimbangan negatif pada: {results.criticalMonths.map((m: any) => months[data.monthlySupply.indexOf(m.supply)]).join(', ')}
+                                                    Keseimbangan negatif pada: {engineResults.criticalMonths.map((m: any) => months[data.monthlySupply.indexOf(m.supply)]).join(', ')}
                                                 </p>
                                             </div>
                                         )}
@@ -366,11 +356,11 @@ export const WaterBalanceAnalysis: React.FC<Props> = ({ onSave, onConsultAI }) =
 
                                 {/* Action buttons */}
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <Button variant="primary" className="w-full flex-1" onClick={() => onSave?.(data, results)}>
+                                    <Button variant="primary" className="w-full flex-1" onClick={() => onSave?.(data, engineResults)}>
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
                                         Simpan Hasil
                                     </Button>
-                                    <Button variant="secondary" className="w-full flex-1" onClick={() => onConsultAI?.(data, results)}>
+                                    <Button variant="secondary" className="w-full flex-1" onClick={() => onConsultAI?.(data, engineResults)}>
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                                         Konsultasi AI
                                     </Button>
