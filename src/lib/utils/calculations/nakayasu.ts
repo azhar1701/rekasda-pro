@@ -119,6 +119,8 @@ export function calculateDischargeAtTime(
 /**
  * Generate data hidrograf lengkap
  */
+import { safeRange } from '@/lib/utils/precision';
+
 export function generateHydrograph(
  Qp: number,
  Tp: number,
@@ -128,7 +130,7 @@ export function generateHydrograph(
  const data: Array<{ time: number; discharge: number }> = [];
  const totalTime = Tp + 3 * T03; // Total durasi hidrograf
  
- for (let t = 0; t <= totalTime; t += timeStep) {
+ for (const t of safeRange(0, totalTime, timeStep)) {
  const Q = calculateDischargeAtTime(t, Qp, Tp, T03);
  data.push({
  time: parseFloat(t.toFixed(2)),

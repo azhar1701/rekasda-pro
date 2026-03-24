@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { calculateTrapezoidCapacity } from '@/lib/engine/channel';
 
 interface ChannelParams {
  b: number; // Lebar dasar (m)
@@ -36,31 +37,23 @@ export default function ChannelCapacity() {
  }, [params]);
 
  const calculateHydraulics = () => {
- try {
- const { b, h, m, S, n } = params;
+    try {
+      const engineResult = calculateTrapezoidCapacity(params);
 
- if (b <= 0 || h <= 0 || m < 0 || S <= 0 || n <= 0) {
- setError('Semua parameter harus bernilai positif');
- setResults(null);
- return;
- }
+      if (engineResult.metadata.error) {
+        setError(engineResult.metadata.warnings.join('. '));
+        setResults(null);
+        return;
+      }
 
- // Perhitungan hidrolis
- const A = (b + m * h) * h; // Luas basah
- const P = b + 2 * h * Math.sqrt(1 + m * m); // Keliling basah
- const R = A / P; // Jari-jari hidrolis
- const T = b + 2 * m * h; // Lebar atas
- const Q = (1 / n) * A * Math.pow(R, 2 / 3) * Math.sqrt(S); // Manning
- const V = Q / A; // Kecepatan
- const Fr = V / Math.sqrt(9.81 * (A / T)); // Froude number
-
- setResults({ A, P, R, T, Q, V, Fr });
- setError('');
- } catch (err) {
- setError('Terjadi kesalahan dalam perhitungan');
- setResults(null);
- }
- };
+      const { A, P, R, T, Q, V, Fr } = engineResult.data;
+      setResults({ A, P, R, T, Q, V, Fr });
+      setError('');
+    } catch (err) {
+      setError('Terjadi kesalahan dalam perhitungan');
+      setResults(null);
+    }
+  };
 
  const updateParam = (key: keyof ChannelParams, value: string | number) => {
  const numValue = typeof value === 'string' ? parseFloat(value) : value;

@@ -43,6 +43,8 @@ export interface ConvolutionInput {
 }
 
 /** Result of the convolution */
+import { safeRange } from '@/lib/utils/precision';
+
 export interface ConvolutionResult {
  /** Design Flood Hydrograph — the convolved result */
  floodHydrograph: HydrographPoint[];
@@ -185,7 +187,12 @@ export function resampleUnitHydrograph(
  const maxTime = uh[uh.length - 1].time;
  const resampled: HydrographPoint[] = [];
 
- for (let t = 0; t <= maxTime; t += newStep) {
+ for (const t of safeRange(0, maxTime, newStep)) {
+        // Clamp tail
+        if (t > maxTime) {
+            resampled.push({ time: round(t, 2), discharge: 0 });
+            continue;
+        }
  // Find bracketing points
  let lower = uh[0];
  let upper = uh[1];

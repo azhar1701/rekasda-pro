@@ -1,3 +1,4 @@
+import { safeRange } from '@/lib/utils/precision';
 /**
  * Flood Calculation Engine (Legacy Proxy)
  * =====================================
@@ -86,7 +87,7 @@ export const calculateHSSGamma1 = (input: HSSGamma1Input): HSSGamma1Output => {
  const dt = 0.1;
  const maxTime = Math.max(TB, 24);
 
- for (let t = 0; t <= maxTime; t += dt) {
+ for (const t of safeRange(0, maxTime, dt)) {
  let Q = 0;
  if (t <= TR) {
  Q = (QP / TR) * t;
@@ -123,7 +124,7 @@ export const calculateHSSSnyder = (input: HSSSnyderInput): HSSSnyderOutput => {
 
  const hydrograph: Array<{ time: number; discharge: number }> = [];
  const dt = 0.2;
- for (let t = 0; t <= Tb; t += dt) {
+ for (const t of safeRange(0, Tb, dt)) {
  let Q = 0;
  if (t <= Tp) Q = Qp * Math.pow(t / Tp, 2.0);
  else Q = Qp * Math.pow((Tb - t) / (Tb - Tp), 1.2);
@@ -150,7 +151,7 @@ export const calculateHSSSCS = (input: HSSSCSInput): HSSSCSOutput => {
  const Tb = 5 * Tp;
 
  const hydrograph: Array<{ time: number; discharge: number }> = [];
- for (let t = 0; t <= Tb; t += 0.5) {
+ for (const t of safeRange(0, Tb, 0.5)) {
  const ratio = t / Tp;
  let Q = ratio <= 1 ? Qp * Math.pow(ratio, 1.5) * Math.exp(1.5 * (1 - ratio)) : Qp * Math.pow(ratio, -1.5) * Math.exp(-1.5 * (ratio - 1));
  hydrograph.push({ time: parseFloat(t.toFixed(2)), discharge: parseFloat(Q.toFixed(4)) });
@@ -173,7 +174,7 @@ export const calculateHSSClark = (input: HSSClarkInput): HSSClarkOutput => {
  const dt = 0.5;
  let prevQ = 0;
  const C = dt / (2 * R + dt);
- for (let t = 0; t <= Tb; t += dt) {
+ for (const t of safeRange(0, Tb, dt)) {
  const I = t <= Tc ? (A * Ro / Tc) : 0;
  const Q = C * (I + I) + (1 - 2 * C) * prevQ;
  const safeQ = Math.max(0, Q);
@@ -221,7 +222,7 @@ export const calculateConvolution = (input: ConvolutionInput & { rainfallInterva
   const uhMaxTime = unitHydrograph[unitHydrograph.length - 1].time;
   const totalDuration = uhMaxTime + (effectiveRainfall.length * rainfallInterval);
 
-  for (let t = 0; t <= totalDuration; t += dtUH) {
+  for (const t of safeRange(0, totalDuration, dtUH)) {
     let Q_conv = 0;
     for (let j = 0; j < effectiveRainfall.length; j++) {
       const timeInUH = t - (j * rainfallInterval);

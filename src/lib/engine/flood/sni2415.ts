@@ -1,3 +1,4 @@
+import { safeRange } from '@/lib/utils/precision';
 /**
  * SNI 2415:2016 Compliant Flood Calculation Engine
  * Tata Cara Perhitungan Debit Banjir Rencana
@@ -202,7 +203,7 @@ export const calculateHSSNakayasu = (input: HSSNakayasuInput): HSSNakayasuOutput
  const timeStep = 0.1;
  const maxTime = Math.max(Tb + 2 * T03, 24);
 
- for (let t = 0; t <= maxTime; t += timeStep) {
+ for (const t of safeRange(0, maxTime, timeStep)) {
  let Q = 0;
  if (t > 0 && t <= Tp) Q = Qp * Math.pow(t / Tp, 2.4);
  else if (t > Tp && t <= Tp + T03) Q = Qp * Math.pow(0.3, (t - Tp) / T03);

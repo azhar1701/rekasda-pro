@@ -1,3 +1,4 @@
+import { safeRange } from '@/lib/utils/precision';
 import { z } from 'zod';
 import { SNI_VALIDATION_LIMITS } from '../../constants/sni';
 import { HSSSnyderInput, HSSSnyderOutput } from '@/types/hydrology';
@@ -28,7 +29,7 @@ export const calculateHSSSnyder = (input: HSSSnyderInput): HSSSnyderOutput => {
   const hydrograph: Array<{ time: number; discharge: number }> = [];
   const dt = 0.2;
   
-  for (let t = 0; t <= Tb; t += dt) {
+  for (const t of safeRange(0, Tb, dt)) {
     let Q = 0;
     if (t <= Tp) {
         Q = Qp * Math.pow(t / Tp, 2.0);

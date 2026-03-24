@@ -1,3 +1,4 @@
+import { safeRange } from '@/lib/utils/precision';
 import { z } from 'zod';
 import { SNI_VALIDATION_LIMITS } from '../../constants/sni';
 import { HSSSCSInput, HSSSCSOutput } from '@/types/hydrology';
@@ -28,7 +29,7 @@ export const calculateHSSSCS = (input: HSSSCSInput): HSSSCSOutput => {
   const Tb = 5 * Tp;
 
   const hydrograph: Array<{ time: number; discharge: number }> = [];
-  for (let t = 0; t <= Tb; t += 0.5) {
+  for (const t of safeRange(0, Tb, 0.5)) {
     const ratio = t / Tp;
     let Q = ratio <= 1 
       ? Qp * Math.pow(ratio, 1.5) * Math.exp(1.5 * (1 - ratio)) 

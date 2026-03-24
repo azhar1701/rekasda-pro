@@ -1,3 +1,4 @@
+import { safeRange } from '@/lib/utils/precision';
 import { z } from 'zod';
 import { SNI_VALIDATION_LIMITS } from '../../constants/sni';
 import { HSSGamma1Input, HSSGamma1Output } from '@/types/hydrology';
@@ -31,7 +32,7 @@ export const calculateHSSGamma1 = (input: HSSGamma1Input): HSSGamma1Output => {
   const dt = 0.1;
   const maxTime = Math.max(TB, 24);
 
-  for (let t = 0; t <= maxTime; t += dt) {
+  for (const t of safeRange(0, maxTime, dt)) {
     let Q = 0;
     if (t <= TR) {
       Q = (QP / TR) * t;

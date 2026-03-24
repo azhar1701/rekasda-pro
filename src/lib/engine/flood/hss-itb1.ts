@@ -1,3 +1,4 @@
+import { safeRange } from '@/lib/utils/precision';
 import { z } from 'zod';
 import { SNI_VALIDATION_LIMITS } from '../../constants/sni';
 import { HSSITB1Input, HSSITB1Output } from '@/types/hydrology';
@@ -26,7 +27,7 @@ export const calculateHSSITB1 = (input: HSSITB1Input): HSSITB1Output => {
   const hydrograph: Array<{ time: number; discharge: number }> = [];
   const dt = 0.5;
   
-  for (let t = 0; t <= Tb; t += dt) {
+  for (const t of safeRange(0, Tb, dt)) {
     let Q = 0;
     if (t <= Tp) {
       Q = Qp * (t / Tp);
