@@ -1,4 +1,4 @@
-// GovTech UI Components - PUPR Official Design System
+// High-Density Engineering UI Components (RekaSDA Design System)
 export { ButtonGovTech } from '../ButtonGovTech';
 export { CardGovTech, CardGovTechHeader, CardGovTechContent } from '../CardGovTech';
 export { TableGovTech } from '../TableGovTech';

@@ -21,7 +21,7 @@ Standardized GovTech UI components following high-density design principles for 
 | GovTech Variants | `src/components/ui/govtech` | `ButtonGovTech.tsx`, `CardGovTech.tsx` |
 
 ## CONVENTIONS
-- **PUPR Brand**: Use `bg-pupr-blue`, `text-pupr-text`, and `bg-pupr-yellow` for brand consistency.
+- **Engineering Theme**: Use `bg-pupr-blue`, `text-pupr-text`, and `bg-pupr-yellow` for primary high-contrast styling.
 - **Data Density**: Use `tabular-nums` for all numeric outputs.
 
 - **Composition**: Prefer component composition over large prop objects.

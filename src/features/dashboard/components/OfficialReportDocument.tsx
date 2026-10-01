@@ -33,12 +33,12 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
     <div className="print-container bg-white text-slate-900 font-sans p-6 sm:p-10 max-w-[210mm] mx-auto shadow-sm border border-slate-200 print:border-none print:shadow-none print:p-0">
       
       {/* =====================================================================
-          KOP SURAT RESMI (PUPR / KEDINASAN)
+          KOP SURAT DOKUMEN RESMI
           ===================================================================== */}
       {sectionsConfig.showKop && (
         <div className="border-b-4 border-slate-900 border-double pb-4 mb-6">
           <div className="flex items-center gap-4">
-            {/* Logo Lambang PU / SDA */}
+            {/* Logo Lambang Rekayasa SDA */}
             <div className="w-16 h-16 shrink-0 rounded-full border-2 border-slate-900 flex items-center justify-center bg-amber-50">
               <Building2 className="w-9 h-9 text-slate-900" />
             </div>
@@ -444,7 +444,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
               <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
               7. Kesimpulan & Rekomendasi Teknis Rekayasa SDA
             </h3>
-            <span className="text-[10px] text-slate-500 font-semibold">Kaidah SNI & PUPR</span>
+            <span className="text-[10px] text-slate-500 font-semibold">Kaidah Standar Teknis SNI</span>
           </div>
 
           <div className="p-3 bg-amber-50/40 border border-amber-200/80 rounded text-xs leading-relaxed text-slate-800 mb-3">
@@ -512,7 +512,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
 
       {/* Footer Cap Standar */}
       <div className="mt-8 pt-3 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between items-center print:text-slate-500">
-        <span>RekaSDA Pro v1.2 — Format Resmi Standar PUPR</span>
+        <span>RekaSDA Pro v1.2 — Format Laporan Standar Rekayasa SDA</span>
         <span>Halaman 1 dari 1 (Ringkasan Eksekutif)</span>
       </div>
     </div>

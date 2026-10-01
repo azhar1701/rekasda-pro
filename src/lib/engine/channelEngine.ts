@@ -5,7 +5,7 @@
  * - SNI 03-3424-1994: Tata Cara Perencanaan Drainase Permukaan Jalan
  * - Pd. T-02-2006-B: Perencanaan Sistem Drainase Jalan
  * - SNI 8066:2015: Tata Cara Pengukuran Debit Aliran Sungai dan Saluran Terbuka
- * - Standar Perencanaan Irigasi KP-03 (Ditjen SDA Kementerian PUPR)
+ * - Standar Perencanaan Irigasi KP-03 (Saluran Terbuka)
  * - Chow, V.T. (1959): Open-Channel Hydraulics
  */
 

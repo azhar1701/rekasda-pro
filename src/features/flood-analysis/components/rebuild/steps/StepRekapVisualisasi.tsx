@@ -257,7 +257,7 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
 
     return (
         <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-            {/* Kartu Ringkasan Metrik Rekayasa (PUPR GovTech Style) */}
+            {/* Kartu Ringkasan Metrik Rekayasa SDA */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="p-5 bg-white border border-slate-300 shadow-sm rounded-md border-l-4 border-l-pupr-blue">
                     <div className="flex items-center justify-between mb-1">

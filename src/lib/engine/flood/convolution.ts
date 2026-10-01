@@ -4,7 +4,7 @@
  * Converts a Unit Hydrograph (UH) into a Design Flood Hydrograph (DFH)
  * by convolving it with effective rainfall from the Alternating Block Method.
  *
- * Mathematical basis (SNI 2415:2016, Modul 6 Hidrologi PUPR):
+ * Mathematical basis (SNI 2415:2016, Modul Analisis Hidrologi Terapan):
  *
  *   Q(n) = Σ_{m=1}^{M}  P_eff(m) × U(n - m + 1)
  *

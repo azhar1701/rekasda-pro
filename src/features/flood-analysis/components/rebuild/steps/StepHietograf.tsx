@@ -201,7 +201,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
                                 />
                                 <span className="absolute right-3 top-2 text-slate-400 font-semibold text-sm">jam</span>
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1">Standar Ditjen SDA untuk hidrograf: 6 s/d 24 jam</p>
+                            <p className="text-[10px] text-slate-400 mt-1">Standar teknis hidrograf rencana: 6 s/d 24 jam</p>
                         </div>
 
                         <div>

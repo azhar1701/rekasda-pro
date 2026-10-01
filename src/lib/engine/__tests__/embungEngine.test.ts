@@ -299,7 +299,7 @@ describe('Embung Engine — Hydrological & Hydraulic Calculations (SNI 03-3432-1
       expect(result.lifespanYears).toBeCloseTo(60000 / expectedTrapped, 1);
     });
 
-    it('contains valid regional sediment presets conforming to PUPR standards', () => {
+    it('contains valid regional sediment presets conforming to technical standards', () => {
       expect(REGIONAL_SEDIMENT_PRESETS.length).toBeGreaterThanOrEqual(4);
       const jawaKritis = REGIONAL_SEDIMENT_PRESETS.find(p => p.id === 'jawa_kritis');
       expect(jawaKritis).toBeDefined();

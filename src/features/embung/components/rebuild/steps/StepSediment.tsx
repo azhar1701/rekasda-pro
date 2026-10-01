@@ -201,7 +201,7 @@ export const StepSediment: React.FC = () => {
                 <div>
                     <h3 className="text-sm font-bold text-rose-900">Analisis Sedimentasi & Estimasi Umur Guna Embung (SNI 03-3432-1994)</h3>
                     <p className="text-xs text-rose-800/80 mt-1 leading-relaxed">
-                        Evaluasi volume sedimen tahunan yang masuk dan terperangkap di waduk untuk memastikan kapasitas tampungan mati (dead storage) mencukupi masa layan teknis embung (target SNI & PUPR: minimal 25–50 tahun).
+                        Evaluasi volume sedimen tahunan yang masuk dan terperangkap di waduk untuk memastikan kapasitas tampungan mati (dead storage) mencukupi masa layan teknis embung (target standar SNI: minimal 25–50 tahun).
                     </p>
                 </div>
             </div>

@@ -154,7 +154,7 @@ export const ExecutiveDashboard: React.FC = () => {
   return (
     <ModuleLayout
       title="Executive Summary & Pelaporan Resmi"
-      description="Laporan kelayakan teknis terpadu dari hulu ke hilir berstandar Kementerian PUPR & SNI"
+      description="Laporan kelayakan teknis terpadu dari hulu ke hilir berbasis kaidah SNI & Standar Rekayasa SDA"
       icon={<FileText className="w-6 h-6" />}
       iconColorClass="bg-[#0c3a66] text-white"
       actions={
@@ -204,7 +204,7 @@ export const ExecutiveDashboard: React.FC = () => {
           <button
             onClick={handlePrint}
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0c3a66] hover:bg-[#082846] text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
-            title="Cetak atau Simpan Dokumen A4 Resmi PUPR (Ctrl+P)"
+            title="Cetak atau Simpan Dokumen Laporan Teknis A4 (Ctrl+P)"
           >
             <Printer className="w-3.5 h-3.5" />
             Cetak Dokumen A4
@@ -327,7 +327,7 @@ export const ExecutiveDashboard: React.FC = () => {
 
             <div className="p-5 space-y-4 overflow-y-auto text-xs">
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Nama Instansi / Kementerian</label>
+                <label className="font-bold text-slate-700 block mb-1">Nama Instansi / Perusahaan Konsultan</label>
                 <input
                   type="text"
                   value={kopData.instansi}

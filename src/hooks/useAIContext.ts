@@ -249,7 +249,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
           chips.push({
             id: 'deficit-solution',
             label: `Solusi defisit air bulan ${hasilNeraca.bulanKritis}`,
-            prompt: `Neraca air menunjukkan defisit pada bulan ${hasilNeraca.bulanKritis} sebesar ${hasilNeraca.totalSurplusDefisit.toFixed(1)} m³/s. Berikan strategi pengelolaan air untuk mengatasi defisit ini sesuai pedoman PUPR.`,
+            prompt: `Neraca air menunjukkan defisit pada bulan ${hasilNeraca.bulanKritis} sebesar ${hasilNeraca.totalSurplusDefisit.toFixed(1)} m³/s. Berikan strategi pengelolaan air untuk mengatasi defisit ini sesuai kaidah rekayasa sumber daya air.`,
             severity: 'critical',
             icon: '🚨',
           });

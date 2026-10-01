@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * Tipe Data Laporan Eksekutif & Ringkasan Teknis PUPR / SNI
+ * Tipe Data Laporan Eksekutif & Ringkasan Teknis Rekayasa SDA / SNI
  * Modul: Executive Dashboard & Reporting Engine
  * =============================================================================
  */

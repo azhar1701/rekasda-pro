@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * Layanan Agregasi Data Laporan Eksekutif (PUPR / SNI)
+ * Layanan Agregasi Data Laporan Eksekutif (SNI / Rekayasa SDA)
  * Modul: Executive Dashboard & Reporting Engine
  * =============================================================================
  */
@@ -25,8 +25,8 @@ export const defaultSectionsConfig: ReportSectionsConfig = {
 };
 
 export const defaultKopData: ReportKopData = {
-  instansi: 'KEMENTERIAN PEKERJAAN UMUM DAN PERUMAHAN RAKYAT',
-  balai: 'DIREKTORAT JENDERAL SUMBER DAYA AIR - BALAI BESAR WILAYAH SUNGAI',
+  instansi: 'KONSULTAN PERENCANA & PENGELOLA SUMBER DAYA AIR',
+  balai: 'DIVISI PERENCANAAN TEKNIS & ANALISIS HIDROLOGI',
   subTitle: 'LAPORAN RINGKASAN EKSEKUTIF KELAYAKAN TEKNIS HIDROLOGI & DESAIN INFRASTRUKTUR AIR',
   nomorDokumen: `LAP-SDA/${new Date().getFullYear()}/${String(Math.floor(1000 + Math.random() * 9000))}`,
   tanggalDokumen: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
@@ -36,8 +36,8 @@ export const defaultKopData: ReportKopData = {
     jabatanPenyusun: 'Ahli Muda Teknik SDA',
     verifikator: 'Ir. Penanggung Jawab Teknis, MT',
     jabatanVerifikator: 'Ahli Madya Teknik Pengairan (Lead Hydrologist)',
-    penggunaJasa: 'Pejabat Pembuat Komitmen (PPK)',
-    jabatanPenggunaJasa: 'Satker Balai Besar Wilayah Sungai / Dinas PUPR'
+    penggunaJasa: 'Pemberi Tugas / Pengguna Jasa',
+    jabatanPenggunaJasa: 'Direksi Pekerjaan / Pengelola Kegiatan'
   }
 };
 

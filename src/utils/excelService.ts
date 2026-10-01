@@ -107,7 +107,7 @@ export const exportHidrologiTemplate = async (stasiunName: string): Promise<void
 
 /**
  * Export Laporan Eksekutif Lengkap ke dalam Multi-Sheet Excel (.xlsx)
- * Standar format pelaporan Dinas PUPR / Balai Besar Wilayah Sungai (BBWS)
+ * Standar format pelaporan teknis Rekayasa Sumber Daya Air (SNI)
  */
 export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
@@ -119,7 +119,7 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
   const headerFill: ExcelJS.Fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FF0C3A66' } // PUPR Navy Blue
+    fgColor: { argb: 'FF0C3A66' } // Professional Navy Blue
   };
   const headerFont: Partial<ExcelJS.Font> = {
     bold: true,
@@ -146,8 +146,8 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
   ];
   styleHeaderRow(wsSummary.getRow(1));
 
-  wsSummary.addRow({ param: 'Instansi / Pemrakarsa', value: report.kop?.instansi || 'Kementerian PUPR', unit: '-' });
-  wsSummary.addRow({ param: 'Balai / Satker', value: report.kop?.balai || 'Balai Besar Wilayah Sungai', unit: '-' });
+  wsSummary.addRow({ param: 'Instansi / Pemrakarsa', value: report.kop?.instansi || 'Konsultan / Pengelola SDA', unit: '-' });
+  wsSummary.addRow({ param: 'Divisi / Satker', value: report.kop?.balai || 'Divisi Perencanaan Teknis SDA', unit: '-' });
   wsSummary.addRow({ param: 'Nomor Dokumen', value: report.kop?.nomorDokumen || '-', unit: '-' });
   wsSummary.addRow({ param: 'Tanggal Terbit', value: report.kop?.tanggalDokumen || '-', unit: '-' });
   wsSummary.addRow({ param: 'Status Dokumen', value: report.kop?.statusDokumen || 'FINAL', unit: '-' });
@@ -292,7 +292,7 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
   }
 
   const projName = report.identitas?.namaPekerjaan?.replace(/[^a-zA-Z0-9]/g, '_') || 'Proyek_SDA';
-  const fileName = `Laporan_Eksekutif_PUPR_${projName}`;
+  const fileName = `Laporan_Eksekutif_SDA_${projName}`;
   const buffer = await workbook.xlsx.writeBuffer();
   saveAs(new Blob([buffer]), `${fileName}.xlsx`);
 };

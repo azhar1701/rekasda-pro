@@ -31,10 +31,10 @@ export default {
 				]
 			},
 			colors: {
-				// PUPR Official Colors (GovTech Identity)
+				// RekaSDA Engineering Colors (High-Contrast Theme)
 				pupr: {
-					blue: '#0c3a66',      // Biru institusi PUPR
-					yellow: '#f2c114',    // Kuning aksen PUPR
+					blue: '#0c3a66',      // Biru primer teknik SDA
+					yellow: '#f2c114',    // Kuning aksen rekayasa
 					surface: '#f8fafc',   // Latar netral
 					border: '#e2e8f0',    // Border tegas
 					text: '#1e293b'       // Teks kontras tinggi

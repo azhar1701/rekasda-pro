@@ -1,7 +1,7 @@
 /**
  * =============================================================================
  * Embung (Small Dam) Module — Type Definitions
- * Berdasarkan Modul 6 Analisis Hidrologi PUPR
+ * Berdasarkan Modul Analisis Hidrologi Terapan SNI
  * =============================================================================
  * Semua tipe data untuk 4 layanan utama:
  *  1. Capacity Calculator (Sequent Peak / Rippl)

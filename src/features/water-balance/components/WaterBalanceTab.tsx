@@ -335,7 +335,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbu
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Neraca_Air_${identitasLokasi.namaDAS || 'PUPR'}.csv`);
+    link.setAttribute('download', `Neraca_Air_${identitasLokasi.namaDAS || 'REKASDA'}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -380,7 +380,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbu
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">Analisis Neraca Air Terpadu</h1>
             <p className="text-xs text-slate-500 font-medium">
-              SNI 19-6728.1-2002 · SNI 6738:2015 · Standar Perencanaan Irigasi KP-01 Ditjen SDA
+              SNI 19-6728.1-2002 · SNI 6738:2015 · Kriteria Perencanaan Irigasi KP-01
             </p>
           </div>
         </div>
@@ -444,7 +444,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbu
                   { symbol: "NFR", description: "Net Field Requirement tanaman", unit: "mm/hari" },
                   { symbol: "e", description: "Efisiensi penyaluran irigasi (KP-01 typical 0.65)", unit: "rasio" }
                 ]}
-                reference="SNI 19-6728.1-2002 & Standar Perencanaan Irigasi Ditjen SDA KP-01"
+                reference="SNI 19-6728.1-2002 & Kriteria Perencanaan Irigasi KP-01"
               />
 
               {/* SECTION 1: GLOBAL WATER DEMAND PARAMETERS */}
@@ -701,7 +701,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbu
               </div>
             )}
 
-            {/* 1. GovTech PUPR KPI Grid with IKA Badge */}
+            {/* 1. Engineering KPI Grid with IKA Badge */}
             <WaterBalanceKpiGrid
               summary={summary}
               totalSupply={totalSupply}

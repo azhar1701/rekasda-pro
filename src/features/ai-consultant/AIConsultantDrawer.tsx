@@ -244,7 +244,7 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
                   Konsultan Rekayasa SDA
                 </h3>
                 <p className="text-xs text-slate-500 max-w-[280px] leading-relaxed font-medium mb-5">
-                  Audit otomatis perhitungan banjir, neraca air, embung, dan dimensi saluran sesuai kriteria <strong className="text-slate-800">SNI & PUPR</strong>.
+                  Audit otomatis perhitungan banjir, neraca air, embung, dan dimensi saluran sesuai kriteria <strong className="text-slate-800">Standar Nasional Indonesia (SNI)</strong>.
                 </p>
 
                 {/* Data Integrity Summary Card */}

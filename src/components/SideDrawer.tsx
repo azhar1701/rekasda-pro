@@ -78,13 +78,13 @@ export function SideDrawer() {
         onClick={handleClose}
       />
 
-      {/* Slide-in Drawer (GovTech PUPR Standard) */}
+      {/* Slide-in Drawer (RekaSDA Engineering Standard) */}
       <div
         className={`fixed top-0 right-0 h-full w-full max-w-[460px] bg-white shadow-[0_0_50px_rgba(0,0,0,0.25)] z-[9999] flex flex-col border-l-4 border-pupr-yellow transform transition-transform duration-300 ease-in-out ${
           isAnimating ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* Header GovTech */}
+        {/* Header Drawer */}
         <div className={`${pColor.bg} text-white p-6 pb-6 flex flex-col items-start shrink-0 relative overflow-hidden`}>
           <div className="w-full flex justify-between items-start mb-3 relative z-10">
             <div className="flex items-center gap-2 flex-wrap">

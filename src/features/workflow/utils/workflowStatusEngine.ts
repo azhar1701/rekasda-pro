@@ -110,7 +110,7 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
       algorithm: 'Form input terverifikasi → Simpan ke Local Storage & Cloud Supabase',
       inputs: ['Nama Proyek', 'Wilayah Administratif', 'Titik Koordinat'],
       outputs: ['identitasLokasi'],
-      sniReference: 'KemenPUPR Pedoman Desain Hidrologi',
+      sniReference: 'Pedoman Standar Desain Hidrologi',
     },
     hujan: {
       id: 'hujan',
@@ -278,7 +278,7 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
       algorithm: 'Standard Reservoir Routing (Modified Puls) & Spillway Hydraulic Design',
       inputs: ['Debit Banjir Masuk (Inflow Qp)', 'Karakteristik Tampungan (H-V Curve)', 'Kebutuhan Air'],
       outputs: ['hasilEmbung', 'Kapasitas Tampungan Efektif'],
-      sniReference: 'Pedoman Teknis Desain Embung Kecil PUPR',
+      sniReference: 'Pedoman Teknis Desain Embung Kecil',
     },
     saluran: {
       id: 'saluran',
@@ -306,7 +306,7 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
       algorithm: 'Agregasi KPI lintas modul & visualisasi multi-dimensi',
       inputs: ['Seluruh Hasil Perhitungan Modul'],
       outputs: ['Executive Summary KPI'],
-      sniReference: 'Standar Pelaporan Teknis Ditjen SDA PUPR',
+      sniReference: 'Standar Pelaporan Teknis Rekayasa SDA',
     },
     ai: {
       id: 'ai',

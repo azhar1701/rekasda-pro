@@ -152,10 +152,10 @@ export const GlobalErrorFallback: React.FC<GlobalErrorFallbackProps> = ({
             )}
           </div>
 
-          {/* Footer institusional */}
+          {/* Footer aplikasi */}
           <div className="mt-5 pt-4 border-t border-slate-100">
             <p className="text-[11px] text-slate-400 text-center">
-              RekaSDA Pro v1.1&nbsp;·&nbsp;Direktorat Jenderal Sumber Daya Air&nbsp;·&nbsp;Kementerian PUPR
+              RekaSDA Pro&nbsp;·&nbsp;Platform Rekayasa Sumber Daya Air Terpadu
             </p>
           </div>
 

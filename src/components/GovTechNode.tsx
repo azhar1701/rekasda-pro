@@ -73,7 +73,7 @@ export function GovTechNode({ data, isConnectable, selected }: NodeProps<GovTech
         className="!w-3.5 !h-3.5 !bg-amber-400 !border-2 !border-white !-top-1.5 transition-transform hover:scale-125 shadow-sm"
       />
 
-      {/* Header GovTech */}
+      {/* Header Node */}
       <div className={`text-white text-[11px] font-bold px-3 py-1.5 border-b-2 border-pupr-yellow ${config.bg} flex items-center justify-between`}>
         <span className="tracking-wide uppercase">{config.label}</span>
         {data.isRecommendedNext && (

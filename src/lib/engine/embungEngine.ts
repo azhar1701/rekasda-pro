@@ -427,7 +427,7 @@ export function calculateSedimentYield(input: SedimentationInput): SedimentYield
 
 /**
  * Presets laju erosi permukaan lahan per regional / tutupan lahan
- * Sumber: SNI 03-3432-1994, USLE Puslitbang Pengairan PUPR
+ * Sumber: SNI 03-3432-1994, Formula USLE Erosi Lahan
  */
 export const REGIONAL_SEDIMENT_PRESETS = [
   { id: 'jawa_kritis', label: 'Jawa — DAS Kritis (Pertanian Lahan Miring/Gundul)', rateMmYear: 2.5 },

@@ -1,6 +1,6 @@
 /**
  * Return Period Infrastructure Guidance
- * Berdasarkan Permen PUPR No. 18/2021
+ * Standar Perencanaan Bangunan Air & Infrastruktur SDA
  */
 
 export const RETURN_PERIOD_GUIDANCE: Record<string, { infrastructure: string; color: string }> = {

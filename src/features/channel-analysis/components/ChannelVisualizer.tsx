@@ -42,7 +42,7 @@ export const ChannelVisualizer: React.FC<Props> = ({ inputs, results, qDesign })
   const getWaterColor = () => {
     if (isOverflow || isCapacityIssue) return '#ef4444'; // Red (Bahaya/Meluap)
     if (isVelocityIssue) return '#f59e0b'; // Amber (Peringatan Gerus/Endap)
-    return '#0284c7'; // Blue PUPR (Aman)
+    return '#0284c7'; // Blue (Aman)
   };
 
   // 1. RENDER CIRCULAR

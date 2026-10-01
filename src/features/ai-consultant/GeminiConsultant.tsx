@@ -334,7 +334,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                 
                 <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Konsultan Hidrologi <span className="text-[#0c3a66] italic">RekaSDA</span></h3>
                 <p className="text-xs sm:text-sm text-slate-500 max-w-md leading-relaxed font-medium mb-8">
-                  Asisten cerdas terintegrasi SNI & Permen PUPR untuk evaluasi debit banjir, neraca air wilayah, perancangan embung, dan dimensi saluran terbuka.
+                  Asisten cerdas terintegrasi SNI untuk evaluasi debit banjir, neraca air wilayah, perancangan embung, dan dimensi saluran terbuka.
                 </p>
                 
                 <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -548,7 +548,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
               </Button>
             </div>
             <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-widest mt-2">
-              Brain Engine Terpadu • Berstandar SNI 2415 & Permen PUPR
+              Brain Engine Terpadu • Berstandar SNI 2415 & Kaidah Rekayasa SDA
             </p>
           </div>
         </div>
