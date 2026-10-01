@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
-import { Activity, TrendingUp } from 'lucide-react';
+import { Activity, TrendingUp, WifiOff } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
-// import { calculateHSSNakayasu } from '@/lib/engine/flood/sni2415';
+import { calculateHSSNakayasu } from '@/lib/engine/flood/sni2415';
+import { apiClient } from '@/lib/api/client';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface HSSComparisonStepProps {
@@ -39,6 +40,8 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
 
   const [hssResults, setHssResults] = useState<Record<string, { time: number[]; discharge: number[]; hydrograph: { time: number; discharge: number }[] }>>({});
   const [isCalculatingAPI, setIsCalculatingAPI] = useState(false);
+  // 'api' = Python engine, 'local' = TypeScript in-browser fallback
+  const [computeMode, setComputeMode] = useState<'api' | 'local'>('api');
 
   const handleCalculate = async () => {
     setIsCalculatingAPI(true);
@@ -47,29 +50,28 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
     try {
       const results: Record<string, { time: number[]; discharge: number[]; hydrograph: { time: number; discharge: number }[] }> = {};
 
-      // Nakayasu (Real Engine via API)
+      // Nakayasu via centralized apiClient (uses VITE_API_URL env var)
       const Tg_nak = L < 15 ? 0.4 + 0.058 * L : 0.21 * Math.pow(L, 0.7);
       const Tr_nak = 0.5 * Tg_nak;
 
-      const response = await fetch('http://localhost:8000/api/v1/banjir/nakayasu', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let nakayasuOutput: { Qp: number; Tp: number; Tb: number; hydrograph: { time: number; discharge: number }[] };
+
+      try {
+        nakayasuOutput = await apiClient.post<typeof nakayasuOutput>('/api/v1/banjir/nakayasu', {
           Ro: 1, // Unit hydrograph
           Tg: Tg_nak,
           Tr: Tr_nak,
           Alpha: 2.0,
-          A: A,
-          L: L
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Gagal menghitung HSS Nakayasu di Python Engine');
+          A,
+          L,
+        });
+        setComputeMode('api');
+      } catch (apiErr) {
+        // Graceful fallback: Python engine tidak tersedia → gunakan TS engine in-browser
+        console.warn('[HSSComparison] Python API tidak tersedia, fallback ke TS engine:', apiErr);
+        setComputeMode('local');
+        nakayasuOutput = calculateHSSNakayasu({ Ro: 1, Tg: Tg_nak, Tr: Tr_nak, Alpha: 2.0, A, L });
       }
-
-      const nakayasuOutput = await response.json();
 
       // Filter to 0.5h intervals for consistency and worker compatibility
       const filteredNakayasu: { time: number; discharge: number }[] = [];
@@ -214,6 +216,17 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
               <span className="text-slate-600">Durasi Hujan:</span>
               <span className="ml-2 font-bold text-blue-900 tabular-nums tracking-tight">{distribusiHujanJamJaman.length} jam</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compute Mode Indicator — tampil jika Python API tidak tersedia */}
+      {calculated && computeMode === 'local' && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md p-3">
+          <WifiOff className="w-4 h-4 text-amber-600 shrink-0" />
+          <div>
+            <p className="text-xs font-bold text-amber-800">Mode Komputasi Lokal (TypeScript Engine)</p>
+            <p className="text-xs text-amber-700">Python API tidak tersedia. Hasil Nakayasu dihitung oleh engine dalam browser — akurasi setara, tidak memerlukan koneksi server.</p>
           </div>
         </div>
       )}

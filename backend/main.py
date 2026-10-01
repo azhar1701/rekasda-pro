@@ -40,15 +40,19 @@ async def log_requests(request: Request, call_next):
     )
     return response
 
-# Konfigurasi CORS Middleware
-# Mengizinkan frontend (yang mungkin berada di Origin/Port berbeda) untuk mengakses API tanpa diblokir
+# Konfigurasi CORS — baca daftar origin yang diizinkan dari environment variable
+# Format: string dipisah koma, contoh: "http://localhost:5173,https://rekasda.go.id"
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:4173")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Pada production, ganti dengan domain frontend yang valid
+    allow_origins=ALLOWED_ORIGINS,       # ✅ Eksplisit — tidak pernah wildcard saat credentials aktif
     allow_credentials=True,
-    allow_methods=["*"],  # Mengizinkan semua method HTTP (GET, POST, PUT, DELETE, dsb)
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
+
 
 # Registrasi Router / Endpoint
 app.include_router(hydrology.router, prefix="/api/v1/hidrologi", tags=["Hidrologi"])
