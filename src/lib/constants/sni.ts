@@ -216,3 +216,193 @@ export const SNI_VALIDATION_LIMITS = {
   timeLag: { min: 0.1, max: 48 }, // jam
   riverLength: { min: 0.1, max: 1000 }, // km
 } as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BATAS KEBERLAKUAN METODE (SNI Method Applicability Boundaries)
+// Digunakan sebagai SSOT oleh semua kalkulator dan UI badge.
+// Menggantikan magic number yang tersebar di berbagai komponen.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SNIMethodBoundary {
+  /** Batas luas DAS minimum (km²) */
+  minAreaKm2?: number;
+  /** Batas luas DAS maksimum (km²) */
+  maxAreaKm2?: number;
+  /** Batas luas DAS dalam satuan Ha untuk display */
+  maxAreaHa?: number;
+  /** Batas waktu konsentrasi maksimum (jam) */
+  maxTcHours?: number;
+  /** Referensi SNI lengkap */
+  standard: string;
+  /** Pasal dalam standar */
+  clause: string;
+  /** Keterangan batas dan asumsi */
+  notes: string;
+}
+
+/**
+ * Batas keberlakuan setiap metode hidrologi sesuai SNI.
+ * Gunakan ini — JANGAN hardcode angka di komponen.
+ *
+ * @standard SNI 2415:2016
+ * @standard SNI 19-6728.1-2002
+ * @standard SNI 03-3432-1994
+ */
+export const SNI_METHOD_BOUNDARIES: Record<string, SNIMethodBoundary> = {
+  /** Metode Rasional — SNI 2415:2016 Pasal 5.2 */
+  RASIONAL: {
+    maxAreaKm2: 50,
+    maxAreaHa: 5000,
+    maxTcHours: 6,
+    standard: 'SNI 2415:2016',
+    clause: 'Pasal 5.2',
+    notes: 'DAS ≤ 50 km² (5000 Ha), DAS homogen, waktu konsentrasi < 6 jam',
+  },
+  /** Batas praktis (best accuracy) Metode Rasional */
+  RASIONAL_OPTIMAL: {
+    maxAreaKm2: 3,
+    maxAreaHa: 300,
+    standard: 'SNI 2415:2016',
+    clause: 'Pasal 5.2',
+    notes: 'Akurasi terbaik pada DAS ≤ 3 km² (300 Ha)',
+  },
+  /** HSS Nakayasu — SNI 2415:2016 Pasal 6.3 */
+  HSS_NAKAYASU: {
+    minAreaKm2: 0.1,
+    standard: 'SNI 2415:2016',
+    clause: 'Pasal 6.3',
+    notes: 'Berlaku untuk DAS dengan data pengamatan debit terbatas. α=2.0 (standar), α=1.5 (DAS landai), α=3.0 (DAS terjal)',
+  },
+  /** F.J. Mock Water Balance — SNI 19-6728.1-2002 */
+  FJ_MOCK: {
+    standard: 'SNI 19-6728.1-2002',
+    clause: 'Pasal 5–6',
+    notes: 'Neraca air bulanan. Data minimal 5 tahun untuk kalibrasi K dan SMC yang andal.',
+  },
+  /** Embung / Small Dam — SNI 03-3432-1994 */
+  EMBUNG: {
+    standard: 'SNI 03-3432-1994',
+    clause: 'Pasal 4.2',
+    notes: 'Tampungan < 3 juta m³ atau luas genangan < 200 ha',
+  },
+};
+
+/**
+ * Metadata badge untuk UI — digunakan oleh komponen kalkulator
+ * untuk menampilkan Engineering Badge dan WhiteBox transparency.
+ */
+export interface SNIBadgeMetadata {
+  label: string;
+  standard: string;
+  clause: string;
+  color: 'blue' | 'green' | 'amber' | 'red';
+}
+
+export const SNI_METADATA: Record<string, SNIBadgeMetadata> = {
+  RASIONAL: {
+    label: 'Metode Rasional',
+    standard: 'SNI 2415:2016',
+    clause: 'Pasal 5.2',
+    color: 'blue',
+  },
+  HSS_NAKAYASU: {
+    label: 'HSS Nakayasu',
+    standard: 'SNI 2415:2016',
+    clause: 'Pasal 6.3',
+    color: 'green',
+  },
+  FJ_MOCK: {
+    label: 'Neraca Air F.J. Mock',
+    standard: 'SNI 19-6728.1-2002',
+    clause: 'Pasal 5–6',
+    color: 'blue',
+  },
+  EMBUNG: {
+    label: 'Perencanaan Embung',
+    standard: 'SNI 03-3432-1994',
+    clause: 'Pasal 4.2',
+    color: 'amber',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOUNDARY CHECK UTILITY — digunakan oleh semua kalkulator frontend
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface BoundaryCheckResult {
+  /** true jika input masih dalam batas keberlakuan */
+  isWithinBounds: boolean;
+  /** Tingkat peringatan: 'ok' | 'warning' | 'error' */
+  severity: 'ok' | 'warning' | 'error';
+  /** Pesan peringatan yang siap ditampilkan di UI */
+  message: string | null;
+  /** Referensi standar yang dilanggar (jika ada) */
+  reference: string | null;
+}
+
+/**
+ * Periksa apakah parameter input masih dalam batas keberlakuan SNI suatu metode.
+ *
+ * @param method  - Kode metode ('RASIONAL' | 'HSS_NAKAYASU' | 'FJ_MOCK' | 'EMBUNG')
+ * @param areaKm2 - Luas DAS dalam km² (opsional)
+ * @param tcHours - Waktu konsentrasi dalam jam (opsional)
+ * @returns BoundaryCheckResult dengan status dan pesan siap tampil
+ *
+ * @example
+ * ```ts
+ * const check = checkSNIBoundary('RASIONAL', 4.5);
+ * if (check.severity === 'warning') showWarning(check.message);
+ * ```
+ */
+export function checkSNIBoundary(
+  method: keyof typeof SNI_METHOD_BOUNDARIES,
+  areaKm2?: number,
+  tcHours?: number,
+): BoundaryCheckResult {
+  const boundary = SNI_METHOD_BOUNDARIES[method];
+
+  if (!boundary) {
+    return { isWithinBounds: true, severity: 'ok', message: null, reference: null };
+  }
+
+  // Cek batas Tc (hanya Rasional yang membatasi Tc)
+  if (tcHours !== undefined && boundary.maxTcHours !== undefined && tcHours > boundary.maxTcHours) {
+    return {
+      isWithinBounds: false,
+      severity: 'warning',
+      message: `Waktu konsentrasi (Tc = ${tcHours.toFixed(2)} jam) melebihi batas ${boundary.clause} (maks. ${boundary.maxTcHours} jam). Verifikasi delineasi DAS.`,
+      reference: `${boundary.standard} ${boundary.clause}`,
+    };
+  }
+
+  if (areaKm2 === undefined) {
+    return { isWithinBounds: true, severity: 'ok', message: null, reference: null };
+  }
+
+  // Cek batas maksimum area
+  if (boundary.maxAreaKm2 !== undefined && areaKm2 > boundary.maxAreaKm2) {
+    const areaHa = (areaKm2 * 100).toFixed(0);
+    return {
+      isWithinBounds: false,
+      severity: 'error',
+      message: `⚠️ Luas DAS (${areaKm2.toFixed(2)} km² / ${areaHa} Ha) melebihi batas ${method === 'RASIONAL' ? 'Metode Rasional' : method} sesuai ${boundary.standard} ${boundary.clause} (maks. ${boundary.maxAreaKm2} km² / ${boundary.maxAreaHa} Ha). Gunakan HSS Nakayasu.`,
+      reference: `${boundary.standard} ${boundary.clause}`,
+    };
+  }
+
+  // Cek zona akurasi optimal (Rasional: 3 km² terbaik, 50 km² masih diizinkan)
+  if (method === 'RASIONAL') {
+    const optimal = SNI_METHOD_BOUNDARIES.RASIONAL_OPTIMAL;
+    if (optimal.maxAreaKm2 !== undefined && areaKm2 > optimal.maxAreaKm2 && areaKm2 <= (boundary.maxAreaKm2 ?? Infinity)) {
+      return {
+        isWithinBounds: true,
+        severity: 'warning',
+        message: `Luas DAS (${areaKm2.toFixed(2)} km²) melampaui zona akurasi optimal Metode Rasional (> ${optimal.maxAreaKm2} km²). Hasil masih valid, namun pertimbangkan HSS Nakayasu untuk akurasi lebih tinggi.`,
+        reference: `${boundary.standard} ${boundary.clause}`,
+      };
+    }
+  }
+
+  return { isWithinBounds: true, severity: 'ok', message: null, reference: null };
+}
+

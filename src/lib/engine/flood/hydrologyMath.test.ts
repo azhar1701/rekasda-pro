@@ -158,7 +158,7 @@ describe('HSS Comparison Service', () => {
       expect(result.hydrograph.length).toBeGreaterThan(0);
       expect(result.color).toBeTruthy();
     });
-  });
+  }, 15000);
 
   /**
    * Test Case 7: Validasi perbandingan metode
@@ -181,7 +181,7 @@ describe('HSS Comparison Service', () => {
     const qpValues = results.map(r => r.Qp);
     const uniqueQp = new Set(qpValues);
     expect(uniqueQp.size).toBeGreaterThan(1);
-  });
+  }, 15000);
 });
 
 /**

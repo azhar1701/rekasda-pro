@@ -16,6 +16,9 @@
     "audit:prod": "npm audit --omit=dev",
     "audit:check": "npm audit --audit-level=high",
     "audit:fix": "npm audit fix --audit-level=high",
+    "parity": "npx tsx scripts/verify-engine-parity.ts",
+    "test:run": "vitest run",
+    "verify": "tsc --noEmit && vitest run",
     "docker:dev": "docker compose up --watch rekasda-pro-dev",
     "docker:prod": "docker compose up --watch rekasda-pro-ui"
   },
