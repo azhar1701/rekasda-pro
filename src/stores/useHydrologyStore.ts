@@ -303,6 +303,7 @@ export interface HydrologyState {
   isLoading: boolean;
   error: string | null;
   selectedKalaUlang: number;
+  deletedStationIds: string[];
 
   // Actions
   setError: (error: string | null) => void;
@@ -385,6 +386,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   arealRainfallAlgebraic: null,
   arealRainfallThiessen: null,
   arealRainfallIsohyet: null,
+  deletedStationIds: [],
 
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
@@ -393,11 +395,19 @@ export const useHydrologyStore = create<HydrologyState>()(
   setCurahHujanRencana: (val: string) => set({ curahHujanRencana: val, isBanjirDirty: true, isNeracaDirty: true }),
   
   fetchStasiun: async () => {
+    const deletedIds = get().deletedStationIds || [];
     if (!supabase) {
       // Offline mode: jika stasiunList kosong, inisialisasi default
-      const currentList = get().stasiunList;
-      if (currentList.length === 0) {
+      const currentList = get().stasiunList.filter(s => !deletedIds.includes(s.id));
+      if (currentList.length === 0 && deletedIds.length === 0) {
         await get().seedInitialStations();
+      } else {
+        const currentSelected = get().selectedStasiun;
+        const stillValid = currentSelected && currentList.some(s => s.id === currentSelected.id);
+        set({
+          stasiunList: currentList,
+          selectedStasiun: stillValid ? currentSelected : (currentList[0] || null)
+        });
       }
       return;
     }
@@ -409,9 +419,22 @@ export const useHydrologyStore = create<HydrologyState>()(
         .order('nama_stasiun');
       
       if (error) throw error;
-      set({ stasiunList: data || [] });
+      const activeStations = (data || []).filter(s => !deletedIds.includes(s.id));
+      const currentSelected = get().selectedStasiun;
+      const stillValid = currentSelected && activeStations.some(s => s.id === currentSelected.id);
+      set({
+        stasiunList: activeStations,
+        selectedStasiun: stillValid ? currentSelected : (activeStations[0] || null)
+      });
     } catch (error: any) {
       console.warn('fetchStasiun gagal, menggunakan data lokal:', error.message);
+      const activeStations = get().stasiunList.filter(s => !deletedIds.includes(s.id));
+      const currentSelected = get().selectedStasiun;
+      const stillValid = currentSelected && activeStations.some(s => s.id === currentSelected.id);
+      set({
+        stasiunList: activeStations,
+        selectedStasiun: stillValid ? currentSelected : (activeStations[0] || null)
+      });
     } finally {
       set({ isLoading: false });
     }
@@ -486,7 +509,8 @@ export const useHydrologyStore = create<HydrologyState>()(
         };
         set(state => ({
           stasiunList: [...state.stasiunList, newStation],
-          selectedStasiun: state.selectedStasiun || newStation
+          selectedStasiun: state.selectedStasiun || newStation,
+          deletedStationIds: (state.deletedStationIds || []).filter(delId => delId !== newStation.id)
         }));
         return;
       }
@@ -499,7 +523,12 @@ export const useHydrologyStore = create<HydrologyState>()(
       if (error) throw error;
       
       if (data && data.length > 0) {
-        set(state => ({ stasiunList: [...state.stasiunList, data[0]] }));
+        const newStation = data[0];
+        set(state => ({
+          stasiunList: [...state.stasiunList, newStation],
+          selectedStasiun: state.selectedStasiun || newStation,
+          deletedStationIds: (state.deletedStationIds || []).filter(delId => delId !== newStation.id)
+        }));
       }
     } catch (error: any) {
       console.warn('Supabase addStasiun gagal, simpan ke lokal:', error);
@@ -508,7 +537,11 @@ export const useHydrologyStore = create<HydrologyState>()(
         ...stasiun,
         created_at: new Date().toISOString(),
       };
-      set(state => ({ stasiunList: [...state.stasiunList, fallbackStation] }));
+      set(state => ({
+        stasiunList: [...state.stasiunList, fallbackStation],
+        selectedStasiun: state.selectedStasiun || fallbackStation,
+        deletedStationIds: (state.deletedStationIds || []).filter(delId => delId !== fallbackStation.id)
+      }));
     } finally {
       set({ isLoading: false });
     }
@@ -560,6 +593,12 @@ export const useHydrologyStore = create<HydrologyState>()(
     set({ isLoading: true });
     try {
       if (supabase) {
+        const { error: rainErr } = await supabase
+          .from('master_data_hujan')
+          .delete()
+          .eq('stasiun_id', id);
+        if (rainErr) console.warn('Supabase delete data hujan error:', rainErr);
+
         const { error } = await supabase
           .from('master_stasiun')
           .delete()
@@ -569,7 +608,9 @@ export const useHydrologyStore = create<HydrologyState>()(
 
       set(state => {
         const remaining = state.stasiunList.filter(s => s.id !== id);
+        const updatedDeletedIds = Array.from(new Set([...(state.deletedStationIds || []), id]));
         return {
+          deletedStationIds: updatedDeletedIds,
           stasiunList: remaining,
           selectedStasiun: state.selectedStasiun?.id === id ? (remaining[0] || null) : state.selectedStasiun,
           dataHujan: state.dataHujan.filter(d => d.stasiun_id !== id)

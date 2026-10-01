@@ -78,3 +78,30 @@ INCLUDE (curah_hujan);
 -- 6. Update Statistik Perencana Query
 ANALYZE public.master_stasiun;
 ANALYZE public.master_data_hujan;
+
+-- 7. Relaksasi RLS Policy master_stasiun & master_data_hujan
+-- Memungkinkan operasional CRUD penuh bagi pengguna aplikasi (authenticated & anon)
+DROP POLICY IF EXISTS "stasiun_admin_delete" ON public.master_stasiun;
+DROP POLICY IF EXISTS "stasiun_admin_update" ON public.master_stasiun;
+DROP POLICY IF EXISTS "stasiun_admin_insert" ON public.master_stasiun;
+DROP POLICY IF EXISTS "stasiun_authenticated_select" ON public.master_stasiun;
+DROP POLICY IF EXISTS "Enable read access for all users on master_stasiun" ON public.master_stasiun;
+DROP POLICY IF EXISTS "Enable all operations for all on master_stasiun" ON public.master_stasiun;
+
+CREATE POLICY "Enable all operations for all on master_stasiun"
+ON public.master_stasiun
+FOR ALL
+USING (true)
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "data_hujan_admin_delete" ON public.master_data_hujan;
+DROP POLICY IF EXISTS "data_hujan_admin_update" ON public.master_data_hujan;
+DROP POLICY IF EXISTS "data_hujan_admin_insert" ON public.master_data_hujan;
+DROP POLICY IF EXISTS "Enable all operations for all on master_data_hujan" ON public.master_data_hujan;
+
+CREATE POLICY "Enable all operations for all on master_data_hujan"
+ON public.master_data_hujan
+FOR ALL
+USING (true)
+WITH CHECK (true);
+
