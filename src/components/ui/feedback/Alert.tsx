@@ -86,7 +86,7 @@ export const Alert: React.FC<AlertProps> = ({
   return (
     <div
       className={`
-        flex items-start gap-3 px-4 py-3 rounded-xl border glass-card
+        flex items-start gap-3 px-4 py-3 rounded-sm border shadow-none
         ${style.bg} ${style.border}
         ${className}
       `}

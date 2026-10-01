@@ -233,10 +233,10 @@ const AppLayout: React.FC = () => {
           triggerCount={aiTriggerCount}
         />
 
-        {/* Modenized Map Detail Modal */}
+        {/* Modernized Map Detail Modal */}
         {mapDetailItem && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setMapDetailItem(null)}>
-            <div className="bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 animate-in fade-in duration-200" onClick={() => setMapDetailItem(null)}>
+            <div className="bg-white rounded-sm border border-slate-300 shadow-none w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
               {/* Modal Header */}
               <div className="relative overflow-hidden bg-slate-900 border-b border-slate-800 px-6 py-5 shrink-0">
@@ -406,7 +406,7 @@ const AppLayout: React.FC = () => {
           </div>
 
           {/* Mobile Navigation - Bottom Bar */}
-          <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+          <div className="md:hidden bg-white border-t border-slate-300 shadow-none">
             <div className="px-1 py-1.5 safe-area-inset-bottom">
               <div className="flex items-center justify-between gap-0.5 w-full">
                 {navGroups.map((group, groupIndex) => (

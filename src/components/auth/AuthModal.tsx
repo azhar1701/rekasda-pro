@@ -51,7 +51,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[400px] glass-card border-white/20">
+            <DialogContent className="sm:max-w-[400px] bg-white border border-slate-300 rounded-sm shadow-none p-6">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-bold text-neutral-900">Selamat Datang</DialogTitle>
                     <DialogDescription>
@@ -60,9 +60,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </DialogHeader>
 
                 <Tabs defaultValue="login" className="w-full mt-4">
-                    <TabsList className="grid w-full grid-cols-2 bg-neutral-100/50">
-                        <TabsTrigger value="login">Masuk</TabsTrigger>
-                        <TabsTrigger value="signup">Daftar</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 bg-slate-100 border border-slate-200 rounded-sm p-1">
+                        <TabsTrigger value="login" className="rounded-sm py-2">Masuk</TabsTrigger>
+                        <TabsTrigger value="signup" className="rounded-sm py-2">Daftar</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="login" className="space-y-4 mt-6">
@@ -74,7 +74,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 placeholder="reka@engineer.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="glass-input"
+                                className="bg-white border-slate-300 rounded-sm h-11"
                             />
                         </div>
                         <div className="space-y-2">
@@ -84,11 +84,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="glass-input"
+                                className="bg-white border-slate-300 rounded-sm h-11"
                             />
                         </div>
                         <Button
-                            className="w-full h-11 bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/20"
+                            className="w-full h-11 bg-pupr-blue hover:bg-pupr-blue/90 text-white rounded-sm font-semibold shadow-none"
                             onClick={() => handleAuth('login')}
                             disabled={loading}
                         >
@@ -105,7 +105,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 placeholder="reka@engineer.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="glass-input"
+                                className="bg-white border-slate-300 rounded-sm h-11"
                             />
                         </div>
                         <div className="space-y-2">
@@ -115,11 +115,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="glass-input"
+                                className="bg-white border-slate-300 rounded-sm h-11"
                             />
                         </div>
                         <Button
-                            className="w-full h-11 bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-600/20"
+                            className="w-full h-11 bg-pupr-blue hover:bg-pupr-blue/90 text-white rounded-sm font-semibold shadow-none"
                             onClick={() => handleAuth('signup')}
                             disabled={loading}
                         >

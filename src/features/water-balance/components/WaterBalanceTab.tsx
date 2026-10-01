@@ -538,7 +538,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* Save Message Toast */}
             {saveMessage && (
-              <div className={`absolute top-0 right-0 z-50 px-6 py-4 rounded-md shadow-sm border flex items-center gap-3 animate-fade-in pointer-events-none ${saveMessage.type === 'success' ? 'bg-emerald-50/90 backdrop-blur-md border-emerald-500 text-emerald-800' : 'bg-red-50/90 backdrop-blur-md border-red-500 text-red-800'
+              <div className={`absolute top-0 right-0 z-50 px-6 py-4 rounded-sm border flex items-center gap-3 animate-fade-in pointer-events-none shadow-none ${saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
                 }`}>
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {saveMessage.type === 'success' ? (
@@ -555,8 +555,8 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             {mockResults && hasilMock && (
               <>
                 {/* Q Andalan Highlight Card */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-md shadow-sm border border-blue-200/60 p-6 flex items-center gap-6">
-                  <div className="p-3 bg-blue-100 rounded-md shrink-0">
+                <div className="bg-white rounded-sm border border-slate-300 p-6 flex items-center gap-6 shadow-none">
+                  <div className="p-3 bg-blue-100 rounded-sm shrink-0">
                     <Droplet className="w-8 h-8 text-pupr-blue" />
                   </div>
                   <div className="flex-1">
@@ -574,14 +574,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
 
                 {/* Mock Summary Table */}
-                <div className="bg-white/60 backdrop-blur-xl rounded-md shadow-sm border border-white/50 overflow-hidden">
-                  <div className="px-5 py-3 border-b border-slate-200/50 bg-white/40">
+                <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
+                  <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
                     <h3 className="text-sm font-bold text-slate-800">Rekap Hasil F.J. Mock (12 Bulan)</h3>
                     <p className="text-[10px] text-slate-500">Transformasi Hujan → Aliran per bulan</p>
                   </div>
                   <div className="overflow-x-auto overflow-y-auto max-h-80">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
+                      <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                         <tr>
                           <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
                           <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">P (mm)</th>
@@ -615,26 +615,26 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
             {/* FINAL NERACA TABLE — Conditional */}
             {neracaFinal && (
-              <div className="bg-white/60 backdrop-blur-xl rounded-md shadow-sm border border-white/50 overflow-hidden">
-                <div className="px-5 py-3 border-b border-slate-200/50 bg-white/40 flex items-center justify-between">
+              <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
+                <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-slate-800">Neraca Air Final (Surplus/Defisit)</h3>
                     <p className="text-[10px] text-slate-500">Ketersediaan − (Irigasi + Air Baku + Lingkungan)</p>
                   </div>
                   <div className="flex items-center gap-3 text-[10px] font-bold">
                     <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-md bg-pupr-blue" />
+                      <span className="w-2.5 h-2.5 rounded-sm bg-pupr-blue" />
                       Surplus: {neracaFinal.filter(r => r.status === 'Surplus').length} bln
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-md bg-rose-500" />
+                      <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
                       Defisit: {neracaFinal.filter(r => r.status === 'Defisit').length} bln
                     </span>
                   </div>
                 </div>
                 <div className="overflow-x-auto overflow-y-auto max-h-80">
                   <table className="w-full text-xs">
-                    <thead className="bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
+                    <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                       <tr>
                         <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
                         <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Supply</th>
@@ -642,7 +642,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         <th className="text-right py-2.5 px-3 font-bold text-orange-600">Air Baku</th>
                         <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Lingk.</th>
                         <th className="text-right py-2.5 px-3 font-bold text-slate-600">Total</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-slate-800 bg-slate-100/80">Neraca</th>
+                        <th className="text-right py-2.5 px-3 font-bold text-slate-800 bg-slate-100">Neraca</th>
                         <th className="text-center py-2.5 px-3 font-bold text-slate-600">Status</th>
                       </tr>
                     </thead>
@@ -656,12 +656,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                           <td className="py-2 px-3 text-right font-mono text-orange-600 tabular-nums tracking-tight">{r.airBaku.toFixed(4)}</td>
                           <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.lingkungan.toFixed(4)}</td>
                           <td className="py-2 px-3 text-right font-mono font-semibold tabular-nums tracking-tight">{r.totalKebutuhan.toFixed(4)}</td>
-                          <td className={`py-2 px-3 text-right font-mono font-bold bg-slate-50/50 ${r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                          <td className={`py-2 px-3 text-right font-mono font-bold bg-slate-50/50 tabular-nums tracking-tight ${r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
                             }`}>
                             {r.neraca >= 0 ? '+' : ''}{r.neraca.toFixed(4)}
                           </td>
                           <td className="py-2 px-3 text-center tabular-nums tracking-tight">
-                            <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
+                            <span className={`inline-block px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
                               r.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
                                 'bg-slate-100 text-slate-600'
                               }`}>
@@ -687,68 +687,68 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               </div>
             )}
 
-            {/* KPI CARDS — Glassmorphism */}
+            {/* KPI CARDS — Flattened Design */}
             <div ref={kpiCardsRef} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
-              <div className="bg-white/80 backdrop-blur-md border border-white/40 rounded-md shadow-sm hover:shadow-sm transition-all duration-300 p-5 group relative">
+              <div className="bg-white border border-slate-300 rounded-sm p-5 group relative shadow-none">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Total Ketersediaan
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Total ketersediaan air dari sumber (debit andalan)
                     </div>
                   </span>
-                  <div className="w-10 h-10 rounded-md bg-blue-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-sm bg-blue-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold text-pupr-blue font-mono">{totalSupply.toFixed(1)}</div>
+                <div className="text-3xl font-bold text-pupr-blue font-mono tabular-nums">{totalSupply.toFixed(1)}</div>
                 <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
 
-              <div className="bg-white rounded-md shadow-sm border border-slate-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-sm">
+              <div className="bg-white rounded-sm border border-slate-300 p-5 group relative shadow-none">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Total Kebutuhan
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Total kebutuhan air domestik dan pertanian
                     </div>
                   </span>
-                  <div className="w-10 h-10 rounded-md bg-orange-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-sm bg-orange-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-3xl font-bold text-orange-600 font-mono">{totalDemand.toFixed(1)}</div>
+                <div className="text-3xl font-bold text-orange-600 font-mono tabular-nums">{totalDemand.toFixed(1)}</div>
                 <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
               </div>
 
-              <div className={`bg-white rounded-md shadow-sm border-2 ${netBalance >= 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-rose-300 bg-rose-50/30'} p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-sm`}>
+              <div className={`bg-white rounded-sm border-2 ${netBalance >= 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-rose-300 bg-rose-50/30'} p-5 group relative shadow-none`}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Status Neraca
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Selisih antara ketersediaan dan kebutuhan air
                     </div>
                   </span>
-                  <div className={`w-10 h-10 rounded-md ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-sm ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
                     <svg className={`w-5 h-5 ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={netBalance >= 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
                     </svg>
                   </div>
                 </div>
-                <div className={`text-3xl font-bold ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'} font-mono`}>
+                <div className={`text-3xl font-bold ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'} font-mono tabular-nums`}>
                   {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
                 </div>
                 <div className={`text-xs font-semibold mt-1 ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'}`}>
@@ -759,18 +759,18 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-md shadow-sm border border-rose-200 p-5 group relative transition-all duration-fast hover:-translate-y-1 hover:shadow-sm">
+              <div className="bg-white rounded-sm border border-rose-200 p-5 group relative shadow-none">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                     Bulan Kritis
                     <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
+                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
                       Bulan dengan defisit air terbesar
                     </div>
                   </span>
-                  <div className="w-10 h-10 rounded-md bg-rose-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-sm bg-rose-100 flex items-center justify-center">
                     <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -784,7 +784,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             </div>
 
             {/* CHART SECTION */}
-            <div className="bg-white/60 backdrop-blur-xl rounded-md shadow-sm border border-white/50 p-4 md:p-6 transition-all duration-300">
+            <div className="bg-white rounded-sm border border-slate-300 p-4 md:p-6 shadow-none">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -797,7 +797,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   <button
                     onClick={handleSaveWaterBalance}
                     disabled={isSaving}
-                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-pupr-blue text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-pupr-blue text-white rounded-sm hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-none"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -808,7 +808,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                   {onConsultAI && (
                     <button
                       onClick={onConsultAI}
-                      className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 active:bg-slate-900 transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-md"
+                      className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-slate-700 text-white rounded-sm hover:bg-slate-800 active:bg-slate-900 transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-none"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -822,7 +822,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               <div className="h-56 xs:h-64 sm:h-80 md:h-96">
                 <WaterBalanceChart data={results} />
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-200/60">
+              <div className="mt-4 pt-4 border-t border-slate-200">
                 <p className="text-xs text-slate-600">
                   <span className="font-semibold">Catatan:</span> Perhitungan mengikuti standar <span className="font-semibold text-pupr-blue">SNI 19-6728.1-2002</span> tentang Penyusunan Neraca Sumber Daya Air pada Wilayah Sungai.
                 </p>
@@ -843,14 +843,14 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
       {
         isInputModalOpen && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsInputModalOpen(false)}>
-            <div className="bg-white/90 backdrop-blur-xl border border-white/50 rounded-md shadow-sm w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/60">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/70" onClick={() => setIsInputModalOpen(false)}>
+            <div className="bg-white border border-slate-300 rounded-sm w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto shadow-none" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800">Input Data Debit Bulanan</h3>
                   <p className="text-xs text-slate-500 mt-1">Ketersediaan Air (m³/s)</p>
                 </div>
-                <button onClick={() => setIsInputModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button onClick={() => setIsInputModalOpen(false)} className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-sm">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -859,7 +859,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
                 {MONTHS.map((month, index) => (
-                  <div key={month} className="bg-white/50 backdrop-blur-md rounded-md p-4 border border-white/60 shadow-inner">
+                  <div key={month} className="bg-slate-50 rounded-sm p-4 border border-slate-200">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">{month}</label>
                     <div className="relative">
                       <input
@@ -867,7 +867,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         step="0.1"
                         value={inputs.monthlySupply[index]}
                         onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
-                        className="w-full h-12 px-4 pr-16 text-lg bg-white/70 border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-11 px-4 pr-16 text-lg bg-white border border-slate-300 rounded-sm font-semibold text-right tabular-nums focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">m³/s</span>
                     </div>
@@ -878,7 +878,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               <div className="flex justify-end">
                 <button
                   onClick={() => setIsInputModalOpen(false)}
-                  className="px-6 py-3 bg-pupr-blue/90 hover:bg-pupr-blue text-white rounded-md font-semibold transition-colors shadow-md backdrop-blur-md"
+                  className="min-h-[44px] px-6 py-2.5 bg-pupr-blue hover:bg-pupr-blue/90 text-white rounded-sm font-semibold transition-colors shadow-none"
                 >
                   Simpan &amp; Tutup
                 </button>

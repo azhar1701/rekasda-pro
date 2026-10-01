@@ -34,19 +34,20 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-md"
+        className="absolute inset-0 bg-slate-900/70"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className={`relative glass-strong rounded-xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200`}>
+      <div className={`relative bg-white border border-slate-300 rounded-sm shadow-none w-full ${sizes[size]} max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200`}>
         {/* Header */}
         {title && (
-          <div className="px-6 py-4 border-b border-white/20 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-neutral-900">{title}</h2>
+          <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full glass hover:bg-white/30 transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-sm border border-slate-200 hover:bg-slate-100 transition-colors"
+              aria-label="Tutup"
             >
               <X className="w-5 h-5 text-neutral-700" />
             </button>

@@ -161,12 +161,12 @@ export const FrequencyAnalysisCalculator: React.FC<{ onApply: (rainfalls: number
   const results = analysisResult?.designValues.map(dv => dv.designValue) || [0, 0, 0, 0, 0, 0];
   
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-md shadow-sm max-w-5xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-5xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-slate-200">
           <h3 className="text-lg font-bold text-slate-900">Analisis Frekuensi Hujan</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-sm transition-colors" aria-label="Tutup">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

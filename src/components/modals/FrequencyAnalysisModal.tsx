@@ -191,8 +191,8 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute inset-0 bg-slate-900/70" onClick={onClose}></div>
+      <div className="bg-white rounded-sm border border-slate-300 shadow-none w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col pointer-events-auto relative z-10" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white">
           <div>
             <h2 className="text-lg font-bold text-gray-900 leading-none">Analisis Frekuensi Hujan</h2>
@@ -201,7 +201,7 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
               Sumber: {sourceName}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={onClose} className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 rounded-sm transition-colors" aria-label="Tutup">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>

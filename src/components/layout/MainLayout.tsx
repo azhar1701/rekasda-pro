@@ -24,7 +24,7 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-neutral-900/40 backdrop-blur-md z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/70 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -42,7 +42,8 @@ export default function MainLayout({ children, title }: MainLayoutProps) {
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-neutral-700 hover:text-neutral-900"
+            className="lg:hidden w-11 h-11 flex items-center justify-center text-neutral-700 hover:text-neutral-900 rounded-sm"
+            aria-label="Tutup menu"
           >
             <X className="w-5 h-5" />
           </button>

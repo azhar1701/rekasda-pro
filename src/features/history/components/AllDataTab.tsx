@@ -332,22 +332,45 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     ),
     value: (
       <div className="flex items-baseline justify-end gap-1.5">
-        <span className="font-bold text-slate-900">{getMainValue(item)}</span>
+        <span className="font-bold text-slate-900 font-mono tabular-nums tracking-tight">{getMainValue(item)}</span>
         <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">m³/s</span>
       </div>
     ),
     actions: (
-      <div className="flex items-center justify-center gap-1.5">
-        <button onClick={() => handleShowOnMap(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors" title="Lihat di Peta">
+      <div className="flex items-center justify-end gap-1">
+        <button
+          onClick={() => handleShowOnMap(item)}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-sm transition-colors"
+          title="Lihat di Peta"
+          aria-label="Lihat di Peta"
+        >
           <MapPin className="w-4 h-4" />
         </button>
-        <button onClick={() => onViewDetail?.(item)} className="p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-800 rounded-md transition-colors" title="Lihat Detail">
+        <button
+          onClick={() => onViewDetail?.(item)}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-800 rounded-sm transition-colors"
+          title="Lihat Detail"
+          aria-label="Lihat Detail"
+        >
           <Eye className="w-4 h-4" />
         </button>
-        <button onClick={() => onConsultAI?.(item)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors" title="Konsultasi AI">
+        <button
+          onClick={() => onConsultAI?.(item)}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-sm transition-colors"
+          title="Konsultasi AI"
+          aria-label="Konsultasi AI"
+        >
           <Bot className="w-4 h-4" />
         </button>
-        <button onClick={() => handleDelete(item.type, item.id)} className="p-1.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-md transition-colors" title="Hapus Data">
+
+        {/* P3-4: Visual separator & deliberate spacing for destructive action */}
+        <div className="h-5 w-px bg-slate-200 mx-1" />
+        <button
+          onClick={() => handleDelete(item.type, item.id)}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-sm transition-colors"
+          title="Hapus Data"
+          aria-label="Hapus Data"
+        >
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
@@ -411,8 +434,8 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
             <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-12 w-12 border-b-2 border-indigo-600"></div>
           </div>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-white/40 backdrop-blur-md rounded-md border border-white/60 shadow-inner text-center">
-            <div className="w-20 h-20 bg-indigo-50 rounded-md flex items-center justify-center mb-5 rotate-3 shadow-sm border border-white">
+          <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-sm border border-slate-300 shadow-none text-center">
+            <div className="w-20 h-20 bg-indigo-50 rounded-sm flex items-center justify-center mb-5 rotate-3 border border-slate-200">
               <Database className="w-10 h-10 text-pupr-blue -rotate-3" />
             </div>
             <h3 className="text-lg font-bold text-slate-800 mb-1">Database Kosong</h3>
@@ -421,7 +444,7 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
         ) : (
           <>
             {viewMode === 'MAP' ? (
-              <div className="bg-white rounded-md shadow-sm border border-slate-200 p-3 sm:p-5">
+              <div className="bg-white rounded-sm shadow-none border border-slate-300 p-3 sm:p-5">
                 <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Peta Lokasi Proyek</h2>
                 <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">

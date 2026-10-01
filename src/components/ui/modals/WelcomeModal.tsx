@@ -26,8 +26,8 @@ export const WelcomeModal: React.FC = () => {
     ];
 
     return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-500">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/70 animate-in fade-in duration-300">
+            <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-2xl w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-500">
 
                 {/* Decorative Header */}
                 <div className="bg-pupr-blue p-8 relative overflow-hidden">
@@ -40,7 +40,8 @@ export const WelcomeModal: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setHasSeenWelcome(true)}
-                        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+                        className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center text-white/80 hover:text-white rounded-sm transition-colors"
+                        aria-label="Tutup"
                     >
                         <X className="w-6 h-6" />
                     </button>

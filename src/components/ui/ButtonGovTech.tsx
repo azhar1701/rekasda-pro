@@ -17,12 +17,12 @@ export const ButtonGovTech: React.FC<ButtonGovTechProps> = ({
   disabled = false,
   ...props
 }) => {
-  const baseStyle = "inline-flex items-center justify-center gap-2 font-semibold rounded-md transition-all duration-200 active:scale-95 hover:translate-y-[-1px] hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none [&_svg]:size-4 [&_svg]:shrink-0";
+  const baseStyle = "inline-flex items-center justify-center gap-2 font-semibold rounded-sm transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-none [&_svg]:size-4 [&_svg]:shrink-0";
 
   const sizes = {
-    sm: "h-8 px-3 text-xs",
-    default: "h-10 px-4 text-sm",
-    lg: "h-11 px-6 text-base",
+    sm: "h-9 px-3 text-xs",
+    default: "h-11 px-5 text-sm",
+    lg: "h-12 px-6 text-base",
   };
 
   const variants = {

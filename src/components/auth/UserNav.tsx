@@ -17,9 +17,9 @@ export const UserNav: React.FC = () => {
             <>
                 <Button
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="glass border-primary-100 text-primary-700 hover:bg-primary-50"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[44px] px-4 rounded-sm"
                 >
                     Masuk
                 </Button>
@@ -42,13 +42,13 @@ export const UserNav: React.FC = () => {
                 </span>
             </div>
 
-            <div className="h-9 w-9 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 shadow-inner">
+            <div className="h-10 w-10 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600">
                 <User className="w-5 h-5" />
             </div>
 
             <button
                 onClick={() => signOut()}
-                className="p-2 text-neutral-400 hover:text-danger transition-colors"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-neutral-400 hover:text-danger transition-colors rounded-sm"
                 title="Keluar"
             >
                 <LogOut className="w-5 h-5" />

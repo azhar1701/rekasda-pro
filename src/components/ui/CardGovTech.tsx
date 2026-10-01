@@ -18,7 +18,7 @@ export const CardGovTech: React.FC<CardGovTechProps> = ({
   noPadding = false
 }) => {
   return (
-    <div className={`bg-white border border-slate-300 rounded-md shadow-sm ${className}`}>
+    <div className={`bg-white border border-slate-300 rounded-sm shadow-none ${className}`}>
       {(title || subtitle || headerAction) && (
         <div className="px-6 py-4 border-b border-slate-300 bg-slate-50">
           <div className="flex items-start justify-between">

@@ -409,7 +409,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                 <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
                     {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
                     <div className="md:col-span-5 flex flex-col gap-5">
-                        <div className="bg-white/60 backdrop-blur border border-white/60 rounded-md shadow-sm p-5 space-y-5">
+                        <div className="bg-white border border-slate-300 rounded-sm shadow-none p-5 space-y-5">
 
                             {/* Project Banner (SSOT) */}
                             <ProjectContextBanner />
@@ -720,18 +720,18 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                         {/* Result Summary Cards */}
                         {resultSummary && (
                             <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-md shadow-sm p-5">
+                                <div className="bg-white border border-slate-300 rounded-sm shadow-none p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Debit Puncak (Qp)</p>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{resultSummary.debitPuncak}</span>
+                                        <span className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono tabular-nums">{resultSummary.debitPuncak}</span>
                                         <span className="text-sm font-bold text-slate-400">m³/s</span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2 font-medium">Metode: {currentMethodInfo?.label}</p>
                                 </div>
-                                <div className="bg-white/80 backdrop-blur border border-white/60 rounded-md shadow-sm p-5">
+                                <div className="bg-white border border-slate-300 rounded-sm shadow-none p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Waktu Puncak (Tp)</p>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-extrabold text-slate-900 tracking-tight">{resultSummary.waktuPuncak}</span>
+                                        <span className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono tabular-nums">{resultSummary.waktuPuncak}</span>
                                         <span className="text-sm font-bold text-slate-400">jam</span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2 font-medium">Kategori: {category === 'empiris' ? 'Empiris' : 'HSS'}</p>
@@ -741,8 +741,8 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                         {/* Hydrograph Chart */}
                         <div className={cn(
-                            'flex-1 bg-white/60 backdrop-blur border rounded-md shadow-sm p-5 flex flex-col transition-all duration-300',
-                            isBanjirDirty ? 'border-amber-200 shadow-amber-500/10' : 'border-white/60'
+                            'flex-1 bg-white border rounded-sm shadow-none p-5 flex flex-col transition-colors',
+                            isBanjirDirty ? 'border-amber-400' : 'border-slate-300'
                         )}>
                             <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 mb-4">
                                 <Activity className="w-5 h-5 text-blue-500" />

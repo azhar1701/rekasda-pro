@@ -22,16 +22,16 @@ export default function DataTable<T extends Record<string, any>>({
   striped = true,
 }: DataTableProps<T>) {
   return (
-    <div className="glass-card rounded-xl overflow-hidden shadow-lg">
+    <div className="bg-white border border-slate-300 rounded-sm overflow-hidden shadow-none">
       {caption && (
-        <div className="px-6 py-4 border-b border-white/20">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
           <h3 className="text-sm font-semibold text-neutral-900">{caption}</h3>
         </div>
       )}
       
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="glass border-b border-white/20">
+          <thead className="bg-slate-100 border-b border-slate-300">
             <tr>
               {columns.map((column, idx) => (
                 <th
@@ -45,7 +45,7 @@ export default function DataTable<T extends Record<string, any>>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+          <tbody className="divide-y divide-slate-200">
             {data.length === 0 ? (
               <tr>
                 <td
@@ -59,12 +59,12 @@ export default function DataTable<T extends Record<string, any>>({
               data.map((row, rowIdx) => (
                 <tr
                   key={rowIdx}
-                  className={striped && rowIdx % 2 === 1 ? 'bg-white/5' : ''}
+                  className={striped && rowIdx % 2 === 1 ? 'bg-slate-50' : 'bg-white'}
                 >
                   {columns.map((column, colIdx) => (
                     <td
                       key={colIdx}
-                      className={`px-6 py-3.5 text-sm text-neutral-900 font-feature-settings-numeric
+                      className={`px-6 py-3 text-sm text-neutral-900 tabular-nums tracking-tight
                         ${column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'}`}
                     >
                       {column.render

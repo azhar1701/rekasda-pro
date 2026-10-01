@@ -82,7 +82,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
       if (error) {
         setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
       } else {
-        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan perhitungan!' });
+        setSaveMessage({ type: 'success', text: 'â Berhasil menyimpan perhitungan!' });
       }
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err) {
@@ -156,7 +156,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">Analisis Saluran Manning</h1>
-            <p className="text-sm text-slate-500 font-medium">Perhitungan kapasitas debit saluran terbuka · Rumus Manning</p>
+            <p className="text-sm text-slate-500 font-medium">Perhitungan kapasitas debit saluran terbuka Â· Rumus Manning</p>
           </div>
         </div>
       </div>
@@ -197,10 +197,10 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   { label: "Bilangan Froude", math: "Fr = \frac{V}{\sqrt{g \cdot D}}" }
                 ]}
                 parameters={[
-                  { symbol: "Q", description: "Debit aliran rancangan", unit: "m�/s" },
+                  { symbol: "Q", description: "Debit aliran rancangan", unit: "m³/s" },
                   { symbol: "V", description: "Kecepatan aliran", unit: "m/s" },
                   { symbol: "n", description: "Koefisien kekasaran Manning", unit: "-" },
-                  { symbol: "A", description: "Luas penampang basah", unit: "m�" },
+                  { symbol: "A", description: "Luas penampang basah", unit: "m²" },
                   { symbol: "R", description: "Jari-jari hidrolis", unit: "m" },
                   { symbol: "P", description: "Keliling penampang basah", unit: "m" },
                   { symbol: "S", description: "Kemiringan dasar saluran", unit: "m/m" },
@@ -318,7 +318,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
             <div className="space-y-6">
 
               {/* Visualization */}
-              <Card className="glass-card shadow-sm border-white/20 p-4 sm:p-6">
+              <Card className="bg-white border border-slate-300 rounded-sm shadow-none p-4 sm:p-6">
                 <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Tampilan Penampang Melintang</h2>
                 <CardContent className="p-0">
                   <ChannelVisualizer inputs={inputs} results={manningResults} />
@@ -330,8 +330,8 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   {/* KPI Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
                     {isHookCalculating && (
-                      <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-md">
-                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-md animate-pulse bg-slate-200 rounded-md"></div>
+                      <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-sm">
+                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-sm animate-pulse bg-slate-200"></div>
                       </div>
                     )}
                     <StatCard
@@ -351,8 +351,8 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   
                   {/* Evaluasi Kapasitas vs Debit Banjir Rencana */}
                   {qDesign !== null && qDesign > 0 && (
-                     <div className={`p-4 rounded-md border ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-sm`}>
-                        <div className={`mt-0.5 p-1.5 rounded-md ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-100 text-pupr-blue' : 'bg-red-100 text-red-600'}`}>
+                     <div className={`p-4 rounded-sm border ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} flex items-start gap-3 shadow-none`}>
+                        <div className={`mt-0.5 p-1.5 rounded-sm ${Number(manningResults?.Discharge || 0) >= qDesign ? 'bg-emerald-100 text-pupr-blue' : 'bg-red-100 text-red-600'}`}>
                            {Number(manningResults?.Discharge || 0) >= qDesign ? (
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                            ) : (
@@ -365,11 +365,11 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                            </h3>
                            <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1 text-xs">
                               <span className={Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
-                                 Debit Banjir Rencana (Q Design): <strong className="font-mono">{Number(qDesign || 0).toFixed(3)} m³/s</strong>
+                                 Debit Banjir Rencana (Q Design): <strong className="font-mono tabular-nums">{Number(qDesign || 0).toFixed(3)} m³/s</strong>
                               </span>
                               <span className="hidden sm:inline text-slate-300">|</span>
                               <span className={Number(manningResults?.Discharge || 0) >= qDesign ? 'text-emerald-700' : 'text-red-700'}>
-                                 Kapasitas Saluran (Q Cap): <strong className="font-mono">{Number(manningResults?.Discharge || 0).toFixed(3)} m³/s</strong>
+                                 Kapasitas Saluran (Q Cap): <strong className="font-mono tabular-nums">{Number(manningResults?.Discharge || 0).toFixed(3)} m³/s</strong>
                               </span>
                            </div>
                            <p className={`mt-2 text-xs ${Number(manningResults?.Discharge || 0) >= qDesign ? 'text-pupr-blue' : 'text-red-600 font-medium'}`}>
@@ -382,7 +382,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                   )}
 
                   {/* Detailed Results */}
-                  <Card className="glass-card shadow-sm border-white/20 p-4 sm:p-6 opacity-ransition duration-300" style={{ opacity: isHookCalculating ? 0.7 : 1 }}>
+                  <Card className="bg-white border border-slate-300 rounded-sm shadow-none p-4 sm:p-6 opacity-ransition duration-300" style={{ opacity: isHookCalculating ? 0.7 : 1 }}>
                     <h2 className="text-base sm:text-lg font-bold text-neutral-900 mb-3 sm:mb-4">Rincian Hasil Perhitungan</h2>
                     <CardContent className="p-0 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -392,7 +392,7 @@ export const ManningCalculator: React.FC<Props> = ({ onConsultAI }) => {
                           { label: 'Energi Spesifik', val: Number(manningResults?.SpecificEnergy || 0).toFixed(3), unit: 'm', help: 'Total energi per satuan berat air' },
                           { label: 'Tegangan Geser', val: Number(manningResults?.ShearStress || 0).toFixed(2), unit: 'N/m²', help: 'Gaya geser pada dasar saluran' },
                         ].map((item, i) => (
-                          <div key={i} className="bg-slate-50 p-3 rounded-md">
+                          <div key={i} className="bg-slate-50 p-3 rounded-sm border border-slate-200">
                             <span className="text-xs font-bold text-slate-600 uppercase block mb-1 flex items-center gap-1">
                               {item.label}
                               <div className="group relative inline-block">

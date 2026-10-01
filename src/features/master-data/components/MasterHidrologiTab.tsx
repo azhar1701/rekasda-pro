@@ -378,8 +378,8 @@ Tindakan ini tidak dapat dibatalkan!`);
                     <h2 className="text-2xl font-bold text-slate-900">Master Data Hidrologi</h2>
                     <p className="text-sm text-slate-600 mt-1">Single Source of Truth untuk Data Curah Hujan</p>
                 </div>
-                <div className="flex gap-3">
-                    <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                <div className="flex flex-wrap gap-2.5">
+                    <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">
                         <Download className="w-4 h-4 mr-2" />
                         Download Template
                     </Button>
@@ -392,11 +392,11 @@ Tindakan ini tidak dapat dibatalkan!`);
                                 onChange={handleFileUpload}
                                 className="hidden"
                             />
-                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
+                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[44px]">
                                 <Upload className="w-4 h-4 mr-2" />
                                 Import Excel
                             </Button>
-                            <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-md font-bold bg-white/80 backdrop-blur border-teal-200 text-teal-700 hover:bg-teal-50">
+                            <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[44px]">
                                 <Activity className="w-4 h-4 mr-2" />
                                 Bulk Paste
                             </Button>
@@ -406,7 +406,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                         setEditingStasiunId(null);
                         setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
                         setShowModalStasiun(true);
-                    }} className="rounded-md font-bold bg-pupr-blue hover:bg-teal-700 shadow-sm shadow-teal-500/20">
+                    }} className="rounded-sm font-semibold bg-pupr-blue hover:bg-pupr-blue/90 text-white min-h-[44px] shadow-none">
                         <Plus className="w-4 h-4 mr-2" />
                         Tambah Stasiun
                     </Button>
@@ -414,13 +414,13 @@ Tindakan ini tidak dapat dibatalkan!`);
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
-                <div className="lg:col-span-4 flex flex-col overflow-hidden bg-white/60 backdrop-blur-xl border border-white/60 rounded-md shadow-sm">
-                    <div className="p-5 border-b border-slate-200/50 bg-white/40 flex justify-between items-center">
+                <div className="lg:col-span-4 flex flex-col overflow-hidden bg-white border border-slate-300 rounded-sm shadow-none">
+                    <div className="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
                         <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                             <MapPin className="w-5 h-5 text-pupr-blue" />
                             Daftar Stasiun
                         </h3>
-                        <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md">{stasiunList.length} Total</span>
+                        <span className="text-xs font-bold bg-slate-200 text-slate-700 px-2.5 py-1 rounded-sm">{stasiunList.length} Total</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -435,16 +435,16 @@ Tindakan ini tidak dapat dibatalkan!`);
                                     <div
                                         key={stasiun.id}
                                         onClick={() => selectStasiun(stasiun)}
-                                        className={`group p-4 rounded-md border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${isActive
-                                            ? 'bg-pupr-blue text-white border-teal-600 shadow-sm scale-[1.02]'
-                                            : 'bg-white/80 border-slate-200 hover:border-teal-300 hover:shadow-md text-slate-700'
+                                        className={`group p-4 rounded-sm border cursor-pointer transition-colors ${isActive
+                                            ? 'bg-pupr-blue text-white border-blue-600 shadow-none'
+                                            : 'bg-white border-slate-200 hover:border-slate-400 text-slate-700 shadow-none'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start">
                                             <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
                                                 {stasiun.nama_stasiun}
                                             </h4>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isActive ? 1 : undefined }}>
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isActive ? 1 : undefined }}>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -458,11 +458,12 @@ Tindakan ini tidak dapat dibatalkan!`);
                                                         });
                                                         setShowModalStasiun(true);
                                                     }}
-                                                    className={`p-1.5 rounded-md ${isActive ? 'hover:bg-white/20 text-white' : 'hover:bg-slate-100 text-slate-500'}`}
+                                                    className={`w-9 h-9 flex items-center justify-center rounded-sm ${isActive ? 'hover:bg-white/20 text-white' : 'hover:bg-slate-100 text-slate-600'}`}
                                                     title="Edit Stasiun"
                                                 >
-                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                    <Edit2 className="w-4 h-4" />
                                                 </button>
+                                                <div className={`h-4 w-px ${isActive ? 'bg-white/30' : 'bg-slate-200'} mx-0.5`} />
                                                 <button
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
@@ -475,19 +476,19 @@ Tindakan ini tidak dapat dibatalkan!`);
                                                             }
                                                         }
                                                     }}
-                                                    className={`p-1.5 rounded-md ${isActive ? 'hover:bg-red-500/50 text-white' : 'hover:bg-red-50 text-red-500'}`}
+                                                    className={`w-9 h-9 flex items-center justify-center rounded-sm ${isActive ? 'hover:bg-red-500/50 text-white' : 'hover:bg-red-50 text-red-600'}`}
                                                     title="Hapus Stasiun"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 mt-3">
-                                            <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
+                                            <div className={`text-xs px-2.5 py-1.5 rounded-sm ${isActive ? 'bg-white/20' : 'bg-slate-50 border border-slate-200'}`}>
                                                 <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Elevasi</span>
-                                                <span className="font-semibold font-mono">{stasiun.elevasi} m</span>
+                                                <span className="font-semibold font-mono tabular-nums">{stasiun.elevasi} m</span>
                                             </div>
-                                            <div className={`text-xs px-2 py-1.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
+                                            <div className={`text-xs px-2.5 py-1.5 rounded-sm ${isActive ? 'bg-white/20' : 'bg-slate-50 border border-slate-200'}`}>
                                                 <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Koordinat</span>
                                                 <span className="font-semibold font-mono truncate">
                                                     {stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}
@@ -501,10 +502,10 @@ Tindakan ini tidak dapat dibatalkan!`);
                     </div>
                 </div>
 
-                <div className="lg:col-span-8 flex flex-col overflow-hidden bg-white/60 backdrop-blur-xl border border-white/60 rounded-md shadow-sm">
+                <div className="lg:col-span-8 flex flex-col overflow-hidden bg-white border border-slate-300 rounded-sm shadow-none">
                     {!selectedStasiun ? (
                         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                            <div className="w-24 h-24 mb-6 bg-white border border-teal-100 rounded-md shadow-sm flex items-center justify-center">
+                            <div className="w-24 h-24 mb-6 bg-slate-50 border border-slate-200 rounded-sm shadow-none flex items-center justify-center">
                                 <Activity className="w-10 h-10 text-pupr-blue" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Stasiun Terpilih</h3>
@@ -517,7 +518,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         await seedInitialStations();
                                         toast.success('Berhasil memuat daftar stasiun pilot Citanduy.');
                                     }}
-                                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                                    className="bg-pupr-blue hover:bg-pupr-blue/90 text-white font-semibold rounded-sm min-h-[44px]"
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     Muat Stasiun Pilot
@@ -526,7 +527,7 @@ Tindakan ini tidak dapat dibatalkan!`);
                         </div>
                     ) : (
                         <>
-                            <div className="p-5 border-b border-slate-200/50 bg-white/40 flex flex-wrap justify-between items-center gap-4">
+                            <div className="p-5 border-b border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-4">
                                 <div>
                                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                                         <CloudRain className="w-5 h-5 text-pupr-blue" />
@@ -538,14 +539,14 @@ Tindakan ini tidak dapat dibatalkan!`);
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
+                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-sm border border-slate-300">
                                         <Calendar className="w-4 h-4 text-slate-400" />
                                         <span className="text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Tahun</span>
                                         <div className="relative">
                                             <select
                                                 value={selectedYear}
                                                 onChange={handleYearChange}
-                                                className="appearance-none bg-transparent border-none text-sm font-bold text-slate-800 pr-6 pl-1 py-1 focus:ring-0 cursor-pointer outline-none"
+                                                className="appearance-none bg-transparent border-none text-sm font-bold text-slate-800 pr-6 pl-1 py-1 focus:ring-0 cursor-pointer outline-none tabular-nums"
                                             >
                                                 {availableYears.map(year => (
                                                     <option key={year} value={year}>{year}</option>
@@ -555,33 +556,35 @@ Tindakan ini tidak dapat dibatalkan!`);
                                         </div>
                                     </div>
 
-
-                                    <Button onClick={handleInfillData} disabled={isInfilling || !selectedStasiun} size="sm" variant="outline" className="rounded-md border-slate-300 text-slate-700 hover:bg-slate-50">
+                                    <Button onClick={handleInfillData} disabled={isInfilling || !selectedStasiun} size="sm" variant="outline" className="rounded-sm border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[40px]">
                                         <Wand2 className={`w-4 h-4 mr-1 ${isInfilling ? 'animate-pulse' : ''}`} />
                                         <span className="hidden sm:inline">{isInfilling ? 'Memproses...' : 'Isi Kosong'}</span>
                                     </Button>
-                                    <Button onClick={handleDeleteYear} disabled={!selectedStasiun || dataHujan.length === 0} size="sm" variant="outline" className="rounded-md border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
-                                        <Trash2 className="w-4 h-4 mr-1" />
-                                        <span className="hidden sm:inline">Hapus Data Tahun Ini</span>
-                                    </Button>
-                                    <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-md bg-pupr-blue hover:bg-teal-700">
+                                    <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-sm bg-pupr-blue hover:bg-pupr-blue/90 text-white min-h-[40px]">
                                         <Plus className="w-4 h-4 mr-1" />
                                         <span className="hidden sm:inline">Tambah Data</span>
+                                    </Button>
+
+                                    {/* Visual separator for destructive button */}
+                                    <div className="h-6 w-px bg-slate-300 mx-1 hidden sm:block" />
+                                    <Button onClick={handleDeleteYear} disabled={!selectedStasiun || dataHujan.length === 0} size="sm" variant="outline" className="rounded-sm border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 min-h-[40px]">
+                                        <Trash2 className="w-4 h-4 mr-1" />
+                                        <span className="hidden sm:inline">Hapus Data Tahun Ini</span>
                                     </Button>
                                 </div>
                             </div>
 
                             <div className="flex-1 overflow-auto bg-slate-50/30 p-4 sm:p-6">
                                 {isLoading && (
-                                    <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-10">
-                                        <div className="animate-pulse bg-slate-200 rounded-md h-10 w-10 border-4 border-slate-200 border-t-teal-600"></div>
+                                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                                        <div className="animate-pulse bg-slate-200 rounded-sm h-10 w-10 border-4 border-slate-200 border-t-pupr-blue"></div>
                                     </div>
                                 )}
 
                                 <DailyRainfallMatrix data={displayData} year={selectedYear} onCellClick={handleCellClick} />
 
                                 {annualMaximums.length > 0 && (
-                                    <div className="mt-8 bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
+                                    <div className="mt-8 bg-white border border-slate-300 rounded-sm shadow-none overflow-hidden">
                                         <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
                                             <h4 className="font-bold text-slate-800 text-sm uppercase tracking-wider">
                                                 Rekapitulasi Hujan Maksimum {
@@ -631,8 +634,8 @@ Tindakan ini tidak dapat dibatalkan!`);
             </div>
 
             {showModalStasiun && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
+                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4">
+                    <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">{editingStasiunId ? 'Edit Stasiun' : 'Tambah Stasiun Baru'}</h3>
                             <button onClick={() => {
@@ -737,8 +740,8 @@ Tindakan ini tidak dapat dibatalkan!`);
             )}
 
             {showModalHujan && selectedStasiun && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-md shadow-sm max-w-md w-full p-6">
+                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4">
+                    <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">Tambah Data Curah Hujan</h3>
                             <button onClick={() => setShowModalHujan(false)} className="text-slate-400 hover:text-slate-600">
@@ -800,8 +803,8 @@ Tindakan ini tidak dapat dibatalkan!`);
             )}
 
             {showModalBulk && selectedStasiun && (
-                <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4 sm:p-10">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-300 animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4 sm:p-10">
+                    <div className="bg-white rounded-sm shadow-none max-w-6xl w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-300 animate-in fade-in zoom-in duration-200">
                         <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-pupr-blue/10 rounded-xl flex items-center justify-center shadow-inner">
@@ -960,8 +963,8 @@ Tindakan ini tidak dapat dibatalkan!`);
                 </div>
             )}
             {showModalQC && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-md shadow-sm max-w-2xl w-full p-6">
+                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4">
+                    <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-2xl w-full p-6">
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-800">Seleksi Stasiun untuk QC & Distribusi</h3>

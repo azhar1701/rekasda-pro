@@ -160,7 +160,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
       )}
 
       {/* Panel utama kalkulasi */}
-      <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
+      <Card className="p-6 bg-white border border-slate-300 rounded-sm shadow-none">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-purple-100 rounded-md flex-shrink-0">
             <Waves className="w-5 h-5 text-pupr-blue" />
@@ -263,7 +263,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
           </div>
 
           {/* Grafik hidrograf */}
-          <Card className="p-6 bg-white/80 backdrop-blur-sm border border-slate-200">
+          <Card className="p-6 bg-white border border-slate-300 rounded-sm shadow-none">
             <h4 className="text-sm font-bold text-slate-900 mb-4">Hidrograf Banjir Rencana vs HSS Unit</h4>
             <ResponsiveContainer width="100%" height={400}>
               <AreaChart data={mergedChartData}>
