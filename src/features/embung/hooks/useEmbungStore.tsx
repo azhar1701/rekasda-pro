@@ -19,6 +19,8 @@ import type {
     SedimentationInput,
     SedimentYieldResult,
     StageStorageCurve,
+    SpillwayConfig,
+    ReservoirZoning,
 } from '@/features/embung/types/embung.types';
 
 // ---------------------------------------------------------------------------
@@ -31,6 +33,12 @@ interface EmbungState {
 
     /** Step 1: Geometry Data (Curve builder) */
     stageStorageCurve: StageStorageCurve | null;
+
+    /** Reservoir standard zoning (MAD, MAN, MAB) */
+    zoning: ReservoirZoning | null;
+
+    /** Spillway parameters (Crest El, Width, Cd) */
+    spillwayConfig: SpillwayConfig | null;
 
     /** Tab 1: Capacity Analysis */
     capacityData: MonthlyData[];
@@ -59,19 +67,53 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 const DEFAULT_CAPACITY_DATA: MonthlyData[] = MONTH_LABELS.map((month, i) => ({
     id: String(i + 1),
     month,
-    inflow: 0,
-    outflow: 0,
+    inflow: [1.2, 1.5, 1.1, 0.8, 0.5, 0.3, 0.2, 0.2, 0.4, 0.7, 1.0, 1.3][i] ?? 0,
+    outflow: [0.8, 0.8, 0.9, 1.0, 1.2, 1.2, 1.1, 1.0, 0.9, 0.9, 0.8, 0.8][i] ?? 0,
+}));
+
+export const DEFAULT_STAGE_STORAGE_CURVE: StageStorageCurve = {
+    elevation: [100, 101, 102, 103, 104, 105],
+    storage: [0, 50000, 120000, 210000, 320000, 450000],
+    area: [0, 10000, 22000, 35000, 50000, 67000],
+};
+
+export const DEFAULT_ZONING: ReservoirZoning = {
+    riverbedElevation: 100,
+    deadStorageElevation: 101,
+    normalWaterLevel: 104,
+    floodWaterLevel: 105,
+    freeboard: 1.0,
+    deadStorageVolume: 50000,
+    activeStorageVolume: 270000,
+    floodStorageVolume: 130000,
+    totalStorageVolume: 450000,
+};
+
+export const DEFAULT_SPILLWAY_CONFIG: SpillwayConfig = {
+    crestElevation: 104,
+    crestLength: 10.0,
+    dischargeCoefficient: 2.0,
+    spillwayType: 'ogee',
+};
+
+export const DEFAULT_WATER_BALANCE_STEPS: WaterBalanceStepInput[] = MONTH_LABELS.map(() => ({
+    inflow: 50000,
+    demand: 30000,
+    evaporation: 120,
+    rainfall: 150,
 }));
 
 const initialState: EmbungState = {
     activeTab: 'geometry',
-    stageStorageCurve: null,
+    stageStorageCurve: DEFAULT_STAGE_STORAGE_CURVE,
+    zoning: DEFAULT_ZONING,
+    spillwayConfig: DEFAULT_SPILLWAY_CONFIG,
     capacityData: DEFAULT_CAPACITY_DATA,
     capacityResult: null,
     routingInput: null,
     routingResult: null,
     waterBalanceConfig: null,
-    waterBalanceSteps: [],
+    waterBalanceSteps: DEFAULT_WATER_BALANCE_STEPS,
     waterBalanceResult: null,
     sedimentInput: null,
     sedimentResult: null,
@@ -86,6 +128,8 @@ const initialState: EmbungState = {
 type EmbungAction =
     | { type: 'SET_ACTIVE_TAB'; payload: EmbungState['activeTab'] }
     | { type: 'SET_STAGE_STORAGE_CURVE'; payload: StageStorageCurve | null }
+    | { type: 'SET_ZONING'; payload: ReservoirZoning | null }
+    | { type: 'SET_SPILLWAY_CONFIG'; payload: SpillwayConfig | null }
     | { type: 'SET_CAPACITY_DATA'; payload: MonthlyData[] }
     | { type: 'SET_CAPACITY_RESULT'; payload: SequentPeakResult | null }
     | { type: 'SET_ROUTING_INPUT'; payload: Partial<FloodRoutingInput> | null }
@@ -105,6 +149,10 @@ function embungReducer(state: EmbungState, action: EmbungAction): EmbungState {
             return { ...state, activeTab: action.payload };
         case 'SET_STAGE_STORAGE_CURVE':
             return { ...state, stageStorageCurve: action.payload };
+        case 'SET_ZONING':
+            return { ...state, zoning: action.payload };
+        case 'SET_SPILLWAY_CONFIG':
+            return { ...state, spillwayConfig: action.payload };
         case 'SET_CAPACITY_DATA':
             return { ...state, capacityData: action.payload };
         case 'SET_CAPACITY_RESULT':

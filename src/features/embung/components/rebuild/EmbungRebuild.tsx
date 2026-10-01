@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { Droplets, Beaker, Spline, Activity, Waves, Database, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Droplets, Beaker, Spline, Activity, Waves, Database, ChevronRight, ChevronLeft, CheckCircle2, Sparkles } from 'lucide-react';
 import { useEmbungStore, EmbungProvider } from '../../hooks/useEmbungStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -21,7 +21,11 @@ const STEPS = [
     { id: 'sediment', title: 'Sedimentasi', icon: <Database className="w-4 h-4" />, description: 'Umur Guna' },
 ] as const;
 
-export const EmbungRebuildMain: React.FC = () => {
+interface EmbungRebuildProps {
+    onConsultAI?: (type: string, data: any, result: any) => void;
+}
+
+export const EmbungRebuildMain: React.FC<EmbungRebuildProps> = ({ onConsultAI }) => {
     const { state, dispatch } = useEmbungStore();
     const currentStepIndex = STEPS.findIndex(s => s.id === state.activeTab);
 
@@ -43,6 +47,25 @@ export const EmbungRebuildMain: React.FC = () => {
             description="Desain & Analisis terpadu berdasarkan Standar Perencanaan Embung (Guidance Workflow)"
             icon={<Droplets className="w-6 h-6" />}
             iconColorClass="bg-blue-50 text-pupr-blue"
+            actions={onConsultAI ? (
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                        onConsultAI(state.activeTab, state, {
+                            zoning: state.zoning,
+                            capacityResult: state.capacityResult,
+                            routingResult: state.routingResult,
+                            waterBalanceResult: state.waterBalanceResult,
+                            sedimentResult: state.sedimentResult
+                        });
+                    }}
+                    className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 h-8 text-xs font-semibold"
+                >
+                    <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600" />
+                    Konsultasi AI
+                </Button>
+            ) : undefined}
         >
             <div className="flex flex-col h-full gap-6">
                 {/* Stepper Header */}
@@ -123,8 +146,8 @@ export const EmbungRebuildMain: React.FC = () => {
     );
 };
 
-export const EmbungRebuild: React.FC = () => (
+export const EmbungRebuild: React.FC<EmbungRebuildProps> = ({ onConsultAI }) => (
     <EmbungProvider>
-        <EmbungRebuildMain />
+        <EmbungRebuildMain onConsultAI={onConsultAI} />
     </EmbungProvider>
 );

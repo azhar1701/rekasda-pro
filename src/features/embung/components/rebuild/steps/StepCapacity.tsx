@@ -4,13 +4,46 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { useEmbungStore } from '../../../hooks/useEmbungStore';
 import { calculateSequentPeak } from '@/lib/engine/embungEngine';
-import { Calculator, Info, Spline, Waves, Sparkles, Table as TableIcon } from 'lucide-react';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { Calculator, Info, Spline, Waves, Sparkles, Table as TableIcon, RefreshCw, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Area, Line } from 'recharts';
 
 export const StepCapacity: React.FC = () => {
     const { state, dispatch } = useEmbungStore();
+    const { hasilNeraca } = useHydrologyStore();
     const [data, setData] = useState(state.capacityData);
+
+    const hasNeracaData = Boolean(hasilNeraca?.monthlySupply && hasilNeraca.monthlySupply.length > 0);
+
+    const handleSyncFromNeraca = () => {
+        if (!hasilNeraca?.monthlySupply || hasilNeraca.monthlySupply.length === 0) {
+            toast.error('Data ketersediaan dan kebutuhan air belum dihitung di tab Neraca Air.');
+            return;
+        }
+
+        const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Des'];
+
+        const syncedRows = hasilNeraca.monthlySupply.map((supply, i) => {
+            const days = daysPerMonth[i] || 30;
+            // Q (m3/s) * days * 86400 / 1e6 = Juta m3
+            const inflowJutaM3 = parseFloat(((supply * days * 86400) / 1e6).toFixed(3));
+            const demandM3s = hasilNeraca.monthlyDemand ? hasilNeraca.monthlyDemand[i] : 0;
+            const outflowJutaM3 = parseFloat(((demandM3s * days * 86400) / 1e6).toFixed(3));
+
+            return {
+                id: String(i + 1),
+                month: monthNames[i] || `Bln-${i + 1}`,
+                inflow: inflowJutaM3,
+                outflow: outflowJutaM3,
+            };
+        });
+
+        setData(syncedRows);
+        dispatch({ type: 'SET_CAPACITY_DATA', payload: syncedRows });
+        toast.success('Data Inflow & Demand dari Neraca Air berhasil disinkronkan!');
+    };
 
     const handleInputChange = (id: string, field: 'inflow' | 'outflow', value: string) => {
         const numValue = parseFloat(value) || 0;
@@ -40,9 +73,9 @@ export const StepCapacity: React.FC = () => {
             <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <Info className="w-5 h-5 text-pupr-blue mt-1 shrink-0" />
                 <div>
-                    <h3 className="text-sm font-bold text-blue-900">Analisis Kapasitas (Metode Rippl)</h3>
+                    <h3 className="text-sm font-bold text-blue-900">Analisis Kapasitas Tampungan Efektif (Metode Rippl / Sequent Peak)</h3>
                     <p className="text-xs text-blue-800/80 mt-1 leading-relaxed">
-                        Metode ini menentukan volume tampungan efektif berdasarkan selisih kumulatif terbesar antara inflow dan outflow (demand).
+                        Metode ini menentukan volume tampungan efektif berdasarkan defisit kumulatif maksimum antara ketersediaan air (inflow) dan kebutuhan air (demand/outflow) sesuai SNI 03-3432-1994.
                     </p>
                 </div>
             </div>
@@ -55,11 +88,30 @@ export const StepCapacity: React.FC = () => {
                             <TableIcon className="w-4 h-4 text-slate-400" />
                             <CardTitle className="text-sm">Inflow & Demand Bulanan</CardTitle>
                         </div>
-                        <Button size="sm" onClick={handleCalculate} className="bg-pupr-blue hover:bg-teal-700 text-white h-8 text-xs">
-                            <Calculator className="w-3 h-3 mr-2" /> Kalkulasi
-                        </Button>
+                        <div className="flex gap-2">
+                            {hasNeracaData && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleSyncFromNeraca}
+                                    className="h-8 text-xs border-teal-300 text-teal-700 bg-teal-50 hover:bg-teal-100"
+                                >
+                                    <RefreshCw className="w-3 h-3 mr-1" /> Sync Neraca
+                                </Button>
+                            )}
+                            <Button size="sm" onClick={handleCalculate} className="bg-pupr-blue hover:bg-teal-700 text-white h-8 text-xs font-semibold">
+                                <Calculator className="w-3 h-3 mr-1.5" /> Hitung
+                            </Button>
+                        </div>
                     </CardHeader>
+                    {hasNeracaData && (
+                        <div className="px-4 py-2 bg-teal-50/70 border-b border-teal-100 text-[10px] text-teal-800 font-medium flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3 text-teal-600 shrink-0" />
+                            <span>Data ketersediaan dan kebutuhan air dapat disinkronkan langsung dari Neraca Air.</span>
+                        </div>
+                    )}
                     <CardContent className="p-0 overflow-auto max-h-[500px]">
+
                         <table className="w-full text-xs text-left">
                             <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10">
                                 <tr>

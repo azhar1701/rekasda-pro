@@ -56,6 +56,40 @@ export interface StageDischargeCurve {
   discharge: number[];
 }
 
+/** Spillway hydraulic parameters (Pd. T-03-2005-A & SNI 03-3432-1994) */
+export interface SpillwayConfig {
+  /** Elevasi Mercu Pelimpah (m asl) — setara Muka Air Normal (MAN) */
+  crestElevation: number;
+  /** Lebar Efektif Mercu Pelimpah B (m) */
+  crestLength: number;
+  /** Koefisien Debit Pelimpah Cd (typical 1.8 - 2.2) */
+  dischargeCoefficient: number;
+  /** Tipe Mercu Pelimpah */
+  spillwayType: 'ogee' | 'broad_crested' | 'sharp_crested';
+}
+
+/** Reservoir standard zoning (SNI 03-3432-1994) */
+export interface ReservoirZoning {
+  /** Elevasi Dasar Sungai (m asl) */
+  riverbedElevation: number;
+  /** Muka Air Rendah / Mati (MAD) */
+  deadStorageElevation: number;
+  /** Muka Air Normal / Mercu Pelimpah (MAN / NWL) */
+  normalWaterLevel: number;
+  /** Muka Air Banjir Maksimum (MAB / HWL) */
+  floodWaterLevel: number;
+  /** Tinggi Jagaan Minimum Freeboard (m) */
+  freeboard: number;
+  /** Volume Tampungan Mati (m³) */
+  deadStorageVolume: number;
+  /** Volume Tampungan Efektif (m³) */
+  activeStorageVolume: number;
+  /** Volume Tampungan Banjir (m³) */
+  floodStorageVolume: number;
+  /** Total Kapasitas Tampungan (m³) */
+  totalStorageVolume: number;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Capacity Calculator (Sequent Peak Algorithm / Rippl)
 // ---------------------------------------------------------------------------
@@ -262,13 +296,14 @@ export interface SedimentationInput {
   reservoirCapacity?: number;
   /** Inflow tahunan (m³) untuk perhitungan Trap Efficiency Brune */
   annualInflow?: number;
+  /** Volume tampungan mati (m³) untuk estimasi umur guna */
+  deadStorageM3?: number;
 }
 
 /** Result for Sediment Yield Rating Curve calculation */
 export interface SedimentYieldResult {
   /** Koefisien a dari log Qs = log a + b log Q */
   a: number;
-  /** Koefisien b dari log Qs = log a + b log Q */
   /** Koefisien b dari log Qs = log a + b log Q */
   b: number;
   /** Bias Correction Factor (Duan's Smearing Estimator) */
@@ -280,7 +315,6 @@ export interface SedimentYieldResult {
   /** Total Sedimen = Suspended + Bed Load (Ton/Tahun) */
   totalLoadTonnes: number;
   /** Volume Sedimen Total (m³/Tahun) */
-  /** Volume Sedimen Total (m³/Tahun) */
   totalVolumeM3: number;
   /** Efisiensi Tangkapan Waduk (Trap Efficiency) dalam persen (%) */
   trapEfficiency: number;
@@ -290,6 +324,46 @@ export interface SedimentYieldResult {
   erosionRateMm: number;
   /** Laju Erosi (Ton/km²/Tahun) */
   specificYield: number;
+  /** Estimasi Umur Guna Tampungan Mati (Tahun) */
+  lifespanYears?: number;
+}
+
+/** Regional / SDR Sediment Input (SNI 03-3432-1994) */
+export interface RegionalSedimentInput {
+  /** Luas Daerah Aliran Sungai (km²) */
+  luasDasKm2: number;
+  /** Laju Erosi Lahan Regional (mm/tahun) */
+  erosionRateMmYear: number;
+  /** Sediment Delivery Ratio (SDR) 0 - 1 (jika kosong dihitung dengan formula Boyd: 0.47 * A^-0.125) */
+  sdr?: number;
+  /** Berat jenis sedimen kering terpadatkan (Ton/m³), default 1.2 - 1.6 */
+  beratJenisTonM3?: number;
+  /** Trap Efficiency Waduk (%) - default 95% atau dihitung via Brune */
+  trapEfficiencyPercent?: number;
+  /** Volume Tampungan Mati (m³) */
+  deadStorageM3?: number;
+}
+
+/** Result of Regional Sediment Yield Calculation */
+export interface RegionalSedimentResult {
+  /** Volume Erosi Kotor Permukaan DAS (m³/tahun) */
+  grossErosionM3: number;
+  /** Berat Erosi Kotor (Ton/tahun) */
+  grossErosionTonnes: number;
+  /** Nilai SDR yang digunakan */
+  sdr: number;
+  /** Hasil Sedimen Sampai ke Waduk / Sediment Yield (m³/tahun) */
+  sedimentYieldM3: number;
+  /** Hasil Sedimen Sampai ke Waduk (Ton/tahun) */
+  sedimentYieldTonnes: number;
+  /** Trap Efficiency Waduk (%) */
+  trapEfficiencyPercent: number;
+  /** Volume Sedimen Terperangkap di Waduk (m³/tahun) */
+  trappedVolumeM3: number;
+  /** Laju Erosi Terhitung (mm/tahun) */
+  erosionRateMmYear: number;
+  /** Estimasi Umur Guna Tampungan Mati (Tahun) */
+  lifespanYears?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -302,3 +376,4 @@ export interface ReservoirParameters {
   activeStorage: number;
   initialStorage: number;
 }
+

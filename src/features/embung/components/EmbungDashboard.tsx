@@ -5,8 +5,8 @@ interface EmbungDashboardProps {
     onConsultAI?: (type: string, data: any, result: any) => void;
 }
 
-export const EmbungDashboard: React.FC<EmbungDashboardProps> = () => {
-    return <EmbungRebuild />;
+export const EmbungDashboard: React.FC<EmbungDashboardProps> = ({ onConsultAI }) => {
+    return <EmbungRebuild onConsultAI={onConsultAI} />;
 };
 
 export default EmbungDashboard;

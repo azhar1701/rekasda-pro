@@ -78,6 +78,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
   const hasilKonvolusi = useHydrologyStore((s) => s.hasilKonvolusi);
   const hasilNeraca = useHydrologyStore((s) => s.hasilNeraca);
   const hasilEmbung = useHydrologyStore((s) => s.hasilEmbung);
+  const hasilSaluran = useHydrologyStore((s) => s.hasilSaluran);
   const hasilMock = useHydrologyStore((s) => s.hasilMock);
   const neracaFinal = useHydrologyStore((s) => s.neracaFinal);
   const isBanjirDirty = useHydrologyStore((s) => s.isBanjirDirty);
@@ -168,6 +169,11 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     // Embung
     if (hasilEmbung) {
       contextParts.push(`Embung: ${hasilEmbung.isAman ? 'AMAN' : 'TIDAK AMAN'}. Reduksi Puncak = ${hasilEmbung.reduksiPuncak}%. Umur Sedimen = ${hasilEmbung.umurSedimen} tahun.`);
+    }
+
+    // Saluran Terbuka
+    if (hasilSaluran) {
+      contextParts.push(`Saluran: Tipe ${hasilSaluran.shape}, Kapasitas = ${hasilSaluran.dischargeCapacity.toFixed(3)} m³/s, Kecepatan = ${hasilSaluran.velocity.toFixed(2)} m/s, Rezim = ${hasilSaluran.flowRegime} (Fr = ${hasilSaluran.froudeNumber.toFixed(2)}), Status = ${hasilSaluran.isSafe ? 'AMAN' : 'OVERTOPPING'}, Kecepatan = ${hasilSaluran.velocityStatus}.`);
     }
 
     // Dirty state warnings
@@ -293,17 +299,37 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
         break;
 
       case 'SALURAN':
+        if (hasilSaluran) {
+          if (!hasilSaluran.isSafe) {
+            chips.push({
+              id: 'saluran-unsafe',
+              label: 'Saluran overtopping — apa solusinya?',
+              prompt: `Kapasitas saluran (${hasilSaluran.dischargeCapacity.toFixed(3)} m³/s) lebih kecil dari debit rencana (${hasilSaluran.designDischarge ? hasilSaluran.designDischarge.toFixed(3) : '?'} m³/s). Apa langkah teknis perbesaran dimensi atau peningkatan kemiringan sesuai SNI 03-3424-1994?`,
+              severity: 'critical',
+              icon: '❌',
+            });
+          }
+          if (!hasilSaluran.isVelocitySafe) {
+            chips.push({
+              id: 'saluran-velocity',
+              label: `Kecepatan ${hasilSaluran.velocity.toFixed(2)} m/s — ${hasilSaluran.velocityStatus}`,
+              prompt: `Aliran saluran terdeteksi ${hasilSaluran.velocityStatus} dengan kecepatan ${hasilSaluran.velocity.toFixed(2)} m/s. Bagaimana rekomendasi proteksi dinding atau penyesuaian kemiringan?`,
+              severity: 'warning',
+              icon: '⚠️',
+            });
+          }
+        }
         chips.push({
           id: 'manning-froude',
-          label: 'Bagaimana mengubah aliran superkritis menjadi subkritis?',
-          prompt: 'Angka Froude saluran saya > 1 (superkritis). Jelaskan cara mengubahnya menjadi subkritis dengan mengatur dimensi saluran, kemiringan, atau kekasaran Manning sesuai SNI.',
+          label: 'Bagaimana mengatasi aliran superkritis?',
+          prompt: 'Angka Froude saluran saya > 1 (superkritis). Jelaskan cara meredam energi atau mengubahnya menjadi subkritis dengan mengatur dimensi saluran, kemiringan, atau kolam olak sesuai SNI.',
           severity: 'warning',
           icon: '⚡',
         });
         chips.push({
           id: 'manning-optimal',
-          label: 'Dimensi saluran optimal untuk debit banjir',
-          prompt: `Berikan rekomendasi dimensi saluran trapesium optimal untuk mengalirkan debit banjir ${hasilBanjir ? hasilBanjir.debitPuncak.toFixed(2) : '?'} m³/s dengan kemiringan dan kekasaran Manning yang wajar.`,
+          label: 'Dimensi penampang hidrolis terbaik (Best Section)',
+          prompt: `Jelaskan kriteria penampang hidrolis terbaik (Best Hydraulic Section) untuk saluran trapesium dan persegi panjang, serta cara menentukan perbandingan b/h optimum.`,
           severity: 'info',
           icon: '📏',
         });

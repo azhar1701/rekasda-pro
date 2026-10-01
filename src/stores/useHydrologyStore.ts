@@ -185,6 +185,37 @@ export interface HasilEmbung {
   isAman: boolean;
   reduksiPuncak: number; 
   umurSedimen: number;
+  peakInflow?: number;
+  peakOutflow?: number;
+  maxElevation?: number;
+  freeboardResidual?: number;
+}
+
+export interface HasilSaluran {
+  shape: 'trapezoid' | 'rectangular' | 'triangular' | 'circular';
+  channelName?: string;
+  dischargeCapacity: number;
+  designDischarge?: number;
+  velocity: number;
+  froudeNumber: number;
+  flowRegime: 'Subkritis' | 'Kritis' | 'Superkritis';
+  isSafe: boolean;
+  isVelocitySafe: boolean;
+  velocityStatus: 'Normal' | 'Rawan Gerusan (Scouring)' | 'Rawan Sedimentasi (Silting)';
+  freeboardActual: number;
+  freeboardRecommended: number;
+  isFreeboardSafe: boolean;
+  dimensions: {
+    width?: number;
+    depth: number;
+    totalDepth: number;
+    sideSlope?: number;
+    diameter?: number;
+    topWidth?: number;
+  };
+  materialName?: string;
+  n: number;
+  slope: number;
 }
 
 export interface HasilMock {
@@ -248,6 +279,7 @@ export interface HydrologyState {
   hasilKonvolusi: HasilKonvolusi | null;
   hasilNeraca: HasilNeraca | null;
   hasilEmbung: HasilEmbung | null;
+  hasilSaluran: HasilSaluran | null;
   hasilMock: HasilMock | null;
   neracaFinal: NeracaFinalRow[] | null;
   distribusiHujanJamJaman: number[] | null;
@@ -322,6 +354,7 @@ export interface HydrologyState {
   setHasilMock: (hasil: HasilMock | null) => void;
   setNeracaFinal: (data: NeracaFinalRow[] | null) => void;
   setHasilEmbung: (hasil: HasilEmbung | null) => void;
+  setHasilSaluran: (hasil: HasilSaluran | null) => void;
   fetchMultipleStationsData: (stasiunIds: string[]) => Promise<void>;
 
   // --- Rainfall Routing Setters ---
@@ -340,7 +373,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   morfometriDAS: null, tutupanLahan: null, curahHujanWilayah: null, analisisFrekuensi: null,
   hasilThiessen: null, hasilARF: null, hasilAnalisisFrekuensi: null,
   hasilBanjir: null, hasilBanjirEmpiris: null, hasilBanjirHSS: null,
-  hasilNeraca: null, hasilEmbung: null, hasilMock: null,
+  hasilNeraca: null, hasilEmbung: null, hasilSaluran: null, hasilMock: null,
   hasilKonvolusi: null, neracaFinal: null, distribusiHujanJamJaman: null, hujanEfektif: null, durasiHujan: 6,
   qcResults: null, qcStatus: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
   hssComparisonResults: null, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
@@ -784,6 +817,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   setHasilMock: (hasil) => set({ hasilMock: hasil, isNeracaDirty: true }),
   setNeracaFinal: (data) => set({ neracaFinal: data, isNeracaDirty: false }),
   setHasilEmbung: (hasil) => set({ hasilEmbung: hasil }),
+  setHasilSaluran: (hasil) => set({ hasilSaluran: hasil }),
   setDistribusiHujanJamJaman: (data) => set({ distribusiHujanJamJaman: data, isBanjirDirty: true }),
   setHujanEfektif: (data) => set({ hujanEfektif: data, isBanjirDirty: true }),
   setDurasiHujan: (durasi) => set({ durasiHujan: durasi, isBanjirDirty: true }),

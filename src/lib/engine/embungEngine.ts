@@ -22,7 +22,11 @@ import type {
   WaterBalanceTimeStep,
   SedimentationInput,
   SedimentYieldResult,
-  MassCurvePoint
+  MassCurvePoint,
+  StageDischargeCurve,
+  SpillwayConfig,
+  RegionalSedimentInput,
+  RegionalSedimentResult
 } from '@/features/embung/types/embung.types';
 
 /**
@@ -85,7 +89,54 @@ export function calculateSequentPeak(input: SequentPeakInput): SequentPeakResult
 }
 
 /**
- * 2. Flood Routing (Modified Puls Method)
+ * Helper: Linear Interpolation with boundary clamping
+ */
+export function linearInterpolate(x: number, xArr: number[], yArr: number[]): number {
+  if (xArr.length === 0 || yArr.length === 0) return 0;
+  if (x <= xArr[0]) return yArr[0];
+  if (x >= xArr[xArr.length - 1]) return yArr[yArr.length - 1];
+  for (let i = 0; i < xArr.length - 1; i++) {
+    if (x >= xArr[i] && x <= xArr[i + 1]) {
+      const denom = xArr[i + 1] - xArr[i];
+      if (denom === 0) return yArr[i];
+      const factor = (x - xArr[i]) / denom;
+      return yArr[i] + factor * (yArr[i + 1] - yArr[i]);
+    }
+  }
+  return yArr[0];
+}
+
+/**
+ * 2a. Spillway Stage-Discharge Curve Generator
+ * Pd. T-03-2005-A / SNI 03-3432-1994: Q = Cd * B * (H - Hcrest)^1.5
+ * Menghasilkan kurva elevasi vs debit keluar pelimpah.
+ */
+export function generateSpillwayDischargeCurve(
+  elevations: number[],
+  config: SpillwayConfig
+): StageDischargeCurve {
+  const { crestElevation, crestLength, dischargeCoefficient } = config;
+  
+  // Ambil set unik elevasi, pastikan crestElevation juga ada di dalam kurva
+  const elevSet = new Set<number>(elevations);
+  elevSet.add(crestElevation);
+  
+  const sortedElev = Array.from(elevSet).sort((a, b) => a - b);
+  
+  const discharge = sortedElev.map(elev => {
+    if (elev <= crestElevation) return 0;
+    const head = elev - crestElevation;
+    return dischargeCoefficient * crestLength * Math.pow(head, 1.5);
+  });
+
+  return {
+    elevation: sortedElev,
+    discharge
+  };
+}
+
+/**
+ * 2b. Flood Routing (Modified Puls Method)
  * Menelusuri hidrograf banjir melewati waduk (Level-Pool Routing).
  */
 export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingResult {
@@ -93,34 +144,57 @@ export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingRes
   
   if (inflowHydrograph.length < 2) throw new Error("Inflow hydrograph must have at least 2 points");
 
-  // Auxiliary function: (2S/dt) + O
-  const calculateFPuls = (elevation: number) => {
-    const s = interpolate(elevation, stageStorageCurve.elevation, stageStorageCurve.storage);
-    const o = interpolate(elevation, stageDischargeCurve.elevation, stageDischargeCurve.discharge);
-    return (2 * s / deltaT) + o;
-  };
+  const n = stageStorageCurve.elevation.length;
+  if (n === 0) throw new Error("Stage storage curve is empty");
 
-  // Interpolate function (helper)
-  const interpolate = (x: number, xArr: number[], yArr: number[]) => {
-    if (x <= xArr[0]) return yArr[0];
-    if (x >= xArr[xArr.length - 1]) return yArr[yArr.length - 1];
-    for (let i = 0; i < xArr.length - 1; i++) {
-      if (x >= xArr[i] && x <= xArr[i+1]) {
-        const factor = (x - xArr[i]) / (xArr[i+1] - xArr[i]);
-        return yArr[i] + factor * (yArr[i+1] - yArr[i]);
-      }
+  // 1. Build extended curves to ensure 1-to-1 alignment and accommodate peak surcharge without clamping
+  const extElevations = [...stageStorageCurve.elevation];
+  const extStorages = [...stageStorageCurve.storage];
+  const extOutflows = extElevations.map(e =>
+    linearInterpolate(e, stageDischargeCurve.elevation, stageDischargeCurve.discharge)
+  );
+
+  // Extrapolate upwards 10 meters in 0.5m steps above top contour
+  const topElev = extElevations[n - 1];
+  const topStorage = extStorages[n - 1];
+  const topArea = stageStorageCurve.area?.[n - 1] ?? (
+    n > 1 ? (extStorages[n - 1] - extStorages[n - 2]) / (extElevations[n - 1] - extElevations[n - 2]) : 50000
+  );
+
+  const topDischarge = extOutflows[n - 1];
+  const prevDischarge = n > 1 ? extOutflows[n - 2] : 0;
+  const dQdE = (topDischarge - prevDischarge) / ((extElevations[n - 1] - (n > 1 ? extElevations[n - 2] : 1)) || 1);
+
+  // Find crest elevation where discharge begins
+  const crestElev = stageDischargeCurve.elevation.find((_, idx) => stageDischargeCurve.discharge[idx] > 0) ?? (topElev - 1);
+
+  for (let s = 1; s <= 20; s++) {
+    const extraH = s * 0.5;
+    const curElev = topElev + extraH;
+    extElevations.push(curElev);
+    // Extrapolate storage using surface area prism: S = S_top + A_top * extraH
+    extStorages.push(topStorage + topArea * extraH);
+
+    // Extrapolate outflow using weir discharge scaling if crest is known, otherwise tangent slope
+    const baseHead = topElev - crestElev;
+    const curHead = curElev - crestElev;
+    if (baseHead > 0 && topDischarge > 0) {
+      extOutflows.push(topDischarge * Math.pow(curHead / baseHead, 1.5));
+    } else {
+      extOutflows.push(topDischarge + dQdE * extraH);
     }
-    return yArr[0];
-  };
+  }
 
-  // Build Indicator Curve: FPuls vs O and FPuls vs S
-  const fPulsValues: number[] = stageStorageCurve.elevation.map(calculateFPuls);
+  // 2. Auxiliary Puls Indicator: (2S/dt) + O
+  const fPulsValues: number[] = extElevations.map((_, idx) => {
+    return (2 * extStorages[idx] / deltaT) + extOutflows[idx];
+  });
 
   const steps: RoutingTimeStep[] = [];
   
   // Initial condition
-  let S1 = interpolate(initialElevation, stageStorageCurve.elevation, stageStorageCurve.storage);
-  let O1 = interpolate(initialElevation, stageDischargeCurve.elevation, stageDischargeCurve.discharge);
+  let S1 = linearInterpolate(initialElevation, extElevations, extStorages);
+  let O1 = linearInterpolate(initialElevation, extElevations, extOutflows);
   
   steps.push({
     time: inflowHydrograph[0].time,
@@ -139,10 +213,10 @@ export function calculateFloodRouting(input: FloodRoutingInput): FloodRoutingRes
     const pulsIndicator = (2 * S1 / dt) - O1;
     const ruasKiri = I1 + I2 + pulsIndicator;
     
-    // Find O2 and S2 from ruasKiri
-    const O2 = interpolate(ruasKiri, fPulsValues, stageDischargeCurve.discharge);
-    const S2 = interpolate(ruasKiri, fPulsValues, stageStorageCurve.storage);
-    const H2 = interpolate(S2, stageStorageCurve.storage, stageStorageCurve.elevation);
+    // Find O2, S2, H2 from ruasKiri using 1-to-1 aligned extended arrays
+    const O2 = linearInterpolate(ruasKiri, fPulsValues, extOutflows);
+    const S2 = linearInterpolate(ruasKiri, fPulsValues, extStorages);
+    const H2 = linearInterpolate(S2, extStorages, extElevations);
 
     steps.push({
       time: inflowHydrograph[i].time,
@@ -331,6 +405,9 @@ export function calculateSedimentYield(input: SedimentationInput): SedimentYield
   const trappedVolumeM3 = (trapEfficiency / 100) * totalVolumeM3;
   const specificYield = totalLoadTonnes / luasDas;
   const erosionRateMm = (totalVolumeM3 / (luasDas * 1000000)) * 1000;
+  const lifespanYears = (input.deadStorageM3 && input.deadStorageM3 > 0 && trappedVolumeM3 > 0)
+    ? input.deadStorageM3 / trappedVolumeM3
+    : undefined;
 
   return {
     a,
@@ -343,6 +420,73 @@ export function calculateSedimentYield(input: SedimentationInput): SedimentYield
     trapEfficiency,
     trappedVolumeM3,
     erosionRateMm,
-    specificYield
+    specificYield,
+    lifespanYears
   };
 }
+
+/**
+ * Presets laju erosi permukaan lahan per regional / tutupan lahan
+ * Sumber: SNI 03-3432-1994, USLE Puslitbang Pengairan PUPR
+ */
+export const REGIONAL_SEDIMENT_PRESETS = [
+  { id: 'jawa_kritis', label: 'Jawa — DAS Kritis (Pertanian Lahan Miring/Gundul)', rateMmYear: 2.5 },
+  { id: 'jawa_sedang', label: 'Jawa — DAS Sedang (Campuran Permukiman & Kebun)', rateMmYear: 1.5 },
+  { id: 'jawa_hutan', label: 'Jawa — DAS Baik / Kawasan Lindung', rateMmYear: 0.8 },
+  { id: 'luar_jawa_kebun', label: 'Luar Jawa — DAS Perkebunan & Semak', rateMmYear: 1.8 },
+  { id: 'luar_jawa_hutan', label: 'Luar Jawa — DAS Hutan Primer / Alami', rateMmYear: 0.5 },
+];
+
+/**
+ * 4b. Estimasi Laju Sedimen Berdasarkan Erosi Regional & SDR (Sediment Delivery Ratio)
+ * Berdasarkan SNI 03-3432-1994 & Formula Boyd (1976)
+ * Cocok untuk embung kecil yang belum memiliki stasiun pengamatan suspensi sedimen harian.
+ */
+export function calculateRegionalSedimentYield(input: RegionalSedimentInput): RegionalSedimentResult {
+  const {
+    luasDasKm2,
+    erosionRateMmYear,
+    sdr: customSdr,
+    beratJenisTonM3 = 1.4,
+    trapEfficiencyPercent = 95,
+    deadStorageM3
+  } = input;
+
+  if (luasDasKm2 <= 0) throw new Error("Luas DAS harus lebih besar dari 0");
+  if (erosionRateMmYear <= 0) throw new Error("Laju erosi harus lebih besar dari 0");
+
+  // 1. Gross surface erosion volume: E = Rate(mm/yr) * Area(m²) * 10^-3 = Rate * Area(km²) * 1000
+  const grossErosionM3 = erosionRateMmYear * luasDasKm2 * 1000;
+  const grossErosionTonnes = grossErosionM3 * beratJenisTonM3;
+
+  // 2. Sediment Delivery Ratio (SDR)
+  // Boyd (1976): SDR = 0.47 * (A)^-0.125 where A is DAS area in km² (capped between 0.1 and 1.0)
+  const calculatedSdr = customSdr !== undefined && customSdr > 0
+    ? customSdr
+    : Math.min(1.0, Math.max(0.1, 0.47 * Math.pow(luasDasKm2, -0.125)));
+
+  // 3. Sediment Yield at Embung Inlet
+  const sedimentYieldM3 = grossErosionM3 * calculatedSdr;
+  const sedimentYieldTonnes = sedimentYieldM3 * beratJenisTonM3;
+
+  // 4. Trapped sediment volume in reservoir
+  const trappedVolumeM3 = sedimentYieldM3 * (trapEfficiencyPercent / 100);
+
+  // 5. Lifespan of dead storage
+  const lifespanYears = deadStorageM3 && deadStorageM3 > 0 && trappedVolumeM3 > 0
+    ? deadStorageM3 / trappedVolumeM3
+    : undefined;
+
+  return {
+    grossErosionM3,
+    grossErosionTonnes,
+    sdr: calculatedSdr,
+    sedimentYieldM3,
+    sedimentYieldTonnes,
+    trapEfficiencyPercent,
+    trappedVolumeM3,
+    erosionRateMmYear,
+    lifespanYears
+  };
+}
+

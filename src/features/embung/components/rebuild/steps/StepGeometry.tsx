@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { useEmbungStore } from '../../../hooks/useEmbungStore';
 import { Plus, Trash2, Info, AreaChart as ChartIcon, Table as TableIcon } from 'lucide-react';
-import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Area, Line } from 'recharts';
+import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Area, Line, ReferenceLine } from 'recharts';
 
 interface CurveRow {
     id: string;
@@ -55,18 +55,86 @@ export const StepGeometry: React.FC = () => {
         setRows(rows.map(r => r.id === id ? { ...r, [field]: numVal } : r));
     };
 
-    // Auto-save to store
+    // Zoning state (SNI 03-3432-1994)
+    const sortedElevs = rows.map(r => r.elevation).sort((a, b) => a - b);
+    const minElev = sortedElevs[0] ?? 100;
+    const maxElev = sortedElevs[sortedElevs.length - 1] ?? 105;
+
+    const [deadStorageElev, setDeadStorageElev] = useState<number>(
+        state.zoning?.deadStorageElevation ?? (sortedElevs[1] ?? minElev + 1)
+    );
+    const [normalWaterLevel, setNormalWaterLevel] = useState<number>(
+        state.zoning?.normalWaterLevel ?? (sortedElevs[sortedElevs.length - 2] ?? maxElev - 1)
+    );
+    const [freeboard, setFreeboard] = useState<number>(
+        state.zoning?.freeboard ?? 1.0
+    );
+
+    // Auto-save to store & calculate zoning
     useEffect(() => {
         const sortedRows = [...rows].sort((a, b) => a.elevation - b.elevation);
+        const elevations = sortedRows.map(r => r.elevation);
+        const storages = sortedRows.map(r => r.storage);
+        const areas = sortedRows.map(r => r.area);
+
+        const curve = {
+            elevation: elevations,
+            storage: storages,
+            area: areas
+        };
+
         dispatch({
             type: 'SET_STAGE_STORAGE_CURVE',
+            payload: curve
+        });
+
+        // Calculate volumes via interpolation
+        const interpolateVol = (h: number) => {
+            if (elevations.length === 0) return 0;
+            if (h <= elevations[0]) return storages[0];
+            if (h >= elevations[elevations.length - 1]) return storages[storages.length - 1];
+            for (let i = 0; i < elevations.length - 1; i++) {
+                if (h >= elevations[i] && h <= elevations[i + 1]) {
+                    const factor = (h - elevations[i]) / (elevations[i + 1] - elevations[i]);
+                    return storages[i] + factor * (storages[i + 1] - storages[i]);
+                }
+            }
+            return 0;
+        };
+
+        const deadStorageVol = Math.round(interpolateVol(deadStorageElev));
+        const normalVol = Math.round(interpolateVol(normalWaterLevel));
+        const activeStorageVol = Math.max(0, normalVol - deadStorageVol);
+        const totalStorageVol = storages[storages.length - 1] ?? 0;
+
+        dispatch({
+            type: 'SET_ZONING',
             payload: {
-                elevation: sortedRows.map(r => r.elevation),
-                storage: sortedRows.map(r => r.storage),
-                area: sortedRows.map(r => r.area)
+                riverbedElevation: minElev,
+                deadStorageElevation: deadStorageElev,
+                normalWaterLevel: normalWaterLevel,
+                floodWaterLevel: normalWaterLevel + 1.0, // default placeholder until routing is run
+                freeboard: freeboard,
+                deadStorageVolume: deadStorageVol,
+                activeStorageVolume: activeStorageVol,
+                floodStorageVolume: Math.max(0, totalStorageVol - normalVol),
+                totalStorageVolume: totalStorageVol
             }
         });
-    }, [rows, dispatch]);
+
+        // Set initial spillway config if not set
+        if (!state.spillwayConfig) {
+            dispatch({
+                type: 'SET_SPILLWAY_CONFIG',
+                payload: {
+                    crestElevation: normalWaterLevel,
+                    crestLength: 10.0,
+                    dischargeCoefficient: 2.0,
+                    spillwayType: 'ogee'
+                }
+            });
+        }
+    }, [rows, deadStorageElev, normalWaterLevel, freeboard, dispatch, minElev, state.spillwayConfig]);
 
     const chartData = [...rows].sort((a, b) => a.elevation - b.elevation);
 
@@ -75,11 +143,66 @@ export const StepGeometry: React.FC = () => {
             <div className="flex items-start gap-4 bg-amber-50 p-4 rounded-lg border border-amber-100">
                 <Info className="w-5 h-5 text-amber-600 mt-1 shrink-0" />
                 <div>
-                    <h3 className="text-sm font-bold text-amber-900">Karakteristik Waduk (Geometri)</h3>
+                    <h3 className="text-sm font-bold text-amber-900">Karakteristik Waduk & Zonasi Tampungan (SNI 03-3432-1994)</h3>
                     <p className="text-xs text-amber-800/80 mt-1 leading-relaxed">
-                        Input hubungan antara elevasi muka air, volume tampungan, dan luas genangan. Data ini merupakan dasar utama (SSOT) untuk seluruh perhitungan kapasitas, routing, dan operasi waduk.
+                        Input hubungan antara elevasi muka air, volume tampungan, dan luas genangan. Tentukan pula elevasi Muka Air Rendah (MAD) dan Muka Air Normal (MAN) sebagai acuan SSOT untuk analisis penelusuran banjir, sedimentasi, dan neraca operasi.
                     </p>
                 </div>
+            </div>
+
+            {/* Zoning Parameters Card */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="p-3 border-slate-200 bg-white">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        Dasar Sungai (Riverbed)
+                    </span>
+                    <p className="text-lg font-bold text-slate-700">{minElev.toFixed(2)} <span className="text-xs font-normal text-slate-400">m asl</span></p>
+                </Card>
+                <Card className="p-3 border-amber-200 bg-amber-50/40">
+                    <label className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block mb-1">
+                        Muka Air Rendah (MAD)
+                    </label>
+                    <div className="flex items-center gap-1">
+                        <Input
+                            type="number"
+                            step="0.1"
+                            value={deadStorageElev}
+                            onChange={(e) => setDeadStorageElev(parseFloat(e.target.value) || minElev)}
+                            className="h-8 text-sm font-bold text-amber-900 border-amber-300 bg-white"
+                        />
+                        <span className="text-xs font-medium text-amber-700 shrink-0">m asl</span>
+                    </div>
+                </Card>
+                <Card className="p-3 border-blue-200 bg-blue-50/40">
+                    <label className="text-[10px] font-bold text-pupr-blue uppercase tracking-wider block mb-1">
+                        Mercu Pelimpah (MAN)
+                    </label>
+                    <div className="flex items-center gap-1">
+                        <Input
+                            type="number"
+                            step="0.1"
+                            value={normalWaterLevel}
+                            onChange={(e) => setNormalWaterLevel(parseFloat(e.target.value) || maxElev)}
+                            className="h-8 text-sm font-bold text-pupr-blue border-blue-300 bg-white"
+                        />
+                        <span className="text-xs font-medium text-blue-700 shrink-0">m asl</span>
+                    </div>
+                </Card>
+                <Card className="p-3 border-emerald-200 bg-emerald-50/40">
+                    <label className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block mb-1">
+                        Tinggi Jagaan (Freeboard)
+                    </label>
+                    <div className="flex items-center gap-1">
+                        <Input
+                            type="number"
+                            step="0.1"
+                            value={freeboard}
+                            onChange={(e) => setFreeboard(parseFloat(e.target.value) || 1.0)}
+                            className="h-8 text-sm font-bold text-emerald-900 border-emerald-300 bg-white"
+                        />
+                        <span className="text-xs font-medium text-emerald-700 shrink-0">m</span>
+                    </div>
+                </Card>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -155,7 +278,7 @@ export const StepGeometry: React.FC = () => {
                     <CardHeader className="py-4 px-5 border-b border-slate-100 bg-slate-50/50">
                         <div className="flex items-center gap-2">
                             <ChartIcon className="w-4 h-4 text-slate-400" />
-                            <CardTitle className="text-sm">Visualisasi Lengkung Kapasitas</CardTitle>
+                            <CardTitle className="text-sm">Visualisasi Lengkung Kapasitas & Garis Elevasi Acuan</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="p-6 h-[500px]">
@@ -166,7 +289,7 @@ export const StepGeometry: React.FC = () => {
                                     dataKey="elevation"
                                     type="number"
                                     domain={['auto', 'auto']}
-                                    label={{ value: 'Elevasi (m)', position: 'bottom', offset: 0, fontSize: 10, fill: '#64748b' }}
+                                    label={{ value: 'Elevasi (m asl)', position: 'bottom', offset: 0, fontSize: 10, fill: '#64748b' }}
                                     tick={{ fontSize: 10, fill: '#94a3b8' }}
                                     axisLine={false}
                                     tickLine={false}
@@ -190,6 +313,28 @@ export const StepGeometry: React.FC = () => {
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '11px' }}
                                 />
                                 <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '10px' }} />
+                                
+                                {deadStorageElev && (
+                                    <ReferenceLine
+                                        yAxisId="left"
+                                        x={Number(deadStorageElev)}
+                                        stroke="#f59e0b"
+                                        strokeDasharray="4 4"
+                                        strokeWidth={1.5}
+                                        label={{ value: `MAD (${deadStorageElev}m)`, position: 'insideTopLeft', fontSize: 10, fill: '#b45309' }}
+                                    />
+                                )}
+                                {normalWaterLevel && (
+                                    <ReferenceLine
+                                        yAxisId="left"
+                                        x={Number(normalWaterLevel)}
+                                        stroke="#0284c7"
+                                        strokeDasharray="4 4"
+                                        strokeWidth={1.5}
+                                        label={{ value: `MAN (${normalWaterLevel}m)`, position: 'insideTopLeft', fontSize: 10, fill: '#0369a1' }}
+                                    />
+                                )}
+
                                 <Area
                                     yAxisId="left"
                                     type="monotone"
@@ -216,3 +361,4 @@ export const StepGeometry: React.FC = () => {
         </div>
     );
 };
+

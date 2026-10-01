@@ -118,7 +118,7 @@ export function WorkflowCanvas() {
       case 'banjir': return hydroState.hasilBanjir ? 'Selesai' : (hydroState.hujanEfektif && hydroState.morfometriDAS ? 'Siap Disimulasi' : 'Menunggu Data');
       case 'neraca': return hydroState.hasilMock ? 'Selesai' : (hydroState.hasilThiessen ? 'Siap Disimulasi' : 'Menunggu Data');
       case 'embung': return hydroState.hasilEmbung ? 'Selesai' : (hydroState.hasilBanjir ? 'Siap Didesain' : 'Menunggu Data');
-      case 'saluran': return 'Tersedia'; // Independent usually
+      case 'saluran': return hydroState.hasilSaluran ? 'Selesai' : (hydroState.hasilBanjir ? 'Siap Didesain' : 'Siap Diisi');
 
       // Outputs
       case 'dashboard': return hydroState.hasilBanjir || hydroState.hasilMock ? 'Tersedia' : 'Menunggu Data';

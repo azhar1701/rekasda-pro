@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { useEmbungStore } from '../../../hooks/useEmbungStore';
 import { calculateReservoirOperation } from '@/lib/engine/embungEngine';
-import { Calculator, TrendingUp, Droplets, Waves } from 'lucide-react';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { Calculator, TrendingUp, Droplets, Waves, RefreshCw, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export const StepOperation: React.FC = () => {
     const { state, dispatch } = useEmbungStore();
+    const { hasilNeraca } = useHydrologyStore();
+
     const [inputs, setInputs] = useState(
         state.waterBalanceSteps.length > 0 ? state.waterBalanceSteps :
             ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Des'].map(() => ({
@@ -21,13 +24,58 @@ export const StepOperation: React.FC = () => {
             }))
     );
 
+    const hasNeracaData = Boolean(hasilNeraca?.monthlySupply && hasilNeraca.monthlySupply.length > 0);
+
+    const handleSyncFromNeraca = () => {
+        if (!hasilNeraca?.monthlySupply || hasilNeraca.monthlySupply.length === 0) {
+            toast.error('Data ketersediaan dan kebutuhan air belum dihitung di tab Neraca Air.');
+            return;
+        }
+
+        const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        const syncedInputs = hasilNeraca.monthlySupply.map((supply, i) => {
+            const days = daysPerMonth[i] || 30;
+            // Q (m3/s) * days * 86400 = m3
+            const inflowM3 = Math.round(supply * days * 86400);
+            const demandM3s = hasilNeraca.monthlyDemand ? hasilNeraca.monthlyDemand[i] : 0;
+            const demandM3 = Math.round(demandM3s * days * 86400);
+
+            return {
+                inflow: inflowM3,
+                demand: demandM3,
+                evaporation: inputs[i]?.evaporation ?? 120,
+                rainfall: inputs[i]?.rainfall ?? 150
+            };
+        });
+
+        setInputs(syncedInputs);
+        dispatch({ type: 'SET_WATER_BALANCE_STEPS', payload: syncedInputs });
+        toast.success('Data Inflow & Demand bulanan (m³) berhasil disinkronkan dari Neraca Air!');
+    };
+
     const handleInputChange = (index: number, field: string, value: string) => {
         const numValue = parseFloat(value) || 0;
         const newInputs = [...inputs];
+        if (!newInputs[index]) {
+            newInputs[index] = { inflow: 0, demand: 0, evaporation: 120, rainfall: 150 };
+        }
         (newInputs[index] as any)[field] = numValue;
         setInputs(newInputs);
         dispatch({ type: 'SET_WATER_BALANCE_STEPS', payload: newInputs });
     };
+
+    const deadStorageVal = state.zoning?.deadStorageVolume && state.zoning.deadStorageVolume > 0
+        ? state.zoning.deadStorageVolume
+        : (state.stageStorageCurve && state.stageStorageCurve.storage.length > 1
+            ? state.stageStorageCurve.storage[1]
+            : 50000);
+
+    const maxStorageVal = state.zoning?.totalStorageVolume && state.zoning.totalStorageVolume > 0
+        ? state.zoning.totalStorageVolume
+        : (state.stageStorageCurve
+            ? state.stageStorageCurve.storage[state.stageStorageCurve.storage.length - 1]
+            : 450000);
 
     const handleCalculate = () => {
         if (!state.stageStorageCurve) {
@@ -35,9 +83,9 @@ export const StepOperation: React.FC = () => {
             return;
         }
 
-        const maxStorage = state.stageStorageCurve.storage[state.stageStorageCurve.storage.length - 1];
-        const deadStorage = state.stageStorageCurve.storage[0];
-        const initialStorage = maxStorage * 0.8; // Assume 80% initially
+        const maxStorage = maxStorageVal;
+        const deadStorage = deadStorageVal;
+        const initialStorage = Math.max(deadStorage, maxStorage * 0.8); // Assume 80% initially
         const surfaceArea = state.stageStorageCurve.area[state.stageStorageCurve.area.length - 1];
 
         try {
@@ -51,7 +99,7 @@ export const StepOperation: React.FC = () => {
                 inputs
             );
             dispatch({ type: 'SET_WATER_BALANCE_RESULT', payload: result });
-            toast.success('Simulasi Pola Operasi Selesai.');
+            toast.success(`Simulasi Operasi Selesai. Keandalan Embung: ${result.reliability.toFixed(1)}%`);
         } catch (error: any) {
             toast.error(`Gagal: ${error.message}`);
         }
@@ -62,6 +110,7 @@ export const StepOperation: React.FC = () => {
         storage: s.storageEnd,
         status: s.status
     })) ?? null;
+
 
     return (
         <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -80,10 +129,28 @@ export const StepOperation: React.FC = () => {
                 <Card className="lg:col-span-5 border-slate-200">
                     <CardHeader className="py-4 px-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
                         <CardTitle className="text-sm">Data Bulanan</CardTitle>
-                        <Button size="sm" onClick={handleCalculate} className="bg-pupr-blue hover:bg-teal-700 h-8 text-xs text-white">
-                            <Calculator className="w-3 h-3 mr-2" /> Jalankan
-                        </Button>
+                        <div className="flex gap-2">
+                            {hasNeracaData && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleSyncFromNeraca}
+                                    className="h-8 text-xs border-teal-300 text-teal-700 bg-teal-50 hover:bg-teal-100"
+                                >
+                                    <RefreshCw className="w-3 h-3 mr-1" /> Sync Neraca
+                                </Button>
+                            )}
+                            <Button size="sm" onClick={handleCalculate} className="bg-pupr-blue hover:bg-teal-700 h-8 text-xs text-white font-semibold">
+                                <Calculator className="w-3 h-3 mr-1.5" /> Jalankan
+                            </Button>
+                        </div>
                     </CardHeader>
+                    {hasNeracaData && (
+                        <div className="px-4 py-2 bg-teal-50/70 border-b border-teal-100 text-[10px] text-teal-800 font-medium flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3 text-teal-600 shrink-0" />
+                            <span>Inflow & demand bulanan dapat disinkronkan langsung dari Neraca Air.</span>
+                        </div>
+                    )}
                     <CardContent className="p-0 overflow-auto max-h-[500px]">
                         <table className="w-full text-[10px] text-left">
                             <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-10 border-b border-slate-200">
@@ -102,7 +169,7 @@ export const StepOperation: React.FC = () => {
                                         <td className="px-1 py-1">
                                             <Input
                                                 type="number"
-                                                value={inputs[i].inflow}
+                                                value={inputs[i]?.inflow ?? 0}
                                                 className="h-7 text-right border-transparent hover:border-slate-200 focus:bg-white text-[10px]"
                                                 onChange={(e) => handleInputChange(i, 'inflow', e.target.value)}
                                             />
@@ -110,7 +177,7 @@ export const StepOperation: React.FC = () => {
                                         <td className="px-1 py-1">
                                             <Input
                                                 type="number"
-                                                value={inputs[i].demand}
+                                                value={inputs[i]?.demand ?? 0}
                                                 className="h-7 text-right border-transparent hover:border-slate-200 focus:bg-white text-[10px]"
                                                 onChange={(e) => handleInputChange(i, 'demand', e.target.value)}
                                             />
@@ -118,7 +185,7 @@ export const StepOperation: React.FC = () => {
                                         <td className="px-1 py-1">
                                             <Input
                                                 type="number"
-                                                value={inputs[i].rainfall}
+                                                value={inputs[i]?.rainfall ?? 0}
                                                 className="h-7 text-right border-transparent hover:border-slate-200 focus:bg-white text-[10px]"
                                                 onChange={(e) => handleInputChange(i, 'rainfall', e.target.value)}
                                             />
@@ -126,7 +193,7 @@ export const StepOperation: React.FC = () => {
                                         <td className="px-1 py-1">
                                             <Input
                                                 type="number"
-                                                value={inputs[i].evaporation}
+                                                value={inputs[i]?.evaporation ?? 0}
                                                 className="h-7 text-right border-transparent hover:border-slate-200 focus:bg-white text-[10px]"
                                                 onChange={(e) => handleInputChange(i, 'evaporation', e.target.value)}
                                             />
@@ -186,18 +253,18 @@ export const StepOperation: React.FC = () => {
 
                                         {state.stageStorageCurve && (
                                             <ReferenceLine
-                                                y={state.stageStorageCurve.storage[state.stageStorageCurve.storage.length - 1]}
-                                                stroke="#94a3b8"
+                                                y={maxStorageVal}
+                                                stroke="#0284c7"
                                                 strokeDasharray="3 3"
-                                                label={{ value: 'MAN', position: 'insideTopRight', fontSize: 10, fill: '#64748b' }}
+                                                label={{ value: 'MAN / Max Storage', position: 'insideTopRight', fontSize: 10, fill: '#0284c7' }}
                                             />
                                         )}
-                                        {state.stageStorageCurve && (
+                                        {deadStorageVal > 0 && (
                                             <ReferenceLine
-                                                y={state.stageStorageCurve.storage[0]}
+                                                y={deadStorageVal}
                                                 stroke="#ef4444"
                                                 strokeDasharray="3 3"
-                                                label={{ value: 'Dead Storage', position: 'insideBottomRight', fontSize: 10, fill: '#ef4444' }}
+                                                label={{ value: 'MAD / Dead Storage', position: 'insideBottomRight', fontSize: 10, fill: '#ef4444' }}
                                             />
                                         )}
 
