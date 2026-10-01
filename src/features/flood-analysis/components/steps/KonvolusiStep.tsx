@@ -45,7 +45,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
   onComplete,
   isCompleted,
 }) => {
-  const { setHasilBanjir, hujanEfektif } = useHydrologyStore();
+  const { setHasilBanjir, hujanEfektif, morfometriDAS, durasiHujan } = useHydrologyStore();
 
   // ── Worker hook — semua kalkulasi berat di background thread ──────────────
   const { calculateConvolution, isCalculating, error: workerError, clearError } =
@@ -73,12 +73,18 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
     try {
       clearError();
 
+      const rainInterval = durasiHujan && hujanEfektif?.length
+        ? Number((durasiHujan / hujanEfektif.length).toFixed(2))
+        : 1.0;
+
       // Kirim ke background thread — main thread TIDAK terblokir
       const workerResult = await calculateConvolution({
         hujanEfektif: hujanEfektif ?? [],
         ordinatHSS: hssOrdinates,
         baseflow: 0,
         timeStep: 0.5,
+        rainInterval,
+        luasDas: morfometriDAS?.luasDAS,
       });
 
       // Transformasi ke format chart
@@ -99,7 +105,7 @@ export const KonvolusiStep: React.FC<KonvolusiStepProps> = ({
       // Error sudah diset di hook — tidak perlu setState tambahan
       console.error('[KonvolusiStep] Worker error:', err);
     }
-  }, [isDataReady, isCalculating, hujanEfektif, hssOrdinates, calculateConvolution, clearError]);
+  }, [isDataReady, isCalculating, hujanEfektif, hssOrdinates, durasiHujan, morfometriDAS, calculateConvolution, clearError]);
 
   // ── Simpan ke global store ─────────────────────────────────────────────────
   const handleSave = useCallback(() => {

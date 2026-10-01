@@ -161,16 +161,13 @@ export function calculateFJMock(
     // DRO = WS − I (surface runoff that flows directly to stream)
     const DRO = WS - I;
 
-    // ── Step 6: Groundwater Storage & Base Flow ──
-    // Vg(t) = K × Vg(t−1) + I        (storage recharges from infiltration)
-    // BF    = Vg(t−1) + I − Vg(t)     (water released as base flow)
-    //       = (1 − K) × Vg(t−1) + (1 − K) × I  ... simplified
-    //       = (1 − K) × (Vg(t−1) + I)
-    //
-    // Alternative derivation:
-    //   Vg(t) = K × (Vg(t-1) + I)  →  BF = (1-K) × (Vg(t-1) + I)
-    const Vg = params.k * (prevVg + I);
-    const BF = (1 - params.k) * (prevVg + I);
+    // ── Step 6: Groundwater Storage & Base Flow (Ditjen SDA / SNI 19-6728.1-2002) ──
+    // Formula Baku F.J. Mock (1973) - Bambang Triatmodjo (2008, hal 145):
+    // Vg(t) = K × Vg(t−1) + 0.5 × (1 + K) × I
+    // BF    = (1 − K) × (Vg(t−1) + 0.5 × I)
+    // Konservasi massa infiltrasi: I = ΔVg + BF (100% presisi)
+    const Vg = params.k * prevVg + 0.5 * (1 + params.k) * I;
+    const BF = Math.max(0, (1 - params.k) * (prevVg + 0.5 * I));
 
     // ── Step 7: Total Runoff ──
     // TRO (mm) = BF + DRO

@@ -528,13 +528,19 @@ export const calculateConvolution = (input: ConvolutionInput): ConvolutionOutput
   const nRain = effectiveRainfall.length;
   const nUH = unitHydrograph.length;
   
-  const dt = unitHydrograph[1]?.time - unitHydrograph[0]?.time || 1;
-  const totalSteps = nRain + nUH - 1;
+  if (nRain === 0 || nUH === 0) {
+    return { hydrograph: [], Qp: 0, Tp: 0 };
+  }
+
+  const dt = unitHydrograph.length > 1 ? Math.max(0.01, unitHydrograph[1].time - unitHydrograph[0].time) : 1;
+  const rainInterval = (input as any).rainInterval || 1.0;
+  const lagSteps = Math.max(1, Math.round(rainInterval / dt));
+  const totalSteps = (nRain - 1) * lagSteps + nUH;
 
   for (let tIdx = 0; tIdx < totalSteps; tIdx++) {
     let Q = 0;
     for (let i = 0; i < nRain; i++) {
-      const idxUH = tIdx - i;
+      const idxUH = tIdx - (i * lagSteps);
       if (idxUH >= 0 && idxUH < nUH) {
         Q += effectiveRainfall[i] * unitHydrograph[idxUH].discharge;
       }
