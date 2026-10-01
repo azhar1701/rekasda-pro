@@ -9,7 +9,8 @@ import { AssistantContainer } from '@/components/ui/govtech';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig, type DataHujan } from '@/stores/useHydrologyStore';
-import { calculateAlgebraicMean, calculateThiessenPolygon, calculateIsohyet } from '@/lib/utils/hydrology/arealRainfall';
+import { calculateIsohyet } from '@/lib/utils/hydrology/arealRainfall';
+import { calculateArealSeries, extractAnnualMaximums } from '@/utils/rainfallSeriesUtils';
 import { determineRainfallMethod, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
 import { toast } from '@/hooks/useToast';
 import { HelpTooltip } from '@/components/ui/govtech';
@@ -101,7 +102,9 @@ export const HujanWilayahCard: React.FC = () => {
     });
   }, [configs, totalLuasPengaruh]);
 
-  const hasError = metode === 'thiessen' && bobotError > 0.01 && morfometriDAS !== null;
+  const dasLuasNum = morfometriDAS?.luasDAS || 0;
+  const maxTol = Math.max(0.05, 0.005 * dasLuasNum);
+  const hasError = metode === 'thiessen' && bobotError > maxTol && morfometriDAS !== null;
 
   const handleLuasChange = (stasiunId: string, value: string) => {
     setConfigs(configs.map(c =>
@@ -126,66 +129,35 @@ export const HujanWilayahCard: React.FC = () => {
       let avgValue = 0;
       let amsArray: number[] = [];
 
-      // HELPER: Ekstrak data curah hujan tahunan maksimum dari stasiun
-      const extractStationAms = (stationData: any[]) => {
-        const byYear = new Map<number, number>();
-        stationData.forEach(d => {
-          const year = new Date(d.tanggal).getFullYear();
-          const current = byYear.get(year) || 0;
-          if (d.curah_hujan > current) byYear.set(year, d.curah_hujan);
-        });
-        return Array.from(byYear.entries()).map(([year, hujan]) => ({ year, hujan }));
-      };
-
       if (metode === 'thiessen' && safeConfigs.length > 0) {
         const stasiunIds = safeConfigs.map(c => c.stasiunId);
         await fetchMultipleStationsData(stasiunIds);
-        const currentData = useHydrologyStore.getState().dataHujan;
+        const currentData = useHydrologyStore.getState().dataHujan.filter(d => stasiunIds.includes(d.stasiun_id));
 
-        // Buat struktur array tahunan konsolidasi untuk Thiessen AMS
-        const yearsAvailable = new Set<number>();
-        const stationAmsMap = new Map<string, { year: number, hujan: number }[]>();
-
-        stasiunIds.forEach(id => {
-          const sData = currentData.filter(d => d.stasiun_id === id);
-          const sAms = extractStationAms(sData);
-          sAms.forEach(val => yearsAvailable.add(val.year));
-          stationAmsMap.set(id, sAms);
+        // Buat map pembobotan Thiessen
+        const weightsMap: Record<string, number> = {};
+        safeConfigs.forEach(cfg => {
+          weightsMap[cfg.stasiunId] = totalLuasPengaruh > 0 ? (cfg.luasPengaruh / totalLuasPengaruh) : (1 / safeConfigs.length);
         });
 
-        const arealResults: DataHujan[] = [];
-
-        // Loop per tahun, jalankan kalkulasi murni P = Σ(Ai*Xi)/ΣAi
-        Array.from(yearsAvailable).sort().forEach(year => {
-          const stationsInput = safeConfigs.map(cfg => {
-            const sAms = stationAmsMap.get(cfg.stasiunId);
-            const yearData = sAms?.find(a => a.year === year);
-            return {
-              rainfall: yearData ? yearData.hujan : 0,
-              area: cfg.luasPengaruh
-            };
-          });
-
-          const thiessenP = calculateThiessenPolygon(stationsInput);
-          amsArray.push(thiessenP);
-          arealResults.push({
-            id: `thiessen-${year}`,
-            stasiun_id: 'thiessen',
-            tanggal: `${year}-12-31`,
-            curah_hujan: Number(thiessenP.toFixed(2))
-          });
+        // Hitung deret waktu harian lengkap (365 hari/tahun) untuk DAS
+        const dailyAreal = calculateArealSeries(currentData, weightsMap);
+        dailyAreal.forEach(d => {
+          d.stasiun_id = 'thiessen';
+          d.id = `thiessen-${d.tanggal}`;
         });
 
+        // Ekstrak Annual Maximum Series (AMS) dari deret harian DAS komposit
+        const amsPoints = extractAnnualMaximums(dailyAreal);
+        amsArray = amsPoints.map(p => p.value);
         avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
-        setArealRainfallData('thiessen', arealResults);
+
+        setArealRainfallData('thiessen', dailyAreal);
         setActiveRainfallSource('thiessen');
-        toast.success(`Hujan Kawasan Thiessen (${amsArray.length} tahun) berhasil dihitung.`);
+        toast.success(`Hujan Kawasan Thiessen (${dailyAreal.length} hari data, ${amsArray.length} thn AMS) berhasil dihitung.`);
 
       } else if (metode === 'isohyet' && safeIsohyet.length > 0) {
-        // Asumsi data yang dipassing oleh user Isohyet di UI sudah berupa CurahHujanRataRata per zona.
-        // Berbeda dengan thiessen, ini biasanya dimasukkan manual (dari kontur Arcgis statik)
-
-        // Jalankan kalkulasi murni P = Σ(Ai * Rata2_i) / ΣAi
+        // Kalkulasi murni P = Σ(Ai * Rata2_i) / ΣAi
         const isohyetInput = safeIsohyet.map(s => ({
           averageRainfall: s.curahHujanRataRata,
           area: s.luasAntarGaris
@@ -197,7 +169,6 @@ export const HujanWilayahCard: React.FC = () => {
         const arealResults: DataHujan[] = [];
         const amsBase = safeIsohyet[0]?.annualMax || [];
 
-        // Kombinasi: ambil tahun dari data store jika tersedia, fallback ke sekuensial
         const storeData = useHydrologyStore.getState().dataHujan;
         const storeYears = Array.from(new Set(storeData.map(d => new Date(d.tanggal).getFullYear()))).sort((a, b) => a - b);
 
@@ -221,46 +192,27 @@ export const HujanWilayahCard: React.FC = () => {
         const stasiunIds = stasiunList.map(s => s.id);
         if (stasiunIds.length > 0) {
           await fetchMultipleStationsData(stasiunIds);
-          const currentData = useHydrologyStore.getState().dataHujan;
+          const currentData = useHydrologyStore.getState().dataHujan.filter(d => stasiunIds.includes(d.stasiun_id));
 
-          const yearsAvailable = new Set<number>();
-          const stationAmsMap = new Map<string, { year: number, hujan: number }[]>();
-
+          // Bobot sama rata untuk metode rata-rata aljabar
+          const weightsMap: Record<string, number> = {};
           stasiunIds.forEach(id => {
-            const sData = currentData.filter(d => d.stasiun_id === id);
-            const sAms = extractStationAms(sData);
-            sAms.forEach(val => yearsAvailable.add(val.year));
-            stationAmsMap.set(id, sAms);
+            weightsMap[id] = 1 / stasiunIds.length;
           });
 
-          const arealResults: DataHujan[] = [];
-
-          // Loop per tahun, jalankan kalkulasi murni P = (X1+X2+...Xn)/n
-          Array.from(yearsAvailable).sort().forEach(year => {
-            const stationsRainfall = stasiunIds.map(id => {
-              const sAms = stationAmsMap.get(id);
-              const yearData = sAms?.find(a => a.year === year);
-              return yearData ? yearData.hujan : 0;
-            });
-
-            // Abaikan stasiun bernilai 0 jika data memang hilang (atau biarkan 0 jika memang kering)
-            const validRainfalls = stationsRainfall.filter(r => r > 0);
-            if (validRainfalls.length > 0) {
-              const aljabarP = calculateAlgebraicMean(validRainfalls);
-              amsArray.push(aljabarP);
-              arealResults.push({
-                id: `aljabar-${year}`,
-                stasiun_id: 'aljabar',
-                tanggal: `${year}-12-31`,
-                curah_hujan: Number(aljabarP.toFixed(2))
-              });
-            }
+          const dailyAreal = calculateArealSeries(currentData, weightsMap);
+          dailyAreal.forEach(d => {
+            d.stasiun_id = 'aljabar';
+            d.id = `aljabar-${d.tanggal}`;
           });
 
+          const amsPoints = extractAnnualMaximums(dailyAreal);
+          amsArray = amsPoints.map(p => p.value);
           avgValue = amsArray.length > 0 ? amsArray.reduce((a, b) => a + b, 0) / amsArray.length : 0;
-          setArealRainfallData('aljabar', arealResults);
+
+          setArealRainfallData('aljabar', dailyAreal);
           setActiveRainfallSource('aljabar');
-          toast.success(`Hujan Kawasan Aljabar (${amsArray.length} tahun) berhasil dihitung.`);
+          toast.success(`Hujan Kawasan Aljabar (${dailyAreal.length} hari data, ${amsArray.length} thn AMS) berhasil dihitung.`);
         }
       }
 

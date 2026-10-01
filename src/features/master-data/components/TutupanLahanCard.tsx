@@ -21,7 +21,7 @@ export const TutupanLahanCard: React.FC = () => {
     }
   }, [tutupanLahan]);
 
-  const { totalLuas, cGabungan, cnGabungan, luasError } = useMemo(() => {
+  const { totalLuas, cGabungan, cnGabungan, luasError, maxTolerance } = useMemo(() => {
     const safeItems = items.map(i => ({
       ...i,
       luas: typeof i.luas === 'string' ? parseFloat(i.luas) || 0 : i.luas,
@@ -34,16 +34,18 @@ export const TutupanLahanCard: React.FC = () => {
 
     const dasLuas = morfometriDAS?.luasDAS || 0;
     const error = dasLuas > 0 ? Math.abs(total - dasLuas) : 0;
+    const maxTolerance = Math.max(0.05, 0.005 * dasLuas);
 
     return {
       totalLuas: total,
       cGabungan: cWeighted,
       cnGabungan: cnWeighted,
       luasError: error,
+      maxTolerance,
     };
   }, [items, morfometriDAS]);
 
-  const hasError = luasError > 0.01 && morfometriDAS !== null;
+  const hasError = morfometriDAS !== null && (morfometriDAS.luasDAS || 0) > 0 && luasError > maxTolerance;
 
   const handleAddRow = () => {
     setItems([...items, { id: crypto.randomUUID(), jenis: '', luas: 0, nilaiC: 0, nilaiCN: 0 }]);
@@ -200,10 +202,10 @@ export const TutupanLahanCard: React.FC = () => {
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas DAS</p>
+              <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas DAS Melebihi Toleransi (0.5%)</p>
               <p className="text-xs text-red-700 mt-1">
-                Total luas tutupan lahan ({totalLuas.toFixed(2)} km²) tidak sama dengan Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
-                Selisih: <strong>{luasError.toFixed(2)} km²</strong>
+                Total luas tutupan lahan ({totalLuas.toFixed(2)} km²) berbeda dari Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
+                Selisih: <strong>{luasError.toFixed(2)} km²</strong> (Batas toleransi: &plusmn;{maxTolerance.toFixed(2)} km²).
               </p>
             </div>
           </div>

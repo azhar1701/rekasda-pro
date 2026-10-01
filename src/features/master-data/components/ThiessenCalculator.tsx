@@ -228,12 +228,20 @@ export const ThiessenCalculator: React.FC = () => {
                 )}
 
                 {/* DAS area comparison */}
-                {luasDas && totalLuas > 0 && Math.abs(totalLuas - parseFloat(luasDas)) > 0.5 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-xs font-medium">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                        Total Thiessen ({totalLuas.toFixed(1)} km²) ≠ Luas DAS ({luasDas} km²)
-                    </div>
-                )}
+                {(() => {
+                    const dasLuasNum = parseFloat(luasDas || '0') || 0;
+                    if (dasLuasNum <= 0 || totalLuas <= 0) return null;
+                    const maxTol = Math.max(0.05, 0.005 * dasLuasNum);
+                    const diff = Math.abs(totalLuas - dasLuasNum);
+                    if (diff <= maxTol) return null;
+
+                    return (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-xs font-medium">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                            Total Thiessen ({totalLuas.toFixed(2)} km²) berbeda dari Luas DAS ({dasLuasNum.toFixed(2)} km²). Selisih: {diff.toFixed(2)} km² (Toleransi: &plusmn;{maxTol.toFixed(2)} km²)
+                        </div>
+                    );
+                })()}
 
                 {/* Output indicator removed, processed downstream instead */}
 

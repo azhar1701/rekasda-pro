@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 
@@ -92,6 +92,9 @@ export const MasterHidrologiTab: React.FC = () => {
                 }
 
                 if (rainfall !== null) {
+                    // Physical sanity check: negative rainfall is impossible in hydrology
+                    rainfall = Math.max(0, rainfall);
+
                     const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const d = new Date(dateStr);
                     if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day) {
@@ -109,6 +112,10 @@ export const MasterHidrologiTab: React.FC = () => {
 
     const handleBulkPreview = () => {
         const result = parseBulkRainfall(bulkRawText, bulkYear);
+        const extremeCount = result.filter(r => r.curah_hujan > 350).length;
+        if (extremeCount > 0) {
+            toast.warning(`Perhatian: Terdeteksi ${extremeCount} data curah hujan ekstrem (>350 mm/hari). Pastikan data telah terverifikasi.`);
+        }
         setBulkPreview(result);
     };
 
@@ -237,13 +244,18 @@ export const MasterHidrologiTab: React.FC = () => {
                 .map(row => ({
                     stasiun_id: selectedStasiun.id,
                     tanggal: row.Tanggal,
-                    curah_hujan: row['Curah Hujan (mm)'] || 0
+                    curah_hujan: Math.max(0, Number(row['Curah Hujan (mm)']) || 0)
                 }));
 
             if (dataList.length === 0) {
                 toast.warning('Tidak ada data valid di file Excel.');
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 return;
+            }
+
+            const extremeCount = dataList.filter(d => d.curah_hujan > 350).length;
+            if (extremeCount > 0) {
+                toast.warning(`Perhatian: Ditemukan ${extremeCount} data curah hujan ekstrem (>350 mm/hari) pada file Excel.`);
             }
 
             await importDataHujanBatch(dataList);
@@ -274,8 +286,8 @@ export const MasterHidrologiTab: React.FC = () => {
             const allData = dataHujan;
             await new Promise(resolve => setTimeout(resolve, 500));
 
+            const infilledItems: Omit<DataHujan, 'id' | 'created_at'>[] = [];
             const filledData = dataHujan.map(item => {
-
                 if (item.curah_hujan === null || String(item.curah_hujan).trim() === '-' || String(item.curah_hujan).trim() === '') {
                     const infillResult = infillMissingData(
                         selectedStasiun,
@@ -285,9 +297,16 @@ export const MasterHidrologiTab: React.FC = () => {
                         'idw'
                     );
                     if (infillResult && infillResult.value > 0) {
+                        const infilledVal = parseFloat(infillResult.value.toFixed(1));
+                        infilledItems.push({
+                            stasiun_id: selectedStasiun.id,
+                            tanggal: item.tanggal,
+                            curah_hujan: infilledVal,
+                            is_infilled: true
+                        });
                         return { 
                             ...item, 
-                            curah_hujan: parseFloat(infillResult.value.toFixed(1)),
+                            curah_hujan: infilledVal,
                             is_infilled: true 
                         };
                     }
@@ -295,8 +314,18 @@ export const MasterHidrologiTab: React.FC = () => {
                 return item;
             });
 
-            updateDataHujanManual(filledData);
-            toast.success('Berhasil mengisi data kosong menggunakan metode IDW/Normal Ratio.');
+            if (infilledItems.length > 0) {
+                try {
+                    await importDataHujanBatch(infilledItems);
+                    toast.success(`Berhasil mengisi & menyimpan ${infilledItems.length} data kosong ke database (metode IDW).`);
+                } catch (dbErr) {
+                    console.warn('Gagal persist ke DB, update state lokal:', dbErr);
+                    updateDataHujanManual(filledData);
+                    toast.success(`Berhasil mengisi ${infilledItems.length} data kosong (tersimpan lokal).`);
+                }
+            } else {
+                toast.info('Tidak ada data kosong yang dapat diisi dari stasiun sekitar.');
+            }
         } catch (error) {
             console.error('Error infilling data:', error);
             toast.error('Gagal mengisi data kosong.');

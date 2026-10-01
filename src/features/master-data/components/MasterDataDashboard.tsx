@@ -1,5 +1,6 @@
-import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, Edit2, MapPin, Droplets, BarChart3, AlertTriangle, ArrowRight, ShieldCheck, ChevronRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { useMemo } from 'react';
@@ -9,6 +10,7 @@ interface MasterDataDashboardProps {
 }
 
 export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboardProps) {
+  const navigate = useNavigate();
   const {
     qcResults: storeQCResults,
     morfometriDAS: storeMorfometri,
@@ -97,6 +99,98 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
     const method = curahHujanWilayah.metode === 'thiessen' ? 'Poligon Thiessen' : 'Rata-rata Aljabar';
     return stationCount > 0 ? `${method} (${stationCount} Stasiun)` : method;
   }, [curahHujanWilayah]);
+
+  const readiness = useMemo(() => {
+    // 1. Data duration >= 10 years (SNI 2415:2016)
+    const distinctYears = new Set(dataHujan?.map(d => new Date(d.tanggal).getFullYear()) || []);
+    const yearsCount = distinctYears.size;
+    const isDurationOk = yearsCount >= 10;
+
+    // 2. QC Status
+    const isQCOk = qcStatus?.allValid || false;
+
+    // 3. Morfometri DAS
+    const isMorfometriOk = Boolean(
+      morfometriDAS && 
+      (morfometriDAS.luasDAS || 0) > 0 && 
+      (morfometriDAS.panjangSungai || 0) > 0
+    );
+
+    // 4. Tutupan Lahan & CN
+    const isTutupanOk = Boolean(
+      tutupanLahan &&
+      tutupanLahan.items &&
+      tutupanLahan.items.length > 0 &&
+      tutupanLahan.koefisienPengaliranGabungan > 0 &&
+      (tutupanLahan.curveNumberGabungan || 0) > 0
+    );
+
+    // 5. Curah Hujan Wilayah
+    const isHujanWilayahOk = Boolean(
+      curahHujanWilayah?.hujanRataRata || 
+      (curahHujanWilayah?.stasiunConfigs && curahHujanWilayah.stasiunConfigs.length > 0)
+    );
+
+    const checks = [
+      {
+        id: 'duration',
+        label: 'Panjang Seri Data Hujan (SNI 2415:2016)',
+        desc: isDurationOk 
+          ? `Tersedia ${yearsCount} tahun (Memenuhi syarat SNI: min. 10 tahun data)` 
+          : yearsCount > 0
+            ? `Tersedia ${yearsCount} tahun (Peringatan: Rekomendasi SNI min. 10 tahun)`
+            : 'Belum ada data curah hujan harian',
+        passed: isDurationOk,
+        warning: yearsCount > 0 && yearsCount < 10,
+        section: 'qc' as const,
+      },
+      {
+        id: 'qc',
+        label: 'Quality Control Data (RAPS, Outlier, Homogenitas)',
+        desc: isQCOk 
+          ? 'Data konsisten, tidak ada outlier signifikan, dan homogen' 
+          : 'Belum dilakukan uji QC lengkap atau terdeteksi anomali pada seri data',
+        passed: isQCOk,
+        warning: false,
+        section: 'qc' as const,
+      },
+      {
+        id: 'morfometri',
+        label: 'Karakteristik & Morfometri DAS',
+        desc: isMorfometriOk 
+          ? `Luas DAS: ${morfometriDAS?.luasDAS.toFixed(2)} km², Panjang Alur: ${morfometriDAS?.panjangSungai.toFixed(2)} km` 
+          : 'Luas DAS dan panjang alur sungai utama belum diisi',
+        passed: isMorfometriOk,
+        warning: false,
+        section: 'morfometri' as const,
+      },
+      {
+        id: 'tutupan',
+        label: 'Tutupan Lahan, Koefisien C & CN SCS',
+        desc: isTutupanOk 
+          ? `C Rasional: ${tutupanLahan?.koefisienPengaliranGabungan.toFixed(3)}, CN SCS: ${(tutupanLahan?.curveNumberGabungan || 0).toFixed(1)}` 
+          : 'Belum ada pembagian tutupan lahan atau nilai C / CN bernilai 0',
+        passed: isTutupanOk,
+        warning: false,
+        section: 'tutupan' as const,
+      },
+      {
+        id: 'hujan-wilayah',
+        label: 'Curah Hujan Wilayah (Areal Rainfall)',
+        desc: isHujanWilayahOk 
+          ? `Metode: ${metodeName} (${curahHujanWilayah?.hujanRataRata ? curahHujanWilayah.hujanRataRata.toFixed(2) + ' mm' : 'Tersimpan'})` 
+          : 'Belum dihitung menggunakan Poligon Thiessen atau Rata-rata Aljabar',
+        passed: isHujanWilayahOk,
+        warning: false,
+        section: 'hujan' as const,
+      },
+    ];
+
+    const passedCount = checks.filter(c => c.passed).length;
+    const scorePct = Math.round((passedCount / checks.length) * 100);
+
+    return { checks, passedCount, total: checks.length, scorePct };
+  }, [dataHujan, qcStatus, morfometriDAS, tutupanLahan, curahHujanWilayah, metodeName]);
 
   return (
     <div className="space-y-4 p-6">
@@ -364,6 +458,117 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
                 <p className="text-xs mt-1">Silakan lengkapi data di tab Curah Hujan Wilayah</p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Card 5: Engineering Readiness Checklist (Full Width) */}
+        <div className="md:col-span-3 bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden">
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-pupr-blue" />
+              <div>
+                <h3 className="font-semibold text-slate-800 text-sm">Status Kesiapan Rekayasa SDA (SNI Compliance)</h3>
+                <p className="text-xs text-slate-500">Verifikasi kelayakan data sebelum masuk pipeline analisis frekuensi & hidrograf banjir</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs px-2.5 py-1 rounded font-bold uppercase tracking-wider ${
+                readiness.scorePct === 100 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : readiness.scorePct >= 60
+                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                    : 'bg-red-100 text-red-800 border border-red-300'
+              }`}>
+                {readiness.passedCount}/{readiness.total} Parameter Siap ({readiness.scorePct}%)
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-4">
+            {/* Progress bar */}
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+              <div 
+                className={`h-full transition-all duration-500 ${
+                  readiness.scorePct === 100 
+                    ? 'bg-emerald-600' 
+                    : readiness.scorePct >= 60 
+                      ? 'bg-amber-500' 
+                      : 'bg-red-500'
+                }`}
+                style={{ width: `${readiness.scorePct}%` }}
+              />
+            </div>
+
+            {/* Checklist items */}
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-md overflow-hidden">
+              {readiness.checks.map((item) => (
+                <div key={item.id} className="p-3.5 flex items-start justify-between gap-4 hover:bg-slate-50/70 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">
+                      {item.passed ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      ) : item.warning ? (
+                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800">{item.label}</h4>
+                      <p className="text-xs text-slate-600 mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                      item.passed 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : item.warning 
+                          ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                          : 'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                      {item.passed ? 'MEMENUHI' : item.warning ? 'PERIKSA' : 'BELUM LENGKAP'}
+                    </span>
+                    <button
+                      onClick={() => onNavigateToSection?.(item.section)}
+                      className="text-xs text-pupr-blue font-semibold hover:underline flex items-center gap-1"
+                    >
+                      Buka <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pipeline Action Buttons */}
+            <div className="mt-6 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-blue-50/60 to-slate-50 p-4 rounded-md border">
+              <div>
+                <p className="text-xs font-bold text-slate-800">Lanjutkan Pipeline Desain SDA</p>
+                <p className="text-xs text-slate-600">Teruskan parameter hidrologi ke modul kalkulasi dan simulasi hidrolik</p>
+              </div>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('navigateToTab', { detail: '/banjir' }));
+                    navigate('/banjir');
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-pupr-blue hover:bg-blue-800 text-white text-xs font-bold rounded-md shadow-sm transition-all"
+                >
+                  <span>Analisis Banjir & Frekuensi</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('navigateToTab', { detail: '/neraca' }));
+                    navigate('/neraca');
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-md shadow-sm transition-all"
+                >
+                  <span>Neraca Air (F.J. Mock)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

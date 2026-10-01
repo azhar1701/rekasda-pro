@@ -93,17 +93,36 @@ export const WebGISPanel: React.FC = () => {
 
       const currentC = tutupanLahan?.koefisienPengaliranGabungan || 0;
       if (!tutupanLahan || Math.abs(compositeResult.compositeC - currentC) > 0.001) {
+        const getStandardCN = (jenis: string, cVal: number): number => {
+          const j = (jenis || '').toLowerCase();
+          if (j.includes('hutan') || j.includes('forest')) return 60;
+          if (j.includes('kebun') || j.includes('perkebunan')) return 72;
+          if (j.includes('sawah') || j.includes('padi')) return 82;
+          if (j.includes('tegalan') || j.includes('ladang') || j.includes('pertanian')) return 78;
+          if (j.includes('permukiman') || j.includes('kota') || j.includes('bangunan') || j.includes('urban')) return 88;
+          if (j.includes('air') || j.includes('sungai') || j.includes('danau')) return 100;
+          if (j.includes('semak') || j.includes('belukar') || j.includes('rumput')) return 70;
+          return Math.min(95, Math.max(55, Math.round(50 + 45 * (cVal || 0.4))));
+        };
+
+        const itemsWithCN = compositeResult.details.map(d => ({
+          id: crypto.randomUUID(),
+          jenis: d.jenis,
+          luas: d.luasKm2,
+          nilaiC: d.nilaiC,
+          nilaiCN: getStandardCN(d.jenis, d.nilaiC)
+        }));
+
+        const totalArea = params.areaKm2;
+        const compositeCN = totalArea > 0
+          ? itemsWithCN.reduce((sum, item) => sum + item.nilaiCN * item.luas, 0) / totalArea
+          : 75;
+
         setTutupanLahan({
-          items: compositeResult.details.map(d => ({
-            id: crypto.randomUUID(),
-            jenis: d.jenis,
-            luas: d.luasKm2,
-            nilaiC: d.nilaiC,
-            nilaiCN: 0
-          })),
+          items: itemsWithCN,
           koefisienPengaliranGabungan: compositeResult.compositeC,
           totalLuas: params.areaKm2,
-          curveNumberGabungan: 0,
+          curveNumberGabungan: Number(compositeCN.toFixed(1)),
         } as any);
       }
 

@@ -655,9 +655,19 @@ export const useHydrologyStore = create<HydrologyState>()(
   updateMorfometriDAS: (data) => set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '', analisisFrekuensi: null, hasilBanjir: null, isBanjirDirty: true }),
   setTutupanLahan: (data) => set({ tutupanLahan: data, isBanjirDirty: true }),
   saveMorfometriDAS: async (data) => {
+    // Catchment morphometry is a property of the DAS, update store state immediately
+    set({ 
+      morfometriDAS: data, 
+      luasDas: data ? String(data.luasDAS) : '', 
+      panjangSungai: data ? String(data.panjangSungai) : '', 
+      analisisFrekuensi: null, 
+      hasilBanjir: null, 
+      isBanjirDirty: true,
+      isNeracaDirty: true
+    });
+
     const stasiunId = get().selectedStasiun?.id;
     if (!stasiunId || !supabase) {
-      set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '', analisisFrekuensi: null, hasilBanjir: null, isBanjirDirty: true });
       return;
     }
     
@@ -673,21 +683,20 @@ export const useHydrologyStore = create<HydrologyState>()(
           elevasi: data.elevasi
         }, { onConflict: 'stasiun_id' });
         
-      if (error) throw error;
-      
-      set({ morfometriDAS: data, luasDas: data ? String(data.luasDAS) : '', panjangSungai: data ? String(data.panjangSungai) : '', analisisFrekuensi: null, hasilBanjir: null, isBanjirDirty: true });
+      if (error) console.warn('Supabase sync warning for Morfometri DAS:', error);
     } catch (error: any) {
-      set({ error: error.message });
-      throw error;
+      console.warn('Error syncing Morfometri DAS to database:', error);
     } finally {
       set({ isLoading: false });
     }
   },
 
   saveTutupanLahan: async (data) => {
+    // Land cover is a property of the DAS, update store state immediately
+    set({ tutupanLahan: data, isBanjirDirty: true, isNeracaDirty: true });
+
     const stasiunId = get().selectedStasiun?.id;
     if (!stasiunId || !supabase) {
-      set({ tutupanLahan: data, isBanjirDirty: true });
       return;
     }
 
@@ -715,11 +724,8 @@ export const useHydrologyStore = create<HydrologyState>()(
           
         if (insertError) throw insertError;
       }
-      
-      set({ tutupanLahan: data, isBanjirDirty: true });
     } catch (error: any) {
-      set({ error: error.message });
-      throw error;
+      console.warn('Error syncing Tutupan Lahan to database:', error);
     } finally {
       set({ isLoading: false });
     }
