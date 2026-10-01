@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '@/services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
@@ -8,19 +8,23 @@ import { saveWaterBalance } from '@/services/calculationService';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { FormulaAccordion } from '@/components/ui/data-display/FormulaAccordion';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { Droplet, AlertTriangle, Zap } from 'lucide-react';
+import { Droplet, AlertTriangle, Zap, CheckCircle2, Database, Layers } from 'lucide-react';
 import { useStaggerAnimation } from '@/hooks/useStaggerAnimation';
-import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
 import {
   DEFAULT_ETO_INDONESIA,
   DAYS_IN_MONTH,
   MONTH_LABELS,
   calculateFJMock,
   calculateWeibullDependableFlow,
+  calculateMultiYearFJMock,
   type MockParams,
   type MockMonthlyInput,
   type MockMonthlyResult,
+  type MonthlyDependableFlowResult,
+  type MultiYearFJMockInput,
 } from '@/lib/engine/fjMock';
+import { aggregateMonthlyRainfall, type MultiYearMonthlyRainfall } from '@/utils/rainfallSeriesUtils';
 import { KalkulatorIrigasi } from './KalkulatorIrigasi';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -50,13 +54,25 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const kpiCardsRef = useStaggerAnimation(50);
 
   // ── F.J. Mock Integration ──
-  const { luasDas, hasilMock, setHasilMock, neracaFinal, setLuasDas, identitasLokasi } = useHydrologyStore();
+  const {
+    luasDas,
+    hasilMock,
+    setHasilMock,
+    neracaFinal,
+    setLuasDas,
+    identitasLokasi,
+    dataHujan,
+    selectedStasiun,
+    arealRainfallThiessen,
+    arealRainfallAlgebraic,
+  } = useHydrologyStore();
   const [luasDasLocal, setLuasDasLocal] = useState<string>('');
   const luasDasGlobal = parseFloat(luasDas) || 0;
   // Effective value: local override → global store → 0
   const luasDasEffective = luasDasLocal !== '' ? (parseFloat(luasDasLocal) || 0) : luasDasGlobal;
   const isLuasDasOverridden = luasDasLocal !== '' && parseFloat(luasDasLocal) !== luasDasGlobal;
   const [supplyMethod, setSupplyMethod] = useState<'manual' | 'mock'>('manual');
+  const [rainSource, setRainSource] = useState<'master_station' | 'master_thiessen' | 'manual'>('master_station');
   const [mockParams, setMockParams] = useState({
     smc: 200,
     ism: 200,
@@ -70,10 +86,37 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   ]);
   const [targetProb, setTargetProb] = useState(80);
   const [mockResults, setMockResults] = useState<MockMonthlyResult[] | null>(null);
+  const [multiYearMockResult, setMultiYearMockResult] = useState<MonthlyDependableFlowResult | null>(null);
   const [mockError, setMockError] = useState<string | null>(null);
   const luasDasNum = luasDasEffective;
 
+  // Derive multi-year rainfall from Master Data or Thiessen
+  const multiYearRainfall: MultiYearMonthlyRainfall | null = useMemo(() => {
+    let dataset: DataHujan[] = [];
+    if (rainSource === 'master_station') {
+      if (selectedStasiun) {
+        dataset = dataHujan.filter(d => d.stasiun_id === selectedStasiun.id);
+      } else {
+        dataset = dataHujan;
+      }
+    } else if (rainSource === 'master_thiessen') {
+      dataset = arealRainfallThiessen || arealRainfallAlgebraic || [];
+    }
+    if (!dataset || dataset.length === 0) return null;
+    try {
+      const agg = aggregateMonthlyRainfall(dataset);
+      return agg.years.length > 0 ? agg : null;
+    } catch {
+      return null;
+    }
+  }, [rainSource, selectedStasiun, dataHujan, arealRainfallThiessen, arealRainfallAlgebraic]);
 
+  // Sync monthlyPrecip from multiYearRainfall average when available and in master mode
+  useEffect(() => {
+    if (rainSource !== 'manual' && multiYearRainfall && multiYearRainfall.averageMonthly.length === 12) {
+      setMonthlyPrecip(multiYearRainfall.averageMonthly.map((v: number) => Math.round(v * 10) / 10));
+    }
+  }, [rainSource, multiYearRainfall]);
 
   useEffect(() => {
     const balanceResults = calculateWaterBalance(inputs);
@@ -98,7 +141,6 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
     setMockError(null);
     setIsMockCalculating(true);
 
-    // Use a small timeout to let the UI update the "Calculating" state
     setTimeout(() => {
       try {
         if (luasDasNum <= 0) {
@@ -116,52 +158,97 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           exposedSurface: mockParams.exposedSurface,
         };
 
-        const data_mock: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
-          month,
-          precipitation: monthlyPrecip[i],
-          eto: monthlyETo[i],
-          daysInMonth: DAYS_IN_MONTH[i],
-        }));
+        if (rainSource !== 'manual' && multiYearRainfall && multiYearRainfall.years.length >= 2) {
+          // Multi-year continuous simulation per SNI 6738:2015 & KP-01
+          const yearsData: MultiYearFJMockInput[] = multiYearRainfall.years.map(yr => ({
+            year: yr,
+            monthlyPrecip: multiYearRainfall.monthlyByYear[yr] || new Array(12).fill(0),
+            monthlyETo: monthlyETo,
+          }));
 
-        // ── PURE LOCAL CALCULATION ──
-        const results_mock = calculateFJMock(params, data_mock);
+          const myRes = calculateMultiYearFJMock(
+            params,
+            yearsData,
+            targetProb
+          );
 
-        // Calculate Q80 (Dependable Flow) using the discharge series
-        const dischargeSeries = results_mock.map((r: MockMonthlyResult) => r.discharge);
-        const weibullResults = calculateWeibullDependableFlow(dischargeSeries, targetProb);
+          setMultiYearMockResult(myRes);
 
-        const qAndalan = weibullResults.qAndalan;
-        const targetProb_val = weibullResults.probability;
+          // Update Water Balance monthly supply with 12 monthly Q80 values
+          setInputs(prev => ({ ...prev, monthlySupply: myRes.monthlyQAndalan }));
 
-        setMockResults(results_mock);
+          // Show the latest year in detailed monthly simulation table
+          const latestYr = multiYearRainfall.years[multiYearRainfall.years.length - 1];
+          const latestYearResults = myRes.continuousResults.filter(r => r.year === latestYr);
+          setMockResults(latestYearResults);
 
-        // Apply Mock discharges as monthlySupply for Water Balance
-        setInputs(prev => ({ ...prev, monthlySupply: dischargeSeries }));
+          // Save to store with monthlyQAndalan, monthlyRAndalan, yearsCount
+          setHasilMock({
+            monthlyResults: latestYearResults.map((r: MockMonthlyResult) => ({
+              month: r.month,
+              precipitation: r.precipitation,
+              eto: r.eto,
+              waterSurplus: r.waterSurplus,
+              baseFlow: r.baseFlow,
+              directRunoff: r.directRunoff,
+              totalRunoff: r.totalRunoff,
+              discharge: r.discharge,
+              daysInMonth: r.daysInMonth,
+            })),
+            qAndalan: myRes.monthlyQAndalan.reduce((a, b) => a + b, 0) / 12,
+            probability: targetProb,
+            metode: 'mock',
+            monthlyQAndalan: myRes.monthlyQAndalan,
+            monthlyRAndalan: myRes.monthlyRAndalan,
+            yearsCount: myRes.yearsCount,
+          });
+        } else {
+          // Single-year fallback calculation
+          const data_mock: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
+            month,
+            precipitation: monthlyPrecip[i],
+            eto: monthlyETo[i],
+            daysInMonth: DAYS_IN_MONTH[i],
+          }));
 
-        // Save to store
-        setHasilMock({
-          monthlyResults: results_mock.map((r: MockMonthlyResult) => ({
-            month: r.month,
-            precipitation: r.precipitation,
-            eto: r.eto,
-            waterSurplus: r.waterSurplus,
-            baseFlow: r.baseFlow,
-            directRunoff: r.directRunoff,
-            totalRunoff: r.totalRunoff,
-            discharge: r.discharge,
-            daysInMonth: r.daysInMonth,
-          })),
-          qAndalan: qAndalan,
-          probability: targetProb_val,
-          metode: 'mock',
-        });
+          const results_mock = calculateFJMock(params, data_mock);
+          const dischargeSeries = results_mock.map((r: MockMonthlyResult) => r.discharge);
+          const weibullResults = calculateWeibullDependableFlow(dischargeSeries, targetProb);
+
+          setMockResults(results_mock);
+          setMultiYearMockResult(null);
+
+          // Apply Mock discharges as monthlySupply for Water Balance
+          setInputs(prev => ({ ...prev, monthlySupply: dischargeSeries }));
+
+          // Save to store
+          setHasilMock({
+            monthlyResults: results_mock.map((r: MockMonthlyResult) => ({
+              month: r.month,
+              precipitation: r.precipitation,
+              eto: r.eto,
+              waterSurplus: r.waterSurplus,
+              baseFlow: r.baseFlow,
+              directRunoff: r.directRunoff,
+              totalRunoff: r.totalRunoff,
+              discharge: r.discharge,
+              daysInMonth: r.daysInMonth,
+            })),
+            qAndalan: weibullResults.qAndalan,
+            probability: weibullResults.probability,
+            metode: 'mock',
+            monthlyQAndalan: dischargeSeries,
+            monthlyRAndalan: monthlyPrecip,
+            yearsCount: 1,
+          });
+        }
       } catch (err: any) {
         setMockError(err.message || 'Perhitungan F.J. Mock gagal.');
       } finally {
         setIsMockCalculating(false);
       }
     }, 100);
-  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, targetProb, setHasilMock, setInputs]);
+  }, [luasDasNum, mockParams, monthlyPrecip, monthlyETo, targetProb, rainSource, multiYearRainfall, setHasilMock, setInputs]);
 
   const totalSupply = inputs.monthlySupply.reduce((a, b) => a + b, 0);
   const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);
@@ -431,9 +518,84 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                       </select>
                     </div>
 
+                    {/* Rainfall Source Selection */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Sumber Data Hujan</label>
+                      <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-md mb-2">
+                        <button
+                          type="button"
+                          onClick={() => setRainSource('master_station')}
+                          className={`py-1.5 px-2 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
+                            rainSource === 'master_station' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          <Database className="w-3 h-3" />
+                          Stasiun
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRainSource('master_thiessen')}
+                          className={`py-1.5 px-2 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
+                            rainSource === 'master_thiessen' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          <Layers className="w-3 h-3" />
+                          Thiessen
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRainSource('manual')}
+                          className={`py-1.5 px-2 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
+                            rainSource === 'manual' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          Manual 12 Bln
+                        </button>
+                      </div>
+
+                      {/* Info alert if Master Data is detected */}
+                      {rainSource !== 'manual' && (
+                        <div className="p-2.5 mb-2 bg-blue-50/70 border border-blue-200 rounded text-xs text-blue-900">
+                          {multiYearRainfall && multiYearRainfall.years.length >= 2 ? (
+                            <div className="flex items-start gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                              <div>
+                                <div className="font-bold">
+                                  {multiYearRainfall.years.length} Tahun Data Harian ({Math.min(...multiYearRainfall.years)} - {Math.max(...multiYearRainfall.years)})
+                                </div>
+                                <div className="text-[10px] text-blue-700 mt-0.5">
+                                  Simulasi F.J. Mock kontinu multi-tahun & debit andalan Weibull bulanan (SNI 6738:2015 & KP-01) siap dihitung.
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-start gap-2 text-amber-800">
+                              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                              <div className="text-[11px]">
+                                {rainSource === 'master_station'
+                                  ? 'Data harian stasiun belum mencukupi (minimal 2 tahun). Silakan impor di tab Master Hidrologi atau gunakan input manual.'
+                                  : 'Data curah hujan wilayah Thiessen belum dihitung di Master Hidrologi.'}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     {/* Monthly Precipitation input (compact) */}
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Curah Hujan Bulanan (mm)</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                          {rainSource !== 'manual' && multiYearRainfall && multiYearRainfall.years.length >= 2
+                            ? 'Curah Hujan Rata-rata Bulanan (mm)'
+                            : 'Curah Hujan Bulanan (mm)'}
+                        </span>
+                        {rainSource !== 'manual' && multiYearRainfall && (
+                          <span className="text-[9px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                            Rerata {multiYearRainfall.years.length} Thn
+                          </span>
+                        )}
+                      </div>
                       <div className="grid grid-cols-4 gap-1.5">
                         {MONTH_LABELS.map((m, i) => (
                           <div key={m} className="text-center">
@@ -529,6 +691,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
               {/* SECTION 3: KEBUTUHAN AIR & NERACA FINAL */}
               <KalkulatorIrigasi
                 monthlySupply={inputs.monthlySupply}
+                monthlyRAndalan={multiYearMockResult?.monthlyRAndalan ?? hasilMock?.monthlyRAndalan}
               />
             </div>
           </div>
@@ -560,24 +723,91 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                     <Droplet className="w-8 h-8 text-pupr-blue" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">
-                      Debit Andalan Q{hasilMock.probability}
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-2">
+                      <span>Debit Andalan Q{hasilMock.probability}</span>
+                      {multiYearMockResult && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                          Multi-Tahun (N = {multiYearMockResult.yearsCount} Thn)
+                        </span>
+                      )}
                     </div>
                     <div className="text-4xl font-bold text-pupr-blue font-mono leading-none">
                       {hasilMock.qAndalan.toFixed(4)}
                     </div>
-                    <div className="text-sm font-semibold text-slate-500 mt-1">m³/s · Metode F.J. Mock</div>
+                    <div className="text-sm font-semibold text-slate-500 mt-1">
+                      m³/s · {multiYearMockResult ? 'Rata-rata Tahunan Debit Andalan Bulanan' : 'Metode F.J. Mock'}
+                    </div>
                   </div>
                   <div className="text-right shrink-0">
                     <ComplianceBadge sniCode="SNI 6738:2015" />
                   </div>
                 </div>
 
+                {/* Multi-Year Dependable Flow Table (SNI 6738:2015 & KP-01) */}
+                {multiYearMockResult && (
+                  <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
+                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-slate-800">Debit & Hujan Andalan Multi-Tahun</h3>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                            Q{targetProb} & R{targetProb} (KP-01)
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">
+                          Ranking Weibull independen per bulan dari {multiYearMockResult.yearsCount} tahun data ({Math.min(...multiYearRainfall!.years)} - {Math.max(...multiYearRainfall!.years)})
+                        </p>
+                      </div>
+                      <ComplianceBadge sniCode="SNI 6738:2015" />
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                          <tr>
+                            <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
+                            <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">R{targetProb} (mm)</th>
+                            <th className="text-right py-2.5 px-3 font-bold text-blue-700 bg-blue-50/80">Q{targetProb} (m³/s)</th>
+                            <th className="text-right py-2.5 px-3 font-bold text-slate-500">Min Q</th>
+                            <th className="text-right py-2.5 px-3 font-bold text-slate-600">Rerata Q</th>
+                            <th className="text-right py-2.5 px-3 font-bold text-slate-500">Max Q</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {multiYearMockResult.monthlyBreakdown.map(row => {
+                            const minQ = Math.min(...row.rankedDischarge.map(p => p.value));
+                            const maxQ = Math.max(...row.rankedDischarge.map(p => p.value));
+                            return (
+                              <tr key={row.month} className="border-b border-slate-100 even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
+                                <td className="py-2 px-3 font-bold text-slate-700">{row.month}</td>
+                                <td className="py-2 px-3 text-right font-mono text-pupr-blue font-semibold">{row.rAndalan.toFixed(1)}</td>
+                                <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">{row.qAndalan.toFixed(4)}</td>
+                                <td className="py-2 px-3 text-right font-mono text-slate-500">{minQ.toFixed(4)}</td>
+                                <td className="py-2 px-3 text-right font-mono text-slate-700">{row.qAverage.toFixed(4)}</td>
+                                <td className="py-2 px-3 text-right font-mono text-slate-500">{maxQ.toFixed(4)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="px-5 py-2.5 bg-blue-50/60 border-t border-blue-200/50 flex items-center justify-between text-[11px] text-blue-800">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                        12 nilai Q{targetProb} bulanan otomatis dialirkan ke Suplai Neraca Air & R{targetProb} ke Kebutuhan Irigasi.
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mock Summary Table */}
                 <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
-                  <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
-                    <h3 className="text-sm font-bold text-slate-800">Rekap Hasil F.J. Mock (12 Bulan)</h3>
-                    <p className="text-[10px] text-slate-500">Transformasi Hujan → Aliran per bulan</p>
+                  <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800">
+                        {multiYearMockResult ? `Simulasi F.J. Mock Bulanan (Tahun ${multiYearRainfall?.years[multiYearRainfall.years.length - 1]})` : 'Rekap Hasil F.J. Mock (12 Bulan)'}
+                      </h3>
+                      <p className="text-[10px] text-slate-500">Transformasi Hujan → Aliran per bulan (Groundwater & Runoff)</p>
+                    </div>
                   </div>
                   <div className="overflow-x-auto overflow-y-auto max-h-80">
                     <table className="w-full text-xs">

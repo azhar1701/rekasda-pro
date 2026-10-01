@@ -192,6 +192,9 @@ export interface HasilMock {
   qAndalan: number;
   probability: number;
   metode: 'mock' | 'manual' | 'weibull';
+  monthlyQAndalan?: number[];
+  monthlyRAndalan?: number[];
+  yearsCount?: number;
 }
 
 export interface NeracaFinalRow {

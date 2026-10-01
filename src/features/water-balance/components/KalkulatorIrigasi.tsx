@@ -15,6 +15,9 @@ import {
     type NeracaAirFinalRow,
 } from '@/lib/engine/irrigationDemand';
 
+import { toast } from '@/hooks/useToast';
+import { calculateKPEffectiveRainfall } from '@/lib/engine/irrigationDemand';
+
 const POLA_OPTIONS: { value: PolaTanam; label: string }[] = [
     { value: 'padi', label: 'Padi' },
     { value: 'palawija', label: 'Palawija' },
@@ -23,10 +26,11 @@ const POLA_OPTIONS: { value: PolaTanam; label: string }[] = [
 
 interface Props {
     monthlySupply: number[]; // 12 values (m³/s) — from Mock or manual
+    monthlyRAndalan?: number[]; // 12 values (mm) — R80 from multi-year Mock/Rainfall
     onNeracaCalculated?: (neraca: NeracaAirFinalRow[]) => void;
 }
 
-export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalculated }) => {
+export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, monthlyRAndalan, onNeracaCalculated }) => {
     const { setNeracaFinal } = useHydrologyStore();
 
     // Irrigation params
@@ -46,6 +50,20 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
     // Results
     const [irrResults, setIrrResults] = useState<IrrigationMonthlyResult[] | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const handleSyncReff = () => {
+        if (!monthlyRAndalan || monthlyRAndalan.length < 12) {
+            toast.error('Curah hujan andalan R80 belum tersedia.');
+            return;
+        }
+        const currentPola = irrData.map(d => d.polaTanam);
+        const calculatedReff = calculateKPEffectiveRainfall(monthlyRAndalan, currentPola);
+        setIrrData(prev => prev.map((row, i) => ({
+            ...row,
+            rpiEfektif: calculatedReff[i],
+        })));
+        toast.success('Hujan efektif (Reff) berhasil disinkronkan dari R80 (Standar KP-01).');
+    };
 
     const updateMonth = (index: number, field: keyof IrrigationMonthlyInput, value: any) => {
         setIrrData(prev => {
@@ -138,6 +156,22 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, onNeracaCalc
                             </div>
                         </div>
                     </div>
+
+                    {/* Sync button with R80 if available */}
+                    {monthlyRAndalan && monthlyRAndalan.length === 12 && (
+                        <div className="flex items-center justify-between p-2.5 bg-blue-50 border border-blue-200 rounded-sm">
+                            <span className="text-xs text-blue-900 font-medium">
+                                Tersedia Curah Hujan Andalan R80 dari F.J. Mock
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleSyncReff}
+                                className="px-3 py-1.5 text-xs font-bold bg-pupr-blue hover:bg-pupr-blue/90 text-white rounded-sm transition-colors shadow-none"
+                            >
+                                Sinkronkan Reff (KP-01)
+                            </button>
+                        </div>
+                    )}
 
                     {/* 12-month matrix — compact scrollable */}
                     <div className="overflow-x-auto overflow-y-auto max-h-72 border border-slate-200 rounded-md bg-white">

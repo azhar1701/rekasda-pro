@@ -201,6 +201,32 @@ export function generateDefaultIrrigationInput(
   });
 }
 
+/**
+ * Computes KP-01 effective rainfall array (mm/day) from 80% dependable rainfall (mm/month)
+ * Sesuai Standar Perencanaan Irigasi KP-01 Pasal 4.3:
+ * - Padi: Reff = 0.70 × R80 / hari
+ * - Palawija: Reff = 0.50 × R80 / hari
+ * - Bero: Reff = 0
+ * 
+ * @param r80Monthly Array of 12 monthly R80 values (mm)
+ * @param polaTanam Array of 12 crop types ('padi' | 'palawija' | 'bero')
+ * @returns Array of 12 daily effective rainfall rates (mm/day)
+ */
+export function calculateKPEffectiveRainfall(
+  r80Monthly: number[],
+  polaTanam: PolaTanam[] = DEFAULT_POLA_TANAM
+): number[] {
+  if (!r80Monthly || r80Monthly.length < 12) return new Array(12).fill(0);
+
+  return r80Monthly.map((r80, i) => {
+    const pola = polaTanam[i] || 'padi';
+    if (pola === 'bero') return 0;
+    const factor = pola === 'padi' ? 0.70 : 0.50; // KP-01
+    const days = DAYS_IN_MONTH[i] || 30;
+    return round((r80 * factor) / days, 2);
+  });
+}
+
 // ─── Raw Water Demand (Domestik + Industri) ─────────────────────────
 
 export interface RawWaterDemandInput {

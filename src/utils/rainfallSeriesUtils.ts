@@ -79,3 +79,61 @@ export function extractAnnualMaximums(data: DataHujan[]): RainfallDataPoint[] {
     .sort((a, b) => b.year - a.year); // Sort descending (latest year first) or ascending?
     // Modal uses ascending: .sort((a, b) => a.year - b.year)
 }
+
+export interface MultiYearMonthlyRainfall {
+  years: number[];
+  monthlyByYear: Record<number, number[]>; // 12 values per year (Jan-Dec)
+  averageMonthly: number[]; // 12 average values across all years
+}
+
+/**
+ * Aggregates daily rainfall series into monthly totals grouped by calendar year.
+ * Standard hydrology practice for F.J. Mock input preparation.
+ * 
+ * @param data Array of daily rainfall records (DataHujan[])
+ * @returns MultiYearMonthlyRainfall
+ */
+export function aggregateMonthlyRainfall(data: DataHujan[]): MultiYearMonthlyRainfall {
+  if (!data || data.length === 0) {
+    return { years: [], monthlyByYear: {}, averageMonthly: new Array(12).fill(0) };
+  }
+
+  const monthlySums: Record<number, number[]> = {};
+
+  data.forEach(d => {
+    const date = new Date(d.tanggal);
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0 to 11
+
+    if (isNaN(year) || isNaN(month) || month < 0 || month > 11) return;
+
+    if (!monthlySums[year]) {
+      monthlySums[year] = new Array(12).fill(0);
+    }
+
+    const rain = typeof d.curah_hujan === 'number' && !isNaN(d.curah_hujan) ? d.curah_hujan : 0;
+    monthlySums[year][month] += rain;
+  });
+
+  const years = Object.keys(monthlySums).map(Number).sort((a, b) => a - b);
+
+  // Round monthly sums to 2 decimals
+  years.forEach(yr => {
+    monthlySums[yr] = monthlySums[yr].map(v => Number(v.toFixed(2)));
+  });
+
+  // Calculate average for each month across all recorded years
+  const averageMonthly = new Array(12).fill(0);
+  if (years.length > 0) {
+    for (let m = 0; m < 12; m++) {
+      const sum = years.reduce((acc, yr) => acc + monthlySums[yr][m], 0);
+      averageMonthly[m] = Number((sum / years.length).toFixed(2));
+    }
+  }
+
+  return {
+    years,
+    monthlyByYear: monthlySums,
+    averageMonthly,
+  };
+}

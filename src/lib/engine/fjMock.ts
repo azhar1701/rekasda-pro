@@ -333,3 +333,207 @@ function round(value: number, decimals: number): number {
   const factor = Math.pow(10, decimals);
   return Math.round(value * factor) / factor;
 }
+
+export interface MultiYearFJMockInput {
+  year: number;
+  monthlyPrecip: number[]; // 12 values
+  monthlyETo?: number[]; // 12 values, optional (defaults to DEFAULT_ETO_INDONESIA)
+}
+
+export interface MonthRankedPoint {
+  rank: number;
+  year: number;
+  value: number;
+  probability: number;
+}
+
+export interface MonthlyDependableFlowResult {
+  /** Target probability (%, e.g. 80) */
+  probability: number;
+  /** Number of years simulated */
+  yearsCount: number;
+  /** 12 dependable flow values (m³/s) for Jan - Dec */
+  monthlyQAndalan: number[];
+  /** 12 dependable rainfall values (mm) for Jan - Dec */
+  monthlyRAndalan: number[];
+  /** 12 average discharge values (m³/s) across all simulated years */
+  monthlyQAverage: number[];
+  /** Continuous monthly results across all years */
+  continuousResults: (MockMonthlyResult & { year: number })[];
+  /** Detailed breakdown per month (ranked series & stats) */
+  monthlyBreakdown: {
+    month: string;
+    monthIndex: number;
+    qAndalan: number;
+    rAndalan: number;
+    qAverage: number;
+    rankedDischarge: MonthRankedPoint[];
+    rankedPrecipitation: MonthRankedPoint[];
+  }[];
+}
+
+/**
+ * Executes a continuous multi-year F.J. Mock simulation and calculates
+ * monthly dependable flow (Debit Andalan Bulanan) per SNI 6738:2015 and KP-01.
+ *
+ * For each calendar month (Jan through Dec), all yearly values are extracted and ranked
+ * using Weibull plotting position: P(m) = m / (N + 1) * 100%.
+ *
+ * @param params Global F.J. Mock parameters (SMC, K, Luas DAS, etc.)
+ * @param yearsData Array of yearly inputs with 12 monthly rainfall values each
+ * @param targetProbability Exceedance probability (%, default 80 for irrigation Q80)
+ * @returns MonthlyDependableFlowResult
+ */
+export function calculateMultiYearFJMock(
+  params: MockParams,
+  yearsData: MultiYearFJMockInput[],
+  targetProbability: number = 80
+): MonthlyDependableFlowResult {
+  if (!yearsData || yearsData.length === 0) {
+    throw new Error('Data multi-tahun tidak boleh kosong.');
+  }
+
+  // Sort years chronologically
+  const sortedYears = [...yearsData].sort((a, b) => a.year - b.year);
+  const yearsCount = sortedYears.length;
+
+  // Flatten into continuous monthly inputs
+  const allMonthlyInputs: (MockMonthlyInput & { year: number; monthIndex: number })[] = [];
+  sortedYears.forEach(y => {
+    const etoSeries = y.monthlyETo && y.monthlyETo.length === 12 ? y.monthlyETo : DEFAULT_ETO_INDONESIA;
+    for (let m = 0; m < 12; m++) {
+      allMonthlyInputs.push({
+        year: y.year,
+        monthIndex: m,
+        month: MONTH_LABELS[m],
+        precipitation: y.monthlyPrecip[m] || 0,
+        eto: etoSeries[m],
+        daysInMonth: DAYS_IN_MONTH[m],
+      });
+    }
+  });
+
+  // Run continuous simulation carrying SM and Vg forward from month to month and year to year
+  let prevSM = params.ism;
+  let prevVg = params.initialGwStorage ?? 0;
+  const continuousResults: (MockMonthlyResult & { year: number })[] = [];
+
+  for (const item of allMonthlyInputs) {
+    const { month, precipitation: P, eto: ETo, daysInMonth, year } = item;
+    const deltaS = P - ETo;
+
+    let SM: number;
+    let ETa: number;
+
+    if (deltaS >= 0) {
+      ETa = ETo;
+      SM = Math.min(prevSM + deltaS, params.smc);
+    } else {
+      const dryingFraction = (params.exposedSurface * Math.abs(deltaS)) / params.smc;
+      SM = Math.max(0, prevSM * (1 - dryingFraction));
+      ETa = P + (prevSM - SM);
+    }
+
+    const deltaSM = SM - prevSM;
+    const WS = Math.max(0, P - ETa - deltaSM);
+    const I = WS * params.infiltrationFactor;
+    const DRO = WS - I;
+
+    // Standard Ditjen SDA equation
+    const Vg = params.k * prevVg + 0.5 * (1 + params.k) * I;
+    const BF = Math.max(0, (1 - params.k) * (prevVg + 0.5 * I));
+    const TRO = BF + DRO;
+
+    const seconds = daysInMonth * 86400;
+    const discharge = (TRO * params.luasDas * 1000) / seconds;
+
+    continuousResults.push({
+      year,
+      month,
+      precipitation: round(P, 2),
+      eto: round(ETo, 2),
+      deltaS: round(deltaS, 2),
+      soilMoisture: round(SM, 2),
+      eta: round(ETa, 2),
+      waterSurplus: round(WS, 2),
+      infiltration: round(I, 2),
+      gwStorage: round(Vg, 2),
+      baseFlow: round(BF, 2),
+      directRunoff: round(DRO, 2),
+      totalRunoff: round(TRO, 2),
+      discharge: round(discharge, 4),
+      daysInMonth,
+    });
+
+    prevSM = SM;
+    prevVg = Vg;
+  }
+
+  // Group continuous results by calendar month (0 = Jan, ..., 11 = Dec)
+  const monthlyQAndalan: number[] = new Array(12).fill(0);
+  const monthlyRAndalan: number[] = new Array(12).fill(0);
+  const monthlyQAverage: number[] = new Array(12).fill(0);
+
+  const monthlyBreakdown = MONTH_LABELS.map((label, m) => {
+    const monthRows = continuousResults.filter((_, idx) => idx % 12 === m);
+    const discharges = monthRows.map(r => r.discharge);
+    const rainfalls = monthRows.map(r => r.precipitation);
+
+    const avgQ = discharges.reduce((s, v) => s + v, 0) / (discharges.length || 1);
+    monthlyQAverage[m] = round(avgQ, 4);
+
+    let qAndalanVal: number;
+    let rAndalanVal: number;
+    let rankedDischarge: MonthRankedPoint[] = [];
+    let rankedPrecipitation: MonthRankedPoint[] = [];
+
+    if (yearsCount >= 2) {
+      const qWeibull = calculateWeibullDependableFlow(discharges, targetProbability);
+      qAndalanVal = qWeibull.qAndalan;
+      rankedDischarge = qWeibull.rankedSeries.map((s, idx) => ({
+        rank: s.rank,
+        year: monthRows[idx]?.year ?? idx + 1,
+        value: s.discharge,
+        probability: s.probability,
+      }));
+
+      const rWeibull = calculateWeibullDependableFlow(rainfalls, targetProbability);
+      rAndalanVal = rWeibull.qAndalan;
+      rankedPrecipitation = rWeibull.rankedSeries.map((s, idx) => ({
+        rank: s.rank,
+        year: monthRows[idx]?.year ?? idx + 1,
+        value: s.discharge,
+        probability: s.probability,
+      }));
+    } else {
+      // Single year fallback
+      qAndalanVal = discharges[0] ?? 0;
+      rAndalanVal = rainfalls[0] ?? 0;
+      rankedDischarge = [{ rank: 1, year: sortedYears[0]?.year ?? 1, value: qAndalanVal, probability: 50 }];
+      rankedPrecipitation = [{ rank: 1, year: sortedYears[0]?.year ?? 1, value: rAndalanVal, probability: 50 }];
+    }
+
+    monthlyQAndalan[m] = round(qAndalanVal, 4);
+    monthlyRAndalan[m] = round(rAndalanVal, 2);
+
+    return {
+      month: label,
+      monthIndex: m,
+      qAndalan: monthlyQAndalan[m],
+      rAndalan: monthlyRAndalan[m],
+      qAverage: monthlyQAverage[m],
+      rankedDischarge,
+      rankedPrecipitation,
+    };
+  });
+
+  return {
+    probability: targetProbability,
+    yearsCount,
+    monthlyQAndalan,
+    monthlyRAndalan,
+    monthlyQAverage,
+    continuousResults,
+    monthlyBreakdown,
+  };
+}
