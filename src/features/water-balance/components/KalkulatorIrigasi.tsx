@@ -27,14 +27,26 @@ const POLA_OPTIONS: { value: PolaTanam; label: string }[] = [
 interface Props {
     monthlySupply: number[]; // 12 values (m³/s) — from Mock or manual
     monthlyRAndalan?: number[]; // 12 values (mm) — R80 from multi-year Mock/Rainfall
+    onDemandCalculated?: (drSeries: number[], rawWaterM3s: number, details: IrrigationMonthlyResult[]) => void;
     onNeracaCalculated?: (neraca: NeracaAirFinalRow[]) => void;
+    initialPopulation?: number;
+    initialAgricultureArea?: number;
+    initialDomesticStandard?: number;
 }
 
-export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, monthlyRAndalan, onNeracaCalculated }) => {
+export const KalkulatorIrigasi: React.FC<Props> = ({
+    monthlySupply,
+    monthlyRAndalan,
+    onDemandCalculated,
+    onNeracaCalculated,
+    initialPopulation = 5000,
+    initialAgricultureArea = 100,
+    initialDomesticStandard = 100,
+}) => {
     const { setNeracaFinal } = useHydrologyStore();
 
     // Irrigation params
-    const [luasIrigasi, setLuasIrigasi] = useState(100);
+    const [luasIrigasi, setLuasIrigasi] = useState(initialAgricultureArea);
     const [efisiensi, setEfisiensi] = useState(0.65);
 
     // 12-month irrigation matrix
@@ -43,8 +55,8 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, monthlyRAnda
     );
 
     // Raw water
-    const [populasi, setPopulasi] = useState(5000);
-    const [standarDomestik, setStandarDomestik] = useState(100);
+    const [populasi, setPopulasi] = useState(initialPopulation);
+    const [standarDomestik, setStandarDomestik] = useState(initialDomesticStandard);
     const [industri, setIndustri] = useState(0);
 
     // Results
@@ -113,16 +125,18 @@ export const KalkulatorIrigasi: React.FC<Props> = ({ monthlySupply, monthlyRAnda
                     rawWaterM3s
                 );
 
-                // 4. Save to store
+                // 4. Save to store and notify parent
                 setNeracaFinal(neraca);
                 onNeracaCalculated?.(neraca);
+                onDemandCalculated?.(irrigationDR, rawWaterM3s, irrResultsLocal);
+                toast.success('Neraca air & DR irigasi KP-01 berhasil diperbarui.');
             } catch (err: any) {
                 setError(err.message || 'Perhitungan gagal.');
             } finally {
                 setIsCalculating(false);
             }
         }, 100);
-    }, [luasIrigasi, efisiensi, irrData, populasi, standarDomestik, industri, monthlySupply, setNeracaFinal, onNeracaCalculated]);
+    }, [luasIrigasi, efisiensi, irrData, populasi, standarDomestik, industri, monthlySupply, setNeracaFinal, onNeracaCalculated, onDemandCalculated]);
 
     return (
         <div className="space-y-4">

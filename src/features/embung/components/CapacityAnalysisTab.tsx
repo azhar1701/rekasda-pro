@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
-import { Download, Calculator, Info, Waves, Spline, Loader2, Sparkles } from 'lucide-react';
+import { Download, Calculator, Info, Waves, Spline, Loader2, Sparkles, Database } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
 // import { calculateSequentPeak } from '@/lib/engine/embung';
 import type { MonthlyData, SequentPeakResult } from '../types/embung.types';
 import { useKapasitasMutation } from '@/hooks/api/useEmbungApi';
@@ -30,8 +31,37 @@ interface CapacityAnalysisTabProps {
 }
 
 export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onConsultAI }) => {
+    const { hasilNeraca } = useHydrologyStore();
     const [data, setData] = useState<MonthlyData[]>(INITIAL_DATA);
     const [result, setResult] = useState<SequentPeakResult | null>(null);
+
+    const handleSyncFromNeraca = () => {
+        if (!hasilNeraca?.monthlySupply || hasilNeraca.monthlySupply.length === 0) {
+            toast.error('Data ketersediaan dan kebutuhan air belum dihitung di tab Neraca Air.');
+            return;
+        }
+
+        const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        const syncedRows: MonthlyData[] = hasilNeraca.monthlySupply.map((supply, i) => {
+            const days = daysPerMonth[i] || 30;
+            // Q (m3/s) * days * 86400 / 1e6 = Juta m3
+            const inflowJutaM3 = parseFloat(((supply * days * 86400) / 1e6).toFixed(3));
+            const demandM3s = hasilNeraca.monthlyDemand ? hasilNeraca.monthlyDemand[i] : 0;
+            const outflowJutaM3 = parseFloat(((demandM3s * days * 86400) / 1e6).toFixed(3));
+
+            return {
+                id: String(i + 1),
+                month: monthNames[i] || `Bln-${i + 1}`,
+                inflow: inflowJutaM3,
+                outflow: outflowJutaM3,
+            };
+        });
+
+        setData(syncedRows);
+        toast.success('Data Inflow & Outflow dari Neraca Air berhasil dimuat!');
+    };
 
     const handleInputChange = (id: string, field: keyof MonthlyData, value: string) => {
         const numValue = parseFloat(value) || 0;
@@ -89,6 +119,18 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
                                     <CardDescription className="text-xs">Input dalam satuan Juta m³</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    {hasilNeraca?.monthlySupply && (
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleSyncFromNeraca}
+                                            className="text-xs font-semibold"
+                                            title="Muat data Q80 ketersediaan dan kebutuhan air dari analisis Neraca Air"
+                                        >
+                                            <Database className="w-3.5 h-3.5 mr-1" />
+                                            Dari Neraca Air
+                                        </Button>
+                                    )}
                                     <Button
                                         variant="primary"
                                         size="sm"

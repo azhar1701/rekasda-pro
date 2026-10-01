@@ -406,3 +406,80 @@ export function checkSNIBoundary(
   return { isWithinBounds: true, severity: 'ok', message: null, reference: null };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WATER SCARCITY INDEX (IKA) — SNI 19-6728.1-2002
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface WaterScarcityCategory {
+  maxRatio: number; // Ratio Total Demand / Total Supply
+  status: 'Aman' | 'Sedang' | 'Kritis' | 'Sangat Kritis';
+  description: string;
+  badgeColor: 'emerald' | 'amber' | 'orange' | 'rose';
+}
+
+export const SNI_WATER_SCARCITY_CATEGORIES: WaterScarcityCategory[] = [
+  {
+    maxRatio: 0.50,
+    status: 'Aman',
+    description: 'Ketersediaan air berlebih, pemanfaatan < 50% dari debit andalan.',
+    badgeColor: 'emerald',
+  },
+  {
+    maxRatio: 0.75,
+    status: 'Sedang',
+    description: 'Pemanfaatan moderat (50% - 75%), pengawasan alokasi air diperlukan.',
+    badgeColor: 'amber',
+  },
+  {
+    maxRatio: 1.00,
+    status: 'Kritis',
+    description: 'Pemanfaatan tinggi (75% - 100%), mendekati kapasitas pasokan andalan.',
+    badgeColor: 'orange',
+  },
+  {
+    maxRatio: Infinity,
+    status: 'Sangat Kritis',
+    description: 'Defisit air (> 100%), mutlak memerlukan tampungan buatan (embung/waduk).',
+    badgeColor: 'rose',
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KP-01 DITJEN SDA IRRIGATION STANDARDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const KP01_IRRIGATION_STANDARDS = {
+  standard: 'Kriteria Perencanaan Irigasi KP-01',
+  efficiency: {
+    tertier: 0.80,
+    sekunder: 0.90,
+    primer: 0.90,
+    totalTypical: 0.65, // 0.80 × 0.90 × 0.90 ≈ 0.648
+  },
+  landPreparation: {
+    defaultDurationDays: 30,
+    defaultSaturationDepthMm: 250, // 200 - 300 mm
+    openWaterEvaporationFactor: 1.1, // Eo = 1.1 × ETo
+  },
+  percolation: {
+    clay: 1.0,
+    clayLoam: 2.0,
+    sandyLoam: 3.0,
+  },
+  wlr: {
+    recommendedMmDay: 3.3, // 50 mm / 15 hari
+  },
+  effectiveRainfallFactor: {
+    padi: 0.70, // 70% dari R80
+    palawija: 0.50, // 50% dari R50/R80
+  },
+  domesticStandardPerCityClass: {
+    metropolitan: 150, // > 1.000.000 jiwa
+    kotaBesar: 120,    // 500.000 - 1.000.000 jiwa
+    kotaSedang: 100,   // 100.000 - 500.000 jiwa
+    kotaKecil: 90,     // 20.000 - 100.000 jiwa
+    pedesaan: 60,      // < 20.000 jiwa
+  },
+};
+
+

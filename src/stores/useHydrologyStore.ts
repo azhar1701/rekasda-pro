@@ -169,6 +169,16 @@ export interface HasilNeraca {
   totalSurplusDefisit: number;
   bulanKritis: string;
   chartData: { bulan: string; ketersediaan: number; kebutuhan: number; neraca: number; }[];
+  waterScarcity?: {
+    ikaPercent: number;
+    status: string;
+    description: string;
+    badgeColor: string;
+  };
+  storageRequiredM3?: number;
+  storageRequiredJutaM3?: number;
+  monthlySupply?: number[];
+  monthlyDemand?: number[];
 }
 
 export interface HasilEmbung {

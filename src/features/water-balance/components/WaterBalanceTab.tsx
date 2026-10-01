@@ -1,15 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { WaterBalanceInputs, calculateWaterBalance, getWaterBalanceSummary, WaterBalanceResult } from '@/services/waterBalanceEngine';
+import {
+  WaterBalanceInputs,
+  calculateWaterBalance,
+  getWaterBalanceSummary,
+  WaterBalanceResult,
+  WaterBalanceSummary,
+  DEFAULT_MONTHS,
+} from '@/services/waterBalanceEngine';
 import { WaterBalanceChart } from './WaterBalanceChart';
+import { WaterBalanceKpiGrid } from './WaterBalanceKpiGrid';
+import { SequentPeakCard } from './SequentPeakCard';
+import { WaterBalanceWhiteBox } from './WaterBalanceWhiteBox';
 import { DependableFlowModal } from '@/components/ui/modals/DependableFlowModal';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { saveWaterBalance } from '@/services/calculationService';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { FormulaAccordion } from '@/components/ui/data-display/FormulaAccordion';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { Droplet, AlertTriangle, Zap, CheckCircle2, Database, Layers } from 'lucide-react';
-import { useStaggerAnimation } from '@/hooks/useStaggerAnimation';
+import { Droplet, AlertTriangle, Zap, Download, Sparkles } from 'lucide-react';
 import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
 import {
   DEFAULT_ETO_INDONESIA,
@@ -26,16 +35,14 @@ import {
 } from '@/lib/engine/fjMock';
 import { aggregateMonthlyRainfall, type MultiYearMonthlyRainfall } from '@/utils/rainfallSeriesUtils';
 import { KalkulatorIrigasi } from './KalkulatorIrigasi';
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
-// Location type removed in favor of ProjectContextBanner
+import { toast } from '@/hooks/useToast';
 
 interface Props {
   onConsultAI?: () => void;
+  onNavigateToEmbung?: () => void;
 }
 
-export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
+export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbung }) => {
   const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -46,19 +53,19 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
     agricultureArea: 100,
     domesticStandard: 100,
     irrigationDemand: 1.0,
-    monthlySupply: [2.5, 2.3, 2.0, 1.8, 1.5, 1.2, 1.0, 0.9, 1.1, 1.4, 1.8, 2.2]
+    monthlySupply: [2.5, 2.3, 2.0, 1.8, 1.5, 1.2, 1.0, 0.9, 1.1, 1.4, 1.8, 2.2],
   });
 
   const [results, setResults] = useState<WaterBalanceResult[]>([]);
-  const [summary, setSummary] = useState<any>(null);
-  const kpiCardsRef = useStaggerAnimation(50);
+  const [summary, setSummary] = useState<WaterBalanceSummary | null>(null);
 
-  // ── F.J. Mock Integration ──
+  // ── F.J. Mock & Hydrology Store Integration ──
   const {
     luasDas,
     hasilMock,
     setHasilMock,
-    neracaFinal,
+    setNeracaFinal,
+    setHasilNeraca,
     setLuasDas,
     identitasLokasi,
     dataHujan,
@@ -66,11 +73,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
     arealRainfallThiessen,
     arealRainfallAlgebraic,
   } = useHydrologyStore();
+
   const [luasDasLocal, setLuasDasLocal] = useState<string>('');
   const luasDasGlobal = parseFloat(luasDas) || 0;
-  // Effective value: local override → global store → 0
   const luasDasEffective = luasDasLocal !== '' ? (parseFloat(luasDasLocal) || 0) : luasDasGlobal;
   const isLuasDasOverridden = luasDasLocal !== '' && parseFloat(luasDasLocal) !== luasDasGlobal;
+
   const [supplyMethod, setSupplyMethod] = useState<'manual' | 'mock'>('manual');
   const [rainSource, setRainSource] = useState<'master_station' | 'master_thiessen' | 'manual'>('master_station');
   const [mockParams, setMockParams] = useState({
@@ -80,7 +88,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
     k: 0.7,
     exposedSurface: 0.1,
   });
-  const [monthlyETo, setMonthlyETo] = useState<number[]>([...DEFAULT_ETO_INDONESIA]);
+  const [monthlyETo] = useState<number[]>([...DEFAULT_ETO_INDONESIA]);
   const [monthlyPrecip, setMonthlyPrecip] = useState<number[]>([
     300, 280, 250, 200, 120, 80, 60, 50, 80, 150, 220, 280,
   ]);
@@ -111,28 +119,78 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
     }
   }, [rainSource, selectedStasiun, dataHujan, arealRainfallThiessen, arealRainfallAlgebraic]);
 
-  // Sync monthlyPrecip from multiYearRainfall average when available and in master mode
+  // Sync monthlyPrecip from multiYearRainfall average when available in master mode
   useEffect(() => {
     if (rainSource !== 'manual' && multiYearRainfall && multiYearRainfall.averageMonthly.length === 12) {
       setMonthlyPrecip(multiYearRainfall.averageMonthly.map((v: number) => Math.round(v * 10) / 10));
     }
   }, [rainSource, multiYearRainfall]);
 
+  // ── Core Water Balance Computation Engine ──
   useEffect(() => {
-    const balanceResults = calculateWaterBalance(inputs);
-    setResults(balanceResults);
-    setSummary(getWaterBalanceSummary(balanceResults));
-  }, [inputs]);
+    try {
+      const balanceResults = calculateWaterBalance(inputs);
+      setResults(balanceResults);
+      const sum = getWaterBalanceSummary(balanceResults);
+      setSummary(sum);
+
+      // Harmonize with Store for downstream modules (Embung, AI context, etc.)
+      const neracaFinalRows = balanceResults.map(r => ({
+        month: r.month,
+        ketersediaan: r.supply,
+        irigasi: r.agricultureDemand,
+        airBaku: r.domesticDemand + (r.industrialDemand || 0),
+        lingkungan: r.environmentalFlow,
+        totalKebutuhan: r.totalDemand,
+        neraca: r.balance,
+        status: r.status,
+      }));
+
+      setNeracaFinal(neracaFinalRows);
+
+      setHasilNeraca({
+        isSurplus: sum.netBalance >= 0,
+        totalSurplusDefisit: sum.netBalance,
+        bulanKritis: sum.criticalMonth?.month || '-',
+        chartData: balanceResults.map(r => ({
+          bulan: r.month,
+          ketersediaan: r.supply,
+          kebutuhan: r.totalDemand,
+          neraca: r.balance,
+        })),
+        waterScarcity: {
+          ikaPercent: sum.waterScarcity.ikaPercent,
+          status: sum.waterScarcity.status,
+          description: sum.waterScarcity.description,
+          badgeColor: sum.waterScarcity.badgeColor,
+        },
+        storageRequiredM3: sum.storageRequiredM3,
+        storageRequiredJutaM3: sum.storageRequiredJutaM3,
+        monthlySupply: balanceResults.map(r => r.supply),
+        monthlyDemand: balanceResults.map(r => r.totalDemand),
+      });
+    } catch (err: any) {
+      console.error('Water Balance calculation error:', err);
+    }
+  }, [inputs, setNeracaFinal, setHasilNeraca]);
 
   const handleSupplyChange = (index: number, value: number) => {
     const newSupply = [...inputs.monthlySupply];
     newSupply[index] = value;
-    setInputs({ ...inputs, monthlySupply: newSupply });
+    setInputs(prev => ({ ...prev, monthlySupply: newSupply }));
   };
 
   const handleUseCalculatedFlow = (flow: number[]) => {
-    setInputs({ ...inputs, monthlySupply: flow });
+    setInputs(prev => ({ ...prev, monthlySupply: flow }));
   };
+
+  // ── Receive Dynamic KP-01 Irrigation Demand ──
+  const handleDemandCalculated = useCallback((drSeries: number[], _rawWaterM3s: number) => {
+    setInputs(prev => ({
+      ...prev,
+      dynamicIrrigationDemand: drSeries,
+    }));
+  }, []);
 
   // ── F.J. Mock Calculate Handler ──
   const [isMockCalculating, setIsMockCalculating] = useState(false);
@@ -166,12 +224,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             monthlyETo: monthlyETo,
           }));
 
-          const myRes = calculateMultiYearFJMock(
-            params,
-            yearsData,
-            targetProb
-          );
-
+          const myRes = calculateMultiYearFJMock(params, yearsData, targetProb);
           setMultiYearMockResult(myRes);
 
           // Update Water Balance monthly supply with 12 monthly Q80 values
@@ -182,7 +235,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
           const latestYearResults = myRes.continuousResults.filter(r => r.year === latestYr);
           setMockResults(latestYearResults);
 
-          // Save to store with monthlyQAndalan, monthlyRAndalan, yearsCount
+          // Save to store
           setHasilMock({
             monthlyResults: latestYearResults.map((r: MockMonthlyResult) => ({
               month: r.month,
@@ -202,6 +255,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             monthlyRAndalan: myRes.monthlyRAndalan,
             yearsCount: myRes.yearsCount,
           });
+          toast.success(`F.J. Mock multi-tahun berhasil dihitung (${myRes.yearsCount} tahun data).`);
         } else {
           // Single-year fallback calculation
           const data_mock: MockMonthlyInput[] = MONTH_LABELS.map((month, i) => ({
@@ -241,6 +295,7 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
             monthlyRAndalan: monthlyPrecip,
             yearsCount: 1,
           });
+          toast.success('F.J. Mock berhasil dihitung.');
         }
       } catch (err: any) {
         setMockError(err.message || 'Perhitungan F.J. Mock gagal.');
@@ -254,7 +309,38 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
   const totalDemand = results.reduce((a, b) => a + Number(b.totalDemand), 0);
   const netBalance = totalSupply - totalDemand;
 
-
+  const handleExportCsv = () => {
+    if (!results || results.length === 0) return;
+    const headers = [
+      'Bulan',
+      'Ketersediaan (m3/s)',
+      'Irigasi DR (m3/s)',
+      'Air Baku (m3/s)',
+      'Debit Lingkungan (m3/s)',
+      'Total Kebutuhan (m3/s)',
+      'Neraca (m3/s)',
+      'Status',
+    ];
+    const rows = results.map(r => [
+      r.month,
+      r.supply.toFixed(4),
+      r.agricultureDemand.toFixed(4),
+      (r.domesticDemand + (r.industrialDemand || 0)).toFixed(4),
+      r.environmentalFlow.toFixed(4),
+      r.totalDemand.toFixed(4),
+      r.balance.toFixed(4),
+      r.status,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Neraca_Air_${identitasLokasi.namaDAS || 'PUPR'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Data Neraca Air berhasil diekspor ke CSV.');
+  };
 
   const handleSaveWaterBalance = async () => {
     setIsSaving(true);
@@ -265,16 +351,16 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
         projectName: identitasLokasi.namaPekerjaan || 'Untitled Project',
         monthlyInputs: { ...inputs, location: identitasLokasi },
         monthlyResults: results,
-        summary
+        summary,
       });
 
       if (error) {
         setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
       } else {
-        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan neraca air!' });
+        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan neraca air ke database!' });
       }
       setTimeout(() => setSaveMessage(null), 3000);
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui';
       setSaveMessage({ type: 'error', text: 'Error: ' + errorMessage });
       setTimeout(() => setSaveMessage(null), 3000);
@@ -285,59 +371,87 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
 
   return (
     <div className="w-full h-full flex flex-col bg-slate-50 rounded-md border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
-      {/* Fixed Shell Header */}
-      <div className="px-6 py-5 border-b border-slate-200 bg-white shadow-sm z-10">
-        <div className="flex items-center gap-3 mb-1">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-slate-200 bg-white shadow-sm z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-50 text-pupr-blue rounded-md shrink-0">
             <Droplet className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Analisis Neraca Air</h1>
-            <p className="text-sm text-slate-500 font-medium">Water Balance Analysis · SNI 6728.1:2015</p>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Analisis Neraca Air Terpadu</h1>
+            <p className="text-xs text-slate-500 font-medium">
+              SNI 19-6728.1-2002 · SNI 6738:2015 · Standar Perencanaan Irigasi KP-01 Ditjen SDA
+            </p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-sm flex items-center gap-1.5 transition-colors shadow-none"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Ekspor CSV</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveWaterBalance}
+            disabled={isSaving}
+            className="px-4 py-2 bg-pupr-blue hover:bg-blue-700 text-white text-xs font-bold rounded-sm flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-none"
+          >
+            {isSaving ? 'Menyimpan...' : 'Simpan Neraca'}
+          </button>
+          {onConsultAI && (
+            <button
+              type="button"
+              onClick={onConsultAI}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-sm flex items-center gap-1.5 transition-colors shadow-none"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Analisis AI</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Internal Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
-
-          {/* LEFT SIDEBAR (Span 5) */}
+          
+          {/* LEFT SIDEBAR: Inputs & Parameters (Span 5) */}
           <div className="lg:col-span-5 flex flex-col gap-4">
             <div className="space-y-4 pb-4">
-
+              
               {/* Project Banner (SSOT) */}
               <ProjectContextBanner />
-              {/* Formula Display */}
-              <div className="mb-4">
-                <FormulaAccordion
-                  title="Neraca Air"
-                  subtitle="SNI 6738:2015 & SNI 19-6728.1-2002"
-                  theme="emerald"
-                  formulas={[
-                    { label: "Persamaan Neraca Air", math: "Neraca = Q_{andalan} - (D_{irigasi} + D_{domestik} + D_{lingkungan})" },
-                    { label: "Debit Andalan (Mock)", math: "Q = \frac{A \cdot R}{C}" },
-                    { label: "Kebutuhan Irigasi", math: "NFR = ET_c + P + WL - R_e" }
-                  ]}
-                  parameters={[
-                    { symbol: "Q_{andalan}", description: "Ketersediaan air andalan (probabilitas 80%)", unit: "m³/s" },
-                    { symbol: "D_{irigasi}", description: "Kebutuhan air irigasi", unit: "m³/s" },
-                    { symbol: "D_{domestik}", description: "Kebutuhan air baku & domestik", unit: "m³/s" },
-                    { symbol: "D_{lingkungan}", description: "Kebutuhan pemeliharaan sungai", unit: "m³/s" },
-                    { symbol: "ET_c", description: "Evapotranspirasi tanaman", unit: "mm/hari" },
-                    { symbol: "R_e", description: "Curah hujan efektif", unit: "mm/hari" }
-                  ]}
-                  reference="Pedoman Perhitungan Ketersediaan Air (F.J. Mock) dan Kebutuhan Air Irigasi"
-                />
-              </div>
 
-              {/* SECTION 1: PARAMETER GLOBAL */}
-              <Collapsible title="Parameter Masukan" defaultOpen={true}>
+              {/* Formula Accordion */}
+              <FormulaAccordion
+                title="Neraca Air Wilayah Sungai"
+                subtitle="SNI 19-6728.1-2002 & SNI 6738:2015"
+                theme="emerald"
+                formulas={[
+                  { label: "Persamaan Neraca Air", math: "Q_{neraca} = Q_{andalan} - (D_{irigasi} + D_{baku} + Q_{lingkungan})" },
+                  { label: "Kebutuhan Irigasi (KP-01)", math: "DR = \\frac{NFR \\cdot A}{e \\cdot 86.4}" },
+                  { label: "Indeks Kekritisan Air (IKA)", math: "IKA = \\frac{\\sum Kebutuhan}{\\sum Ketersediaan} \\times 100\\%" },
+                  { label: "Debit Pemeliharaan Sungai", math: "Q_{lingkungan} = 10\\% \\times Q_{andalan}" }
+                ]}
+                parameters={[
+                  { symbol: "Q_{andalan}", description: "Debit andalan sumber air (Q80 F.J. Mock / AWLR)", unit: "m³/s" },
+                  { symbol: "D_{irigasi}", description: "Kebutuhan pengambilan irigasi (Diversion Requirement)", unit: "m³/s" },
+                  { symbol: "D_{baku}", description: "Kebutuhan air baku domestik & industri", unit: "m³/s" },
+                  { symbol: "Q_{lingkungan}", description: "Aliran pemeliharaan sungai (UU 17/2019 Ps. 22)", unit: "m³/s" },
+                  { symbol: "NFR", description: "Net Field Requirement tanaman", unit: "mm/hari" },
+                  { symbol: "e", description: "Efisiensi penyaluran irigasi (KP-01 typical 0.65)", unit: "rasio" }
+                ]}
+                reference="SNI 19-6728.1-2002 & Standar Perencanaan Irigasi Ditjen SDA KP-01"
+              />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* SECTION 1: GLOBAL WATER DEMAND PARAMETERS */}
+              <Collapsible title="Parameter Kebutuhan Air (Baku & Irigasi)" defaultOpen={true}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">
                       Jumlah Penduduk
                     </label>
                     <div className="relative">
@@ -345,31 +459,16 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.population}
                         onChange={e => setInputs({ ...inputs, population: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-10 px-3 pr-14 text-sm bg-white border border-slate-200 rounded font-semibold text-right focus:border-blue-500 outline-none"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">jiwa</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
-                      Luas Lahan Irigasi
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={inputs.agricultureArea}
-                        onChange={e => setInputs({ ...inputs, agricultureArea: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-16 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">Ha</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">jiwa</span>
                     </div>
                   </div>
 
                   <div>
                     <SNILabel
                       label="Standar Kebutuhan Air"
-                      tooltip="Standar kebutuhan air domestik berdasarkan SNI untuk perencanaan sistem penyediaan air minum"
+                      tooltip="Standar kebutuhan air domestik perkotaan/pedesaan sesuai SNI 03-7065-2005"
                       sniCode="SNI 03-7065-2005"
                     />
                     <div className="relative">
@@ -377,15 +476,35 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         type="number"
                         value={inputs.domesticStandard}
                         onChange={e => setInputs({ ...inputs, domesticStandard: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-10 px-3 pr-16 text-sm bg-white border border-slate-200 rounded font-semibold text-right focus:border-blue-500 outline-none"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/org/hr</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">L/org/hr</span>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
-                      Kebutuhan Irigasi
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">
+                      Luas Lahan Irigasi
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={inputs.agricultureArea}
+                        onChange={e => setInputs({ ...inputs, agricultureArea: parseFloat(e.target.value) || 0 })}
+                        className="w-full h-10 px-3 pr-12 text-sm bg-white border border-slate-200 rounded font-semibold text-right focus:border-blue-500 outline-none"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Ha</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1 block flex items-center justify-between">
+                      <span>Status Engine Irigasi</span>
+                      {inputs.dynamicIrrigationDemand && (
+                        <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1 py-0.5 rounded">
+                          KP-01 Dinamis Aktif
+                        </span>
+                      )}
                     </label>
                     <div className="relative">
                       <input
@@ -393,53 +512,56 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                         step="0.1"
                         value={inputs.irrigationDemand}
                         onChange={e => setInputs({ ...inputs, irrigationDemand: parseFloat(e.target.value) || 0 })}
-                        className="w-full h-12 px-4 pr-20 text-base bg-slate-50 border border-slate-300 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        disabled={!!inputs.dynamicIrrigationDemand}
+                        className="w-full h-10 px-3 pr-16 text-sm bg-white border border-slate-200 rounded font-semibold text-right focus:border-blue-500 outline-none disabled:bg-slate-100 disabled:text-slate-400"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">L/s/Ha</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">L/s/Ha</span>
                     </div>
+                    {inputs.dynamicIrrigationDemand && (
+                      <p className="text-[9px] text-slate-400 mt-1">
+                        Kebutuhan irigasi dihitung otomatis dari matriks pola tanam KP-01 di bawah.
+                      </p>
+                    )}
                   </div>
                 </div>
               </Collapsible>
 
-              {/* SECTION 2: DEBIT ANDALAN — Method Selection */}
+              {/* SECTION 2: DEBIT ANDALAN / KETERSREDIAAN AIR */}
               <Collapsible title="Ketersediaan Air (Debit Andalan)" defaultOpen={true} badge="SNI 6738:2015">
-
                 {/* Method Toggle */}
-                <div className="flex rounded-md bg-slate-100 p-1 mb-4">
+                <div className="flex rounded-md bg-slate-100 p-1 mb-3">
                   <button
+                    type="button"
                     onClick={() => setSupplyMethod('mock')}
-                    className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${supplyMethod === 'mock'
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                      }`}
+                    className={`flex-1 py-1.5 px-3 rounded text-xs font-bold transition-all ${
+                      supplyMethod === 'mock' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
                     F.J. Mock (Hujan→Aliran)
                   </button>
                   <button
+                    type="button"
                     onClick={() => setSupplyMethod('manual')}
-                    className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${supplyMethod === 'manual'
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                      }`}
+                    className={`flex-1 py-1.5 px-3 rounded text-xs font-bold transition-all ${
+                      supplyMethod === 'manual' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
                   >
-                    Input Manual
+                    Input Manual 12 Bulan
                   </button>
                 </div>
 
                 {supplyMethod === 'mock' ? (
-                  <div className="space-y-4">
-                    {/* Luas DAS — SmartOverrideInput */}
+                  <div className="space-y-3">
+                    {/* Luas DAS */}
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase">Luas DAS</label>
                         {isLuasDasOverridden && (
                           <button
-                            onClick={() => { setLuasDasLocal(''); }}
-                            className="text-[9px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-0.5 transition-colors"
+                            type="button"
+                            onClick={() => setLuasDasLocal('')}
+                            className="text-[9px] font-bold text-amber-600 hover:text-amber-700"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
                             Reset ke Data Master
                           </button>
                         )}
@@ -453,23 +575,18 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                           onChange={e => {
                             const val = e.target.value;
                             setLuasDasLocal(val);
-                            // Also sync back to global store
                             if (val !== '') setLuasDas(val);
                           }}
-                          className={`w-full h-10 px-3 pr-12 text-sm bg-white rounded-md font-semibold text-right focus:ring-2 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isLuasDasOverridden
-                            ? 'border-2 border-amber-400 focus:border-amber-500 focus:ring-amber-500/20'
-                            : 'border border-slate-200 focus:border-blue-500 focus:ring-blue-500/20'
-                            }`}
+                          className={`w-full h-10 px-3 pr-12 text-sm bg-white rounded font-semibold text-right outline-none ${
+                            isLuasDasOverridden ? 'border-2 border-amber-400' : 'border border-slate-200'
+                          }`}
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">km²</span>
                       </div>
-                      {luasDasGlobal > 0 && !isLuasDasOverridden && (
-                        <p className="text-[9px] text-slate-400 mt-1">Dari Master Data: {luasDasGlobal} km²</p>
-                      )}
                     </div>
 
-                    {/* Mock Parameters — Compact 2-col */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Mock Parameters */}
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         { key: 'smc', label: 'SMC', unit: 'mm', step: 10 },
                         { key: 'ism', label: 'ISM', unit: 'mm', step: 10 },
@@ -484,640 +601,361 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI }) => {
                               step={step}
                               value={mockParams[key as keyof typeof mockParams]}
                               onChange={e => setMockParams(p => ({ ...p, [key]: parseFloat(e.target.value) || 0 }))}
-                              className="w-full h-10 px-3 pr-12 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-full h-9 px-2 pr-10 text-xs bg-white border border-slate-200 rounded font-semibold text-right outline-none"
                             />
-                            {unit && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">{unit}</span>}
+                            {unit && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">{unit}</span>}
                           </div>
                         </div>
                       ))}
-                      <div className="col-span-2">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">m (Exposed Surface %)</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step={0.01}
-                            value={mockParams.exposedSurface}
-                            onChange={e => setMockParams(p => ({ ...p, exposedSurface: parseFloat(e.target.value) || 0 }))}
-                            className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                        </div>
-                      </div>
                     </div>
 
-                    {/* Probability target */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Probabilitas Andalan</label>
-                      <select
-                        value={targetProb}
-                        onChange={e => setTargetProb(Number(e.target.value))}
-                        className="w-full h-10 px-3 text-sm bg-white border border-slate-200 rounded-md font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                      >
-                        <option value={80}>Q80 — Irigasi</option>
-                        <option value={90}>Q90 — PLTA</option>
-                        <option value={95}>Q95 — Air Baku</option>
-                      </select>
-                    </div>
-
-                    {/* Rainfall Source Selection */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Sumber Data Hujan</label>
-                      <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-md mb-2">
-                        <button
-                          type="button"
-                          onClick={() => setRainSource('master_station')}
-                          className={`py-1.5 px-2 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                            rainSource === 'master_station' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                          }`}
+                    {/* Probability & Rain Source */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Probabilitas Q</label>
+                        <select
+                          value={targetProb}
+                          onChange={e => setTargetProb(Number(e.target.value))}
+                          className="w-full h-9 px-2 text-xs bg-white border border-slate-200 rounded font-semibold outline-none"
                         >
-                          <Database className="w-3 h-3" />
-                          Stasiun
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRainSource('master_thiessen')}
-                          className={`py-1.5 px-2 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                            rainSource === 'master_thiessen' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                          }`}
+                          <option value={80}>Q80 — Irigasi</option>
+                          <option value={90}>Q90 — PLTA</option>
+                          <option value={95}>Q95 — Air Baku</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Sumber Hujan</label>
+                        <select
+                          value={rainSource}
+                          onChange={e => setRainSource(e.target.value as any)}
+                          className="w-full h-9 px-2 text-xs bg-white border border-slate-200 rounded font-semibold outline-none"
                         >
-                          <Layers className="w-3 h-3" />
-                          Thiessen
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRainSource('manual')}
-                          className={`py-1.5 px-2 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                            rainSource === 'manual' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                          }`}
-                        >
-                          Manual 12 Bln
-                        </button>
-                      </div>
-
-                      {/* Info alert if Master Data is detected */}
-                      {rainSource !== 'manual' && (
-                        <div className="p-2.5 mb-2 bg-blue-50/70 border border-blue-200 rounded text-xs text-blue-900">
-                          {multiYearRainfall && multiYearRainfall.years.length >= 2 ? (
-                            <div className="flex items-start gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                              <div>
-                                <div className="font-bold">
-                                  {multiYearRainfall.years.length} Tahun Data Harian ({Math.min(...multiYearRainfall.years)} - {Math.max(...multiYearRainfall.years)})
-                                </div>
-                                <div className="text-[10px] text-blue-700 mt-0.5">
-                                  Simulasi F.J. Mock kontinu multi-tahun & debit andalan Weibull bulanan (SNI 6738:2015 & KP-01) siap dihitung.
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-start gap-2 text-amber-800">
-                              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                              <div className="text-[11px]">
-                                {rainSource === 'master_station'
-                                  ? 'Data harian stasiun belum mencukupi (minimal 2 tahun). Silakan impor di tab Master Hidrologi atau gunakan input manual.'
-                                  : 'Data curah hujan wilayah Thiessen belum dihitung di Master Hidrologi.'}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Monthly Precipitation input (compact) */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                          {rainSource !== 'manual' && multiYearRainfall && multiYearRainfall.years.length >= 2
-                            ? 'Curah Hujan Rata-rata Bulanan (mm)'
-                            : 'Curah Hujan Bulanan (mm)'}
-                        </span>
-                        {rainSource !== 'manual' && multiYearRainfall && (
-                          <span className="text-[9px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                            Rerata {multiYearRainfall.years.length} Thn
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {MONTH_LABELS.map((m, i) => (
-                          <div key={m} className="text-center">
-                            <div className="text-[9px] font-bold text-slate-400 mb-0.5">{m}</div>
-                            <input
-                              type="number"
-                              value={monthlyPrecip[i]}
-                              onChange={e => {
-                                const v = [...monthlyPrecip]; v[i] = parseFloat(e.target.value) || 0; setMonthlyPrecip(v);
-                              }}
-                              className="w-full h-8 px-1 text-xs bg-white border border-slate-200 rounded text-center font-mono font-semibold focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                          </div>
-                        ))}
+                          <option value="master_station">Stasiun Master</option>
+                          <option value="master_thiessen">Wilayah Thiessen</option>
+                          <option value="manual">Manual 12 Bulan</option>
+                        </select>
                       </div>
                     </div>
 
-                    {/* Monthly ETo input (compact) */}
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">ETo Bulanan (mm)</span>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {MONTH_LABELS.map((m, i) => (
-                          <div key={m} className="text-center">
-                            <div className="text-[9px] font-bold text-slate-400 mb-0.5">{m}</div>
-                            <input
-                              type="number"
-                              value={monthlyETo[i]}
-                              onChange={e => {
-                                const v = [...monthlyETo]; v[i] = parseFloat(e.target.value) || 0; setMonthlyETo(v);
-                              }}
-                              className="w-full h-8 px-1 text-xs bg-white border border-slate-200 rounded text-center font-mono font-semibold focus:border-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Mock error */}
                     {mockError && (
-                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-md text-xs text-rose-800 font-medium">
+                      <div className="p-2 bg-rose-50 border border-rose-200 rounded text-xs text-rose-700">
                         {mockError}
                       </div>
                     )}
 
                     <button
+                      type="button"
                       onClick={handleMockCalculate}
-                      disabled={luasDasNum <= 0 || isMockCalculating}
-                      className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-bold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={isMockCalculating}
+                      className="w-full min-h-[38px] py-2 bg-pupr-blue hover:bg-blue-700 active:bg-blue-800 text-white rounded font-bold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                     >
-                      <Zap className="w-5 h-5" />
-                      {isMockCalculating ? 'Menghitung via Engine...' : 'Hitung Ketersediaan Air (F.J. Mock)'}
+                      <Zap className="w-4 h-4" />
+                      <span>{isMockCalculating ? 'Menghitung F.J. Mock...' : 'Hitung Debit Andalan F.J. Mock'}</span>
                     </button>
                   </div>
                 ) : (
-                  /* Manual mode — original UI */
-                  <>
-                    <button
-                      onClick={() => setIsCalcModalOpen(true)}
-                      className="w-full min-h-[44px] py-3 bg-pupr-blue text-white text-white rounded-md font-semibold hover:from-blue-700 hover:to-cyan-700 active:from-blue-800 active:to-cyan-800 transition-all shadow-md mb-4 flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      Kalkulator Hujan
-                    </button>
-
-                    <div className="bg-slate-50 rounded-md p-4 border border-slate-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Data Bulanan (m³/s)</span>
-                        <button
-                          onClick={() => setIsInputModalOpen(true)}
-                          className="text-xs font-semibold text-pupr-blue hover:text-blue-700 flex items-center gap-1"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Edit
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {MONTHS.map((month, index) => (
-                          <div key={month} className="bg-white rounded-md px-2 py-2 border border-slate-200 text-center">
-                            <div className="text-[10px] font-semibold text-slate-400 uppercase">{month}</div>
-                            <div className="text-sm font-bold text-slate-700 font-mono">{inputs.monthlySupply[index]}</div>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">Nilai pasokan air bulanan (m³/s):</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsInputModalOpen(true)}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-bold"
+                      >
+                        Edit Cepat
+                      </button>
                     </div>
-                  </>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {DEFAULT_MONTHS.map((m, i) => (
+                        <div key={m} className="bg-white border border-slate-200 p-1.5 rounded text-center">
+                          <span className="text-[9px] font-bold text-slate-400 block">{m}</span>
+                          <span className="text-xs font-mono font-bold text-slate-700">
+                            {inputs.monthlySupply[i]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </Collapsible>
 
-              {/* SECTION 3: KEBUTUHAN AIR & NERACA FINAL */}
+              {/* SECTION 3: KALKULATOR IRIGASI DINAMIS KP-01 */}
               <KalkulatorIrigasi
                 monthlySupply={inputs.monthlySupply}
                 monthlyRAndalan={multiYearMockResult?.monthlyRAndalan ?? hasilMock?.monthlyRAndalan}
+                initialPopulation={inputs.population}
+                initialAgricultureArea={inputs.agricultureArea}
+                initialDomesticStandard={inputs.domesticStandard}
+                onDemandCalculated={handleDemandCalculated}
               />
             </div>
           </div>
 
-          {/* MAIN CONTENT (Span 7) */}
-          <div className="lg:col-span-7 flex flex-col gap-6 min-h-0 page-enter">
-
-            {/* Save Message Toast */}
+          {/* MAIN CONTENT: Results, Chart, Sequent Peak, Table (Span 7) */}
+          <div className="lg:col-span-7 flex flex-col gap-5 min-h-0 page-enter">
             {saveMessage && (
-              <div className={`absolute top-0 right-0 z-50 px-6 py-4 rounded-sm border flex items-center gap-3 animate-fade-in pointer-events-none shadow-none ${saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
-                }`}>
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {saveMessage.type === 'success' ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  )}
-                </svg>
-                <span className="font-semibold text-sm">{saveMessage.text}</span>
+              <div className={`p-3 rounded border text-xs font-semibold flex items-center gap-2 ${
+                saveMessage.type === 'success' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-red-50 border-red-300 text-red-800'
+              }`}>
+                {saveMessage.text}
               </div>
             )}
 
-            {/* F.J. Mock Results — Conditional */}
-            {mockResults && hasilMock && (
-              <>
-                {/* Q Andalan Highlight Card */}
-                <div className="bg-white rounded-sm border border-slate-300 p-6 flex items-center gap-6 shadow-none">
-                  <div className="p-3 bg-blue-100 rounded-sm shrink-0">
-                    <Droplet className="w-8 h-8 text-pupr-blue" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-2">
-                      <span>Debit Andalan Q{hasilMock.probability}</span>
-                      {multiYearMockResult && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                          Multi-Tahun (N = {multiYearMockResult.yearsCount} Thn)
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-4xl font-bold text-pupr-blue font-mono leading-none">
-                      {hasilMock.qAndalan.toFixed(4)}
-                    </div>
-                    <div className="text-sm font-semibold text-slate-500 mt-1">
-                      m³/s · {multiYearMockResult ? 'Rata-rata Tahunan Debit Andalan Bulanan' : 'Metode F.J. Mock'}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <ComplianceBadge sniCode="SNI 6738:2015" />
-                  </div>
-                </div>
+            {/* 1. GovTech PUPR KPI Grid with IKA Badge */}
+            <WaterBalanceKpiGrid
+              summary={summary}
+              totalSupply={totalSupply}
+              totalDemand={totalDemand}
+              netBalance={netBalance}
+            />
 
-                {/* Multi-Year Dependable Flow Table (SNI 6738:2015 & KP-01) */}
-                {multiYearMockResult && (
-                  <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
-                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-slate-800">Debit & Hujan Andalan Multi-Tahun</h3>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
-                            Q{targetProb} & R{targetProb} (KP-01)
+            {/* 2. Main Composed Chart */}
+            <div className="bg-white rounded-sm border border-slate-300 p-4 md:p-6 shadow-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-slate-800">Grafik Neraca Air Bulanan</h2>
+                    <ComplianceBadge sniCode="SNI 19-6728.1-2002" />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Perbandingan Ketersediaan (Q80) vs Total Kebutuhan (KP-01 + Air Baku + Debit Lingkungan)
+                  </p>
+                </div>
+              </div>
+              <div className="h-64 sm:h-80 md:h-96">
+                <WaterBalanceChart data={results} />
+              </div>
+            </div>
+
+            {/* 3. Sequent Peak Reservoir Storage Sizing & Embung Linkage */}
+            <SequentPeakCard
+              results={results}
+              summary={summary}
+              onNavigateToEmbung={onNavigateToEmbung}
+            />
+
+            {/* 4. Unified Final Water Balance Table */}
+            <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
+              <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">
+                    Tabel Rincian Neraca Air Wilayah Sungai
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    Alokasi Ketersediaan (Supply) − Kebutuhan Sektoral (Irigasi + Domestik + Industri + Lingkungan)
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-[11px] font-bold">
+                  <span className="flex items-center gap-1 text-emerald-700">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+                    Surplus: {results.filter(r => r.status === 'Surplus').length} bln
+                  </span>
+                  <span className="flex items-center gap-1 text-rose-700">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+                    Defisit: {results.filter(r => r.status === 'Defisit').length} bln
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto max-h-96">
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                    <tr>
+                      <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
+                      <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Q Supply</th>
+                      <th className="text-right py-2.5 px-3 font-bold text-teal-700">Irigasi (DR)</th>
+                      <th className="text-right py-2.5 px-3 font-bold text-orange-600">Air Baku</th>
+                      <th className="text-right py-2.5 px-3 font-bold text-blue-600">Q Lingk.</th>
+                      <th className="text-right py-2.5 px-3 font-bold text-slate-700">Total Demand</th>
+                      <th className="text-right py-2.5 px-3 font-bold text-slate-800 bg-slate-100">Neraca</th>
+                      <th className="text-center py-2.5 px-3 font-bold text-slate-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((r, i) => (
+                      <tr
+                        key={i}
+                        className={`border-b border-slate-100 transition-colors ${
+                          r.status === 'Defisit' ? 'bg-rose-50/50' : 'even:bg-slate-50/40'
+                        } hover:bg-slate-100/50`}
+                      >
+                        <td className="py-2 px-3 font-bold text-slate-700">{r.month}</td>
+                        <td className="py-2 px-3 text-right font-mono text-pupr-blue font-semibold">{r.supply.toFixed(4)}</td>
+                        <td className="py-2 px-3 text-right font-mono text-teal-700">{r.agricultureDemand.toFixed(4)}</td>
+                        <td className="py-2 px-3 text-right font-mono text-orange-600">
+                          {(r.domesticDemand + (r.industrialDemand || 0)).toFixed(4)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono text-blue-600">{r.environmentalFlow.toFixed(4)}</td>
+                        <td className="py-2 px-3 text-right font-mono font-semibold text-slate-800">{r.totalDemand.toFixed(4)}</td>
+                        <td
+                          className={`py-2 px-3 text-right font-mono font-bold bg-slate-50/50 ${
+                            r.balance >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                          }`}
+                        >
+                          {r.balance >= 0 ? '+' : ''}{r.balance.toFixed(4)}
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                              r.status === 'Surplus'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : r.status === 'Defisit'
+                                ? 'bg-rose-100 text-rose-800'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {r.status}
                           </span>
-                        </div>
-                        <p className="text-[10px] text-slate-500">
-                          Ranking Weibull independen per bulan dari {multiYearMockResult.yearsCount} tahun data ({Math.min(...multiYearRainfall!.years)} - {Math.max(...multiYearRainfall!.years)})
-                        </p>
-                      </div>
-                      <ComplianceBadge sniCode="SNI 6738:2015" />
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                          <tr>
-                            <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
-                            <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">R{targetProb} (mm)</th>
-                            <th className="text-right py-2.5 px-3 font-bold text-blue-700 bg-blue-50/80">Q{targetProb} (m³/s)</th>
-                            <th className="text-right py-2.5 px-3 font-bold text-slate-500">Min Q</th>
-                            <th className="text-right py-2.5 px-3 font-bold text-slate-600">Rerata Q</th>
-                            <th className="text-right py-2.5 px-3 font-bold text-slate-500">Max Q</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {multiYearMockResult.monthlyBreakdown.map(row => {
-                            const minQ = Math.min(...row.rankedDischarge.map(p => p.value));
-                            const maxQ = Math.max(...row.rankedDischarge.map(p => p.value));
-                            return (
-                              <tr key={row.month} className="border-b border-slate-100 even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
-                                <td className="py-2 px-3 font-bold text-slate-700">{row.month}</td>
-                                <td className="py-2 px-3 text-right font-mono text-pupr-blue font-semibold">{row.rAndalan.toFixed(1)}</td>
-                                <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">{row.qAndalan.toFixed(4)}</td>
-                                <td className="py-2 px-3 text-right font-mono text-slate-500">{minQ.toFixed(4)}</td>
-                                <td className="py-2 px-3 text-right font-mono text-slate-700">{row.qAverage.toFixed(4)}</td>
-                                <td className="py-2 px-3 text-right font-mono text-slate-500">{maxQ.toFixed(4)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="px-5 py-2.5 bg-blue-50/60 border-t border-blue-200/50 flex items-center justify-between text-[11px] text-blue-800">
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                        12 nilai Q{targetProb} bulanan otomatis dialirkan ke Suplai Neraca Air & R{targetProb} ke Kebutuhan Irigasi.
-                      </span>
-                    </div>
-                  </div>
-                )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-                {/* Mock Summary Table */}
-                <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
-                  <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-800">
-                        {multiYearMockResult ? `Simulasi F.J. Mock Bulanan (Tahun ${multiYearRainfall?.years[multiYearRainfall.years.length - 1]})` : 'Rekap Hasil F.J. Mock (12 Bulan)'}
-                      </h3>
-                      <p className="text-[10px] text-slate-500">Transformasi Hujan → Aliran per bulan (Groundwater & Runoff)</p>
-                    </div>
+              {/* Critical Alert Banner */}
+              {summary && summary.deficitMonths > 0 && (
+                <div className="px-5 py-3 bg-rose-50 border-t border-rose-200 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-rose-800">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>
+                      Bulan kritis defisit air: <strong>{summary.criticalMonth.month}</strong> dengan kekurangan{' '}
+                      <strong>{Math.abs(summary.criticalMonth.balance).toFixed(4)} m³/s</strong>.
+                    </span>
                   </div>
-                  <div className="overflow-x-auto overflow-y-auto max-h-80">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
-                        <tr>
-                          <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">P (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-orange-600">ETo (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-cyan-600">WS (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">BF (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">DRO (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-slate-600">TRO (mm)</th>
-                          <th className="text-right py-2.5 px-3 font-bold text-blue-700 bg-blue-50/80">Q (m³/s)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mockResults.map((r, i) => (
-                          <tr key={i} className="border-b border-slate-100 even:bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
-                            <td className="py-2 px-3 font-bold text-slate-700 tabular-nums tracking-tight">{r.month}</td>
-                            <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.precipitation}</td>
-                            <td className="py-2 px-3 text-right font-mono text-orange-600 tabular-nums tracking-tight">{r.eto}</td>
-                            <td className="py-2 px-3 text-right font-mono text-cyan-600 tabular-nums tracking-tight">{r.waterSurplus}</td>
-                            <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.baseFlow}</td>
-                            <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.directRunoff}</td>
-                            <td className="py-2 px-3 text-right font-mono font-semibold tabular-nums tracking-tight">{r.totalRunoff}</td>
-                            <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30 tabular-nums tracking-tight">{r.discharge}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <span className="font-bold text-rose-700 text-[11px]">
+                    Kapasitas Embung Diperlukan: {summary.storageRequiredJutaM3.toFixed(3)} Juta m³
+                  </span>
                 </div>
-              </>
-            )}
+              )}
+            </div>
 
-            {/* FINAL NERACA TABLE — Conditional */}
-            {neracaFinal && (
+            {/* 5. White-Box KaTeX Mathematical Transparency Drawer */}
+            <WaterBalanceWhiteBox results={results} />
+
+            {/* 6. F.J. Mock Simulation Summary (Conditional) */}
+            {mockResults && hasilMock && (
               <div className="bg-white rounded-sm border border-slate-300 overflow-hidden shadow-none">
                 <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-800">Neraca Air Final (Surplus/Defisit)</h3>
-                    <p className="text-[10px] text-slate-500">Ketersediaan − (Irigasi + Air Baku + Lingkungan)</p>
+                    <h3 className="text-sm font-bold text-slate-800">
+                      {multiYearMockResult
+                        ? `Simulasi Transformasi Hujan-Aliran F.J. Mock (Tahun ${multiYearRainfall?.years[multiYearRainfall.years.length - 1]})`
+                        : 'Rekap Simulasi F.J. Mock Bulanan'}
+                    </h3>
+                    <p className="text-[10px] text-slate-500">
+                      Komponen Water Surplus, Baseflow, Direct Runoff, dan Total Discharge
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3 text-[10px] font-bold">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-pupr-blue" />
-                      Surplus: {neracaFinal.filter(r => r.status === 'Surplus').length} bln
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
-                      Defisit: {neracaFinal.filter(r => r.status === 'Defisit').length} bln
-                    </span>
-                  </div>
+                  <span className="text-xs font-bold text-blue-700">
+                    Q{hasilMock.probability} Rerata = {hasilMock.qAndalan.toFixed(3)} m³/s
+                  </span>
                 </div>
-                <div className="overflow-x-auto overflow-y-auto max-h-80">
+                <div className="overflow-x-auto max-h-72">
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                       <tr>
-                        <th className="text-left py-2.5 px-3 font-bold text-slate-600">Bulan</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Supply</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Irigasi</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-orange-600">Air Baku</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-pupr-blue">Lingk.</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-slate-600">Total</th>
-                        <th className="text-right py-2.5 px-3 font-bold text-slate-800 bg-slate-100">Neraca</th>
-                        <th className="text-center py-2.5 px-3 font-bold text-slate-600">Status</th>
+                        <th className="text-left py-2 px-3 font-bold text-slate-600">Bulan</th>
+                        <th className="text-right py-2 px-3 font-bold text-pupr-blue">P (mm)</th>
+                        <th className="text-right py-2 px-3 font-bold text-orange-600">ETo (mm)</th>
+                        <th className="text-right py-2 px-3 font-bold text-cyan-600">WS (mm)</th>
+                        <th className="text-right py-2 px-3 font-bold text-pupr-blue">BF (mm)</th>
+                        <th className="text-right py-2 px-3 font-bold text-pupr-blue">DRO (mm)</th>
+                        <th className="text-right py-2 px-3 font-bold text-slate-700">TRO (mm)</th>
+                        <th className="text-right py-2 px-3 font-bold text-blue-700 bg-blue-50/80">Q (m³/s)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {neracaFinal.map((r, i) => (
-                        <tr key={i} className={`border-b border-slate-100 transition-colors ${r.status === 'Defisit' ? 'bg-rose-50/40' : 'even:bg-slate-50/50'
-                          } hover:bg-slate-100/50`}>
-                          <td className="py-2 px-3 font-bold text-slate-700 tabular-nums tracking-tight">{r.month}</td>
-                          <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.ketersediaan.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.irigasi.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono text-orange-600 tabular-nums tracking-tight">{r.airBaku.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono text-pupr-blue tabular-nums tracking-tight">{r.lingkungan.toFixed(4)}</td>
-                          <td className="py-2 px-3 text-right font-mono font-semibold tabular-nums tracking-tight">{r.totalKebutuhan.toFixed(4)}</td>
-                          <td className={`py-2 px-3 text-right font-mono font-bold bg-slate-50/50 tabular-nums tracking-tight ${r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
-                            }`}>
-                            {r.neraca >= 0 ? '+' : ''}{r.neraca.toFixed(4)}
-                          </td>
-                          <td className="py-2 px-3 text-center tabular-nums tracking-tight">
-                            <span className={`inline-block px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase ${r.status === 'Surplus' ? 'bg-emerald-100 text-emerald-700' :
-                              r.status === 'Defisit' ? 'bg-rose-100 text-rose-700' :
-                                'bg-slate-100 text-slate-600'
-                              }`}>
-                              {r.status}
-                            </span>
+                      {mockResults.map((r, i) => (
+                        <tr key={i} className="border-b border-slate-100 even:bg-slate-50/40 hover:bg-slate-100/50">
+                          <td className="py-1.5 px-3 font-bold text-slate-700">{r.month}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-pupr-blue">{r.precipitation}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-orange-600">{r.eto}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-cyan-600">{r.waterSurplus}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-pupr-blue">{r.baseFlow}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-pupr-blue">{r.directRunoff}</td>
+                          <td className="py-1.5 px-3 text-right font-mono font-semibold">{r.totalRunoff}</td>
+                          <td className="py-1.5 px-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">
+                            {r.discharge}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                {/* Critical Month Alert */}
-                {neracaFinal.some(r => r.status === 'Defisit') && (
-                  <div className="px-5 py-3 bg-rose-50/60 border-t border-rose-200/50 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <p className="text-xs text-rose-800 font-medium">
-                      Bulan kritis: <strong>
-                        {neracaFinal.reduce((min, r) => r.neraca < min.neraca ? r : min).month}
-                      </strong> dengan defisit {Math.abs(neracaFinal.reduce((min, r) => r.neraca < min.neraca ? r : min).neraca).toFixed(4)} m³/s
-                    </p>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* KPI CARDS — Flattened Design */}
-            <div ref={kpiCardsRef} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
-              <div className="bg-white border border-slate-300 rounded-sm p-5 group relative shadow-none">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    Total Ketersediaan
-                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
-                      Total ketersediaan air dari sumber (debit andalan)
-                    </div>
-                  </span>
-                  <div className="w-10 h-10 rounded-sm bg-blue-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-pupr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-3xl font-bold text-pupr-blue font-mono tabular-nums">{totalSupply.toFixed(1)}</div>
-                <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
-              </div>
-
-              <div className="bg-white rounded-sm border border-slate-300 p-5 group relative shadow-none">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    Total Kebutuhan
-                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
-                      Total kebutuhan air domestik dan pertanian
-                    </div>
-                  </span>
-                  <div className="w-10 h-10 rounded-sm bg-orange-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-3xl font-bold text-orange-600 font-mono tabular-nums">{totalDemand.toFixed(1)}</div>
-                <div className="text-xs text-slate-500 font-medium mt-1">m³/s</div>
-              </div>
-
-              <div className={`bg-white rounded-sm border-2 ${netBalance >= 0 ? 'border-emerald-300 bg-emerald-50/30' : 'border-rose-300 bg-rose-50/30'} p-5 group relative shadow-none`}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    Status Neraca
-                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
-                      Selisih antara ketersediaan dan kebutuhan air
-                    </div>
-                  </span>
-                  <div className={`w-10 h-10 rounded-sm ${netBalance >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} flex items-center justify-center`}>
-                    <svg className={`w-5 h-5 ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={netBalance >= 0 ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
-                    </svg>
-                  </div>
-                </div>
-                <div className={`text-3xl font-bold ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'} font-mono tabular-nums`}>
-                  {netBalance >= 0 ? '+' : ''}{netBalance.toFixed(1)}
-                </div>
-                <div className={`text-xs font-semibold mt-1 ${netBalance >= 0 ? 'text-pupr-blue' : 'text-rose-600'}`}>
-                  {netBalance >= 0 ? 'SURPLUS' : 'DEFISIT'}
-                </div>
-                <div className="mt-3 pt-3 border-t border-slate-200">
-                  <ComplianceBadge sniCode="SNI 19-6728.1-2002" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-sm border border-rose-200 p-5 group relative shadow-none">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    Bulan Kritis
-                    <svg className="w-3 h-3 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="absolute top-2 left-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-56 z-50">
-                      Bulan dengan defisit air terbesar
-                    </div>
-                  </span>
-                  <div className="w-10 h-10 rounded-sm bg-rose-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-2xl font-bold text-rose-600">{summary?.criticalMonth?.month || '-'}</div>
-                <div className="text-xs text-slate-500 font-medium mt-1">
-                  {summary?.criticalMonth ? `${Math.abs(summary.criticalMonth.balance).toFixed(1)} m³/s` : 'Tidak ada'}
-                </div>
-              </div>
-            </div>
-
-            {/* CHART SECTION */}
-            <div className="bg-white rounded-sm border border-slate-300 p-4 md:p-6 shadow-none">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base sm:text-lg font-bold text-slate-800">Grafik Neraca Air Bulanan</h2>
-                    <ComplianceBadge sniCode="SNI 19-6728.1-2002" />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">Perbandingan Ketersediaan vs Kebutuhan Air</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={handleSaveWaterBalance}
-                    disabled={isSaving}
-                    className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-pupr-blue text-white rounded-sm hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-none"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
-                    <span className="hidden sm:inline">{isSaving ? 'Menyimpan...' : 'Simpan Neraca'}</span>
-                    <span className="sm:hidden">{isSaving ? 'Simpan...' : 'Simpan'}</span>
-                  </button>
-                  {onConsultAI && (
-                    <button
-                      onClick={onConsultAI}
-                      className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-slate-700 text-white rounded-sm hover:bg-slate-800 active:bg-slate-900 transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-none"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      <span className="hidden sm:inline">Analisis AI</span>
-                      <span className="sm:hidden">AI</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="h-56 xs:h-64 sm:h-80 md:h-96">
-                <WaterBalanceChart data={results} />
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <p className="text-xs text-slate-600">
-                  <span className="font-semibold">Catatan:</span> Perhitungan mengikuti standar <span className="font-semibold text-pupr-blue">SNI 19-6728.1-2002</span> tentang Penyusunan Neraca Sumber Daya Air pada Wilayah Sungai.
-                </p>
-              </div>
-            </div>
-
           </div>
         </div>
-
       </div>
 
-      {/* MODALS */}
+      {/* Manual Monthly Supply Modal */}
+      {isInputModalOpen && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/70"
+          onClick={() => setIsInputModalOpen(false)}
+        >
+          <div
+            className="bg-white border border-slate-300 rounded-sm w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto shadow-none"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Input Data Debit Pasokan Bulanan</h3>
+                <p className="text-xs text-slate-500 mt-1">Ketersediaan Air Sumber (m³/s)</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInputModalOpen(false)}
+                className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+              {DEFAULT_MONTHS.map((month, index) => (
+                <div key={month} className="bg-slate-50 rounded p-3 border border-slate-200">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 block">
+                    {month}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={inputs.monthlySupply[index]}
+                      onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
+                      className="w-full h-10 px-3 pr-14 text-base bg-white border border-slate-300 rounded font-semibold text-right tabular-nums focus:border-blue-500 outline-none"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                      m³/s
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsInputModalOpen(false)}
+                className="px-6 py-2.5 bg-pupr-blue hover:bg-blue-700 text-white rounded font-bold text-xs transition-colors shadow-none"
+              >
+                Simpan &amp; Tutup
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Dependable Flow Modal */}
       <DependableFlowModal
         isOpen={isCalcModalOpen}
         onClose={() => setIsCalcModalOpen(false)}
         onApply={handleUseCalculatedFlow}
       />
-
-      {
-        isInputModalOpen && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/70" onClick={() => setIsInputModalOpen(false)}>
-            <div className="bg-white border border-slate-300 rounded-sm w-full max-w-4xl p-6 relative max-h-[90vh] overflow-y-auto shadow-none" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">Input Data Debit Bulanan</h3>
-                  <p className="text-xs text-slate-500 mt-1">Ketersediaan Air (m³/s)</p>
-                </div>
-                <button onClick={() => setIsInputModalOpen(false)} className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-sm">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
-                {MONTHS.map((month, index) => (
-                  <div key={month} className="bg-slate-50 rounded-sm p-4 border border-slate-200">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">{month}</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={inputs.monthlySupply[index]}
-                        onChange={e => handleSupplyChange(index, parseFloat(e.target.value) || 0)}
-                        className="w-full h-11 px-4 pr-16 text-lg bg-white border border-slate-300 rounded-sm font-semibold text-right tabular-nums focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">m³/s</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setIsInputModalOpen(false)}
-                  className="min-h-[44px] px-6 py-2.5 bg-pupr-blue hover:bg-pupr-blue/90 text-white rounded-sm font-semibold transition-colors shadow-none"
-                >
-                  Simpan &amp; Tutup
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )
-      }
-    </div >
+    </div>
   );
 };
