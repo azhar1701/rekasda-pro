@@ -200,7 +200,7 @@ const AppLayout: React.FC = () => {
                 <Route path={Tab.MASTER} element={<MasterDataPage />} />
                 <Route path={Tab.FREKUENSI} element={<ModulAnalisisFrekuensi />} />
                 <Route path={Tab.EXEC} element={<ExecutiveDashboard />} />
-                <Route path={Tab.AI} element={<div className="max-w-4xl mx-auto"><GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} /></div>} />
+                <Route path={Tab.AI} element={<GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} />} />
                 <Route path={Tab.HISTORY} element={
                   <AllDataTab
                     onViewDetail={(item) => setViewAllDataDetail(item)}
