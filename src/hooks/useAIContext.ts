@@ -15,14 +15,32 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 // ─── Types ──────────────────────────────────────────────────────────
 
 export type ActiveModule =
-  | 'SALURAN'
-  | 'BANJIR'
-  | 'NERACA'
-  | 'EMBUNG'
-  | 'MASTER'
-  | 'HISTORY'
-  | 'AI'
-  | 'EXEC';
+  | 'SALURAN' | '/saluran'
+  | 'BANJIR' | '/banjir'
+  | 'NERACA' | '/neraca'
+  | 'EMBUNG' | '/embung'
+  | 'MASTER' | '/master'
+  | 'FREKUENSI' | '/frekuensi'
+  | 'HISTORY' | '/history'
+  | 'AI' | '/ai'
+  | 'EXEC' | '/exec'
+  | 'WORKFLOW' | '/workflow'
+  | string;
+
+export const normalizeModuleKey = (tab: string): string => {
+  const clean = (tab || '').replace(/^\//, '').toUpperCase();
+  if (clean.includes('SALURAN')) return 'SALURAN';
+  if (clean.includes('BANJIR')) return 'BANJIR';
+  if (clean.includes('NERACA')) return 'NERACA';
+  if (clean.includes('EMBUNG')) return 'EMBUNG';
+  if (clean.includes('MASTER')) return 'MASTER';
+  if (clean.includes('FREKUENSI')) return 'FREKUENSI';
+  if (clean.includes('HISTORY')) return 'HISTORY';
+  if (clean.includes('AI')) return 'AI';
+  if (clean.includes('EXEC')) return 'EXEC';
+  if (clean.includes('WORKFLOW')) return 'WORKFLOW';
+  return clean || 'AI';
+};
 
 export interface SuggestionChip {
   /** Unique key */
@@ -48,25 +66,28 @@ export interface AIContextResult {
   hasIssues: boolean;
   /** Structured list of what data is currently available to AI */
   dataStatus: { label: string; isLoaded: boolean }[];
-
 }
 
 // ─── Module Label Map ───────────────────────────────────────────────
 
-const MODULE_LABELS: Record<ActiveModule, string> = {
+const MODULE_LABELS: Record<string, string> = {
   SALURAN: 'Modul Analisis Saluran (Manning)',
   BANJIR: 'Modul Analisis Banjir Rencana',
   NERACA: 'Modul Neraca Air (F.J. Mock)',
-  EMBUNG: 'Modul Perencanaan Embung',
+  EMBUNG: 'Modul Perencanaan Embung & Situ',
   MASTER: 'Modul Data Master Hidrologi',
-  HISTORY: 'Riwayat Perhitungan',
-  AI: 'Konsultan AI',
-  EXEC: 'Laporan Eksekutif',
+  FREKUENSI: 'Modul Analisis Frekuensi Curah Hujan',
+  HISTORY: 'Riwayat Perhitungan Hidrologi',
+  AI: 'Pusat Konsultan AI Hidrologi',
+  EXEC: 'Laporan Eksekutif Rekayasa SDA',
+  WORKFLOW: 'Workflow & Pemodelan Terintegrasi',
 };
 
 // ─── Hook ───────────────────────────────────────────────────────────
 
 export function useAIContext(activeTab: ActiveModule): AIContextResult {
+  const normalizedTab = normalizeModuleKey(activeTab);
+
   // Subscribe to relevant slices of the Zustand store
   const luasDas = useHydrologyStore((s) => s.luasDas);
   const panjangSungai = useHydrologyStore((s) => s.panjangSungai);
@@ -90,8 +111,9 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     // ── 1. Build Invisible System Context ──
     const contextParts: string[] = [];
 
+    const currentModuleTitle = MODULE_LABELS[normalizedTab] || 'Pusat Analisis Hidrologi';
     contextParts.push(`[SYSTEM — Invisible Context for AI]`);
-    contextParts.push(`User saat ini berada di: ${MODULE_LABELS[activeTab]}.`);
+    contextParts.push(`User saat ini berada di: ${currentModuleTitle}.`);
 
     // Fundamental parameters
     const areaNum = parseFloat(luasDas);
@@ -213,7 +235,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     }
 
     // Module-specific chips
-    switch (activeTab) {
+    switch (normalizedTab) {
       case 'BANJIR':
         if (!hasilAnalisisFrekuensi) {
           chips.push({
@@ -335,6 +357,57 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
         });
         break;
 
+      case 'FREKUENSI':
+        chips.push({
+          id: 'freq-guidance',
+          label: 'Panduan Uji Kecocokan Smirnov & Chi-Square',
+          prompt: 'Jelaskan kriteria penerimaan uji kecocokan distribusi frekuensi (Smirnov-Kolmogorov dan Chi-Square) sesuai SNI 2415:2016 serta interpretasi nilai Chi-Kritis vs Chi-Hitung.',
+          severity: 'info',
+          icon: '📐',
+        });
+        chips.push({
+          id: 'freq-distribution',
+          label: 'Karakteristik Distribusi Gumbel vs Log Pearson III',
+          prompt: 'Kapan sebaiknya memilih distribusi Gumbel dibanding Log Pearson III pada hidrologi Indonesia? Jelaskan batas koefisien asimetri (Cs) dan kurtosis (Ck).',
+          severity: 'info',
+          icon: '📊',
+        });
+        break;
+
+      case 'WORKFLOW':
+        chips.push({
+          id: 'wf-integrity',
+          label: 'Audit Integritas Data Antar Modul',
+          prompt: 'Lakukan audit konsistensi alur data hidrologi: dari curah hujan master, analisis frekuensi, debit banjir, hingga kapasitas penampang saluran.',
+          severity: 'info',
+          icon: '🔄',
+        });
+        break;
+
+      case 'AI':
+        chips.push({
+          id: 'ai-audit-all',
+          label: 'Audit Komprehensif Seluruh Modul SNI',
+          prompt: 'Lakukan audit menyeluruh terhadap seluruh parameter yang telah diinput pada proyek ini mengacu pada standar SNI (DAS, Hujan Rencana, Banjir, Saluran, Neraca, Embung).',
+          severity: 'info',
+          icon: '🔍',
+        });
+        chips.push({
+          id: 'ai-manning-check',
+          label: 'Kriteria Kecepatan & Jagaan Saluran SNI',
+          prompt: 'Jelaskan kriteria teknis kecepatan izin non-silting & non-scouring serta tinggi jagaan saluran terbuka menurut SNI 03-2401-1991.',
+          severity: 'info',
+          icon: '🌊',
+        });
+        chips.push({
+          id: 'ai-nakayasu-params',
+          label: 'Panduan Parameter Alpha HSS Nakayasu',
+          prompt: 'Bagaimana pedoman pemilihan koefisien karakteristik alfa (α) pada HSS Nakayasu untuk berbagai tipologi DAS di Indonesia?',
+          severity: 'info',
+          icon: '⚡',
+        });
+        break;
+
       case 'MASTER':
         chips.push({
           id: 'data-quality',
@@ -357,7 +430,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
       });
     }
 
-    const moduleSummary = MODULE_LABELS[activeTab] || 'Modul Tidak Diketahui';
+    const moduleSummary = MODULE_LABELS[normalizedTab] || 'Pusat Analisis Hidrologi';
     const hasIssues = chips.some((c) => c.severity === 'critical' || c.severity === 'warning');
 
     const dataStatus = [

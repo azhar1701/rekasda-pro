@@ -4,13 +4,14 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { consultHydrologist } from '@/services/geminiService';
+import { consultHydrologist, getActiveGeminiApiKey } from '@/services/geminiService';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { useAIContext, ActiveModule, SuggestionChip } from '@/hooks/useAIContext';
 import { useAIChatHistory } from './hooks/useAIChatHistory';
 import { generateOfflineExpertAnalysis } from './services/offlineExpertEngine';
 import { parseActionableSuggestions } from './utils/actionableParser';
 import { ChatMessage } from './types/ai.types';
+import { ApiKeyModal } from './components/ApiKeyModal';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/useToast';
 import {
@@ -30,7 +31,8 @@ import {
   Copy,
   Check,
   Paperclip,
-  WifiOff
+  WifiOff,
+  Key
 } from 'lucide-react';
 
 interface AIConsultantDrawerProps {
@@ -58,6 +60,8 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(() => !!getActiveGeminiApiKey());
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -211,6 +215,15 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
               </div>
 
               <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setApiKeyModalOpen(true)}
+                  className="flex items-center gap-1 text-[9px] font-bold text-white/90 bg-white/15 hover:bg-white/25 px-2 py-0.5 rounded border border-white/20 uppercase tracking-wider transition-colors cursor-pointer"
+                  title="Konfigurasi Kunci API Gemini Google"
+                >
+                  <Key className="w-2.5 h-2.5 text-amber-300" />
+                  <span>{hasApiKey ? 'Gemini Online' : 'Kunci API'}</span>
+                </button>
                 <span className="text-[9px] font-bold text-white/90 bg-white/15 px-2 py-0.5 rounded border border-white/20 uppercase tracking-wider">
                   SNI READY
                 </span>
@@ -493,6 +506,12 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
           </div>
         </div>
       </div>
+
+      <ApiKeyModal
+        isOpen={apiKeyModalOpen}
+        onClose={() => setApiKeyModalOpen(false)}
+        onKeyUpdated={() => setHasApiKey(!!getActiveGeminiApiKey())}
+      />
     </>
   );
 };

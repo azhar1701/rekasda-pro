@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { consultHydrologistStream } from '@/services/geminiService';
+import { consultHydrologistStream, getActiveGeminiApiKey } from '@/services/geminiService';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -14,13 +14,13 @@ import { useAIChatHistory } from './hooks/useAIChatHistory';
 import { generateOfflineExpertAnalysis } from './services/offlineExpertEngine';
 import { parseActionableSuggestions } from './utils/actionableParser';
 import { ChatMessage } from './types/ai.types';
+import { ApiKeyModal } from './components/ApiKeyModal';
 import { toast } from '@/hooks/useToast';
 import { 
   Bot, 
   User, 
   Send, 
   Paperclip, 
-  AlertCircle, 
   CheckCircle2, 
   Clock, 
   Trash2, 
@@ -34,7 +34,8 @@ import {
   Copy,
   Check,
   Download,
-  WifiOff
+  WifiOff,
+  Key
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -57,6 +58,8 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(() => !!getActiveGeminiApiKey());
   
   const { systemContext, dataStatus, suggestionChips } = useAIContext('AI');
   
@@ -116,7 +119,11 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
         selectedImage || undefined
       );
 
-      const finalContent = accumulatedText || 'Analisis hidrologi telah selesai diproses.';
+      if (!accumulatedText || accumulatedText.trim().length === 0 || accumulatedText.includes('kesalahan saat menghubungi layanan')) {
+        throw new Error('Respon AI kosong atau terjadi gangguan konektivitas.');
+      }
+
+      const finalContent = accumulatedText;
       const actions = parseActionableSuggestions(finalContent, store);
 
       addMessage({
@@ -183,6 +190,20 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
       iconColorClass="bg-indigo-600 text-white"
       actions={
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setApiKeyModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition-colors shadow-2xs cursor-pointer"
+            title="Konfigurasi Kunci API Gemini Google"
+          >
+            <Key className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden sm:inline">Kunci API</span>
+            <span className={cn(
+              "w-2 h-2 rounded-full",
+              hasApiKey ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" : "bg-amber-400"
+            )} title={hasApiKey ? 'Kunci API Gemini Terpasang' : 'Engine SNI Lokal'} />
+          </button>
+
           {messages.length > 0 && (
             <>
               <button
@@ -245,7 +266,7 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                 </ResponsiveContainer>
                 <div className="absolute inset-x-0 bottom-2 flex flex-col items-center">
                   <span className="text-2xl font-extrabold text-slate-800">{loadedCount}/{totalCount}</span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Modul Aktif</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">Parameter Terisi</span>
                 </div>
               </div>
 
@@ -260,11 +281,13 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
                       <span className="text-[11px] font-bold text-slate-600 tracking-tight">{item.label}</span>
                     </div>
                     {item.isLoaded ? (
-                      <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                      </div>
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        Terisi
+                      </span>
                     ) : (
-                      <AlertCircle className="w-3.5 h-3.5 text-slate-300" />
+                      <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                        Belum Diisi
+                      </span>
                     )}
                   </div>
                 ))}
@@ -554,6 +577,12 @@ export const GeminiConsultant: React.FC<Props> = ({ lastContext, initialQuery })
         </div>
 
       </div>
+
+      <ApiKeyModal
+        isOpen={apiKeyModalOpen}
+        onClose={() => setApiKeyModalOpen(false)}
+        onKeyUpdated={() => setHasApiKey(!!getActiveGeminiApiKey())}
+      />
     </ModuleLayout>
   );
 };
