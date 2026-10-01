@@ -21,3 +21,57 @@
 .animate-shimmer {
     animation: shimmer 2s infinite linear;
 }
+
+/* =============================================================================
+   Print Optimization for Official PUPR A4 Documents
+   ============================================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide web chrome: navigations, actions, drawers, floating UI */
+  header, 
+  nav, 
+  aside, 
+  footer, 
+  button,
+  .no-print,
+  [role="banner"],
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* Ensure containers use full printed width */
+  main, .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Page break rules */
+  .print-avoid-break,
+  table,
+  tr,
+  .print-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-force-break {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+}
