@@ -2,7 +2,8 @@
 export enum CalculationType {
   MANNING = 'MANNING',
   RATIONAL = 'RATIONAL',
-  WATER_BALANCE = 'WATER_BALANCE'
+  WATER_BALANCE = 'WATER_BALANCE',
+  EMBUNG = 'EMBUNG'
 }
 
 export type ExtendedCalculationType = CalculationType;

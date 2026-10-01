@@ -251,3 +251,39 @@ export const saveWaterBalance = async (data: WaterBalanceData) => {
 
   return { data: result, error };
 };
+
+/**
+ * Menyimpan data proyek embung ke Supabase
+ */
+export const saveEmbungProject = async (data: {
+  projectName: string;
+  analysisType?: string;
+  inputData: any;
+  resultData: any;
+  curveData?: any;
+  location?: any;
+  notes?: string;
+}) => {
+  if (!supabase) {
+    return { data: null, error: { message: 'Supabase not configured' } };
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: result, error } = await supabase
+    .from('embung_projects')
+    .insert({
+      project_name: data.projectName,
+      analysis_type: data.analysisType || 'capacity',
+      input_data: data.inputData || {},
+      result_data: data.resultData || {},
+      curve_data: data.curveData || null,
+      location: data.location || null,
+      notes: data.notes || null,
+      user_id: user?.id || null
+    })
+    .select()
+    .single();
+
+  return { data: result, error };
+};

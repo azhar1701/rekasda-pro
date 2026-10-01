@@ -12,22 +12,31 @@ interface Props {
 function getTypeInfo(type: CalculationType | ExtendedCalculationType) {
   const isManning = type === CalculationType.MANNING;
   const isWater = type === CalculationType.WATER_BALANCE;
+  const isEmbung = type === CalculationType.EMBUNG;
 
   if (isManning) return {
     label: 'Saluran Manning',
     outputLabel: 'Kapasitas Saluran',
     color: '#2563eb', bg: '#eff6ff',
     badgeClass: 'bg-blue-100 text-blue-700',
-    zOffset: 200,    // middle layer
-    iconColor: 'blue' as const,
+    zOffset: 200,
+    hexColor: '#2563eb',
   };
   if (isWater) return {
     label: 'Neraca Air',
     outputLabel: 'Ketersediaan Total',
     color: '#059669', bg: '#f0fdf4',
-    badgeClass: 'bg-green-100 text-green-700',
-    zOffset: 100,    // bottom layer
-    iconColor: 'green' as const,
+    badgeClass: 'bg-emerald-100 text-emerald-700',
+    zOffset: 100,
+    hexColor: '#059669',
+  };
+  if (isEmbung) return {
+    label: 'Embung / Situ',
+    outputLabel: 'Tampungan Efektif',
+    color: '#0d9488', bg: '#f0fdfa',
+    badgeClass: 'bg-teal-100 text-teal-700',
+    zOffset: 250,
+    hexColor: '#0d9488',
   };
   // default = RATIONAL / flood
   return {
@@ -35,19 +44,36 @@ function getTypeInfo(type: CalculationType | ExtendedCalculationType) {
     outputLabel: 'Debit Puncak',
     color: '#dc2626', bg: '#fef2f2',
     badgeClass: 'bg-red-100 text-red-700',
-    zOffset: 300,    // top layer  (so red always visible when overlapping)
-    iconColor: 'red' as const,
+    zOffset: 300,
+    hexColor: '#dc2626',
   };
 }
 
-// ─── Icon factory (cached) ────────────────────────────────────────────
-function buildIcons(color: 'blue' | 'red' | 'green') {
-  const url = `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`;
-  const shadow = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png';
-  return {
-    normal: L.icon({ iconUrl: url, shadowUrl: shadow, iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
-    large: L.icon({ iconUrl: url, shadowUrl: shadow, iconSize: [35, 57], iconAnchor: [17, 57], popupAnchor: [1, -48], shadowSize: [57, 57] }),
-  };
+// ─── Offline-First SVG DivIcon Factory ────────────────────────────────
+function createSvgPin(hexColor: string, isLarge: boolean = false, isFocused: boolean = false) {
+  const size = isLarge ? 32 : 26;
+  const h = isLarge ? 42 : 34;
+  const pulseHtml = isFocused
+    ? `<div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);width:${size + 14}px;height:${size + 14}px;border-radius:50%;background:${hexColor};opacity:0.35;animation:pulse 1.8s cubic-bezier(0,0,0.2,1) infinite;"></div>`
+    : '';
+
+  const html = `
+    <div style="position:relative;width:${size}px;height:${h}px;display:flex;justify-content:center;align-items:center;">
+      ${pulseHtml}
+      <svg width="${size}" height="${h}" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));transition:transform 0.2s ease;">
+        <path d="M12 0C5.372 0 0 5.373 0 12c0 9 12 20 12 20s12-11 12-20c0-6.627-5.372-12-12-12z" fill="${hexColor}"/>
+        <circle cx="12" cy="11" r="4.5" fill="#ffffff"/>
+      </svg>
+    </div>
+  `;
+
+  return L.divIcon({
+    className: 'custom-govtech-pin',
+    html,
+    iconSize: [size, h],
+    iconAnchor: [size / 2, h],
+    popupAnchor: [0, -h + 6]
+  });
 }
 
 export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId }) => {
@@ -99,13 +125,6 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
       }).addTo(map);
       L.control.scale({ position: 'bottomright', imperial: false, metric: true }).addTo(map);
 
-      // Pre-build icons for the 3 colors
-      const icons = {
-        blue: buildIcons('blue'),
-        red: buildIcons('red'),
-        green: buildIcons('green'),
-      };
-
       const bounds = L.latLngBounds([]);
 
       // ── Create markers ────────────────────────────────────────────
@@ -115,26 +134,26 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
         if (typeof latitude !== 'number' || typeof longitude !== 'number' || isNaN(latitude) || isNaN(longitude)) return;
 
         const info = getTypeInfo(item.type);
-        const icon = icons[info.iconColor].normal;
-        const iconLarge = icons[info.iconColor].large;
+        const isItemFocused = focusItemId === item.id;
+        const iconNormal = createSvgPin(info.hexColor, false, isItemFocused);
+        const iconLarge = createSvgPin(info.hexColor, true, isItemFocused);
 
         const marker = L.marker([latitude, longitude], {
-          icon,
-          zIndexOffset: info.zOffset,  // avoids visual overlap confusion
+          icon: iconNormal,
+          zIndexOffset: isItemFocused ? 9000 : info.zOffset,
         }).addTo(map);
 
         // Attach custom ID so we can target this exact marker later
         (marker as any).customId = item.id;
 
         // Auto-open popup if this is the focused item (initial load)
-        if (focusItemId && item.id === focusItemId) {
-          marker.setZIndexOffset(9000); // bring to absolute front
-          setTimeout(() => marker.openPopup(), 1800);
+        if (isItemFocused) {
+          setTimeout(() => marker.openPopup(), 1200);
         }
 
         // Hover effects
         marker.on('mouseover', function (this: L.Marker) { this.setIcon(iconLarge); });
-        marker.on('mouseout', function (this: L.Marker) { this.setIcon(icon); });
+        marker.on('mouseout', function (this: L.Marker) { this.setIcon(iconNormal); });
 
         // Click → detail
         marker.on('click', () => {
@@ -157,7 +176,7 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
               <strong style="display:block;font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px">${info.outputLabel}</strong>
               <div style="display:flex;align-items:baseline;gap:4px">
                 <span style="font-size:18px;font-weight:800;color:#0f172a">${item.outputs.Discharge}</span>
-                <span style="font-size:11px;font-weight:600;color:#64748b">m³/s</span>
+                <span style="font-size:11px;font-weight:600;color:#64748b">${item.type === CalculationType.EMBUNG ? 'm³' : 'm³/s'}</span>
               </div>
             </div>
             <button onclick="window.__mapPopupDetail('${item.id}')" style="width:100%;appearance:none;border:none;background:#0f172a;color:#fff;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
@@ -221,9 +240,9 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
     <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-md overflow-hidden shadow-sm border border-slate-200 z-0 bg-slate-50">
       <div ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 1 }} />
 
-      {/* Floating Info Card — handles all 3 types */}
+      {/* Floating Info Card — handles all types */}
       {selectedMarker && selInfo && (
-        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[1000] bg-white rounded-md shadow-sm p-4 sm:p-5 w-[calc(100%-1rem)] sm:w-auto sm:max-w-sm animate-in slide-in-from-right duration-300">
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[1000] bg-white rounded-md shadow-lg border border-slate-200 p-4 sm:p-5 w-[calc(100%-1rem)] sm:w-auto sm:max-w-sm animate-in slide-in-from-right duration-300">
           <button
             onClick={() => setSelectedMarker(null)}
             className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 transition-colors"
@@ -242,11 +261,11 @@ export const HistoryMap: React.FC<Props> = ({ data, onViewDetail, focusItemId })
             {new Date(selectedMarker.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
 
-          <div className="bg-pupr-blue text-white p-3 sm:p-4 rounded-md border border-slate-200">
+          <div className="bg-slate-50 p-3 sm:p-4 rounded-md border border-slate-200">
             <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">{selInfo.outputLabel}</span>
             <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{selectedMarker.outputs.Discharge}</span>
-              <span className="text-xs sm:text-sm font-semibold text-slate-600">m³/s</span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums">{selectedMarker.outputs.Discharge}</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-600">{selectedMarker.type === CalculationType.EMBUNG ? 'm³' : 'm³/s'}</span>
             </div>
           </div>
 

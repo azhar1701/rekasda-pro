@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getAllCalculations, deleteCalculationById, AllCalculationsData } from '@/services/allCalculationsService';
 import { HistoryMap } from './HistoryMap';
 import { CalculationType, ChannelShape } from '@/types/types';
@@ -9,11 +9,30 @@ import { Button } from '@/components/ui/Button';
 import { apiService } from '@/services/api.service';
 import { getCurrentLocation } from '@/lib/utils/geolocation';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { Database, MapPin, Eye, Bot, Trash2 } from 'lucide-react';
+import { exportToExcel } from '@/utils/excelService';
+import {
+  Database,
+  MapPin,
+  Eye,
+  Bot,
+  Trash2,
+  Search,
+  Download,
+  RefreshCw,
+  Waves,
+  CloudRain,
+  Droplets,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+  Cloud,
+  HardDrive
+} from 'lucide-react';
 import { TableGovTech } from '@/components/ui/TableGovTech';
 import { toast } from '@/hooks/useToast';
 
 type ViewMode = 'LIST' | 'MAP';
+type ModuleFilter = 'ALL' | 'manning' | 'flood' | 'water_balance' | 'embung';
 
 interface Props {
   onViewDetail?: (item: AllCalculationsData) => void;
@@ -23,10 +42,21 @@ interface Props {
 
 export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail }) => {
   const [data, setData] = useState<AllCalculationsData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSearchingNearby, setIsSearchingNearby] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isSearchingNearby, setIsSearchingNearby] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [focusItemId, setFocusItemId] = useState<string | undefined>(undefined);
+
+  // Search, Filter & Pagination states
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedModule, setSelectedModule] = useState<ModuleFilter>('ALL');
+  const [showPilotData, setShowPilotData] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 10;
+
+  // Delete modal state
+  const [deleteTarget, setDeleteTarget] = useState<AllCalculationsData | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   useEffect(() => {
     loadData();
@@ -34,9 +64,15 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
 
   const loadData = async () => {
     setLoading(true);
-    const result = await getAllCalculations();
-    setData(result);
-    setLoading(false);
+    try {
+      const result = await getAllCalculations();
+      setData(result);
+    } catch (e) {
+      console.error('Failed to load calculations:', e);
+      toast.error('Gagal memuat data riwayat');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearchNearby = async () => {
@@ -46,7 +82,6 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       const response = await apiService.findNearbyCalculations(pos.latitude, pos.longitude, 10000); // 10km radius
 
       if (response.status === 'success' && response.data) {
-        // Map new schema to display format
         const nearbyItems: AllCalculationsData[] = response.data.map((item: any) => ({
           id: item.id,
           type: item.calculation_type === 'manning' ? 'manning' : 'flood',
@@ -56,172 +91,168 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
             inputs: item.input_data,
             results: item.result_data
           },
-          location: item.location
+          location: item.location,
+          isLocalOnly: false
         }));
 
         if (nearbyItems.length === 0) {
           toast.info('Tidak ditemukan perhitungan lain dalam radius 10km.');
         } else {
           setData(nearbyItems);
+          toast.success(`Ditemukan ${nearbyItems.length} perhitungan dalam radius 10km.`);
         }
       }
     } catch (error) {
       console.error('Search nearby failed', error);
-      toast.error('Gagal mencari lokasi. Pastikan izin lokasi aktif.');
+      toast.error('Gagal mencari lokasi. Pastikan izin lokasi browser aktif.');
     } finally {
       setIsSearchingNearby(false);
     }
   };
 
-  const handleDelete = async (type: string, id: string) => {
-    if (!window.confirm('Hapus data ini?')) return;
-
-    const { error } = await deleteCalculationById(type, id);
-    if (error) {
-      toast.error('Gagal menghapus: ' + error.message);
-    } else {
-      loadData();
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await deleteCalculationById(deleteTarget.type, deleteTarget.id);
+      if (error) {
+        toast.error('Gagal menghapus: ' + error.message);
+      } else {
+        toast.success(`Data proyek "${deleteTarget.project_name}" berhasil dihapus.`);
+        setDeleteTarget(null);
+        loadData();
+      }
+    } catch (err: any) {
+      toast.error('Error saat menghapus: ' + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleShowOnMap = (item: AllCalculationsData) => {
     setViewMode('MAP');
-    // Set focus after view mode changes
     setTimeout(() => {
       setFocusItemId(item.id);
-    }, 100);
+    }, 150);
   };
 
   const getTypeLabel = (type: string) => {
-    if (type === 'manning') return 'Saluran';
-    if (type === 'flood') return 'Banjir';
-    if (type === 'water_balance') return 'Neraca Air';
-    return type;
+    switch (type) {
+      case 'manning': return 'Saluran Manning';
+      case 'flood': return 'Analisis Banjir';
+      case 'water_balance': return 'Neraca Air';
+      case 'embung': return 'Embung / Situ';
+      default: return type;
+    }
   };
 
-  const getTypeColor = (type: string) => {
-    if (type === 'manning') return 'bg-blue-100 text-blue-700';
-    if (type === 'flood') return 'bg-red-100 text-red-700';
-    if (type === 'water_balance') return 'bg-green-100 text-green-700';
-    return 'bg-slate-50 text-slate-700';
+  const getTypeBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'manning': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'flood': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'water_balance': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'embung': return 'bg-teal-50 text-teal-700 border-teal-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
   };
 
-  const getMainValue = (item: AllCalculationsData) => {
+  const getMainValue = (item: AllCalculationsData): string => {
     if (item.type === 'manning') {
-      return item.data.results?.Discharge || '-';
+      const q = item.data.results?.Discharge || item.data.results?.discharge;
+      return q ? (typeof q === 'number' ? q.toFixed(3) : String(q)) : '-';
     } else if (item.type === 'flood') {
-      return item.data.results?.qPeak?.toFixed(2) || '-';
+      const q = item.data.results?.qPeak || item.data.results?.peakDischarge || item.data.results?.Discharge;
+      return q ? (typeof q === 'number' ? q.toFixed(3) : parseFloat(q).toFixed(3)) : '-';
     } else if (item.type === 'water_balance') {
-      const totalSupply = item.data.monthly_inputs?.monthlySupply?.reduce((a: number, b: number) => a + b, 0);
-      return totalSupply?.toFixed(1) || '-';
+      const monthlySupply = item.data.monthly_inputs?.monthlySupply || item.data.inputs?.monthlySupply;
+      if (Array.isArray(monthlySupply)) {
+        const total = monthlySupply.reduce((a: number, b: number) => a + (Number(b) || 0), 0);
+        return total.toFixed(2);
+      }
+      return '-';
+    } else if (item.type === 'embung') {
+      const cap = item.data.result_data?.capacityResult?.requiredCapacity ||
+        item.data.results?.requiredCapacity ||
+        item.data.results?.effectiveStorage ||
+        item.data.result_data?.zoning?.effectiveStorage;
+      return cap ? (typeof cap === 'number' ? cap.toLocaleString('id-ID') : String(cap)) : '-';
     }
     return '-';
   };
 
-  // Convert to CalculationResult format for map - ONLY items with valid GPS
-  const dbMapData = data
-    .filter(item => {
-      // Check if item has valid location
-      let location = item.location;
+  const getMainUnit = (type: string): string => {
+    return type === 'embung' ? 'm³' : 'm³/s';
+  };
 
-      if (!location && item.type === 'manning' && item.data?.inputs?.site?.location) {
-        location = item.data.inputs.site.location;
-      }
+  // Convert to CalculationResult format for map
+  const dbMapData = useMemo(() => {
+    return data
+      .filter(item => {
+        let loc = item.location;
+        if (!loc && item.type === 'manning') loc = item.data?.inputs?.site?.location;
+        if (!loc && item.type === 'flood') loc = item.data?.inputs?.location || item.data?.inputs?.site?.location;
+        if (!loc && item.type === 'water_balance') loc = item.data?.monthly_inputs?.location;
+        if (!loc && item.type === 'embung') loc = item.data?.input_data?.location || item.data?.inputs?.location;
+        return loc && loc.latitude && loc.longitude && !isNaN(loc.latitude) && !isNaN(loc.longitude);
+      })
+      .map((item) => {
+        const loc = item.location ||
+          (item.type === 'manning' && item.data?.inputs?.site?.location) ||
+          (item.type === 'flood' && (item.data?.inputs?.location || item.data?.inputs?.site?.location)) ||
+          (item.type === 'water_balance' && item.data?.monthly_inputs?.location) ||
+          (item.type === 'embung' && (item.data?.input_data?.location || item.data?.inputs?.location));
 
-      if (!location && item.type === 'flood') {
-        location = item.data?.inputs?.location || item.data?.inputs?.site?.location;
-      }
-
-      if (!location && item.type === 'water_balance' && item.data?.monthly_inputs?.location) {
-        location = item.data.monthly_inputs.location;
-      }
-
-      // Only include if has valid GPS coordinates
-      return location && location.latitude && location.longitude;
-    })
-    .map((item) => {
-      const location = item.location ||
-        (item.type === 'manning' && item.data?.inputs?.site?.location) ||
-        (item.type === 'flood' && (item.data?.inputs?.location || item.data?.inputs?.site?.location)) ||
-        (item.type === 'water_balance' && item.data?.monthly_inputs?.location);
-
-      const calcType: CalculationType = item.type === 'manning' ? CalculationType.MANNING :
-        item.type === 'water_balance' ? CalculationType.WATER_BALANCE :
+        const calcType: CalculationType =
+          item.type === 'manning' ? CalculationType.MANNING :
+          item.type === 'water_balance' ? CalculationType.WATER_BALANCE :
+          item.type === 'embung' ? CalculationType.EMBUNG :
           CalculationType.RATIONAL;
 
-      // Extract location details based on type
-      let regency = '';
-      let district = '';
-      let village = '';
+        const regency =
+          item.data?.inputs?.site?.regency ||
+          item.data?.inputs?.site?.kabupaten ||
+          item.data?.inputs?.regency ||
+          item.data?.inputs?.kabupaten ||
+          item.data?.monthly_inputs?.regency ||
+          item.data?.monthly_inputs?.kabupaten ||
+          '';
 
-      if (item.type === 'manning') {
-        regency = item.data?.inputs?.site?.regency || item.data?.inputs?.site?.kabupaten || '';
-        district = item.data?.inputs?.site?.district || item.data?.inputs?.site?.kecamatan || '';
-        village = item.data?.inputs?.site?.village || item.data?.inputs?.site?.desa || '';
-      } else if (item.type === 'flood') {
-        regency = item.data?.inputs?.regency || item.data?.inputs?.kabupaten || '';
-        district = item.data?.inputs?.district || item.data?.inputs?.kecamatan || '';
-        village = item.data?.inputs?.village || item.data?.inputs?.desa || '';
-      } else if (item.type === 'water_balance') {
-        regency = item.data?.monthly_inputs?.regency || item.data?.monthly_inputs?.kabupaten || '';
-        district = item.data?.monthly_inputs?.district || item.data?.monthly_inputs?.kecamatan || '';
-        village = item.data?.monthly_inputs?.village || item.data?.monthly_inputs?.desa || '';
-      }
-
-      return {
-        id: item.id,
-        type: calcType,
-        date: item.created_at,
-        inputs: {
-          site: {
-            channelName: item.project_name,
-            regency,
-            district,
-            village
+        return {
+          id: item.id,
+          type: calcType,
+          date: item.created_at,
+          inputs: {
+            site: {
+              channelName: item.project_name,
+              regency,
+              district: '',
+              village: ''
+            },
+            shape: ChannelShape.TRAPEZOID,
+            roughness: 0,
+            slope: 0,
+            width: 0,
+            topWidth: 0,
+            diameter: 0,
+            depth: 0,
+            totalDepth: 0,
+            sideSlope: 0
           },
-          shape: ChannelShape.TRAPEZOID,
-          roughness: 0,
-          slope: 0,
-          width: 0,
-          topWidth: 0,
-          diameter: 0,
-          depth: 0,
-          totalDepth: 0,
-          sideSlope: 0
-        },
-        outputs: { Discharge: getMainValue(item) },
-        location: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: 10,
-          timestamp: Date.now()
-        }
-      };
-    });
+          outputs: { Discharge: getMainValue(item) },
+          location: {
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            accuracy: 10,
+            timestamp: Date.now()
+          }
+        };
+      });
+  }, [data]);
 
-  // Helper function to calculate Manning discharge
-  const calculateManningDischarge = (inputs: any) => {
-    const { width, depth, slope, roughness, sideSlope } = inputs;
-    const area = width * depth + sideSlope * depth * depth;
-    const wettedPerimeter = width + 2 * depth * Math.sqrt(1 + sideSlope * sideSlope);
-    const hydraulicRadius = area / wettedPerimeter;
-    const velocity = (1 / roughness) * Math.pow(hydraulicRadius, 2 / 3) * Math.pow(slope, 0.5);
-    const discharge = area * velocity;
-    return discharge.toFixed(2);
-  };
-
-  // Helper function to calculate Rational discharge
-  const calculateRationalDischarge = (inputs: any) => {
-    const { C, A, I } = inputs;
-    const discharge = (0.00278 * C * I * A);
-    return discharge.toFixed(2);
-  };
-
-  // Add pilot data to map
-  const pilotMapData = [
-    ...manningPilotData.map((pilot, idx) => {
-      const discharge = calculateManningDischarge(pilot.inputs);
-      return {
+  // Pilot mock data for demonstrations
+  const pilotMapData = useMemo(() => {
+    return [
+      ...manningPilotData.map((pilot, idx) => ({
         id: `pilot-manning-${idx}`,
         type: CalculationType.MANNING,
         date: new Date().toISOString(),
@@ -234,18 +265,15 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
           },
           ...pilot.inputs
         },
-        outputs: { Discharge: discharge },
+        outputs: { Discharge: '4.85' },
         location: pilot.location.coordinates ? {
           latitude: pilot.location.coordinates.lat,
           longitude: pilot.location.coordinates.lng,
           accuracy: 10,
           timestamp: Date.now()
         } : undefined
-      };
-    }),
-    ...rationalPilotData.map((pilot, idx) => {
-      const discharge = calculateRationalDischarge(pilot.inputs);
-      return {
+      })),
+      ...rationalPilotData.map((pilot, idx) => ({
         id: `pilot-rational-${idx}`,
         type: CalculationType.RATIONAL,
         date: new Date().toISOString(),
@@ -266,18 +294,15 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
           totalDepth: 0,
           sideSlope: 0
         },
-        outputs: { Discharge: discharge },
+        outputs: { Discharge: '12.40' },
         location: pilot.location.coordinates ? {
           latitude: pilot.location.coordinates.lat,
           longitude: pilot.location.coordinates.lng,
           accuracy: 10,
           timestamp: Date.now()
         } : undefined
-      };
-    }),
-    ...waterBalancePilotData.map((pilot, idx) => {
-      const totalSupply = pilot.inputs.monthlySupply.reduce((a, b) => a + b, 0);
-      return {
+      })),
+      ...waterBalancePilotData.map((pilot, idx) => ({
         id: `pilot-water-${idx}`,
         type: CalculationType.WATER_BALANCE,
         date: new Date().toISOString(),
@@ -298,80 +323,156 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
           totalDepth: 0,
           sideSlope: 0
         },
-        outputs: { Discharge: totalSupply.toFixed(1) },
+        outputs: { Discharge: '18.50' },
         location: pilot.location.coordinates ? {
           latitude: pilot.location.coordinates.lat,
           longitude: pilot.location.coordinates.lng,
           accuracy: 10,
           timestamp: Date.now()
         } : undefined
-      };
-    })
-  ].filter(item => item.location);
+      }))
+    ].filter(item => item.location);
+  }, []);
 
-  const mapData = [...dbMapData, ...pilotMapData];
+  const mapData = useMemo(() => {
+    return showPilotData ? [...dbMapData, ...pilotMapData] : dbMapData;
+  }, [showPilotData, dbMapData, pilotMapData]);
+
+  // Statistics KPIs
+  const stats = useMemo(() => {
+    const total = data.length;
+    const manningCount = data.filter(d => d.type === 'manning').length;
+    const floodCount = data.filter(d => d.type === 'flood').length;
+    const waterCount = data.filter(d => d.type === 'water_balance').length;
+    const embungCount = data.filter(d => d.type === 'embung').length;
+    const localCount = data.filter(d => d.isLocalOnly).length;
+    return { total, manningCount, floodCount, waterCount, embungCount, localCount };
+  }, [data]);
+
+  // Filtered & Searched Data
+  const filteredData = useMemo(() => {
+    return data.filter(item => {
+      // 1. Module filter
+      if (selectedModule !== 'ALL' && item.type !== selectedModule) {
+        return false;
+      }
+      // 2. Search query filter
+      if (searchTerm.trim()) {
+        const query = searchTerm.toLowerCase();
+        const nameMatch = (item.project_name || '').toLowerCase().includes(query);
+        const typeMatch = getTypeLabel(item.type).toLowerCase().includes(query);
+        const dateMatch = new Date(item.created_at).toLocaleDateString('id-ID').toLowerCase().includes(query);
+        return nameMatch || typeMatch || dateMatch;
+      }
+      return true;
+    });
+  }, [data, selectedModule, searchTerm]);
+
+  // Pagination slice
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, currentPage]);
+
+  // Export to Excel
+  const handleExportExcel = async () => {
+    if (filteredData.length === 0) {
+      toast.warning('Tidak ada data untuk diekspor');
+      return;
+    }
+
+    const exportRows = filteredData.map((item, idx) => ({
+      No: idx + 1,
+      Tanggal: new Date(item.created_at).toLocaleDateString('id-ID'),
+      Modul: getTypeLabel(item.type),
+      'Nama Proyek': item.project_name,
+      'Nilai Utama': getMainValue(item),
+      Satuan: getMainUnit(item.type),
+      'Penyimpanan': item.isLocalOnly ? 'Lokal (Offline)' : 'Cloud Supabase'
+    }));
+
+    await exportToExcel(exportRows, `Rekasda_Riwayat_Perhitungan_${new Date().toISOString().slice(0, 10)}`, 'Riwayat');
+    toast.success('File Excel berhasil diunduh!');
+  };
+
+  // Table Columns
   const tableColumns = [
     { key: 'date', label: 'Tanggal', align: 'left' as const },
     { key: 'type', label: 'Modul', align: 'left' as const },
     { key: 'project', label: 'Nama Proyek', align: 'left' as const },
     { key: 'value', label: 'Kapasitas / Debit', align: 'right' as const, numeric: true },
+    { key: 'sync', label: 'Penyimpanan', align: 'center' as const },
     { key: 'actions', label: 'Aksi', align: 'center' as const }
   ];
 
-  const tableData = data.map((item) => ({
-    date: new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+  const tableData = paginatedData.map((item) => ({
+    date: (
+      <span className="text-xs text-slate-600 font-medium whitespace-nowrap">
+        {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+      </span>
+    ),
     type: (
-      <span className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border ${getTypeColor(item.type).replace('text-', 'border-').replace('100', '200')} ${getTypeColor(item.type)}`}>
+      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border whitespace-nowrap ${getTypeBadgeStyle(item.type)}`}>
         {getTypeLabel(item.type)}
       </span>
     ),
     project: (
-      <div className="max-w-[200px] truncate" title={item.project_name}>
-        <span className="font-semibold text-slate-800">{item.project_name}</span>
+      <div className="max-w-[240px] truncate" title={item.project_name}>
+        <span className="font-semibold text-slate-800 text-xs">{item.project_name}</span>
       </div>
     ),
     value: (
-      <div className="flex items-baseline justify-end gap-1.5">
-        <span className="font-bold text-slate-900 font-mono tabular-nums tracking-tight">{getMainValue(item)}</span>
-        <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">m³/s</span>
+      <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
+        <span className="font-bold text-slate-900 font-mono text-xs tabular-nums tracking-tight">{getMainValue(item)}</span>
+        <span className="text-[10px] text-slate-400 font-semibold uppercase">{getMainUnit(item.type)}</span>
       </div>
     ),
+    sync: item.isLocalOnly ? (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200" title="Tersimpan secara offline di browser lokal">
+        <HardDrive className="w-3 h-3" />
+        Lokal
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Tersimpan di Cloud Database Supabase">
+        <Cloud className="w-3 h-3" />
+        Cloud
+      </span>
+    ),
     actions: (
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-center gap-1">
         <button
           onClick={() => handleShowOnMap(item)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-sm transition-colors"
-          title="Lihat di Peta"
-          aria-label="Lihat di Peta"
+          className="h-8 w-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded transition-colors"
+          title="Tampilkan di Peta"
+          aria-label="Tampilkan di Peta"
         >
-          <MapPin className="w-4 h-4" />
+          <MapPin className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onViewDetail?.(item)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-800 rounded-sm transition-colors"
-          title="Lihat Detail"
-          aria-label="Lihat Detail"
+          className="h-8 w-8 flex items-center justify-center text-slate-700 hover:bg-slate-100 rounded transition-colors"
+          title="Lihat Rincian Analisis"
+          aria-label="Lihat Rincian Analisis"
         >
-          <Eye className="w-4 h-4" />
+          <Eye className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onConsultAI?.(item)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-sm transition-colors"
-          title="Konsultasi AI"
-          aria-label="Konsultasi AI"
+          className="h-8 w-8 flex items-center justify-center text-purple-600 hover:bg-purple-50 rounded transition-colors"
+          title="Konsultasi AI Engineering"
+          aria-label="Konsultasi AI Engineering"
         >
-          <Bot className="w-4 h-4" />
+          <Bot className="w-3.5 h-3.5" />
         </button>
-
-        {/* P3-4: Visual separator & deliberate spacing for destructive action */}
-        <div className="h-5 w-px bg-slate-200 mx-1" />
+        <div className="h-4 w-px bg-slate-200 mx-0.5" />
         <button
-          onClick={() => handleDelete(item.type, item.id)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-sm transition-colors"
-          title="Hapus Data"
-          aria-label="Hapus Data"
+          onClick={() => setDeleteTarget(item)}
+          className="h-8 w-8 flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded transition-colors"
+          title="Hapus Rekaman"
+          aria-label="Hapus Rekaman"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
     )
@@ -379,105 +480,322 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
 
   return (
     <ModuleLayout
-      title="Daftar Proyek"
-      description="Database riwayat perhitungan RekaSDA"
+      title="Riwayat Perhitungan Hidrologi & Hidraulika"
+      description="Arsip rekayasa terintegrasi: Saluran Manning, Analisis Banjir, Neraca Air, dan Embung/Situ"
       icon={<Database className="w-6 h-6" />}
-      iconColorClass="bg-indigo-50 text-pupr-blue"
-    >
-      <div className="space-y-6 pb-6 page-enter relative z-10">
+      iconColorClass="bg-blue-50 text-pupr-blue"
+      actions={
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={filteredData.length === 0}
+            className="h-8 text-xs font-semibold border-slate-300 hover:bg-slate-50"
+          >
+            <Download className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+            Ekspor Excel
+          </Button>
 
-        {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              disabled={loading || isSearchingNearby}
-              className="rounded-md font-bold text-xs"
-            >
-              <svg className="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              Refresh
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleSearchNearby}
-              disabled={loading || isSearchingNearby}
-              className="rounded-md font-bold text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100"
-            >
-              <svg className="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              {isSearchingNearby ? 'Mencari...' : 'Cari di Sekitar'}
-            </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading || isSearchingNearby}
+            className="h-8 text-xs font-semibold border-slate-300 hover:bg-slate-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={handleSearchNearby}
+            disabled={loading || isSearchingNearby}
+            className="h-8 text-xs font-semibold bg-pupr-blue hover:bg-teal-700 text-white"
+          >
+            <MapPin className="w-3.5 h-3.5 mr-1" />
+            {isSearchingNearby ? 'Mencari...' : 'Cari di Sekitar'}
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-6">
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-pupr-blue">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Total Arsip</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-extrabold text-slate-900 tabular-nums">{stats.total}</span>
+                <span className="text-[10px] text-slate-400">proyek</span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-2 p-1.5 bg-slate-100 rounded-md w-full sm:w-auto">
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Waves className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Saluran Manning</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-extrabold text-blue-900 tabular-nums">{stats.manningCount}</span>
+                <span className="text-[10px] text-slate-400">rekaman</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
+              <CloudRain className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Analisis Banjir</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-extrabold text-rose-900 tabular-nums">{stats.floodCount}</span>
+                <span className="text-[10px] text-slate-400">rekaman</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
+              <Droplets className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Neraca & Embung</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-extrabold text-teal-900 tabular-nums">{stats.waterCount + stats.embungCount}</span>
+                <span className="text-[10px] text-slate-400">rekaman</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Toolbar: Search, Filters & View Toggle */}
+        <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search bar */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Cari nama proyek, lokasi, atau tanggal..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full h-8 pl-9 pr-3 text-xs rounded-md border border-slate-300 focus:outline-none focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue"
+            />
+          </div>
+
+          {/* Module filter pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0">
+            {[
+              { id: 'ALL', label: `Semua (${stats.total})` },
+              { id: 'manning', label: `Saluran (${stats.manningCount})` },
+              { id: 'flood', label: `Banjir (${stats.floodCount})` },
+              { id: 'water_balance', label: `Neraca (${stats.waterCount})` },
+              { id: 'embung', label: `Embung (${stats.embungCount})` },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setSelectedModule(tab.id as ModuleFilter);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md whitespace-nowrap transition-colors ${
+                  selectedModule === tab.id
+                    ? 'bg-pupr-blue text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* View mode toggle */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-md shrink-0">
             <button
               onClick={() => setViewMode('LIST')}
-              className={`flex-1 sm:flex-none py-1.5 px-4 rounded-lg text-xs font-bold transition-all ${viewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                }`}
+              className={`py-1 px-3 rounded text-xs font-bold transition-all ${
+                viewMode === 'LIST' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
             >
               Daftar
             </button>
             <button
               onClick={() => setViewMode('MAP')}
-              className={`flex-1 sm:flex-none py-1.5 px-4 rounded-lg text-xs font-bold transition-all ${viewMode === 'MAP' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                }`}
+              className={`py-1 px-3 rounded text-xs font-bold transition-all ${
+                viewMode === 'MAP' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
             >
               Peta
             </button>
           </div>
         </div>
 
+        {/* Content Area */}
         {loading ? (
-          <div className="flex justify-center items-center py-24">
-            <div className="animate-pulse bg-slate-200 rounded-md rounded-md h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="flex flex-col justify-center items-center py-20 bg-white rounded-lg border border-slate-200">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pupr-blue mb-3"></div>
+            <p className="text-xs text-slate-500 font-medium">Memuat data riwayat perhitungan...</p>
           </div>
-        ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-sm border border-slate-300 shadow-none text-center">
-            <div className="w-20 h-20 bg-indigo-50 rounded-sm flex items-center justify-center mb-5 rotate-3 border border-slate-200">
-              <Database className="w-10 h-10 text-pupr-blue -rotate-3" />
+        ) : filteredData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg border border-slate-200 text-center p-6">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
+              <Database className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Database Kosong</h3>
-            <p className="text-sm text-slate-500 max-w-sm">Belum ada riwayat perhitungan yang tersimpan. Mulai buat perhitungan di modul terkait untuk melihat datanya di sini.</p>
+            <h3 className="text-sm font-bold text-slate-800 mb-1">
+              {searchTerm || selectedModule !== 'ALL' ? 'Data Tidak Ditemukan' : 'Belum Ada Riwayat Perhitungan'}
+            </h3>
+            <p className="text-xs text-slate-500 max-w-sm">
+              {searchTerm || selectedModule !== 'ALL'
+                ? 'Tidak ada rekaman yang sesuai dengan kata kunci atau filter modul yang dipilih.'
+                : 'Mulai lakukan perhitungan di modul Saluran, Banjir, Neraca Air, atau Embung untuk menyimpan hasil rekayasa di sini.'}
+            </p>
           </div>
         ) : (
           <>
             {viewMode === 'MAP' ? (
-              <div className="bg-white rounded-sm shadow-none border border-slate-300 p-3 sm:p-5">
-                <h2 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mb-3 sm:mb-4">Peta Lokasi Proyek</h2>
+              <div className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Sebaran Geografis Lokasi Proyek</h3>
+                    <p className="text-[11px] text-slate-500">
+                      {mapData.length} lokasi berkoordinat GPS ({dbMapData.length} proyek aktif{showPilotData ? ` + ${pilotMapData.length} contoh pilot` : ''})
+                    </p>
+                  </div>
+
+                  {/* Toggle show pilot mock data */}
+                  <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer bg-slate-50 px-2.5 py-1 rounded border border-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={showPilotData}
+                      onChange={(e) => setShowPilotData(e.target.checked)}
+                      className="rounded text-pupr-blue focus:ring-pupr-blue h-3.5 w-3.5"
+                    />
+                    <span className="font-semibold text-[11px]">Tampilkan Data Contoh (Pilot)</span>
+                  </label>
+                </div>
+
                 <HistoryMap data={mapData} onViewDetail={onMapDetail} focusItemId={focusItemId} />
-                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                  <p className="text-[10px] sm:text-xs text-slate-500">{mapData.length} lokasi terdata ({dbMapData.length} database + {pilotMapData.length} pilot)</p>
-                  <div className="flex gap-3 text-[10px] sm:text-xs">
-                    <span className="flex items-center gap-1.5 text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-md bg-[#2563eb]"></span>
+
+                {/* Map Legend */}
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-600 border-t border-slate-100">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></span>
                       Saluran Manning
                     </span>
-                    <span className="flex items-center gap-1.5 text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-md bg-[#dc2626]"></span>
-                      Banjir Rasional
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626]"></span>
+                      Analisis Banjir
                     </span>
-                    <span className="flex items-center gap-1.5 text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-md bg-[#059669]"></span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#059669]"></span>
                       Neraca Air
                     </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#0d9488]"></span>
+                      Embung / Situ
+                    </span>
                   </div>
+                  <span className="text-slate-400 text-[10px]">*Klik pin peta untuk melihat ringkasan debit dan membuka analisis lengkap</span>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-md shadow-sm">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
                 <TableGovTech
                   columns={tableColumns}
                   data={tableData}
                   stickyHeader={true}
                   zebraStripe={true}
                 />
+
+                {/* Table Footer with Pagination */}
+                <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
+                  <div>
+                    Menampilkan <strong>{paginatedData.length}</strong> dari <strong>{filteredData.length}</strong> total rekaman
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="p-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Halaman Sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      <span className="px-3 py-1 font-semibold text-slate-800">
+                        {currentPage} / {totalPages}
+                      </span>
+
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        className="p-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Halaman Selanjutnya"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </>
+        )}
+
+        {/* Delete Confirmation Modal (GovTech Standard) */}
+        {deleteTarget && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
+            <div className="bg-white rounded-lg border border-slate-300 shadow-xl max-w-md w-full p-5 space-y-4 animate-in zoom-in-95 duration-200">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Konfirmasi Hapus Rekaman</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus data perhitungan proyek <strong>"{deleteTarget.project_name}"</strong> ({getTypeLabel(deleteTarget.type)})? Tindakan ini tidak dapat dibatalkan.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={isDeleting}
+                  className="h-8 text-xs font-semibold"
+                >
+                  Batal
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="h-8 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  {isDeleting ? 'Menghapus...' : 'Ya, Hapus Data'}
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </ModuleLayout>
   );
 };
+
+export default AllDataTab;
