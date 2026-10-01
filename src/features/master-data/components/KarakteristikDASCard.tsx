@@ -56,8 +56,8 @@ export const KarakteristikDASCard: React.FC = () => {
     <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
       <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-pupr-blue/10 rounded">
-            <Mountain className="w-5 h-5 text-pupr-blue" />
+          <div className="p-2 bg-primary-50 rounded">
+            <Mountain className="w-5 h-5 text-primary-700" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900">Karakteristik DAS (Morfometri)</h3>
@@ -77,7 +77,7 @@ export const KarakteristikDASCard: React.FC = () => {
                 type="number"
                 value={formData.luasDAS === 0 ? 0 : (formData.luasDAS ?? '')}
                 onChange={(e) => handleChange('luasDAS', e.target.value)}
-                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
+                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums tracking-tight"
                 placeholder="0.00"
                 step="0.01"
               />
@@ -96,7 +96,7 @@ export const KarakteristikDASCard: React.FC = () => {
                 type="number"
                 value={formData.panjangSungai === 0 ? 0 : (formData.panjangSungai ?? '')}
                 onChange={(e) => handleChange('panjangSungai', e.target.value)}
-                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
+                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums tracking-tight"
                 placeholder="0.00"
                 step="0.01"
               />
@@ -115,7 +115,7 @@ export const KarakteristikDASCard: React.FC = () => {
                 type="number"
                 value={formData.kemiringanSungai === 0 ? 0 : (formData.kemiringanSungai ?? '')}
                 onChange={(e) => handleChange('kemiringanSungai', e.target.value)}
-                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
+                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums tracking-tight"
                 placeholder="0.0000"
                 step="0.0001"
               />
@@ -134,7 +134,7 @@ export const KarakteristikDASCard: React.FC = () => {
                 type="number"
                 value={formData.elevasi === 0 ? 0 : (formData.elevasi ?? '')}
                 onChange={(e) => handleChange('elevasi', e.target.value)}
-                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums tracking-tight"
+                className="w-full px-3 py-2 pr-12 border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums tracking-tight"
                 placeholder="0"
                 step="1"
               />
@@ -158,8 +158,8 @@ export const KarakteristikDASCard: React.FC = () => {
           className={`w-full mt-4 px-4 py-2.5 font-semibold rounded-md transition-all flex items-center justify-center gap-2 ${!isValid
               ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
               : isSaved
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-pupr-blue hover:bg-pupr-blue/90 text-white'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-primary-700 hover:bg-primary-800 text-white'
             }`}
         >
           <Save className="w-4 h-4" />

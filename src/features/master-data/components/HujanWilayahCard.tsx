@@ -242,11 +242,11 @@ export const HujanWilayahCard: React.FC = () => {
           onComplete={() => setShowCelebration(false)}
         />
       )}
-      <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden border-l-4 border-l-pupr-blue">
-        <div className="border-b border-slate-200 bg-pupr-blue/[0.03] px-4 py-3">
+      <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden border-l-4 border-l-primary-600">
+        <div className="border-b border-slate-200 bg-primary-50/50 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-pupr-blue/10 rounded-md">
-              <CloudRain className="w-5 h-5 text-pupr-blue" />
+            <div className="p-2 bg-primary-100/60 rounded-md">
+              <CloudRain className="w-5 h-5 text-primary-700" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">Curah Hujan Wilayah</h3>

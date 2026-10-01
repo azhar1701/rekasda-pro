@@ -330,6 +330,7 @@ export interface HydrologyState {
   saveMorfometriDAS: (data: MorfometriDAS) => Promise<void>;
   saveTutupanLahan: (data: TutupanLahan) => Promise<void>;
   setCurahHujanWilayah: (data: CurahHujanWilayah | null) => void;
+  fetchSpatialParameters: () => Promise<void>;
   setAnalisisFrekuensi: (data: AnalisisFrekuensi | null) => void;
   getTimeOfConcentration: () => number;
   getDesignRainfall: (returnPeriod: number) => number | null;
@@ -876,24 +877,37 @@ export const useHydrologyStore = create<HydrologyState>()(
       isNeracaDirty: true
     });
 
-    const stasiunId = get().selectedStasiun?.id;
-    if (!stasiunId || !supabase) {
-      return;
-    }
+    if (!supabase) return;
     
     set({ isLoading: true });
     try {
-      const { error } = await supabase
+      const dasId = '00000000-0000-0000-0000-000000000001';
+      // 1. Sync to master_das
+      await supabase
+        .from('master_das')
+        .upsert({
+          id: dasId,
+          nama_das: get().identitasLokasi?.namaDAS || 'DAS Wilayah Studi',
+          nama_sungai_utama: get().identitasLokasi?.namaSungai || '',
+          luas_das: data.luasDAS,
+          panjang_sungai: data.panjangSungai,
+          kemiringan_sungai: data.kemiringanSungai,
+          elevasi_rata_rata: data.elevasi,
+          updated_at: new Date().toISOString()
+        });
+
+      // 2. Also sync to master_morfometri_das (independent of stasiunId)
+      const stasiunId = get().selectedStasiun?.id || null;
+      await supabase
         .from('master_morfometri_das')
         .upsert({
+          das_id: dasId,
           stasiun_id: stasiunId,
           luas_das: data.luasDAS,
           panjang_sungai: data.panjangSungai,
           kemiringan_sungai: data.kemiringanSungai,
           elevasi: data.elevasi
-        }, { onConflict: 'stasiun_id' });
-        
-      if (error) console.warn('Supabase sync warning for Morfometri DAS:', error);
+        });
     } catch (error: any) {
       console.warn('Error syncing Morfometri DAS to database:', error);
     } finally {
@@ -905,22 +919,22 @@ export const useHydrologyStore = create<HydrologyState>()(
     // Land cover is a property of the DAS, update store state immediately
     set({ tutupanLahan: data, isBanjirDirty: true, isNeracaDirty: true });
 
-    const stasiunId = get().selectedStasiun?.id;
-    if (!stasiunId || !supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     set({ isLoading: true });
     try {
-      const { error: deleteError } = await supabase
+      const dasId = '00000000-0000-0000-0000-000000000001';
+      const stasiunId = get().selectedStasiun?.id || null;
+
+      // Delete previous land cover for this DAS
+      await supabase
         .from('master_tutupan_lahan')
         .delete()
-        .eq('stasiun_id', stasiunId);
-        
-      if (deleteError) throw deleteError;
+        .or(`das_id.eq.${dasId}${stasiunId ? `,stasiun_id.eq.${stasiunId}` : ''}`);
 
       if (data.items.length > 0) {
         const insertData = data.items.map(item => ({
+          das_id: dasId,
           stasiun_id: stasiunId,
           jenis: item.jenis,
           luas: item.luas,
@@ -932,7 +946,7 @@ export const useHydrologyStore = create<HydrologyState>()(
           .from('master_tutupan_lahan')
           .insert(insertData);
           
-        if (insertError) throw insertError;
+        if (insertError) console.warn('Supabase insert tutupan lahan warning:', insertError);
       }
     } catch (error: any) {
       console.warn('Error syncing Tutupan Lahan to database:', error);
@@ -941,7 +955,80 @@ export const useHydrologyStore = create<HydrologyState>()(
     }
   },
 
-  setCurahHujanWilayah: (data) => set({ curahHujanWilayah: data, isBanjirDirty: true }),
+  setCurahHujanWilayah: async (data) => {
+    set({ curahHujanWilayah: data, isBanjirDirty: true });
+    if (!supabase || !data) return;
+    try {
+      const dasId = '00000000-0000-0000-0000-000000000001';
+      await supabase
+        .from('master_hujan_wilayah')
+        .upsert({
+          id: dasId,
+          das_id: dasId,
+          metode: data.metode,
+          hujan_rata_rata: data.hujanRataRata,
+          hujan_rata_rata_ams: data.hujanRataRataAMS || [],
+          configs: data.stasiunConfigs || data.isohyetConfigs || [],
+          updated_at: new Date().toISOString()
+        });
+    } catch (err) {
+      console.warn('Error syncing Hujan Wilayah to database:', err);
+    }
+  },
+
+  fetchSpatialParameters: async () => {
+    if (!supabase) return;
+    try {
+      // 1. Fetch DAS / Morfometri
+      const { data: dasData } = await supabase
+        .from('master_das')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (dasData && !get().morfometriDAS) {
+        set({
+          morfometriDAS: {
+            luasDAS: Number(dasData.luas_das) || 0,
+            panjangSungai: Number(dasData.panjang_sungai) || 0,
+            kemiringanSungai: Number(dasData.kemiringan_sungai) || 0,
+            elevasi: Number(dasData.elevasi_rata_rata) || 0,
+          },
+          luasDas: String(dasData.luas_das || ''),
+          panjangSungai: String(dasData.panjang_sungai || '')
+        });
+      }
+
+      // 2. Fetch Tutupan Lahan
+      const { data: lcData } = await supabase
+        .from('master_tutupan_lahan')
+        .select('*');
+
+      if (lcData && lcData.length > 0 && !get().tutupanLahan) {
+        const items = lcData.map((d: any) => ({
+          id: d.id,
+          jenis: d.jenis,
+          luas: Number(d.luas) || 0,
+          nilaiC: Number(d.nilai_c) || 0,
+          nilaiCN: Number(d.nilai_cn) || 0
+        }));
+        const total = items.reduce((sum: number, it: any) => sum + it.luas, 0);
+        const cWeighted = total > 0 ? items.reduce((sum: number, it: any) => sum + (it.nilaiC * it.luas), 0) / total : 0;
+        const cnWeighted = total > 0 ? items.reduce((sum: number, it: any) => sum + (it.nilaiCN * it.luas), 0) / total : 0;
+
+        set({
+          tutupanLahan: {
+            items,
+            totalLuas: total,
+            koefisienPengaliranGabungan: Number(cWeighted.toFixed(3)),
+            curveNumberGabungan: Number(cnWeighted.toFixed(1))
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('fetchSpatialParameters warning:', err);
+    }
+  },
   setAnalisisFrekuensi: (data) => set({ analisisFrekuensi: data, hasilBanjir: null, isBanjirDirty: true }),
   setIdentitasLokasi: (data) => set(state => ({ identitasLokasi: { ...state.identitasLokasi, ...data } })),
 

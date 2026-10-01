@@ -89,12 +89,25 @@ export const TutupanLahanCard: React.FC = () => {
     }
   };
 
+  const handleNormalizeArea = () => {
+    const targetDAS = morfometriDAS?.luasDAS || 0;
+    if (targetDAS <= 0 || totalLuas <= 0) return;
+    const factor = targetDAS / totalLuas;
+    const normalized = items.map(item => ({
+      ...item,
+      luas: Number(((item.luas || 0) * factor).toFixed(3))
+    }));
+    setItems(normalized);
+    setIsSaved(false);
+    toast.info('Luas tutupan lahan berhasil dinormalisasi agar tepat sama dengan Luas DAS.');
+  };
+
   return (
     <Card className="border border-slate-300 shadow-sm rounded-md overflow-hidden">
       <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-pupr-blue/10 rounded">
-            <Trees className="w-5 h-5 text-pupr-blue" />
+          <div className="p-2 bg-emerald-50 rounded">
+            <Trees className="w-5 h-5 text-emerald-700" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900">Analisis Tutupan Lahan</h3>
@@ -103,7 +116,7 @@ export const TutupanLahanCard: React.FC = () => {
         </div>
         <button
           onClick={handleAddRow}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-300 hover:border-pupr-blue hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-md transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-md transition-colors"
         >
           <Plus className="w-4 h-4" />
           Tambah
@@ -130,7 +143,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="text"
                       value={item.jenis}
                       onChange={(e) => handleChange(item.id, 'jenis', e.target.value)}
-                      className="w-full py-1 px-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue"
+                      className="w-full py-1 px-2 text-sm border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                       placeholder="Contoh: Hutan"
                     />
                   </td>
@@ -139,7 +152,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="number"
                       value={item.luas === 0 ? 0 : (item.luas ?? '')}
                       onChange={(e) => handleChange(item.id, 'luas', e.target.value)}
-                      className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
+                      className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums"
                       placeholder="0.00"
                       step="0.01"
                     />
@@ -149,7 +162,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="number"
                       value={item.nilaiC === 0 ? 0 : (item.nilaiC ?? '')}
                       onChange={(e) => handleChange(item.id, 'nilaiC', e.target.value)}
-                      className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
+                      className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums"
                       placeholder="0.00"
                       step="0.01"
                       min="0"
@@ -161,7 +174,7 @@ export const TutupanLahanCard: React.FC = () => {
                       type="number"
                       value={item.nilaiCN === 0 ? 0 : (item.nilaiCN ?? '')}
                       onChange={(e) => handleChange(item.id, 'nilaiCN', e.target.value)}
-                      className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-pupr-blue focus:border-pupr-blue tabular-nums"
+                      className="w-full py-1 px-2 text-sm text-right border border-slate-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500 tabular-nums"
                       placeholder="0"
                       step="1"
                       min="0"
@@ -190,24 +203,33 @@ export const TutupanLahanCard: React.FC = () => {
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
             <p className="text-xs text-slate-600 font-medium mb-1">C Gabungan (Weighted)</p>
-            <p className="text-lg font-bold text-pupr-blue tabular-nums">{cGabungan.toFixed(3)}</p>
+            <p className="text-lg font-bold text-primary-700 tabular-nums">{cGabungan.toFixed(3)}</p>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
             <p className="text-xs text-slate-600 font-medium mb-1">CN Gabungan (Weighted)</p>
-            <p className="text-lg font-bold text-pupr-blue tabular-nums">{cnGabungan.toFixed(1)}</p>
+            <p className="text-lg font-bold text-primary-700 tabular-nums">{cnGabungan.toFixed(1)}</p>
           </div>
         </div>
 
         {hasError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas DAS Melebihi Toleransi (0.5%)</p>
-              <p className="text-xs text-red-700 mt-1">
-                Total luas tutupan lahan ({totalLuas.toFixed(2)} km²) berbeda dari Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
-                Selisih: <strong>{luasError.toFixed(2)} km²</strong> (Batas toleransi: &plusmn;{maxTolerance.toFixed(2)} km²).
-              </p>
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-red-900">Peringatan: Selisih Luas DAS Melebihi Toleransi (0.5%)</p>
+                <p className="text-xs text-red-700 mt-1">
+                  Total luas ({totalLuas.toFixed(2)} km²) berbeda dari Luas DAS ({morfometriDAS?.luasDAS.toFixed(2)} km²).
+                  Selisih: <strong>{luasError.toFixed(2)} km²</strong> (Batas: &plusmn;{maxTolerance.toFixed(2)} km²).
+                </p>
+              </div>
             </div>
+            <button
+              onClick={handleNormalizeArea}
+              type="button"
+              className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-800 text-xs font-bold rounded border border-red-300 self-start sm:self-center shrink-0 transition-colors"
+            >
+              Normalisasikan Luas ke 100%
+            </button>
           </div>
         )}
 
@@ -217,8 +239,8 @@ export const TutupanLahanCard: React.FC = () => {
           className={`w-full px-4 py-2.5 font-semibold rounded-md transition-all flex items-center justify-center gap-2 ${hasError
               ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
               : isSaved
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-pupr-blue hover:bg-pupr-blue/90 text-white'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-primary-700 hover:bg-primary-800 text-white'
             }`}
         >
           {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}

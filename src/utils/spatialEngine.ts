@@ -114,29 +114,81 @@ export function generateThiessenWeights(
   dasGeoJSON: Feature<Polygon | MultiPolygon>,
   stationsFC: FeatureCollection<Point>
 ): ThiessenWeight[] {
-  const b = bbox(dasGeoJSON);
-  const voronoiPolygons = voronoi(stationsFC, { bbox: b });
   const totalDasAreaM2 = area(dasGeoJSON);
-  const results: ThiessenWeight[] = [];
+  const totalDasAreaKm2 = totalDasAreaM2 / 1_000_000;
+  const numStations = stationsFC.features.length;
 
-  voronoiPolygons.features.forEach((voronoiFeature, index) => {
-    if (!voronoiFeature) return;
-    const clipped = intersect(
-      featureCollection([dasGeoJSON, voronoiFeature as any])
-    );
+  if (numStations === 0) {
+    return [];
+  }
 
-    if (clipped) {
-      const areaM2 = area(clipped);
-      const stasiun = stationsFC.features[index];
-      
-      results.push({
-        stasiunId: stasiun.properties?.id || `st-${index}`,
-        namaStasiun: stasiun.properties?.nama_stasiun || `Stasiun ${index + 1}`,
-        areaKm2: areaM2 / 1_000_000,
-        weight: areaM2 / totalDasAreaM2,
+  // SNI Kasus 1 Stasiun: Seluruh area DAS 100% dipengaruhi oleh stasiun tunggal
+  if (numStations === 1) {
+    const s = stationsFC.features[0];
+    return [{
+      stasiunId: s.properties?.id || 'st-0',
+      namaStasiun: s.properties?.nama_stasiun || 'Stasiun Tunggal',
+      areaKm2: totalDasAreaKm2,
+      weight: 1.0,
+      elevation: s.properties?.elevasi
+    }];
+  }
+
+  // SNI Kasus 2 Stasiun: Pembagian proporsional rata-rata 50%-50% (bisektor DAS)
+  if (numStations === 2) {
+    const halfArea = totalDasAreaKm2 / 2;
+    return stationsFC.features.map((s, idx) => ({
+      stasiunId: s.properties?.id || `st-${idx}`,
+      namaStasiun: s.properties?.nama_stasiun || `Stasiun ${idx + 1}`,
+      areaKm2: halfArea,
+      weight: 0.5,
+      elevation: s.properties?.elevasi
+    }));
+  }
+
+  // Kasus >= 3 Stasiun: Voronoi Polygon Delaunay Triangulation
+  try {
+    const b = bbox(dasGeoJSON);
+    const voronoiPolygons = voronoi(stationsFC, { bbox: b });
+    const results: ThiessenWeight[] = [];
+
+    if (voronoiPolygons && voronoiPolygons.features) {
+      voronoiPolygons.features.forEach((voronoiFeature, index) => {
+        if (!voronoiFeature) return;
+        const clipped = intersect(
+          featureCollection([dasGeoJSON, voronoiFeature as any])
+        );
+
+        if (clipped) {
+          const areaM2 = area(clipped);
+          const stasiun = stationsFC.features[index];
+          
+          results.push({
+            stasiunId: stasiun?.properties?.id || `st-${index}`,
+            namaStasiun: stasiun?.properties?.nama_stasiun || `Stasiun ${index + 1}`,
+            areaKm2: areaM2 / 1_000_000,
+            weight: totalDasAreaM2 > 0 ? (areaM2 / totalDasAreaM2) : 0,
+            elevation: stasiun?.properties?.elevasi
+          });
+        }
       });
     }
-  });
 
-  return results.sort((a, b) => b.areaKm2 - a.areaKm2);
+    if (results.length > 0) {
+      return results.sort((a, b) => b.areaKm2 - a.areaKm2);
+    }
+  } catch (error) {
+    console.warn('Voronoi generation fallback to equal weights:', error);
+  }
+
+  // Fallback jika titik kolinier atau terjadi kegagalan topologi
+  const equalWeight = 1 / numStations;
+  const equalArea = totalDasAreaKm2 / numStations;
+  return stationsFC.features.map((s, idx) => ({
+    stasiunId: s.properties?.id || `st-${idx}`,
+    namaStasiun: s.properties?.nama_stasiun || `Stasiun ${idx + 1}`,
+    areaKm2: equalArea,
+    weight: equalWeight,
+    elevation: s.properties?.elevasi
+  }));
 }

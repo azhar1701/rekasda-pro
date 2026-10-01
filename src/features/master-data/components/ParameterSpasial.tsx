@@ -1,22 +1,28 @@
-import React from 'react';
-import { MapPin, CheckCircle2, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, CheckCircle2, AlertTriangle, TrendingUp, Info, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { KarakteristikDASCard } from './KarakteristikDASCard';
 import { TutupanLahanCard } from './TutupanLahanCard';
 import { HujanWilayahCard } from './HujanWilayahCard';
+import { AutoDelineationCard } from './AutoDelineationCard';
 const WebGISPanel = React.lazy(() => import('../../spatial-analysis/WebGISPanel').then(m => ({ default: m.WebGISPanel })));
 
 const MapFallback = () => (
   <div className="w-full h-96 bg-slate-100 animate-pulse rounded-lg border border-slate-200 flex items-center justify-center">
     <div className="text-slate-400 font-bold flex flex-col items-center gap-2">
-      <div className="w-8 h-8 rounded-full border-4 border-slate-300 border-t-pupr-blue animate-spin" />
+      <div className="w-8 h-8 rounded-full border-4 border-slate-300 border-t-primary-600 animate-spin" />
       Memuat Peta Spasial...
     </div>
   </div>
 );
 
 export const ParameterSpasial: React.FC = () => {
-  const { morfometriDAS, tutupanLahan, curahHujanWilayah } = useHydrologyStore();
+  const { morfometriDAS, tutupanLahan, curahHujanWilayah, fetchSpatialParameters } = useHydrologyStore();
+  const [showAutoDelineation, setShowAutoDelineation] = useState(false);
+
+  useEffect(() => {
+    fetchSpatialParameters();
+  }, [fetchSpatialParameters]);
 
   const completionStatus = {
     morfometri: morfometriDAS !== null,
@@ -33,14 +39,14 @@ export const ParameterSpasial: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-pupr-blue rounded-xl shadow-lg shadow-pupr-blue/20">
-            <MapPin className="w-8 h-8 text-pupr-yellow" />
+          <div className="p-3 bg-primary-700 rounded-xl shadow-lg shadow-primary-700/20">
+            <MapPin className="w-8 h-8 text-amber-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-extrabold text-pupr-blue tracking-tight uppercase leading-tight">Parameter Spasial & Kewilayahan</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight uppercase leading-tight">Parameter Spasial & Kewilayahan</h2>
             <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-1">
-              <Info className="w-3.5 h-3.5" />
-              Sistem Otomasi Delineasi & Karakterisasi Geospasial DAS
+              <Info className="w-3.5 h-3.5 text-primary-600" />
+              Sistem Otomasi Delineasi & Karakterisasi Geospasial DAS (SNI 2415:2016)
             </p>
           </div>
         </div>
@@ -84,21 +90,40 @@ export const ParameterSpasial: React.FC = () => {
         </React.Suspense>
       </div>
 
-      {/* Guidance Box */}
-      <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3 shadow-sm">
-        <TrendingUp className="w-5 h-5 text-pupr-blue shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-600 leading-relaxed ">
-          <span className="font-bold text-pupr-blue uppercase tracking-wider text-xs block mb-1 font-extrabold">Alur Kerja Otomatis:</span>
-          Unggah atau delineasi batas DAS pada peta di atas. Sistem akan mengeksekusi perhitungan **Luas DAS**, **Interseksi Tata Guna Lahan**, dan **Poligon Thiessen** secara instan.
-          Hasil rincian teknis akan ditampilkan secara reaktif pada modul-modul di bawah ini untuk verifikasi Anda.
-        </p>
+      {/* Guidance Box & Auto-Delineation Toggle */}
+      <div className="flex flex-col gap-3">
+        <div className="p-4 bg-sky-50 border border-sky-100 rounded-lg flex items-start justify-between gap-3 shadow-sm">
+          <div className="flex items-start gap-3">
+            <TrendingUp className="w-5 h-5 text-primary-700 shrink-0 mt-0.5" />
+            <div className="text-sm text-slate-600 leading-relaxed">
+              <span className="font-bold text-primary-800 uppercase tracking-wider text-xs block mb-1">Alur Kerja Geospasial Terpadu:</span>
+              Unggah batas poligon DAS atau pilih preset demo. Sistem menghitung **Luas DAS**, **Interseksi Tata Guna Lahan**, dan **Poligon Thiessen** secara instan.
+              Nilai yang dihasilkan tersinkronisasi otomatis ke modul Analisis Banjir dan Neraca Air.
+            </div>
+          </div>
+          <button
+            onClick={() => setShowAutoDelineation(!showAutoDelineation)}
+            type="button"
+            className="px-3 py-1.5 bg-white border border-sky-200 hover:bg-sky-100 text-sky-800 text-xs font-bold rounded-md flex items-center gap-1.5 shrink-0 transition-colors"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            {showAutoDelineation ? 'Tutup Alat DEM' : 'Alat Auto-DEM'}
+            {showAutoDelineation ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        {showAutoDelineation && (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+            <AutoDelineationCard />
+          </div>
+        )}
       </div>
 
-      {/* Technical Modules Section (The Reactive Details) */}
+      {/* Technical Modules Section */}
       <div className="space-y-4">
-        <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2 flex items-center gap-2">
-          <div className="w-2 h-2 bg-pupr-yellow rounded-full shadow-[0_0_8px_#f2c114]"></div>
-          Hasil Analisis Spasial & Rincian Modul
+        <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-[0.2em] ml-1 mb-2 flex items-center gap-2">
+          <div className="w-2 h-2 bg-amber-400 rounded-full shadow-[0_0_8px_#f59e0b]"></div>
+          Hasil Analisis Spasial & Rincian Teknis Modul
         </h3>
 
         <div className="flex flex-col gap-6">
@@ -114,7 +139,6 @@ export const ParameterSpasial: React.FC = () => {
             <HujanWilayahCard />
           </div>
         </div>
-
       </div>
     </div>
   );

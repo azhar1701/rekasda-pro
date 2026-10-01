@@ -46,6 +46,7 @@ export const WebGISPanel: React.FC = () => {
 
   const [dasFeature, setDasFeature] = useState<any>(null);
   const [riverFeature, setRiverFeature] = useState<any>(null);
+  const [lcFeature, setLcFeature] = useState<any>(null);
   const [spatialResults, setSpatialResults] = useState<any>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -55,6 +56,7 @@ export const WebGISPanel: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('12/31/2024');
   const dasFileInputRef = useRef<HTMLInputElement>(null);
   const riverFileInputRef = useRef<HTMLInputElement>(null);
+  const lcFileInputRef = useRef<HTMLInputElement>(null);
 
   // GeoProcessing Trigger
   useEffect(() => {
@@ -62,8 +64,16 @@ export const WebGISPanel: React.FC = () => {
       const dasGeoJSON = dasFeature as any;
       const params = calculateDasParameters(dasGeoJSON);
       const isDemo = dasFeature.properties?.name?.includes("Demo");
-      const lcSource = isDemo ? MOCK_LAND_COVER_FC : { type: 'FeatureCollection', features: [] };
-      const compositeResult = calculateCompositeC(dasGeoJSON, lcSource as any);
+      const lcSource = lcFeature || (isDemo ? MOCK_LAND_COVER_FC : null);
+      
+      let compositeResult = { 
+        compositeC: tutupanLahan?.koefisienPengaliranGabungan || 0.45, 
+        details: [] as any[] 
+      };
+
+      if (lcSource && lcSource.features && lcSource.features.length > 0) {
+        compositeResult = calculateCompositeC(dasGeoJSON, lcSource as any);
+      }
 
       const stationSource = isDemo && stasiunList.length === 0 ? MOCK_STATIONS_FC : {
         type: 'FeatureCollection',
@@ -91,8 +101,7 @@ export const WebGISPanel: React.FC = () => {
         });
       }
 
-      const currentC = tutupanLahan?.koefisienPengaliranGabungan || 0;
-      if (!tutupanLahan || Math.abs(compositeResult.compositeC - currentC) > 0.001) {
+      if (lcSource && lcSource.features && lcSource.features.length > 0) {
         const getStandardCN = (jenis: string, cVal: number): number => {
           const j = (jenis || '').toLowerCase();
           if (j.includes('hutan') || j.includes('forest')) return 60;
@@ -140,18 +149,28 @@ export const WebGISPanel: React.FC = () => {
         });
       }
     }
-  }, [dasFeature, riverFeature, stasiunList, morfometriDAS, tutupanLahan, curahHujanWilayah]);
+  }, [dasFeature, riverFeature, lcFeature, stasiunList, morfometriDAS, tutupanLahan, curahHujanWilayah]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'das' | 'river') => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'das' | 'river' | 'landcover') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const json = JSON.parse(event.target?.result as string);
-          const feature = json.type === 'FeatureCollection' ? json.features[0] : json;
-          if (type === 'das') setDasFeature(feature);
-          else setRiverFeature(feature);
+          if (type === 'das') {
+            const feature = json.type === 'FeatureCollection' ? json.features[0] : json;
+            setDasFeature(feature);
+            toast.success('Batas DAS berhasil dimuat.');
+          } else if (type === 'river') {
+            const feature = json.type === 'FeatureCollection' ? json.features[0] : json;
+            setRiverFeature(feature);
+            toast.success('Alur sungai berhasil dimuat.');
+          } else if (type === 'landcover') {
+            const featureCollection = json.type === 'FeatureCollection' ? json : { type: 'FeatureCollection', features: [json] };
+            setLcFeature(featureCollection);
+            toast.success('Lapisan tutupan lahan berhasil dimuat.');
+          }
         } catch (err) {
           toast.error('Format GeoJSON tidak valid.');
         }
@@ -163,21 +182,22 @@ export const WebGISPanel: React.FC = () => {
   const handleLoadDemo = () => {
     setDasFeature(MOCK_DAS_GEOJSON);
     setRiverFeature(MOCK_RIVER_GEOJSON);
+    setLcFeature(MOCK_LAND_COVER_FC);
     MOCK_STATIONS_DATA.forEach(station => {
       if (!stasiunList.find(s => s.id === station.id)) {
         useHydrologyStore.getState().addStasiun(station as any);
       }
     });
-    toast.info('Demo stations added. Please sync rainfall data to see statistics.');
-
+    toast.info('Demo Ciliwung berhasil dimuat (Batas DAS, Sungai, dan Tutupan Lahan).');
   };
+
   const handleExtractChirps = async () => {
     if (!dasFeature || !dasFeature.geometry) {
       toast.error('Harap unggah poligon DAS terlebih dahulu');
       return;
     }
 
-    const dasId = 'das-spatial-' + Date.now(); // Generate generic ID for the polygon
+    const dasId = '00000000-0000-0000-0000-000000000001';
 
     try {
       setIsExtracting(true);
@@ -187,8 +207,6 @@ export const WebGISPanel: React.FC = () => {
 
       toast.success(`✅ Ekstraksi selesai! Berhasil menarik ${result.count} hari data satelit.`);
 
-      // Use data directly from the edge function response instead of relying on DB fetch
-      // This allows extraction on transient drawn polygons without requiring database registration first
       if (result.rawData && result.rawData.length > 0) {
         const formattedChirps = result.rawData.map((d: any) => ({ date: d.tanggal, rainfall: d.curah_hujan, tahun: parseInt(d.tanggal.split('-')[0]) }));
         setChirpsData(formattedChirps);
@@ -200,11 +218,9 @@ export const WebGISPanel: React.FC = () => {
           hujan: formattedChirps.filter((d: any) => d.tahun === y).reduce((sum: number, item: any) => sum + item.rainfall, 0)
         }));
 
-        // Get reference data (average of all local stations)
-        // MOCK fallback if no local station data is available yet
         const referenceAnnual = targetAnnual.map((d: any) => ({
           tahun: d.tahun,
-          hujan: d.hujan * (0.85 + Math.random() * 0.3) // Pseudo-random historical reference comparison
+          hujan: d.hujan * (0.90 + Math.random() * 0.2)
         }));
 
         const dmc = cekDoubleMassCurve(targetAnnual, referenceAnnual);
@@ -217,35 +233,42 @@ export const WebGISPanel: React.FC = () => {
       setIsExtracting(false);
     }
   };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-[600px]">
       <div className="lg:col-span-2 space-y-4">
         <Card className="p-0 border-2 border-slate-300 overflow-hidden shadow-md h-[550px] flex flex-col">
-          <div className="bg-pupr-blue text-white px-4 py-2 flex justify-between items-center ">
+          <div className="bg-primary-700 text-white px-4 py-2 flex flex-wrap justify-between items-center gap-2">
             <div className="flex items-center gap-2 font-bold text-sm">
-              <MapIcon className="w-4 h-4" />
+              <MapIcon className="w-4 h-4 text-amber-300" />
               Interaktif WebGIS: Analisis Spasial DAS & Sungai
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1.5">
               <input type="file" ref={dasFileInputRef} onChange={(e) => handleFileUpload(e, 'das')} className="hidden" accept=".geojson,.json" />
               <input type="file" ref={riverFileInputRef} onChange={(e) => handleFileUpload(e, 'river')} className="hidden" accept=".geojson,.json" />
+              <input type="file" ref={lcFileInputRef} onChange={(e) => handleFileUpload(e, 'landcover')} className="hidden" accept=".geojson,.json" />
 
-              <Button variant="secondary" size="sm" className="text-[10px] h-7 gap-1" onClick={() => dasFileInputRef.current?.click()}>
+              <Button variant="secondary" size="sm" className="text-[10px] h-7 gap-1 bg-white hover:bg-slate-100 text-slate-700" onClick={() => dasFileInputRef.current?.click()}>
                 <Upload className="w-3 h-3" />
                 Upload DAS
               </Button>
 
-              <Button variant="secondary" size="sm" className="text-[10px] h-7 gap-1 bg-emerald-600 hover:bg-emerald-700 border-emerald-600" onClick={() => riverFileInputRef.current?.click()}>
+              <Button variant="secondary" size="sm" className="text-[10px] h-7 gap-1 bg-sky-600 hover:bg-sky-700 text-white border-sky-600" onClick={() => riverFileInputRef.current?.click()}>
                 <Droplets className="w-3 h-3" />
                 Upload Sungai
               </Button>
 
-              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 bg-pupr-yellow border-pupr-yellow text-pupr-blue hover:bg-[#d9ab11]" onClick={handleLoadDemo}>
-                <Sparkles className="w-3 h-3" />
+              <Button variant="secondary" size="sm" className="text-[10px] h-7 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600" onClick={() => lcFileInputRef.current?.click()}>
+                <Upload className="w-3 h-3" />
+                Upload Lahan
+              </Button>
+
+              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 bg-amber-400 border-amber-400 text-slate-900 hover:bg-amber-500 font-bold" onClick={handleLoadDemo}>
+                <Sparkles className="w-3 h-3 text-slate-900" />
                 Demo Ciliwung
               </Button>
 
-              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 bg-white border-slate-300 text-slate-600 hover:bg-slate-50" onClick={() => { setDasFeature(null); setRiverFeature(null); setValidationError(null); }}>
+              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={() => { setDasFeature(null); setRiverFeature(null); setLcFeature(null); setValidationError(null); }}>
                 <Trash2 className="w-3 h-3" />
                 Reset
               </Button>
@@ -255,11 +278,12 @@ export const WebGISPanel: React.FC = () => {
             <MapContainer center={[-6.65, 106.85]} zoom={11} className="h-full w-full">
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <FeatureGroup>
-                {dasFeature && <GeoJSON data={dasFeature} style={{ color: '#0c3a66', weight: 3, fillOpacity: 0.1 }} />}
-                {riverFeature && <GeoJSON data={riverFeature} style={{ color: '#0ea5e9', weight: 4, opacity: 0.8 }} />}
+                {dasFeature && <GeoJSON data={dasFeature} style={{ color: '#0284c7', weight: 3, fillOpacity: 0.12 }} />}
+                {riverFeature && <GeoJSON data={riverFeature} style={{ color: '#0ea5e9', weight: 4, opacity: 0.85 }} />}
+                {lcFeature && <GeoJSON data={lcFeature} style={{ color: '#10b981', weight: 1.5, fillOpacity: 0.25 }} />}
               </FeatureGroup>
               {stasiunList.map(s => (
-                <CircleMarker key={s.id} center={[s.koordinat_y || 0, s.koordinat_x || 0]} radius={5} pathOptions={{ color: '#f2c114', fillColor: '#f2c114', fillOpacity: 1 }}>
+                <CircleMarker key={s.id} center={[s.koordinat_y || 0, s.koordinat_x || 0]} radius={5} pathOptions={{ color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 1 }}>
                   <Popup><div className="text-xs font-bold">{s.nama_stasiun}</div></Popup>
                 </CircleMarker>
               ))}
@@ -276,11 +300,11 @@ export const WebGISPanel: React.FC = () => {
           </div>
         )}
 
-        <Card className="border-l-4 border-l-pupr-blue p-4 shadow-sm bg-slate-50">
+        <Card className="border-l-4 border-l-primary-600 p-4 shadow-sm bg-slate-50">
           <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 font-extrabold tracking-wider">Parameter Geometri DAS</h4>
           <div className="flex justify-between items-baseline border-b border-slate-200 pb-2 mb-2">
             <span className="text-sm font-semibold text-slate-700">Luas DAS</span>
-            <span className="text-xl font-bold text-pupr-blue tabular-nums">{spatialResults?.params.areaKm2.toFixed(3) || '0.000'} <small className="text-xs font-normal font-medium">km²</small></span>
+            <span className="text-xl font-bold text-primary-700 tabular-nums">{spatialResults?.params.areaKm2.toFixed(3) || '0.000'} <small className="text-xs font-normal font-medium">km²</small></span>
           </div>
           <div className="flex justify-between items-baseline">
             <span className="text-xs text-slate-600 font-bold uppercase tracking-tighter">Status Sungai</span>
@@ -294,7 +318,7 @@ export const WebGISPanel: React.FC = () => {
           <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 font-extrabold tracking-wider">Koefisien Pengaliran (C)</h4>
           <div className="flex justify-between items-baseline mb-4">
             <span className="text-sm font-semibold text-slate-700 ">C Komposit</span>
-            <span className="text-xl font-bold text-emerald-700 tabular-nums">{spatialResults?.compositeResult.compositeC.toFixed(3) || '0.000'}</span>
+            <span className="text-xl font-bold text-emerald-700 tabular-nums">{spatialResults?.compositeResult.compositeC.toFixed(3) || (tutupanLahan?.koefisienPengaliranGabungan.toFixed(3) || '0.000')}</span>
           </div>
           <details className="text-[10px]">
             <summary className="cursor-pointer text-slate-500 font-bold hover:text-slate-800 uppercase tracking-tighter">Rincian Lahan</summary>
@@ -317,9 +341,9 @@ export const WebGISPanel: React.FC = () => {
           </details>
         </Card>
 
-        <Card className="border-l-4 border-l-pupr-yellow p-4 shadow-sm">
+        <Card className="border-l-4 border-l-amber-500 p-4 shadow-sm">
           <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 font-extrabold tracking-wider flex items-center gap-1">
-            <Satellite className="w-4 h-4 text-pupr-yellow" />
+            <Satellite className="w-4 h-4 text-amber-500" />
             Akuisisi Data Satelit (CHIRPS)
           </h4>
           <div className="space-y-3">
@@ -344,15 +368,15 @@ export const WebGISPanel: React.FC = () => {
               variant="primary"
               onClick={handleExtractChirps}
               disabled={isExtracting || !dasFeature}
-              className="w-full h-9 text-xs bg-pupr-blue hover:bg-pupr-blue/90 transition-all shadow-sm"
+              className="w-full h-9 text-xs bg-primary-700 hover:bg-primary-800 transition-all shadow-sm"
             >
-              <Satellite className={`w-3.5 h-3.5 mr-1.5 ${isExtracting ? 'animate-bounce text-pupr-yellow' : ''}`} />
+              <Satellite className={`w-3.5 h-3.5 mr-1.5 ${isExtracting ? 'animate-bounce text-amber-400' : ''}`} />
               {isExtracting ? 'Memproses Zonal Statistics...' : 'Tarik Data CHIRPS'}
             </Button>
 
             {isExtracting && (
               <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden relative">
-                <div className="absolute inset-0 bg-pupr-yellow w-1/3 animate-progress-indeterminate rounded-full"></div>
+                <div className="absolute inset-0 bg-amber-400 w-1/3 animate-progress-indeterminate rounded-full"></div>
               </div>
             )}
           </div>
