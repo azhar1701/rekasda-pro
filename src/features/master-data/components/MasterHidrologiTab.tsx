@@ -1,1145 +1,774 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useHydrologyStore, type DataHujan } from '@/stores/useHydrologyStore';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useHydrologyStore, type StasiunHidrologi, type DataHujan } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
-import { CloudRain, Plus, Upload, MapPin, Calendar, Activity, ChevronDown, X, Download, Sparkles, AlertCircle, Edit2, Trash2 } from 'lucide-react';
+import {
+  CloudRain,
+  Plus,
+  Upload,
+  MapPin,
+  Calendar,
+  Activity,
+  ChevronDown,
+  Download,
+  Sparkles,
+  Edit2,
+  Trash2,
+  Wand2,
+  Database,
+} from 'lucide-react';
 
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
 import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
-import { Wand2 } from 'lucide-react';
-import { infillMissingData } from '@/lib/utils/spatialMath';
-import { extractRainfallFromPdf } from '@/services/geminiService';
+import { parseRainfallValue } from '@/lib/sanitizer/rainfallSanitizer';
 import { toast } from '@/hooks/useToast';
 
 import { DailyRainfallMatrix } from './DailyRainfallMatrix';
-
+import { StationModal } from './modals/StationModal';
+import { BulkPasteModal } from './modals/BulkPasteModal';
+import { ManualEntryModal } from './modals/ManualEntryModal';
+import { InfillModal } from './modals/InfillModal';
 
 export const MasterHidrologiTab: React.FC = () => {
-    const {
-        stasiunList,
-        selectedStasiun,
-        dataHujan,
-        isLoading,
-        error,
-        fetchStasiun,
-        addStasiun,
-        addDataHujan,
-        importDataHujanBatch,
-        selectStasiun,
-        updateDataHujanManual,
-        seedInitialStations,
-        updateStasiun,
-        deleteStasiun,
-        deleteDataHujanByYear,
-        updateDataHujanSingle,
-        activeRainfallSource,
-        arealRainfallAlgebraic,
-        arealRainfallThiessen,
-        arealRainfallIsohyet
-    } = useHydrologyStore();
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-    const [showModalStasiun, setShowModalStasiun] = useState(false);
-    const [editingStasiunId, setEditingStasiunId] = useState<string | null>(null);
-    const [showModalHujan, setShowModalHujan] = useState(false);
-    const [formStasiun, setFormStasiun] = useState({
-        nama_stasiun: '',
-        koordinat_x: '',
-        koordinat_y: '',
-        elevasi: '',
-        keterangan: ''
-    });
-    const [formHujan, setFormHujan] = useState({
-        tanggal: '',
-        curah_hujan: ''
-    });
-    const [isInfilling, setIsInfilling] = useState(false);
-    const [showModalBulk, setShowModalBulk] = useState(false);
-    const [bulkRawText, setBulkRawText] = useState('');
-    const [isQCLoading, setIsQCLoading] = useState(false);
-    const [bulkYear, setBulkYear] = useState<number>(new Date().getFullYear());
-    const [showModalQC, setShowModalQC] = useState(false);
-    const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
-    const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
-    const [isProcessingOcr, setIsProcessingOcr] = useState(false);
-    const ocrFileInputRef = useRef<HTMLInputElement>(null);
-
-    const parseBulkRainfall = (text: string, year: number): any[] => {
-        const lines = text.trim().split('\n');
-        const records: any[] = [];
-
-        lines.forEach((line) => {
-            const parts = line.trim().split(/\s+/);
-            if (parts.length < 2) return;
-
-            const day = parseInt(parts[0], 10);
-            if (isNaN(day) || day < 1 || day > 31) return;
-
-            const values = parts.slice(1);
-            values.forEach((val, monthIdx) => {
-                if (monthIdx >= 12) return;
-
-                let rainfall: number | null = null;
-                if (val === '-' || val === 'NR' || val === '') {
-                    rainfall = null;
-                } else {
-                    const parsed = parseFloat(val.replace(',', '.'));
-                    if (!isNaN(parsed)) {
-                        rainfall = parsed;
-                    }
-                }
-
-                if (rainfall !== null) {
-                    // Physical sanity check: negative rainfall is impossible in hydrology
-                    rainfall = Math.max(0, rainfall);
-
-                    const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const d = new Date(dateStr);
-                    if (d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === day) {
-                        records.push({
-                            stasiun_id: selectedStasiun?.id,
-                            tanggal: dateStr,
-                            curah_hujan: rainfall
-                        });
-                    }
-                }
-            });
-        });
-        return records;
-    };
-
-    const handleBulkPreview = () => {
-        const result = parseBulkRainfall(bulkRawText, bulkYear);
-        const extremeCount = result.filter(r => r.curah_hujan > 350).length;
-        if (extremeCount > 0) {
-            toast.warning(`Perhatian: Terdeteksi ${extremeCount} data curah hujan ekstrem (>350 mm/hari). Pastikan data telah terverifikasi.`);
-        }
-        setBulkPreview(result);
-    };
-
-    const handleBulkSave = async () => {
-        if (!bulkPreview || bulkPreview.length === 0 || !selectedStasiun) return;
-        try {
-            await importDataHujanBatch(bulkPreview);
-            toast.success(`Berhasil mengimpor ${bulkPreview.length} data harian.`);
-            setShowModalBulk(false);
-            setBulkRawText('');
-            setBulkPreview(null);
-        } catch (err) {
-            console.error(err);
-            toast.error('Gagal menyimpan data bulk.');
-        }
-    };
-
-    const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !selectedStasiun) return;
-
-        setIsProcessingOcr(true);
-        try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const base64 = event.target?.result as string;
-                try {
-                    const matrix = await extractRainfallFromPdf(base64, bulkYear);
-                    if (matrix) {
-                        const records: any[] = [];
-                        matrix.forEach((row, dayIdx) => {
-                            row.forEach((val, monthIdx) => {
-                                if (val !== null && val !== undefined) {
-                                    const day = dayIdx + 1;
-                                    const month = monthIdx + 1;
-                                    const dateStr = `${bulkYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                    const d = new Date(dateStr);
-                                    if (d.getFullYear() === bulkYear && d.getMonth() === monthIdx && d.getDate() === day) {
-                                        records.push({
-                                            stasiun_id: selectedStasiun.id,
-                                            tanggal: dateStr,
-                                            curah_hujan: val
-                                        });
-                                    }
-                                }
-                            });
-                        });
-                        setBulkPreview(records);
-                        toast.success(`AI berhasil mengekstrak ${records.length} data curah hujan.`);
-                    } else {
-                        toast.error('AI gagal mengekstrak data. Pastikan file PDF berisi tabel curah hujan.');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    toast.error('Terjadi kesalahan saat memproses OCR.');
-                } finally {
-                    setIsProcessingOcr(false);
-                }
-            };
-            reader.readAsDataURL(file);
-        } catch (err) {
-            console.error(err);
-            setIsProcessingOcr(false);
-        }
-        if (ocrFileInputRef.current) ocrFileInputRef.current.value = '';
-    };
-
-    useEffect(() => {
-        fetchStasiun();
-    }, [fetchStasiun]);
-
-    useEffect(() => {
-        if (dataHujan.length >= 10) {
-            updateDataHujanManual(dataHujan);
-        }
-    }, [dataHujan, updateDataHujanManual]);
-
-    const displayData = React.useMemo(() => {
-        if (activeRainfallSource === 'aljabar') return arealRainfallAlgebraic || [];
-        if (activeRainfallSource === 'thiessen') return arealRainfallThiessen || [];
-        if (activeRainfallSource === 'isohyet') return arealRainfallIsohyet || [];
-
-        // Default: Titik (Point) data filtered by selected station
-        if (!selectedStasiun) return [];
-        return dataHujan.filter(d => d.stasiun_id === selectedStasiun.id);
-    }, [activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet, dataHujan, selectedStasiun]);
-
-    const availableYears = React.useMemo(() => {
-        if (!displayData || displayData.length === 0) return [new Date().getFullYear()];
-        const years = new Set(displayData.map(d => parseInt(d.tanggal.split('-')[0], 10)));
-        return Array.from(years).filter(y => !isNaN(y)).sort((a, b) => b - a);
-    }, [displayData]);
-
-    useEffect(() => {
-        if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
-            setSelectedYear(availableYears[0]);
-        }
-    }, [availableYears, selectedYear]);
-
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const year = parseInt(e.target.value, 10);
-        setSelectedYear(year);
-    };
-
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !selectedStasiun) return;
-
-        const confirmed = confirm(
-            `Import data ke stasiun: ${selectedStasiun.nama_stasiun}\n\n` +
-            `File: ${file.name}\n\n` +
-            `Lanjutkan?`
-        );
-
-        if (!confirmed) {
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-        }
-
-        try {
-            const data = await file.arrayBuffer();
-            const jsonData = await parseExcelData<{ Tanggal: string; 'Curah Hujan (mm)': number }>(data, 4);
-
-            const dataList = jsonData
-                .filter(row => row.Tanggal && row['Curah Hujan (mm)'] !== undefined)
-                .map(row => ({
-                    stasiun_id: selectedStasiun.id,
-                    tanggal: row.Tanggal,
-                    curah_hujan: Math.max(0, Number(row['Curah Hujan (mm)']) || 0)
-                }));
-
-            if (dataList.length === 0) {
-                toast.warning('Tidak ada data valid di file Excel.');
-                if (fileInputRef.current) fileInputRef.current.value = '';
-                return;
-            }
-
-            const extremeCount = dataList.filter(d => d.curah_hujan > 350).length;
-            if (extremeCount > 0) {
-                toast.warning(`Perhatian: Ditemukan ${extremeCount} data curah hujan ekstrem (>350 mm/hari) pada file Excel.`);
-            }
-
-            await importDataHujanBatch(dataList);
-            toast.success(`Berhasil import ${dataList.length} data ke stasiun ${selectedStasiun.nama_stasiun}`);
-        } catch (err) {
-            console.error(err);
-            toast.error('Gagal import file. Pastikan format sesuai template.');
-        }
-
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
-    const downloadTemplate = async () => {
-        if (!selectedStasiun) {
-            toast.warning('Pilih stasiun terlebih dahulu.');
-            return;
-        }
-        await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
-    };
-
-
-
-    const handleInfillData = async () => {
-        if (!selectedStasiun) return;
-        setIsInfilling(true);
-
-        try {
-            const allData = dataHujan;
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            const infilledItems: Omit<DataHujan, 'id' | 'created_at'>[] = [];
-            const filledData = dataHujan.map(item => {
-                if (item.curah_hujan === null || String(item.curah_hujan).trim() === '-' || String(item.curah_hujan).trim() === '') {
-                    const infillResult = infillMissingData(
-                        selectedStasiun,
-                        stasiunList,
-                        allData,
-                        item.tanggal,
-                        'idw'
-                    );
-                    if (infillResult && infillResult.value > 0) {
-                        const infilledVal = parseFloat(infillResult.value.toFixed(1));
-                        infilledItems.push({
-                            stasiun_id: selectedStasiun.id,
-                            tanggal: item.tanggal,
-                            curah_hujan: infilledVal,
-                            is_infilled: true
-                        });
-                        return { 
-                            ...item, 
-                            curah_hujan: infilledVal,
-                            is_infilled: true 
-                        };
-                    }
-                }
-                return item;
-            });
-
-            if (infilledItems.length > 0) {
-                try {
-                    await importDataHujanBatch(infilledItems);
-                    toast.success(`Berhasil mengisi & menyimpan ${infilledItems.length} data kosong ke database (metode IDW).`);
-                } catch (dbErr) {
-                    console.warn('Gagal persist ke DB, update state lokal:', dbErr);
-                    updateDataHujanManual(filledData);
-                    toast.success(`Berhasil mengisi ${infilledItems.length} data kosong (tersimpan lokal).`);
-                }
-            } else {
-                toast.info('Tidak ada data kosong yang dapat diisi dari stasiun sekitar.');
-            }
-        } catch (error) {
-            console.error('Error infilling data:', error);
-            toast.error('Gagal mengisi data kosong.');
-        } finally {
-            setIsInfilling(false);
-        }
-    };
-
-    const handleDeleteYear = async () => {
-        if (!selectedStasiun) return;
-        const confirmed = window.confirm(`⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?
-Tindakan ini tidak dapat dibatalkan!`);
-        if (confirmed) {
-            try {
-                await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
-                toast.success(`Data tahun ${selectedYear} berhasil dihapus.`);
-            } catch (err) {
-                console.error(err);
-                toast.error('Gagal menghapus data.');
-            }
-        }
-    };
-
-    const handleCellClick = async (dateStr: string, currentVal: number | null) => {
-        if (!selectedStasiun) return;
-        const newValStr = window.prompt(`Masukkan Curah Hujan untuk ${dateStr}:`, currentVal !== null ? currentVal.toString() : '0');
-        if (newValStr !== null) {
-            const newVal = parseFloat(newValStr);
-            if (!isNaN(newVal) && newVal >= 0) {
-                try {
-                    await updateDataHujanSingle(selectedStasiun.id, dateStr, newVal);
-                } catch (err) {
-                    console.error(err);
-                    toast.error('Gagal mengupdate data.');
-                }
-            } else {
-                toast.warning('Nilai tidak valid. Masukkan angka positif.');
-            }
-        }
-    };
-
-    const annualMaximums = React.useMemo(() => {
-        if (!displayData || displayData.length === 0) return [];
-        const maxByYear: Record<number, number> = {};
-        displayData.forEach(row => {
-            const [yyyy] = row.tanggal.split('-');
-            const y = parseInt(yyyy, 10);
-            if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) {
-                maxByYear[y] = row.curah_hujan;
-            }
-        });
-        return Object.entries(maxByYear)
-            .map(([y, val]) => ({ tahun: parseInt(y, 10), curah_hujan: val }))
-            .sort((a, b) => b.tahun - a.tahun);
-    }, [displayData]);
-
-    const handleHubungkanDistribusi = () => {
-        if (annualMaximums.length < 10) {
-            toast.warning('Minimal butuh 10 tahun data untuk Analisis Frekuensi Distribusi Statistik.');
-        } else {
-            setSelectedQCStations([selectedStasiun?.id || '']);
-            setShowModalQC(true);
-        }
-    };
-
-    return (
-        <div className="space-y-6">
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                        <h4 className="font-bold text-sm">Terjadi Kesalahan</h4>
-                        <p className="text-sm mt-1">{error}</p>
-                    </div>
-                </div>
-            )}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Master Data Hidrologi</h2>
-                    <p className="text-sm text-slate-600 mt-1">Single Source of Truth untuk Data Curah Hujan</p>
-                </div>
-                <div className="flex flex-wrap gap-2.5">
-                    <Button onClick={downloadTemplate} disabled={!selectedStasiun} variant="outline" className="rounded-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download Template
-                    </Button>
-                    {selectedStasiun && (
-                        <>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".xlsx,.xls"
-                                onChange={handleFileUpload}
-                                className="hidden"
-                            />
-                            <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[44px]">
-                                <Upload className="w-4 h-4 mr-2" />
-                                Import Excel
-                            </Button>
-                            <Button onClick={() => setShowModalBulk(true)} variant="outline" className="rounded-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[44px]">
-                                <Activity className="w-4 h-4 mr-2" />
-                                Bulk Paste
-                            </Button>
-                        </>
-                    )}
-                    <Button onClick={() => {
-                        setEditingStasiunId(null);
-                        setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
-                        setShowModalStasiun(true);
-                    }} className="rounded-sm font-semibold bg-pupr-blue hover:bg-pupr-blue/90 text-white min-h-[44px] shadow-none">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Tambah Stasiun
-                    </Button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
-                <div className="lg:col-span-4 flex flex-col overflow-hidden bg-white border border-slate-300 rounded-sm shadow-none">
-                    <div className="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-pupr-blue" />
-                            Daftar Stasiun
-                        </h3>
-                        <span className="text-xs font-bold bg-slate-200 text-slate-700 px-2.5 py-1 rounded-sm">{stasiunList.length} Total</span>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {isLoading && stasiunList.length === 0 ? (
-                            <div className="flex justify-center items-center h-40">
-                                <div className="animate-pulse bg-slate-200 rounded-md h-8 w-8 border-b-2 border-teal-600"></div>
-                            </div>
-                        ) : (
-                            stasiunList.map((stasiun) => {
-                                const isActive = selectedStasiun?.id === stasiun.id;
-                                return (
-                                    <div
-                                        key={stasiun.id}
-                                        onClick={() => selectStasiun(stasiun)}
-                                        className={`group p-4 rounded-sm border cursor-pointer transition-colors ${isActive
-                                            ? 'bg-pupr-blue text-white border-blue-600 shadow-none'
-                                            : 'bg-white border-slate-200 hover:border-slate-400 text-slate-700 shadow-none'
-                                            }`}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <h4 className={`font-bold text-[15px] ${isActive ? 'text-white' : 'text-slate-800'}`}>
-                                                {stasiun.nama_stasiun}
-                                            </h4>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isActive ? 1 : undefined }}>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setEditingStasiunId(stasiun.id);
-                                                        setFormStasiun({
-                                                            nama_stasiun: stasiun.nama_stasiun,
-                                                            koordinat_x: stasiun.koordinat_x?.toString() || '',
-                                                            koordinat_y: stasiun.koordinat_y?.toString() || '',
-                                                            elevasi: stasiun.elevasi?.toString() || '',
-                                                            keterangan: stasiun.keterangan || ''
-                                                        });
-                                                        setShowModalStasiun(true);
-                                                    }}
-                                                    className={`w-9 h-9 flex items-center justify-center rounded-sm ${isActive ? 'hover:bg-white/20 text-white' : 'hover:bg-slate-100 text-slate-600'}`}
-                                                    title="Edit Stasiun"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
-                                                <div className={`h-4 w-px ${isActive ? 'bg-white/30' : 'bg-slate-200'} mx-0.5`} />
-                                                <button
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        if (window.confirm(`Apakah Anda yakin ingin menghapus stasiun ${stasiun.nama_stasiun}?`)) {
-                                                            try {
-                                                                await deleteStasiun(stasiun.id);
-                                                            } catch (err) {
-                                                                console.error(err);
-                                                                toast.error('Gagal menghapus stasiun.');
-                                                            }
-                                                        }
-                                                    }}
-                                                    className={`w-9 h-9 flex items-center justify-center rounded-sm ${isActive ? 'hover:bg-red-500/50 text-white' : 'hover:bg-red-50 text-red-600'}`}
-                                                    title="Hapus Stasiun"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 mt-3">
-                                            <div className={`text-xs px-2.5 py-1.5 rounded-sm ${isActive ? 'bg-white/20' : 'bg-slate-50 border border-slate-200'}`}>
-                                                <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Elevasi</span>
-                                                <span className="font-semibold font-mono tabular-nums">{stasiun.elevasi} m</span>
-                                            </div>
-                                            <div className={`text-xs px-2.5 py-1.5 rounded-sm ${isActive ? 'bg-white/20' : 'bg-slate-50 border border-slate-200'}`}>
-                                                <span className="block text-[9px] uppercase tracking-wider mb-0.5 opacity-80">Koordinat</span>
-                                                <span className="font-semibold font-mono truncate">
-                                                    {stasiun.koordinat_y?.toFixed(2)}, {stasiun.koordinat_x?.toFixed(2)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                </div>
-
-                <div className="lg:col-span-8 flex flex-col overflow-hidden bg-white border border-slate-300 rounded-sm shadow-none">
-                    {!selectedStasiun ? (
-                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                            <div className="w-24 h-24 mb-6 bg-slate-50 border border-slate-200 rounded-sm shadow-none flex items-center justify-center">
-                                <Activity className="w-10 h-10 text-pupr-blue" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Stasiun Terpilih</h3>
-                            <p className="text-sm text-slate-500 max-w-sm mb-6">
-                                Silakan pilih salah satu stasiun hujan di panel sebelah kiri atau muat stasiun pilot untuk mulai mengelola data.
-                            </p>
-                            {stasiunList.length === 0 && (
-                                <Button
-                                    onClick={async () => {
-                                        await seedInitialStations();
-                                        toast.success('Berhasil memuat daftar stasiun pilot Citanduy.');
-                                    }}
-                                    className="bg-pupr-blue hover:bg-pupr-blue/90 text-white font-semibold rounded-sm min-h-[44px]"
-                                >
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    Muat Stasiun Pilot
-                                </Button>
-                            )}
-                        </div>
-                    ) : (
-                        <>
-                            <div className="p-5 border-b border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-4">
-                                <div>
-                                    <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                                        <CloudRain className="w-5 h-5 text-pupr-blue" />
-                                        Data Curah Hujan
-                                    </h3>
-                                    <p className="text-xs text-slate-500 font-medium mt-0.5">
-                                        Stasiun: <span className="font-bold text-slate-700">{selectedStasiun.nama_stasiun}</span>
-                                    </p>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-sm border border-slate-300">
-                                        <Calendar className="w-4 h-4 text-slate-400" />
-                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Tahun</span>
-                                        <div className="relative">
-                                            <select
-                                                value={selectedYear}
-                                                onChange={handleYearChange}
-                                                className="appearance-none bg-transparent border-none text-sm font-bold text-slate-800 pr-6 pl-1 py-1 focus:ring-0 cursor-pointer outline-none tabular-nums"
-                                            >
-                                                {availableYears.map(year => (
-                                                    <option key={year} value={year}>{year}</option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                        </div>
-                                    </div>
-
-                                    <Button onClick={handleInfillData} disabled={isInfilling || !selectedStasiun} size="sm" variant="outline" className="rounded-sm border-slate-300 text-slate-700 hover:bg-slate-50 min-h-[40px]">
-                                        <Wand2 className={`w-4 h-4 mr-1 ${isInfilling ? 'animate-pulse' : ''}`} />
-                                        <span className="hidden sm:inline">{isInfilling ? 'Memproses...' : 'Isi Kosong'}</span>
-                                    </Button>
-                                    <Button onClick={() => setShowModalHujan(true)} size="sm" className="rounded-sm bg-pupr-blue hover:bg-pupr-blue/90 text-white min-h-[40px]">
-                                        <Plus className="w-4 h-4 mr-1" />
-                                        <span className="hidden sm:inline">Tambah Data</span>
-                                    </Button>
-
-                                    {/* Visual separator for destructive button */}
-                                    <div className="h-6 w-px bg-slate-300 mx-1 hidden sm:block" />
-                                    <Button onClick={handleDeleteYear} disabled={!selectedStasiun || dataHujan.length === 0} size="sm" variant="outline" className="rounded-sm border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 min-h-[40px]">
-                                        <Trash2 className="w-4 h-4 mr-1" />
-                                        <span className="hidden sm:inline">Hapus Data Tahun Ini</span>
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 overflow-auto bg-slate-50/30 p-4 sm:p-6">
-                                {isLoading && (
-                                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-                                        <div className="animate-pulse bg-slate-200 rounded-sm h-10 w-10 border-4 border-slate-200 border-t-pupr-blue"></div>
-                                    </div>
-                                )}
-
-                                <DailyRainfallMatrix data={displayData} year={selectedYear} onCellClick={handleCellClick} />
-
-                                {annualMaximums.length > 0 && (
-                                    <div className="mt-8 bg-white border border-slate-300 rounded-sm shadow-none overflow-hidden">
-                                        <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                                            <h4 className="font-bold text-slate-800 text-sm uppercase tracking-wider">
-                                                Rekapitulasi Hujan Maksimum {
-                                                    activeRainfallSource === 'aljabar' ? '(Aljabar)' :
-                                                        activeRainfallSource === 'thiessen' ? '(Thiessen)' :
-                                                            activeRainfallSource === 'isohyet' ? '(Isohyet)' :
-                                                                'Tahunan'
-                                                }
-                                            </h4>
-                                            <Button onClick={handleHubungkanDistribusi} size="sm" className="bg-teal-600 hover:bg-teal-700 text-white rounded-md text-xs h-8">
-                                                <Activity className="w-3 h-3 mr-1" />
-                                                Hubungkan ke Distribusi Statistik
-                                            </Button>
-                                        </div>
-                                        <div className="p-0 overflow-x-auto">
-                                            <table className="w-full text-sm">
-                                                <thead>
-                                                    <tr className="bg-slate-100 border-b border-slate-200">
-                                                        {annualMaximums.map(m => (
-                                                            <th key={m.tahun} className="py-2 px-3 border-r border-slate-200 text-center text-xs font-bold text-slate-600">{m.tahun}</th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        {annualMaximums.map(m => (
-                                                            <td key={m.tahun} className="py-3 px-3 border-r border-slate-200 text-center font-bold text-pupr-blue tabular-nums">
-                                                                {m.curah_hujan.toFixed(1)}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {dataHujan.length >= 10 && (
-                                <div className="p-4 border-t border-slate-200/50 bg-white/40">
-                                    <DataQualityDashboard />
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {showModalStasiun && (
-                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-md w-full p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-800">{editingStasiunId ? 'Edit Stasiun' : 'Tambah Stasiun Baru'}</h3>
-                            <button onClick={() => {
-                                setShowModalStasiun(false);
-                                setEditingStasiunId(null);
-                            }} className="text-slate-400 hover:text-slate-600">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            try {
-                                const payload = {
-                                    nama_stasiun: formStasiun.nama_stasiun,
-                                    koordinat_x: formStasiun.koordinat_x ? parseFloat(formStasiun.koordinat_x) : null,
-                                    koordinat_y: formStasiun.koordinat_y ? parseFloat(formStasiun.koordinat_y) : null,
-                                    elevasi: formStasiun.elevasi ? parseFloat(formStasiun.elevasi) : null,
-                                    keterangan: formStasiun.keterangan || null
-                                };
-                                if (editingStasiunId) {
-                                    await updateStasiun(editingStasiunId, payload);
-                                } else {
-                                    await addStasiun(payload);
-                                }
-                                setShowModalStasiun(false);
-                                setEditingStasiunId(null);
-                                setFormStasiun({ nama_stasiun: '', koordinat_x: '', koordinat_y: '', elevasi: '', keterangan: '' });
-                            } catch (err) {
-                                console.error(err);
-                            }
-                        }} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Nama Stasiun *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formStasiun.nama_stasiun}
-                                    onChange={(e) => setFormStasiun(prev => ({ ...prev, nama_stasiun: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                    placeholder="Stasiun Cikampak"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Longitude</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        value={formStasiun.koordinat_x}
-                                        onChange={(e) => setFormStasiun(prev => ({ ...prev, koordinat_x: e.target.value }))}
-                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                        placeholder="106.7562"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Latitude</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        value={formStasiun.koordinat_y}
-                                        onChange={(e) => setFormStasiun(prev => ({ ...prev, koordinat_y: e.target.value }))}
-                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                        placeholder="-6.5872"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Elevasi (m)</label>
-                                <input
-                                    type="number"
-                                    step="any"
-                                    value={formStasiun.elevasi}
-                                    onChange={(e) => setFormStasiun(prev => ({ ...prev, elevasi: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                    placeholder="250"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Keterangan</label>
-                                <textarea
-                                    value={formStasiun.keterangan}
-                                    onChange={(e) => setFormStasiun(prev => ({ ...prev, keterangan: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                    rows={2}
-                                    placeholder="Tipe Manual. Terawat baik."
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-2">
-                                <Button type="button" onClick={() => {
-                                    setShowModalStasiun(false);
-                                    setEditingStasiunId(null);
-                                }} variant="outline" className="flex-1 rounded-md">
-                                    Batal
-                                </Button>
-                                <Button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700">
-                                    {isLoading ? 'Menyimpan...' : 'Simpan'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {showModalHujan && selectedStasiun && (
-                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-md w-full p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-800">Tambah Data Curah Hujan</h3>
-                            <button onClick={() => setShowModalHujan(false)} className="text-slate-400 hover:text-slate-600">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            try {
-                                await addDataHujan({
-                                    stasiun_id: selectedStasiun.id,
-                                    tanggal: formHujan.tanggal,
-                                    curah_hujan: parseFloat(formHujan.curah_hujan)
-                                });
-                                setShowModalHujan(false);
-                                setFormHujan({ tanggal: '', curah_hujan: '' });
-                            } catch (err) {
-                                console.error(err);
-                            }
-                        }} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Tanggal *</label>
-                                <input
-                                    type="date"
-                                    required
-                                    value={formHujan.tanggal}
-                                    onChange={(e) => setFormHujan(prev => ({ ...prev, tanggal: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Curah Hujan (mm) *</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    required
-                                    value={formHujan.curah_hujan}
-                                    onChange={(e) => setFormHujan(prev => ({ ...prev, curah_hujan: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                                    placeholder="0.0"
-                                />
-                            </div>
-                            <div className="bg-teal-50 border border-teal-200 rounded-md p-3">
-                                <p className="text-xs text-teal-700">
-                                    <span className="font-bold">Stasiun:</span> {selectedStasiun.nama_stasiun}
-                                </p>
-                            </div>
-                            <div className="flex gap-3 pt-2">
-                                <Button type="button" onClick={() => setShowModalHujan(false)} variant="outline" className="flex-1 rounded-md">
-                                    Batal
-                                </Button>
-                                <Button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700">
-                                    {isLoading ? 'Menyimpan...' : 'Simpan'}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {showModalBulk && selectedStasiun && (
-                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4 sm:p-10">
-                    <div className="bg-white rounded-sm shadow-none max-w-6xl w-full flex flex-col max-h-[90vh] overflow-hidden border border-slate-300 animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-pupr-blue/10 rounded-xl flex items-center justify-center shadow-inner">
-                                    <Activity className="w-6 h-6 text-pupr-blue" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Bulk Input Curah Hujan</h3>
-                                    <p className="text-xs text-slate-500 font-medium">Otomasi OCR PDF & Manual Paste Matriks 31x12</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setShowModalBulk(false)}
-                                className="p-2.5 hover:bg-red-50 hover:text-red-500 rounded-full transition-all text-slate-400 group"
-                            >
-                                <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
-                            </button>
-                        </div>
-
-                        <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-10 flex-1 overflow-hidden bg-white">
-                            <div className="flex flex-col gap-5 overflow-y-auto pr-2 custom-scrollbar">
-                                <div className="flex items-center gap-4 bg-slate-100 p-3 rounded-lg border border-slate-200">
-                                    <label className="text-sm font-bold text-slate-700">Tahun Target:</label>
-                                    <input
-                                        type="number"
-                                        value={bulkYear}
-                                        onChange={(e) => setBulkYear(parseInt(e.target.value))}
-                                        className="w-28 px-4 py-2 border-2 border-slate-300 rounded-md font-bold font-mono focus:ring-4 focus:ring-pupr-blue/10 focus:border-pupr-blue outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div className="relative group">
-                                    <div className="p-8 border-2 border-dashed border-slate-300 group-hover:border-pupr-blue rounded-xl bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:bg-pupr-blue/[0.02]">
-                                        <div className="w-20 h-20 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-pupr-blue group-hover:scale-110 transition-transform">
-                                            <CloudRain className="w-10 h-10" />
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="text-base font-extrabold text-slate-800 uppercase tracking-widest">Otomasi PDF OCR</p>
-                                            <p className="text-xs text-slate-500 mt-2 max-w-[280px] leading-relaxed">Unggah laporan BBWS (31x12). AI akan mengekstrak angka secara otomatis.</p>
-                                        </div>
-                                        <input
-                                            ref={ocrFileInputRef}
-                                            type="file"
-                                            accept=".pdf"
-                                            className="hidden"
-                                            onChange={handlePdfUpload}
-                                        />
-                                        <Button
-                                            onClick={() => ocrFileInputRef.current?.click()}
-                                            disabled={isProcessingOcr}
-                                            className="bg-pupr-blue hover:bg-slate-900 text-white w-full py-7 rounded-xl font-extrabold text-sm shadow-lg shadow-pupr-blue/20"
-                                        >
-                                            {isProcessingOcr ? (
-                                                <>
-                                                    <Sparkles className="w-5 h-5 mr-2 animate-pulse" />
-                                                    PROSES OCR AKTIF...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Upload className="w-5 h-5 mr-3" />
-                                                    UNGGAH PDF SEKARANG
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="relative py-2">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t-2 border-slate-100"></span>
-                                    </div>
-                                    <div className="relative flex justify-center text-[11px] uppercase tracking-widest">
-                                        <span className="bg-white px-4 text-slate-400 font-extrabold italic">Atau Manual Paste</span>
-                                    </div>
-                                </div>
-
-                                <textarea
-                                    className="min-h-[160px] w-full p-5 font-mono text-[11px] border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none resize-none bg-slate-50/30 transition-all leading-relaxed"
-                                    placeholder="Paste teks baris 1-31 di sini jika ingin input manual..."
-                                    value={bulkRawText}
-                                    onChange={(e) => setBulkRawText(e.target.value)}
-                                />
-                                <Button
-                                    onClick={handleBulkPreview}
-                                    variant="outline"
-                                    className="text-slate-600 border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-800 hover:text-white font-bold py-5 rounded-xl transition-all"
-                                >
-                                    Pratinjau Data Manual
-                                </Button>
-                            </div>
-
-                            <div className="flex flex-col gap-4 overflow-hidden border-l border-slate-100 pl-4">
-                                <div className="flex justify-between items-center bg-slate-800 text-white px-4 py-3 rounded-lg shadow-inner">
-                                    <h4 className="text-xs font-extrabold uppercase tracking-widest flex items-center gap-2">
-                                        <Activity className="w-4 h-4 text-teal-400" />
-                                        Hasil Parsing
-                                    </h4>
-                                    <span className="text-xs font-mono bg-white/10 px-2 py-1 rounded">
-                                        {bulkPreview?.length || 0} Data Terdeteksi
-                                    </span>
-                                </div>
-
-                                <div className="flex-1 overflow-auto border-2 border-slate-100 rounded-xl bg-slate-50 shadow-inner custom-scrollbar">
-                                    {bulkPreview ? (
-                                        <table className="w-full text-[11px] border-collapse">
-                                            <thead className="bg-slate-200 sticky top-0 z-10">
-                                                <tr>
-                                                    <th className="p-3 border-b border-slate-300 text-left font-extrabold text-slate-600">TANGGAL</th>
-                                                    <th className="p-3 border-b border-slate-300 text-right font-extrabold text-slate-600">CH (MM)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {bulkPreview.slice(0, 200).map((row, idx) => (
-                                                    <tr key={idx} className="border-b border-slate-100 hover:bg-pupr-blue/[0.03] transition-colors">
-                                                        <td className="p-3 border-r border-slate-100 font-mono text-slate-600">{row.tanggal}</td>
-                                                        <td className="p-3 text-right font-bold text-pupr-blue tabular-nums text-sm">
-                                                            {row.curah_hujan.toFixed(1)}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {bulkPreview.length > 200 && (
-                                                    <tr>
-                                                        <td colSpan={2} className="p-4 text-center text-slate-400 italic bg-white font-medium">
-                                                            ... Menampilkan 200 dari {bulkPreview.length} baris data
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 opacity-60">
-                                            <Activity className="w-12 h-12 stroke-[1.5]" />
-                                            <p className="text-sm font-medium">Belum ada data untuk diproses</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="pt-2">
-                                    <Button
-                                        onClick={handleBulkSave}
-                                        disabled={!bulkPreview || bulkPreview.length === 0 || isLoading}
-                                        className="w-full bg-pupr-blue hover:bg-slate-900 text-white py-8 rounded-xl font-extrabold text-base shadow-xl shadow-pupr-blue/30 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
-                                    >
-                                        {isLoading ? (
-                                            <span className="flex items-center gap-2">
-                                                <Activity className="w-5 h-5 animate-spin" />
-                                                MENYIMPAN DATA...
-                                            </span>
-                                        ) : (
-                                            'KONFIRMASI & SIMPAN KE DATABASE'
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {showModalQC && (
-                <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-[9999] p-4">
-                    <div className="bg-white rounded-sm border border-slate-300 shadow-none max-w-2xl w-full p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-800">Seleksi Stasiun untuk QC & Distribusi</h3>
-                                <p className="text-sm text-slate-500 mt-1">Pilih stasiun yang akan digunakan dalam analisis frekuensi</p>
-                            </div>
-                            <button onClick={() => setShowModalQC(false)} className="text-slate-400 hover:text-slate-600">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 mb-6">
-                            {stasiunList.map((stasiun) => {
-                                const isSelected = selectedQCStations.includes(stasiun.id);
-                                return (
-                                    <div
-                                        key={stasiun.id}
-                                        onClick={() => {
-                                            if (isSelected) {
-                                                setSelectedQCStations(prev => prev.filter(id => id !== stasiun.id));
-                                            } else {
-                                                setSelectedQCStations(prev => [...prev, stasiun.id]);
-                                            }
-                                        }}
-                                        className={`flex items-center justify-between p-4 rounded-md border-2 cursor-pointer transition-all ${isSelected ? 'border-pupr-blue bg-blue-50' : 'border-slate-100 hover:border-slate-200'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-pupr-blue border-pupr-blue' : 'border-slate-300'
-                                                }`}>
-                                                {isSelected && <Activity className="w-3 h-3 text-white" />}
-                                            </div>
-                                            <div>
-                                                <span className="font-bold text-slate-800">{stasiun.nama_stasiun}</span>
-                                                <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                                                    {stasiun.koordinat_y?.toFixed(3)}, {stasiun.koordinat_x?.toFixed(3)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="text-xs font-bold text-slate-400">
-                                            {stasiun.elevasi} m
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => setShowModalQC(false)}
-                                variant="outline"
-                                className="flex-1 rounded-md"
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                disabled={isQCLoading}
-                                onClick={async () => {
-                                    if (selectedQCStations.length === 0) {
-                                        toast.warning('Pilih minimal 1 stasiun untuk melanjutkan.');
-                                        return;
-                                    }
-
-                                    setIsQCLoading(true);
-                                    try {
-                                        useHydrologyStore.getState().setQCStatus(null);
-                                        useHydrologyStore.getState().setQCResults(null);
-
-                                        const newQcStatus: Record<string, any> = {};
-                                        const newQcResults: Record<string, any> = {};
-
-                                        for (const stasiunId of selectedQCStations) {
-                                            let allData: any[] = [];
-                                            let hasMore = true;
-                                            let page = 0;
-                                            const pageSize = 1000;
-
-                                            while (hasMore && supabase) {
-                                                const { data, error } = await supabase
-                                                    .from('master_data_hujan')
-                                                    .select('*')
-                                                    .eq('stasiun_id', stasiunId)
-                                                    .order('tanggal', { ascending: true })
-                                                    .range(page * pageSize, (page + 1) * pageSize - 1);
-
-                                                if (error) throw error;
-
-                                                if (data && data.length > 0) {
-                                                    allData = [...allData, ...data];
-                                                    if (data.length < pageSize) hasMore = false;
-                                                    else page++;
-                                                } else {
-                                                    hasMore = false;
-                                                }
-                                            }
-
-                                            if (allData.length > 0) {
-                                                const maxByYear: Record<number, number> = {};
-                                                allData.forEach(row => {
-                                                    const y = parseInt(row.tanggal.split('-')[0], 10);
-                                                    const val = typeof row.curah_hujan === 'number' ? row.curah_hujan : parseFloat(row.curah_hujan) || 0;
-                                                    if (!maxByYear[y] || val > maxByYear[y]) {
-                                                        maxByYear[y] = val;
-                                                    }
-                                                });
-
-                                                const annualMax = Object.entries(maxByYear)
-                                                    .map(([year, value]) => ({ tahun: parseInt(year, 10), hujan: value }))
-                                                    .sort((a, b) => a.tahun - b.tahun);
-
-                                                if (annualMax.length >= 10) {
-                                                    const result = runFullQC(annualMax);
-                                                    newQcStatus[stasiunId] = {
-                                                        konsisten: result.isKonsisten,
-                                                        bebasOutlier: result.isBebasOutlier,
-                                                        homogen: result.isHomogen,
-                                                    };
-                                                    newQcResults[stasiunId] = result;
-                                                } else {
-                                                    console.warn(`Stasiun ${stasiunId} memiliki kurang dari 10 tahun data.`);
-                                                }
-                                            }
-                                        }
-
-                                        if (Object.keys(newQcStatus).length > 0) {
-                                            useHydrologyStore.getState().setQCStatus(newQcStatus);
-                                            useHydrologyStore.getState().setQCResults(newQcResults);
-                                            toast.success(`${Object.keys(newQcStatus).length} stasiun berhasil dianalisis dan ditampilkan pada Dashboard Quality Control.`);
-                                        } else {
-                                            toast.warning('Tidak ada stasiun yang memenuhi syarat minimal 10 tahun data.');
-                                        }
-                                        setShowModalQC(false);
-                                    } catch (err) {
-                                        console.error('Error calculating QC:', err);
-                                        toast.error('Terjadi kesalahan saat melakukan analisis Quality Control.');
-                                    } finally {
-                                        setIsQCLoading(false);
-                                    }
-                                }}
-                                className="flex-1 rounded-md bg-pupr-blue hover:bg-teal-700"
-                            >
-                                {isQCLoading ? 'Memproses...' : 'Lanjutkan ke Distribusi'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+  const {
+    stasiunList,
+    selectedStasiun,
+    dataHujan,
+    isLoading,
+    fetchStasiun,
+    addStasiun,
+    importDataHujanBatch,
+    selectStasiun,
+    seedInitialStations,
+    updateStasiun,
+    deleteStasiun,
+    deleteDataHujanByYear,
+    updateDataHujanSingle,
+    activeRainfallSource,
+    arealRainfallAlgebraic,
+    arealRainfallThiessen,
+    arealRainfallIsohyet,
+  } = useHydrologyStore();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+
+  // Modal States
+  const [isStationModalOpen, setIsStationModalOpen] = useState(false);
+  const [editingStation, setEditingStation] = useState<StasiunHidrologi | null>(null);
+
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isInfillModalOpen, setIsInfillModalOpen] = useState(false);
+
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualCellInfo, setManualCellInfo] = useState<{ dateStr: string; currentVal: number | null }>({
+    dateStr: '',
+    currentVal: null,
+  });
+
+  const [showModalQC, setShowModalQC] = useState(false);
+  const [selectedQCStations, setSelectedQCStations] = useState<string[]>([]);
+  const [isQCLoading, setIsQCLoading] = useState(false);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchStasiun();
+  }, [fetchStasiun]);
+
+  useEffect(() => {
+    if (stasiunList.length > 0 && !selectedStasiun) {
+      selectStasiun(stasiunList[0]);
+    }
+  }, [stasiunList, selectedStasiun, selectStasiun]);
+
+  // Data display filtered by active rainfall source
+  const displayData = useMemo(() => {
+    if (activeRainfallSource === 'aljabar') return arealRainfallAlgebraic || [];
+    if (activeRainfallSource === 'thiessen') return arealRainfallThiessen || [];
+    if (activeRainfallSource === 'isohyet') return arealRainfallIsohyet || [];
+
+    if (!selectedStasiun) return [];
+    return dataHujan.filter((d) => d.stasiun_id === selectedStasiun.id);
+  }, [activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet, dataHujan, selectedStasiun]);
+
+  const availableYears = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [new Date().getFullYear()];
+    const years = new Set(displayData.map((d) => parseInt(d.tanggal.split('-')[0], 10)));
+    return Array.from(years)
+      .filter((y) => !isNaN(y))
+      .sort((a, b) => b - a);
+  }, [displayData]);
+
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+      setSelectedYear(availableYears[0]);
+    }
+  }, [availableYears, selectedYear]);
+
+  // Excel File Ingestion with Unified Sanitizer
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedStasiun) return;
+
+    const confirmed = window.confirm(
+      `Import file Excel ke stasiun "${selectedStasiun.nama_stasiun}"?\n\nFile: ${file.name}`
     );
+    if (!confirmed) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    try {
+      const data = await file.arrayBuffer();
+      const jsonData = await parseExcelData<{ Tanggal?: string; 'Curah Hujan (mm)'?: any; col1?: string; col2?: any }>(data, 4);
+
+      const sanitizedRecords: Omit<DataHujan, 'id' | 'created_at'>[] = [];
+      let extremeCount = 0;
+
+      jsonData.forEach((row) => {
+        const rawDate = row.Tanggal || row.col1;
+        const rawRain = row['Curah Hujan (mm)'] !== undefined ? row['Curah Hujan (mm)'] : row.col2;
+
+        if (!rawDate) return;
+
+        const { val, error } = parseRainfallValue(rawRain);
+        if (error || val === null) return;
+
+        if (val > 300) extremeCount++;
+
+        sanitizedRecords.push({
+          stasiun_id: selectedStasiun.id,
+          tanggal: String(rawDate).trim(),
+          curah_hujan: val,
+        });
+      });
+
+      if (sanitizedRecords.length === 0) {
+        toast.warning('Tidak ada data curah hujan valid yang ditemukan pada file Excel.');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
+      if (extremeCount > 0) {
+        toast.warning(`Perhatian: Terdeteksi ${extremeCount} data curah hujan sangat lebat (> 300 mm/hari).`);
+      }
+
+      await importDataHujanBatch(sanitizedRecords);
+      toast.success(`Berhasil mengimpor ${sanitizedRecords.length} data curah hujan.`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Gagal membaca file Excel. Pastikan format sesuai template.');
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const downloadTemplate = async () => {
+    if (!selectedStasiun) {
+      toast.warning('Pilih stasiun terlebih dahulu.');
+      return;
+    }
+    await exportHidrologiTemplate(selectedStasiun.nama_stasiun);
+  };
+
+  const handleDeleteYear = async () => {
+    if (!selectedStasiun) return;
+    const confirmed = window.confirm(
+      `⚠️ PERINGATAN INTEGRITAS DATA:\nAnda yakin ingin menghapus SELURUH data hujan untuk stasiun ${selectedStasiun.nama_stasiun} pada tahun ${selectedYear}?\n\nTindakan ini tidak dapat dibatalkan!`
+    );
+    if (confirmed) {
+      try {
+        await deleteDataHujanByYear(selectedStasiun.id, selectedYear);
+        toast.success(`Data tahun ${selectedYear} berhasil dihapus.`);
+      } catch (err: any) {
+        toast.error(err.message || 'Gagal menghapus data tahun ini.');
+      }
+    }
+  };
+
+  const handleDeleteStation = async (stasiun: StasiunHidrologi) => {
+    const confirmed = window.confirm(
+      `⚠️ PERINGATAN PENGHAPUSAN STASIUN:\nMenghapus stasiun "${stasiun.nama_stasiun}" akan menghapus seluruh data curah hujan historis yang terhubung secara permanen!\n\nLanjutkan penghapusan stasiun ini?`
+    );
+    if (confirmed) {
+      try {
+        await deleteStasiun(stasiun.id);
+        toast.success(`Stasiun "${stasiun.nama_stasiun}" berhasil dihapus.`);
+      } catch (err: any) {
+        toast.error(err.message || 'Gagal menghapus stasiun.');
+      }
+    }
+  };
+
+  // Open interactive manual entry modal on cell click
+  const handleCellClick = (dateStr: string, currentVal: number | null) => {
+    if (!selectedStasiun) return;
+    setManualCellInfo({ dateStr, currentVal });
+    setIsManualModalOpen(true);
+  };
+
+  const annualMaximums = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+    const maxByYear: Record<number, number> = {};
+    displayData.forEach((row) => {
+      const [yyyy] = row.tanggal.split('-');
+      const y = parseInt(yyyy, 10);
+      if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) {
+        maxByYear[y] = row.curah_hujan;
+      }
+    });
+    return Object.entries(maxByYear)
+      .map(([year, curah_hujan]) => ({ tahun: parseInt(year, 10), curah_hujan }))
+      .sort((a, b) => b.tahun - a.tahun);
+  }, [displayData]);
+
+  const handleHubungkanDistribusi = () => {
+    if (annualMaximums.length === 0) {
+      toast.warning('Tidak ada data maksimum tahunan untuk dihubungkan.');
+      return;
+    }
+    const annualMaxArray = annualMaximums.map((m) => m.curah_hujan);
+    useHydrologyStore.setState({
+      hasilThiessen: {
+        stasiunConfigs: [],
+        totalLuas: 0,
+        hujanRataRataDAS: annualMaxArray,
+      },
+    });
+    toast.success('Data hujan maksimum berhasil dihubungkan ke modul Analisis Frekuensi.');
+  };
+
+  const isCloudConnected = !!supabase;
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Top Banner: Status & Action Bar */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-200">
+            <Database className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-800">Master Data Curah Hujan Harian</h2>
+              <span
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isCloudConnected
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isCloudConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                {isCloudConnected ? 'Cloud Supabase Terhubung' : 'Penyimpanan Lokal Aktif'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Basis data primer time-series hidrologi SNI dengan validasi batas fisik terpadu.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {stasiunList.length >= 1 && (
+            <Button
+              onClick={() => {
+                setSelectedQCStations(stasiunList.map((s) => s.id));
+                setShowModalQC(true);
+              }}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              <Activity className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+              Quality Control (QC)
+            </Button>
+          )}
+
+          <Button onClick={downloadTemplate} variant="outline" size="sm" className="text-xs">
+            <Download className="w-3.5 h-3.5 mr-1.5 text-slate-600" />
+            Template Excel
+          </Button>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx, .xls"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!selectedStasiun}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            <Upload className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
+            Import Excel
+          </Button>
+
+          <Button
+            onClick={() => setIsBulkModalOpen(true)}
+            disabled={!selectedStasiun}
+            size="sm"
+            className="text-xs bg-blue-700 hover:bg-blue-800 text-white"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-300" />
+            Bulk / OCR PDF
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Grid: Station Selector (Left) & Rainfall Matrix (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Panel: Station List */}
+        <div className="lg:col-span-4 flex flex-col gap-3">
+          <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-blue-700" />
+              <h3 className="font-bold text-slate-800 text-sm">Daftar Stasiun Hujan</h3>
+              <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                {stasiunList.length}
+              </span>
+            </div>
+            <Button
+              onClick={() => {
+                setEditingStation(null);
+                setIsStationModalOpen(true);
+              }}
+              size="sm"
+              className="text-xs bg-blue-700 hover:bg-blue-800 text-white h-8 px-2.5"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Stasiun
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto pr-1">
+            {stasiunList.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-lg p-6 text-center text-slate-500">
+                <CloudRain className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs font-medium">Belum ada stasiun pengamatan.</p>
+                <Button
+                  onClick={async () => {
+                    await seedInitialStations();
+                    toast.success('Berhasil memuat stasiun pilot.');
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 text-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
+                  Muat Stasiun Pilot
+                </Button>
+              </div>
+            ) : (
+              stasiunList.map((stasiun) => {
+                const isActive = selectedStasiun?.id === stasiun.id;
+                return (
+                  <div
+                    key={stasiun.id}
+                    onClick={() => selectStasiun(stasiun)}
+                    className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-blue-50/80 border-blue-500 shadow-sm ring-1 ring-blue-500'
+                        : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              isActive ? 'bg-blue-600' : 'bg-slate-300'
+                            }`}
+                          />
+                          <h4 className="font-bold text-sm text-slate-800 truncate">
+                            {stasiun.nama_stasiun}
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-1 truncate">
+                          {stasiun.keterangan || 'Pos Pengamatan Hujan'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 ml-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingStation(stasiun);
+                            setIsStationModalOpen(true);
+                          }}
+                          className="p-1 text-slate-400 hover:text-blue-700 hover:bg-white rounded transition-colors"
+                          title="Edit Stasiun"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteStation(stasiun);
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-white rounded transition-colors"
+                          title="Hapus Stasiun"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-600">
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">Elevasi:</span>
+                        <span className="font-semibold font-mono">
+                          {stasiun.elevasi !== null ? `${stasiun.elevasi} mdpl` : '-'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">Koordinat:</span>
+                        <span className="font-semibold font-mono truncate block">
+                          {stasiun.koordinat_y !== null && stasiun.koordinat_x !== null
+                            ? `${stasiun.koordinat_y.toFixed(2)}, ${stasiun.koordinat_x.toFixed(2)}`
+                            : '-'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Right Panel: Daily Rainfall Matrix */}
+        <div className="lg:col-span-8 flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+          {!selectedStasiun ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-500">
+              <CloudRain className="w-12 h-12 text-slate-300 mb-3" />
+              <h3 className="font-bold text-slate-700 text-base">Belum Ada Stasiun Terpilih</h3>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">
+                Pilih stasiun pada panel sebelah kiri untuk menampilkan dan mengelola data curah hujan.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Matrix Header */}
+              <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-wrap justify-between items-center gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CloudRain className="w-4 h-4 text-blue-700" />
+                    <h3 className="font-bold text-slate-800 text-sm">
+                      Matriks Curah Hujan Harian (31 x 12)
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Stasiun: <span className="font-semibold text-slate-700">{selectedStasiun.nama_stasiun}</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Year Selector */}
+                  <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-slate-300 text-xs">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="font-semibold text-slate-600">Tahun:</span>
+                    <div className="relative">
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                        className="appearance-none bg-transparent font-bold text-slate-800 pr-5 pl-1 py-0.5 cursor-pointer outline-none font-mono"
+                      >
+                        {availableYears.map((yr) => (
+                          <option key={yr} value={yr}>
+                            {yr}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <Button
+                    onClick={() => setIsInfillModalOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8"
+                  >
+                    <Wand2 className="w-3.5 h-3.5 mr-1 text-indigo-600" />
+                    Isi Kosong
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      setManualCellInfo({ dateStr: '', currentVal: null });
+                      setIsManualModalOpen(true);
+                    }}
+                    size="sm"
+                    className="text-xs bg-blue-700 hover:bg-blue-800 text-white h-8"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Input Hari
+                  </Button>
+
+                  <div className="h-5 w-px bg-slate-300 mx-0.5" />
+
+                  <Button
+                    onClick={handleDeleteYear}
+                    disabled={dataHujan.length === 0}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8 border-rose-200 text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                    Hapus Tahun Ini
+                  </Button>
+                </div>
+              </div>
+
+              {/* Matrix Content */}
+              <div className="p-4 sm:p-6 bg-slate-50/30 flex-1 overflow-auto">
+                <DailyRainfallMatrix
+                  data={displayData}
+                  year={selectedYear}
+                  onCellClick={handleCellClick}
+                />
+
+                {/* Annual Maximum Summary Table */}
+                {annualMaximums.length > 0 && (
+                  <div className="mt-6 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="p-3.5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Rekapitulasi Hujan Maksimum Tahunan ({annualMaximums.length} Tahun)
+                      </span>
+                      <Button
+                        onClick={handleHubungkanDistribusi}
+                        size="sm"
+                        className="text-xs h-7 bg-teal-600 hover:bg-teal-700 text-white"
+                      >
+                        <Activity className="w-3 h-3 mr-1" />
+                        Hubungkan ke Analisis Frekuensi
+                      </Button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-200 text-slate-600">
+                            {annualMaximums.slice(0, 15).map((m) => (
+                              <th key={m.tahun} className="py-2 px-2.5 text-center font-bold border-r border-slate-200">
+                                {m.tahun}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            {annualMaximums.slice(0, 15).map((m) => (
+                              <td
+                                key={m.tahun}
+                                className="py-2.5 px-2.5 text-center font-bold text-blue-700 tabular-nums border-r border-slate-200 font-mono"
+                              >
+                                {m.curah_hujan.toFixed(1)}
+                              </td>
+                            ))}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quality Control Widget */}
+              {dataHujan.length >= 10 && (
+                <div className="p-4 border-t border-slate-200 bg-slate-50/50">
+                  <DataQualityDashboard />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      <StationModal
+        isOpen={isStationModalOpen}
+        onClose={() => {
+          setIsStationModalOpen(false);
+          setEditingStation(null);
+        }}
+        editingStation={editingStation}
+        isLoading={isLoading}
+        onSave={async (payload) => {
+          if (editingStation) {
+            await updateStasiun(editingStation.id, payload);
+            toast.success(`Stasiun "${payload.nama_stasiun}" berhasil diperbarui.`);
+          } else {
+            await addStasiun(payload);
+            toast.success(`Stasiun "${payload.nama_stasiun}" berhasil ditambahkan.`);
+          }
+        }}
+      />
+
+      {selectedStasiun && (
+        <>
+          <BulkPasteModal
+            isOpen={isBulkModalOpen}
+            onClose={() => setIsBulkModalOpen(false)}
+            stasiunId={selectedStasiun.id}
+            stasiunName={selectedStasiun.nama_stasiun}
+            onImport={async (records, onProgress) => {
+              await importDataHujanBatch(records, onProgress);
+            }}
+          />
+
+          <ManualEntryModal
+            isOpen={isManualModalOpen}
+            onClose={() => setIsManualModalOpen(false)}
+            stasiunId={selectedStasiun.id}
+            stasiunName={selectedStasiun.nama_stasiun}
+            initialDate={manualCellInfo.dateStr}
+            initialValue={manualCellInfo.currentVal}
+            isLoading={isLoading}
+            onSave={async (stasiunId, tanggal, curah_hujan) => {
+              await updateDataHujanSingle(stasiunId, tanggal, curah_hujan);
+              toast.success(`Data tanggal ${tanggal} (${curah_hujan} mm) berhasil disimpan.`);
+            }}
+          />
+
+          <InfillModal
+            isOpen={isInfillModalOpen}
+            onClose={() => setIsInfillModalOpen(false)}
+            targetStation={selectedStasiun}
+            allStations={stasiunList}
+            dataHujan={dataHujan}
+            onApplyInfill={async (infilledRecords) => {
+              await importDataHujanBatch(infilledRecords);
+              toast.success(`Berhasil menerapkan ${infilledRecords.length} data hasil estimasi.`);
+            }}
+          />
+        </>
+      )}
+
+      {/* QC Modal */}
+      {showModalQC && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 text-blue-800 rounded-lg">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-lg">Quality Control Hidrologi (SNI)</h3>
+                  <p className="text-xs text-slate-500">Uji Konsistensi (RAPS), Outlier (Grubbs-Beck), & Homogenitas</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-600">
+                Pilih stasiun hujan yang akan diuji validitas datanya sebelum digunakan dalam Analisis Frekuensi:
+              </p>
+              <div className="max-h-56 overflow-y-auto space-y-2 border border-slate-200 rounded-lg p-3">
+                {stasiunList.map((stasiun) => (
+                  <label
+                    key={stasiun.id}
+                    className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer p-1.5 hover:bg-slate-50 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedQCStations.includes(stasiun.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedQCStations([...selectedQCStations, stasiun.id]);
+                        } else {
+                          setSelectedQCStations(selectedQCStations.filter((id) => id !== stasiun.id));
+                        }
+                      }}
+                      className="rounded text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="font-semibold">{stasiun.nama_stasiun}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50/50">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowModalQC(false)}
+                disabled={isQCLoading}
+              >
+                Batal
+              </Button>
+              <Button
+                size="sm"
+                disabled={isQCLoading || selectedQCStations.length === 0}
+                onClick={async () => {
+                  setIsQCLoading(true);
+                  try {
+                    const newQcStatus: Record<string, any> = {};
+                    const newQcResults: Record<string, any> = {};
+
+                    for (const stasiunId of selectedQCStations) {
+                      const records = dataHujan.filter((d) => d.stasiun_id === stasiunId);
+                      const maxByYear: Record<number, number> = {};
+
+                      records.forEach((row) => {
+                        const y = parseInt(row.tanggal.split('-')[0], 10);
+                        const val = Number(row.curah_hujan) || 0;
+                        if (!maxByYear[y] || val > maxByYear[y]) {
+                          maxByYear[y] = val;
+                        }
+                      });
+
+                      const annualMax = Object.entries(maxByYear)
+                        .map(([yr, val]) => ({ tahun: parseInt(yr, 10), hujan: val }))
+                        .sort((a, b) => a.tahun - b.tahun);
+
+                      if (annualMax.length >= 5) {
+                        const result = runFullQC(annualMax);
+                        newQcStatus[stasiunId] = {
+                          konsisten: result.isKonsisten,
+                          bebasOutlier: result.isBebasOutlier,
+                          homogen: result.isHomogen,
+                        };
+                        newQcResults[stasiunId] = result;
+                      }
+                    }
+
+                    if (Object.keys(newQcStatus).length > 0) {
+                      useHydrologyStore.getState().setQCStatus(newQcStatus);
+                      useHydrologyStore.getState().setQCResults(newQcResults);
+                      toast.success(
+                        `Analisis QC berhasil dihitung untuk ${Object.keys(newQcStatus).length} stasiun.`
+                      );
+                    } else {
+                      toast.warning('Data tahunan belum mencukupi (minimal 5 tahun data).');
+                    }
+                    setShowModalQC(false);
+                  } catch (err: any) {
+                    toast.error('Gagal menjalankan Quality Control.');
+                  } finally {
+                    setIsQCLoading(false);
+                  }
+                }}
+                className="bg-blue-700 hover:bg-blue-800 text-white"
+              >
+                Jalankan Pengujian QC
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
+
+export default MasterHidrologiTab;

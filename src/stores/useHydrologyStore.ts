@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
 import { supabase } from '@/lib/api/supabase';
+import { chunkArray } from '@/lib/sanitizer/rainfallSanitizer';
 
 
 // --- Interfaces ---
@@ -315,7 +316,7 @@ export interface HydrologyState {
   updateStasiun: (id: string, data: Partial<StasiunHidrologi>) => Promise<void>;
   deleteStasiun: (id: string) => Promise<void>;
   addDataHujan: (data: Omit<DataHujan, 'id' | 'created_at'>) => Promise<void>;
-  importDataHujanBatch: (dataList: Omit<DataHujan, 'id' | 'created_at'>[]) => Promise<void>;
+  importDataHujanBatch: (dataList: Omit<DataHujan, 'id' | 'created_at'>[], onProgress?: (progress: number) => void) => Promise<void>;
   deleteDataHujanByYear: (stasiunId: string, year: number) => Promise<void>;
   updateDataHujanSingle: (stasiunId: string, tanggal: string, curah_hujan: number) => Promise<void>;
   selectStasiun: (stasiun: StasiunHidrologi | null) => void;
@@ -547,15 +548,42 @@ export const useHydrologyStore = create<HydrologyState>()(
     }
   },
 
-  importDataHujanBatch: async (dataList) => {
-    if (!supabase) return;
+  importDataHujanBatch: async (dataList, onProgress) => {
     set({ isLoading: true });
     try {
-      const { error } = await supabase
-        .from('master_data_hujan')
-        .upsert(dataList, { onConflict: 'stasiun_id, tanggal' });
-      
-      if (error) throw error;
+      if (!supabase) {
+        // Fallback penyimpanan lokal jika Supabase tidak dikonfigurasi / offline
+        set(state => {
+          const existingMap = new Map(state.dataHujan.map(d => [`${d.stasiun_id}_${d.tanggal}`, d]));
+          dataList.forEach(item => {
+            const key = `${item.stasiun_id}_${item.tanggal}`;
+            existingMap.set(key, {
+              id: existingMap.get(key)?.id || `local_${Date.now()}_${Math.random()}`,
+              ...item
+            });
+          });
+          return { dataHujan: Array.from(existingMap.values()) };
+        });
+        if (onProgress) onProgress(100);
+        return;
+      }
+
+      // Chunking batch per 365 baris untuk stabilitas jaringan
+      const chunks = chunkArray(dataList, 365);
+      const totalChunks = chunks.length;
+
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = chunks[i];
+        const { error } = await supabase
+          .from('master_data_hujan')
+          .upsert(chunk, { onConflict: 'stasiun_id, tanggal' });
+        
+        if (error) throw error;
+        if (onProgress) {
+          onProgress(Math.round(((i + 1) / totalChunks) * 100));
+        }
+      }
+
       // Refresh current view if needed
       const currentStasiun = get().selectedStasiun;
       if (currentStasiun) {
