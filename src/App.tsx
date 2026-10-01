@@ -73,11 +73,16 @@ const AppLayout: React.FC = () => {
 
   useEffect(() => {
     const handleNavigateToTab = (e: CustomEvent) => {
-      const tabPath = e.detail as string;
-      if (Object.values(Tab).includes(tabPath as Tab)) {
-        navigate(tabPath);
-      } else if (tabPath in Tab) { // Fallback if using old enum keys
-        navigate(Tab[tabPath as keyof typeof Tab]);
+      const tabDetail = (e.detail as string) || '';
+      const [path, query] = tabDetail.split('?');
+      const search = query ? `?${query}` : '';
+
+      if (Object.values(Tab).includes(path as Tab)) {
+        navigate(path + search);
+      } else if (path in Tab) { // Fallback if using old enum keys
+        navigate(Tab[path as keyof typeof Tab] + search);
+      } else if (path.startsWith('/')) {
+        navigate(tabDetail);
       }
     };
     window.addEventListener('navigateToTab', handleNavigateToTab as EventListener);
@@ -177,7 +182,7 @@ const AppLayout: React.FC = () => {
             <React.Suspense fallback={<TabFallback />}>
               <Routes>
                 <Route path="/" element={<Navigate to={Tab.MASTER} replace />} />
-                <Route path={Tab.WORKFLOW} element={<div className="h-[800px] w-full"><WorkflowCanvas /></div>} />
+                <Route path={Tab.WORKFLOW} element={<div className="w-full min-h-[750px]"><WorkflowCanvas /></div>} />
                 <Route path={Tab.SALURAN} element={<ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />} />
                 <Route path={Tab.BANJIR} element={<FloodAnalysisTab onConsultAI={() => {
                   setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');

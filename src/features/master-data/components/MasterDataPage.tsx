@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { Database, CloudRain, MapPin, LayoutDashboard, Building2 } from 'lucide-react';
 import { MasterHidrologiTab } from './MasterHidrologiTab';
@@ -9,7 +10,22 @@ import { FormIdentitasLokasi } from './FormIdentitasLokasi';
 type TabType = 'dashboard' | 'identitas' | 'data-hujan' | 'parameter-spasial';
 
 export const MasterDataPage: React.FC = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('identitas');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      if (tabParam === 'qc' || tabParam === 'satelit' || tabParam === 'hujan') {
+        setActiveTab('data-hujan');
+      } else if (tabParam === 'spasial' || tabParam === 'tutupan' || tabParam === 'karakteristik') {
+        setActiveTab('parameter-spasial');
+      } else if (['dashboard', 'identitas', 'data-hujan', 'parameter-spasial'].includes(tabParam)) {
+        setActiveTab(tabParam as TabType);
+      }
+    }
+  }, [location.search]);
 
   const tabs = [
     { id: 'identitas' as TabType, label: 'Identitas Lokasi', icon: Building2 },

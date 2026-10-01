@@ -1,205 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { X, Calculator, Waves, CloudRain, ShieldCheck, TrendingUp, Compass, Settings2, Info, ArrowRightLeft, FileJson, CheckCircle2, Sparkles, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  X,
+  Info,
+  ArrowRightLeft,
+  FileJson,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ArrowUpRight,
+  BookOpen
+} from 'lucide-react';
 import { useWorkflowStore } from '../stores/useWorkflowStore';
-
-// Definisi MetaData kaya untuk setiap modul
-type ModuleMeta = {
-  title: string;
-  icon: React.ReactNode;
-  targetTab: string; // Navigasi ke main app Tab
-  description: string;
-  algorithm: string;
-  inputs: string[];
-  outputs: string[];
-  status: 'active' | 'pending' | 'completed';
-};
-
-const moduleDatabase: Record<string, ModuleMeta> = {
-  identitas: {
-    title: 'Identitas Proyek & Lokasi',
-    icon: <Info size={24} />,
-    targetTab: 'MASTER',
-    description: 'Data identitas proyek dan administrasi wilayah DAS.',
-    algorithm: 'Form input manual → Simpan ke Zustand store & Supabase',
-    inputs: ['Nama Proyek', 'Provinsi/Kabupaten/Kecamatan/Desa', 'Koordinat GPS'],
-    outputs: ['identitasLokasi: IdentitasLokasi'],
-    status: 'completed'
-  },
-  hujan: {
-    title: 'Data Hujan Multi-Sumber',
-    icon: <CloudRain size={24} />,
-    targetTab: 'MASTER',
-    description: 'Ingestion data curah hujan via manual entry, Excel/CSV, bulk paste matrix, dan PDF OCR (Gemini Multimodal).',
-    algorithm: 'Multi-source ingestion (csvParser.ts, geminiService.ts)',
-    inputs: ['Data Hujan Excel/CSV', 'PDF Scan (Gemini OCR)', 'Bulk Paste Matrix', 'Nama & Koordinat Stasiun'],
-    outputs: ['stasiunList: StasiunHidrologi[]', 'dataHujan: DataHujan[]'],
-    status: 'completed'
-  },
-  spasial: {
-    title: 'Karakteristik & Spasial DAS',
-    icon: <Compass size={24} />,
-    targetTab: 'MASTER',
-    description: 'Parameter fisik DAS dan analisis spasial WebGIS (delineasi otomatis, sungai GeoJSON, CHIRPS zonal).',
-    algorithm: 'WebGIS geoprocessing engine (Auto-delineation DEM)',
-    inputs: ['Luas DAS (A)', 'Panjang Sungai (L)', 'GeoJSON DAS & Sungai', 'DEM Upload'],
-    outputs: ['morfometriDAS: MorfometriDAS', 'spatialData: SpatialData'],
-    status: 'completed'
-  },
-  tutupan: {
-    title: 'Tutupan Lahan',
-    icon: <Settings2 size={24} />,
-    targetTab: 'MASTER',
-    description: 'Parameter pengaliran/infiltrasi (Koefisien C runoff).',
-    algorithm: 'Weighted average calculation untuk Koefisien C',
-    inputs: ['Jenis Lahan', 'Luas Lahan'],
-    outputs: ['tutupanLahan: TutupanLahan', 'landCoverParams: LandCoverParameters'],
-    status: 'completed'
-  },
-  qc: {
-    title: 'Quality Control (QC)',
-    icon: <ShieldCheck size={24} />,
-    targetTab: 'MASTER',
-    description: 'Uji kelayakan data hujan (Outlier, Konsistensi, Homogenitas) dengan sinkronisasi Dashboard Kualitas Data.',
-    algorithm: 'Outlier (Kn), Konsistensi (RAPS), Homogenitas (T/F-Test)',
-    inputs: ['state.dataHujan', 'Pilihan Stasiun'],
-    outputs: ['qcResults: Record<string, QualityControlResults>', 'Status Lulus/Gagal'],
-    status: 'completed'
-  },
-  thiessen: {
-    title: 'Curah Hujan Wilayah',
-    icon: <CloudRain size={24} />,
-    targetTab: 'FREKUENSI',
-    description: 'Menghitung hujan perwakilan wilayah metode Polygon Thiessen.',
-    algorithm: 'CHw = Σ (CH Stasiun × Luas Pengaruh) / Luas Total DAS',
-    inputs: ['Data Hujan Tervalidasi', 'Luas Area Pengaruh Stasiun'],
-    outputs: ['hasilThiessen: HasilThiessen'],
-    status: 'completed'
-  },
-  satelit: {
-    title: 'Infilling Data (CHIRPS)',
-    icon: <CloudRain size={24} />,
-    targetTab: 'MASTER',
-    description: 'Ekstraksi data hujan satelit CHIRPS dan pengisian data kosong (missing data infilling).',
-    algorithm: 'CHIRPS zonal extraction API & Infilling algorithm',
-    inputs: ['Koordinat DAS', 'Rentang Tahun', 'Data Hujan (dengan gap)'],
-    outputs: ['dataSatelit: DataCHIRPS[]', 'dataHujanInfilled: DataHujan[]'],
-    status: 'completed'
-  },
-  frekuensi: {
-    title: 'Analisis Frekuensi',
-    icon: <TrendingUp size={24} />,
-    targetTab: 'FREKUENSI',
-    description: 'Menghitung Curah Hujan Rencana kala ulang (Tr) 2–100 tahun dengan uji kecocokan distribusi.',
-    algorithm: 'Normal, Log Normal, Gumbel, Log Pearson III, Smirnov-Kolmogorov',
-    inputs: ['Hujan Maksimum Tahunan (dari Thiessen)'],
-    outputs: ['hasilAnalisisFrekuensi: HasilAnalisisFrekuensi', 'curahHujanRencana: number[]'],
-    status: 'completed'
-  },
-  arf: {
-    title: 'Areal Reduction Factor',
-    icon: <ArrowRightLeft size={24} />,
-    targetTab: 'FREKUENSI',
-    description: 'Koreksi pengurangan hujan titik ke hujan area DAS.',
-    algorithm: 'ARF = 1 - (0.048 × A^0.5)',
-    inputs: ['curahHujanRencana', 'morfometriDAS.luas'],
-    outputs: ['hasilARF: HasilARF (Hujan Rencana Terkoreksi)'],
-    status: 'completed'
-  },
-  distribusi: {
-    title: 'Distribusi & Hujan Efektif',
-    icon: <TrendingUp size={24} />,
-    targetTab: 'BANJIR',
-    description: 'Memecah hujan harian ke jam-jaman (Mononobe) dan kalkulasi hujan efektif.',
-    algorithm: 'PT = R24/t × (t/T)^(2/3), Hujan Efektif = PT × C',
-    inputs: ['Hujan Terkoreksi ARF', 'landCoverParams.C', 'Durasi Hujan'],
-    outputs: ['distribusiHujanJamJaman: number[]', 'hujanEfektif: number[]'],
-    status: 'completed'
-  },
-  banjir: {
-    title: 'Modul Banjir Rencana',
-    icon: <Waves size={24} />,
-    targetTab: 'BANJIR',
-    description: 'Simulasi Hidrograf Satuan Sintetis (HSS Nakayasu, Snyder, SCS).',
-    algorithm: 'Konvolusi: Q = Σ (U × Pe)',
-    inputs: ['state.hujanEfektif', 'morfometriDAS (L, A, S)'],
-    outputs: ['hasilBanjir: HasilBanjir (Q Peak, Ordinat HSS)'],
-    status: 'completed'
-  },
-  neraca: {
-    title: 'Modul Neraca Air',
-    icon: <Waves size={24} />,
-    targetTab: 'NERACA',
-    description: 'Simulasi ketersediaan air andalan metode FJ Mock.',
-    algorithm: 'Soil Moisture Balance → Surplus/Defisit → Baseflow → Runoff',
-    inputs: ['Hujan Bulanan (Thiessen)', 'Evapotranspirasi', 'Water Holding Capacity'],
-    outputs: ['hasilMock: HasilMock', 'Debit Andalan (Q80)'],
-    status: 'completed'
-  },
-  embung: {
-    title: 'Modul Perencanaan Embung',
-    icon: <TrendingUp size={24} />,
-    targetTab: 'EMBUNG',
-    description: 'Penelusuran waduk (Routing) dan desain dimensi embung dengan persistensi hasil.',
-    algorithm: 'Simulasi Storage (ΔS = Inflow - Outflow), Desain Spillway',
-    inputs: ['Debit Banjir (Q Peak)', 'Debit Andalan (Inflow)', 'Kebutuhan Air (Outflow)'],
-    outputs: ['hasilEmbung: HasilEmbung (Dimensi, Volume Efektif)'],
-    status: 'completed'
-  },
-  saluran: {
-    title: 'Kapasitas Saluran (Manning)',
-    icon: <Calculator size={24} />,
-    targetTab: 'SALURAN',
-    description: 'Analisis kapasitas hidraulik saluran terbuka metode Manning.',
-    algorithm: 'Q = (1/n) × A × R^(2/3) × S^(1/2)',
-    inputs: ['Debit Rencana (Q)', 'Geometri Saluran (B, h, m)', 'Koefisien Manning (n)'],
-    outputs: ['hasilManning: HasilManning (V, Q, Fr, freeboard)'],
-    status: 'completed'
-  },
-  dashboard: {
-    title: 'Dashboard Eksekutif',
-    icon: <TrendingUp size={24} />,
-    targetTab: 'EXEC',
-    description: 'Ringkasan eksekutif seluruh hasil analisis hidrologi dalam satu tampilan terintegrasi.',
-    algorithm: 'Aggregation & visualization via Recharts',
-    inputs: ['Seluruh State Hasil', 'Identitas Proyek'],
-    outputs: ['Dashboard Interaktif', 'Kartu Statistik Eksekutif'],
-    status: 'completed'
-  },
-  ai: {
-    title: 'AI Consultant (Gemini)',
-    icon: <Sparkles size={24} />,
-    targetTab: 'AI',
-    description: 'Penasihat teknis cerdas berbasis Gemini AI dengan RAG kontekstual dan Multimodal OCR.',
-    algorithm: 'RAG Context Building → Prompt Engineering → Gemini Pro API',
-    inputs: ['Rekapitulasi Parameter & Hasil Perhitungan', 'Context dari Modul Aktif'],
-    outputs: ['Rekomendasi Teknis SNI', 'Kesimpulan Analisis Markdown'],
-    status: 'completed'
-  },
-  ekspor: {
-    title: 'Ekspor Laporan',
-    icon: <FileText size={24} />,
-    targetTab: 'MASTER',
-    description: 'Cetak dokumen PDF dan Excel secara offline dari seluruh modul.',
-    algorithm: 'react-to-pdf, exceljs',
-    inputs: ['DOM Elements', 'JSON State', 'Dashboard Data'],
-    outputs: ['LaporanBanjir.pdf', 'DataNeraca.xlsx'],
-    status: 'completed'
-  }
-};
+import { useHydrologyStore } from '../stores/useHydrologyStore';
+import { computeWorkflowStatus, ModuleId } from '@/features/workflow/utils/workflowStatusEngine';
 
 export function SideDrawer() {
   const { activeModule, setActiveModule } = useWorkflowStore();
+  const hydroState = useHydrologyStore();
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  
+
   // Local state for internal drawer tabs
-  const [drawerTab, setDrawerTab] = useState<'info' | 'flow'>('info');
+  const [drawerTab, setDrawerTab] = useState<'info' | 'flow' | 'prereq'>('info');
+
+  // Compute live workflow statuses
+  const workflowData = computeWorkflowStatus(hydroState);
+  const currentModuleInfo = activeModule ? workflowData.modules[activeModule as ModuleId] : null;
 
   // Smooth mount/unmount logic
   useEffect(() => {
     if (activeModule) {
       setShouldRender(true);
-      setDrawerTab('info'); // Reset tab on new module
+      setDrawerTab('info');
       const timer = setTimeout(() => setIsAnimating(true), 10);
       return () => clearTimeout(timer);
     } else {
@@ -209,134 +41,203 @@ export function SideDrawer() {
     }
   }, [activeModule]);
 
-  if (!shouldRender) return null;
+  if (!shouldRender || !currentModuleInfo) return null;
 
   const handleClose = () => setActiveModule(null);
 
-  // Safely get module data
-  const meta: ModuleMeta = activeModule && moduleDatabase[activeModule] 
-    ? moduleDatabase[activeModule] 
-    : {
-        title: 'Modul Sistem',
-        icon: <Settings2 size={24} />,
-        targetTab: 'MASTER',
-        description: 'Detail modul tidak ditemukan.',
-        algorithm: 'Unknown',
-        inputs: [], outputs: [],
-        status: 'pending'
-      };
-
-  // Navigation Logic to Main App
+  // Navigation Logic to Main App with deep-link
   const handleNavigateToModule = () => {
+    const target = currentModuleInfo.targetTab;
     setActiveModule(null);
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('navigateToTab', { detail: meta.targetTab }));
+      window.dispatchEvent(new CustomEvent('navigateToTab', { detail: target }));
     }, 150);
   };
+
+  const isSuccess = currentModuleInfo.status === 'Selesai' || currentModuleInfo.status === 'Tersedia';
+  const isReady = currentModuleInfo.statusType === 'ready';
+  const isWarning = currentModuleInfo.statusType === 'warning';
+
+  const phaseColors: Record<string, { bg: string; badge: string }> = {
+    input: { bg: 'bg-sky-700', badge: 'bg-sky-100 text-sky-800' },
+    pre: { bg: 'bg-amber-600', badge: 'bg-amber-100 text-amber-800' },
+    engine: { bg: 'bg-rose-600', badge: 'bg-rose-100 text-rose-800' },
+    module: { bg: 'bg-purple-700', badge: 'bg-purple-100 text-purple-800' },
+    output: { bg: 'bg-emerald-700', badge: 'bg-emerald-100 text-emerald-800' },
+  };
+
+  const pColor = phaseColors[currentModuleInfo.phase] || { bg: 'bg-pupr-blue', badge: 'bg-slate-100 text-slate-800' };
 
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9990] transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
+      <div
+        className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9990] transition-opacity duration-300 ${
+          isAnimating ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={handleClose}
       />
-      
-      {/* Slide-in Drawer (GovTech Style) */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-full max-w-[450px] bg-white shadow-[0_0_40px_rgba(0,0,0,0.2)] z-[9999] flex flex-col border-l-4 border-pupr-yellow transform transition-transform duration-300 ease-in-out ${isAnimating ? 'translate-x-0' : 'translate-x-full'}`}
+
+      {/* Slide-in Drawer (GovTech PUPR Standard) */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full max-w-[460px] bg-white shadow-[0_0_50px_rgba(0,0,0,0.25)] z-[9999] flex flex-col border-l-4 border-pupr-yellow transform transition-transform duration-300 ease-in-out ${
+          isAnimating ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
         {/* Header GovTech */}
-        <div className="bg-pupr-blue text-white p-6 pb-8 flex flex-col items-start shrink-0 relative overflow-hidden">
-          <div className="absolute -right-4 -bottom-4 text-white/5 transform -rotate-12 scale-[3]">
-            {meta.icon}
-          </div>
-          
-          <div className="w-full flex justify-between items-start mb-4 relative z-10">
-            <span className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full ${
-              meta.status === 'completed' ? 'bg-success/20 text-success-light border border-success/30' :
-              meta.status === 'active' ? 'bg-blue-400/20 text-blue-200 border border-blue-400/30' :
-              'bg-slate-500/20 text-slate-300 border border-slate-500/30'
-            }`}>
-              {meta.status === 'completed' ? 'Tersedia' : meta.status === 'active' ? 'Dalam Pengerjaan' : 'Antrean Integrasi'}
-            </span>
-            <button 
+        <div className={`${pColor.bg} text-white p-6 pb-6 flex flex-col items-start shrink-0 relative overflow-hidden`}>
+          <div className="w-full flex justify-between items-start mb-3 relative z-10">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded bg-white/20 text-white border border-white/30">
+                {currentModuleInfo.phaseLabel}
+              </span>
+              <span
+                className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full flex items-center gap-1 ${
+                  isSuccess
+                    ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40'
+                    : isReady
+                    ? 'bg-blue-400/20 text-blue-200 border border-blue-400/40'
+                    : isWarning
+                    ? 'bg-amber-400/20 text-amber-200 border border-amber-400/40'
+                    : 'bg-slate-400/20 text-slate-200 border border-slate-400/40'
+                }`}
+              >
+                {isSuccess ? (
+                  <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+                ) : isReady ? (
+                  <ArrowUpRight className="w-3 h-3 text-blue-300" />
+                ) : isWarning ? (
+                  <AlertCircle className="w-3 h-3 text-amber-300" />
+                ) : (
+                  <Clock className="w-3 h-3 text-slate-300" />
+                )}
+                {currentModuleInfo.status}
+              </span>
+            </div>
+
+            <button
               onClick={handleClose}
-              className="p-1.5 hover:bg-white/20 rounded-md transition-colors text-slate-300 hover:text-white"
+              className="p-1.5 hover:bg-white/20 rounded-md transition-colors text-slate-200 hover:text-white"
               aria-label="Tutup panel"
             >
-              <X size={24} />
+              <X size={22} />
             </button>
           </div>
-          
-          <div className="relative z-10 w-full pr-4">
-            <h2 className="font-extrabold text-2xl flex items-center gap-3 leading-tight tracking-tight">
-              {meta.title}
+
+          <div className="relative z-10 w-full pr-2">
+            <h2 className="font-extrabold text-xl leading-snug tracking-tight text-white">
+              {currentModuleInfo.label}
             </h2>
+            <p className="text-xs text-slate-200 mt-1 line-clamp-1">
+              {currentModuleInfo.shortName} • Tahap {currentModuleInfo.order} dari 17
+            </p>
+          </div>
+        </div>
+
+        {/* Live Parameter State Banner */}
+        <div className="bg-slate-50 border-b border-slate-200 p-4 shrink-0">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Status Nilai Saat Ini (Live Payload)
+          </div>
+          <div className="font-mono text-xs font-semibold text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm leading-relaxed">
+            {currentModuleInfo.metricSummary}
           </div>
         </div>
 
         {/* Drawer Tabs */}
         <div className="flex border-b border-slate-200 bg-slate-50 shrink-0 shadow-sm relative z-20">
-          <button 
+          <button
             onClick={() => setDrawerTab('info')}
-            className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-colors ${
-              drawerTab === 'info' ? 'border-pupr-blue text-pupr-blue bg-blue-50/50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+            className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+              drawerTab === 'info'
+                ? 'border-pupr-blue text-pupr-blue bg-white shadow-sm'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/70'
             }`}
           >
-            <Info size={18} />
-            Informasi Modul
+            <Info size={15} />
+            Fungsi & Standar
           </button>
-          <button 
+          <button
             onClick={() => setDrawerTab('flow')}
-            className={`flex-1 py-3.5 text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-colors ${
-              drawerTab === 'flow' ? 'border-pupr-blue text-pupr-blue bg-blue-50/50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+            className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+              drawerTab === 'flow'
+                ? 'border-pupr-blue text-pupr-blue bg-white shadow-sm'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/70'
             }`}
           >
-            <ArrowRightLeft size={18} />
-            Data Flow (I/O)
+            <ArrowRightLeft size={15} />
+            I/O Data Flow
+          </button>
+          <button
+            onClick={() => setDrawerTab('prereq')}
+            className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+              drawerTab === 'prereq'
+                ? 'border-pupr-blue text-pupr-blue bg-white shadow-sm'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/70'
+            }`}
+          >
+            <CheckCircle2 size={15} />
+            Prasyarat
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto bg-slate-50/50">
-          
+        <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-slate-50/50">
           {/* TAB: INFO */}
           {drawerTab === 'info' && (
-            <div className="p-6 space-y-6 animate-in fade-in duration-300">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Deskripsi Fungsi</h3>
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Deskripsi Fungsi Teknis
+                </h3>
                 <p className="text-sm text-slate-700 leading-relaxed">
-                  {meta.description}
+                  {currentModuleInfo.description}
                 </p>
               </div>
 
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-400 transition-all hover:shadow-md">
-                <h3 className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <FileJson size={16} />
-                  Metode & Algoritma
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                <h3 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <FileJson size={15} />
+                  Metode & Rumus Perhitungan
                 </h3>
-                <p className="text-sm font-mono text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-100">
-                  {meta.algorithm}
+                <p className="text-xs font-mono text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200 leading-relaxed">
+                  {currentModuleInfo.algorithm}
                 </p>
               </div>
+
+              {currentModuleInfo.sniReference && (
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-pupr-blue">
+                  <h3 className="text-xs font-bold text-pupr-blue uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <BookOpen size={15} />
+                    Rujukan Standar Nasional Indonesia (SNI)
+                  </h3>
+                  <p className="text-xs font-semibold text-slate-800">
+                    {currentModuleInfo.sniReference}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {/* TAB: FLOW */}
           {drawerTab === 'flow' && (
-            <div className="p-6 space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-4 animate-in fade-in duration-200">
               {/* Inputs */}
-              <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
+              <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
                 <div className="absolute left-0 top-0 w-1.5 h-full bg-blue-500"></div>
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded uppercase tracking-wider">Input</span>
+                <h3 className="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                  <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    Input
+                  </span>
                   Dependensi Data Masuk
                 </h3>
-                <ul className="space-y-3">
-                  {meta.inputs.map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                      <div className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+                <ul className="space-y-2">
+                  {currentModuleInfo.inputs.map((item, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2.5 text-xs text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                       <span className="font-medium">{item}</span>
                     </li>
                   ))}
@@ -344,17 +245,22 @@ export function SideDrawer() {
               </div>
 
               {/* Outputs */}
-              <div className="bg-white p-5 rounded-xl border border-green-100 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
-                <div className="absolute left-0 top-0 w-1.5 h-full bg-green-500"></div>
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded uppercase tracking-wider">Output</span>
+              <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                <div className="absolute left-0 top-0 w-1.5 h-full bg-emerald-500"></div>
+                <h3 className="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                  <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    Output
+                  </span>
                   Hasil Perhitungan (Payload)
                 </h3>
-                <ul className="space-y-3">
-                  {meta.outputs.map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                      <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                      <span className="font-medium">{item}</span>
+                <ul className="space-y-2">
+                  {currentModuleInfo.outputs.map((item, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2.5 text-xs text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100"
+                    >
+                      <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                      <span className="font-medium font-mono">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -362,22 +268,56 @@ export function SideDrawer() {
             </div>
           )}
 
+          {/* TAB: PREREQUISITES */}
+          {drawerTab === 'prereq' && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h3 className="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                  Kesiapan Prasyarat Analisis
+                </h3>
+                <ul className="space-y-2.5">
+                  {currentModuleInfo.prerequisites.map((prereq, i) => (
+                    <li
+                      key={i}
+                      className={`flex items-center justify-between p-2.5 rounded-lg border text-xs font-medium ${
+                        prereq.isMet
+                          ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800'
+                          : 'bg-amber-50/70 border-amber-200 text-amber-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {prereq.isMet ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                        )}
+                        <span>{prereq.name}</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-white shadow-xs">
+                        {prereq.isMet ? 'Terpenuhi' : 'Belum Lengkap'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
-        
+
         {/* Footer Actions */}
-        <div className="p-5 border-t border-slate-200 bg-white shrink-0 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] flex gap-3 z-30 relative">
-          <button 
+        <div className="p-4 border-t border-slate-200 bg-white shrink-0 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] flex gap-3 z-30 relative">
+          <button
             onClick={handleClose}
-            className="flex-[0.8] py-3 px-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-lg font-bold text-sm transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200"
+            className="flex-[0.8] py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors shadow-sm"
           >
             Tutup
           </button>
-          <button 
+          <button
             onClick={handleNavigateToModule}
-            className="flex-[1.5] py-3 px-4 bg-pupr-blue hover:bg-blue-800 text-white rounded-lg font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-pupr-blue focus:ring-offset-2"
+            className="flex-[1.6] py-2.5 px-4 bg-pupr-blue hover:bg-blue-800 text-white rounded-xl font-bold text-xs transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-98"
           >
-            Buka Modul {meta.targetTab}
-            <ArrowRightLeft size={18} />
+            <span>Buka Modul {currentModuleInfo.shortName}</span>
+            <ArrowUpRight size={16} />
           </button>
         </div>
       </div>
