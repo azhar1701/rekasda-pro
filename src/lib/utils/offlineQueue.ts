@@ -71,7 +71,7 @@ export const addToQueue = async (url: string, method: QueuedRequest['method'], b
  */
 export const getQueue = async (): Promise<QueuedRequest[]> => {
   const allKeys = await keys();
-  const queueKeys = allKeys.filter((key) => typeof key === 'string' && key.startsWith(QUEUE_KEY_PREFIX));
+  const queueKeys = allKeys.filter((key: IDBValidKey) => typeof key === 'string' && key.startsWith(QUEUE_KEY_PREFIX));
   
   const requests: QueuedRequest[] = [];
   for (const key of queueKeys) {
@@ -87,7 +87,7 @@ export const getQueue = async (): Promise<QueuedRequest[]> => {
  */
 export const clearQueue = async () => {
   const allKeys = await keys();
-  const queueKeys = allKeys.filter((key) => typeof key === 'string' && key.startsWith(QUEUE_KEY_PREFIX));
+  const queueKeys = allKeys.filter((key: IDBValidKey) => typeof key === 'string' && key.startsWith(QUEUE_KEY_PREFIX));
   
   for (const key of queueKeys) {
     await del(key);

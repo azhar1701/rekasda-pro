@@ -154,7 +154,8 @@ describe('Rainfall Engine (SNI 2415:2016)', () => {
       const w2 = 1 / 16;
       const expected = (100 * w1 + 150 * w2) / (w1 + w2);
       
-      expect(result).toBeCloseTo(expected, 2);
+      // infillMissingData returns { value, method } object
+      expect(result.value).toBeCloseTo(expected, 2);
     });
   });
   describe('Edge Cases and Branch Coverage', () => {
@@ -164,7 +165,8 @@ describe('Rainfall Engine (SNI 2415:2016)', () => {
     });
 
     it('should handle bransby-williams method in calculateTimeConcentration', () => {
-      const result = calculateTimeConcentration({ L: 2, S: 0.01, method: 'bransby-williams' });
+      // bransby-williams requires A (catchment area in km²)
+      const result = calculateTimeConcentration({ L: 2, S: 0.01, method: 'bransby-williams', A: 10 });
       expect(result).toBeGreaterThan(0);
     });
   });

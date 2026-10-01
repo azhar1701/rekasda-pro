@@ -45,7 +45,8 @@ describe('spatialMath', () => {
         { avg: 90, value: 90 }    // (100/90) * 90 = 100
       ];
       // (100 + 100) / 2 = 100
-      expect(infillNormalRatio(targetAvg, surrounding)).toBe(100);
+      // infillNormalRatio returns { value, isLongTermMean } object
+      expect(infillNormalRatio(targetAvg, surrounding).value).toBe(100);
     });
   });
 });

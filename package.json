@@ -38,7 +38,7 @@
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
-    "idb-keyval": "^6.2.2",
+    "idb-keyval": "^6.3.0",
     "katex": "^0.16.33",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",

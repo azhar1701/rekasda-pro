@@ -6,6 +6,10 @@ def test_fj_mock_simple():
     Test FJ Mock calculation with simple inputs.
     Checks if water balance components sum up reasonably.
     """
+    # 12 months of test data (mm/bulan) — Stasiun Pilot Citanduy
+    p   = [120, 150, 180, 210, 90, 60, 40, 30, 50, 80, 130, 160]
+    pet = [100] * 12  # Evapotranspirasi potensial (mm/bulan)
+
     # 12 months of test data
     data = [
         {"month": str(i), "precipitation": p[i], "eto": pet[i], "daysInMonth": 30}
