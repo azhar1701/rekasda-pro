@@ -36,3 +36,10 @@ export {
   type ConvolutionResult,
   type HydrographPoint as ConvolutionHydrographPoint,
 } from './convolution';
+
+// Empirical Hydrographs — SNI 2415:2016 Pasal 5.3
+export {
+  generateEmpiricalHydrograph,
+  type EmpiricalHydrographPoint,
+} from './empiricalHydrograph';
+

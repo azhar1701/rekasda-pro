@@ -10,7 +10,8 @@ import {
     calculateMelchior,
     calculateHaspers,
     calculateDerWeduwen,
-    calculateRational
+    calculateRational,
+    generateEmpiricalHydrograph
 } from '@/lib/engine/flood';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from '@/hooks/useToast';
@@ -125,12 +126,17 @@ export const StepMetodeBanjir: React.FC<StepMetodeBanjirProps> = ({ onComplete }
     const handleComplete = () => {
         const method = METHODS.find(m => m.id === selectedMethod);
         if (!method) return;
+        setHasilBanjirHSS(results.hss);
+        setHasilBanjirEmpiris(results.emp);
+
         if (method.type === 'hss') {
             const selected = results.hss[selectedMethod];
             onComplete(selectedMethod, selected.hydrograph, selected.Qp);
         } else {
             const selected = results.emp[selectedMethod];
-            onComplete(selectedMethod, [], selected.Qp);
+            const tcVal = selected.tc || 1.5;
+            const empHydro = generateEmpiricalHydrograph(selectedMethod, selected.Qp, tcVal, 24);
+            onComplete(selectedMethod, empHydro, selected.Qp);
         }
     };
 

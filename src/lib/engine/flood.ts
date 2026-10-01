@@ -131,8 +131,10 @@ export const calculateHSSNakayasu = (input: HSSNakayasuInput): HSSNakayasuOutput
   const validated = HSSNakayasuInputSchema.parse(input);
   const { Ro, Alpha, A, L } = validated;
 
-  // Perhitungan Tg otomatis jika tidak diinput: Tg = 0.4 + 0.058L
-  const Tg_calc = 0.4 + 0.058 * L;
+  // Perhitungan Tg otomatis jika tidak diinput (SNI 2415:2016 Pasal 6.3):
+  // L <= 15 km: Tg = 0.21 * L^0.7
+  // L > 15 km: Tg = 0.4 + 0.058 * L
+  const Tg_calc = L <= 15 ? 0.21 * Math.pow(L, 0.7) : 0.4 + 0.058 * L;
   const Tg_used = validated.Tg || Tg_calc;
   const Tr_used = validated.Tr || (0.75 * Tg_used);
 
@@ -554,9 +556,21 @@ export const calculateConvolution = (input: ConvolutionInput): ConvolutionOutput
   const Qp = Math.max(...floodHydrograph.map(f => f.discharge));
   const peak = floodHydrograph.find(f => f.discharge === Qp);
 
+  // Hitung volume limpasan total (m³) dengan integrasi trapesium numerik
+  let totalVolume = 0;
+  for (let i = 0; i < floodHydrograph.length - 1; i++) {
+    const dtSec = (floodHydrograph[i + 1].time - floodHydrograph[i].time) * 3600;
+    const avgQ = (floodHydrograph[i].discharge + floodHydrograph[i + 1].discharge) / 2;
+    totalVolume += avgQ * dtSec;
+  }
+
   return {
     hydrograph: floodHydrograph,
     Qp: parseFloat(Qp.toFixed(3)),
-    Tp: peak?.time || 0
+    Tp: peak?.time || 0,
+    totalVolume: parseFloat(totalVolume.toFixed(2))
   };
 };
+
+export { generateEmpiricalHydrograph, type EmpiricalHydrographPoint } from './flood/empiricalHydrograph';
+

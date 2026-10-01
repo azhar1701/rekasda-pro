@@ -191,8 +191,10 @@ export const calculateHSSNakayasu = (input: HSSNakayasuInput): HSSNakayasuOutput
   const validated = HSSNakayasuInputSchema.parse(input);
   const { Ro, Tg, Tr, Alpha, A, L } = validated;
 
-  // 1. Perhitungan Tg (jika tidak diinput manual): Tg = 0.4 + 0.058 × L
-  const Tg_calc = 0.4 + 0.058 * L;
+  // 1. Perhitungan Tg (jika tidak diinput manual, SNI 2415:2016 Pasal 6.3):
+  // L <= 15 km: Tg = 0.21 * L^0.7
+  // L > 15 km: Tg = 0.4 + 0.058 * L
+  const Tg_calc = L <= 15 ? 0.21 * Math.pow(L, 0.7) : 0.4 + 0.058 * L;
   const Tg_used = Tg ?? Tg_calc;
 
   // 2. Validasi Tr: 0.5 × Tg ≤ Tr ≤ Tg (SNI 2415:2016)

@@ -354,6 +354,8 @@ export interface ConvolutionOutput {
   Qp: number;
   /** Waktu Puncak (Time to Peak) - jam */
   Tp: number;
+  /** Total Volume Limpasan Banjir (m³) */
+  totalVolume?: number;
 }
 
 /**
