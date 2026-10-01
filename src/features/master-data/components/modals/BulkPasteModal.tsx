@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 import { Upload, X, AlertCircle, AlertTriangle, CheckCircle2, FileText, Sparkles } from 'lucide-react';
 import { parseBulkMatrixText, type SanitizerResult, parseRainfallValue } from '@/lib/sanitizer/rainfallSanitizer';
@@ -143,8 +144,8 @@ export const BulkPasteModal: React.FC<BulkPasteModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -376,6 +377,7 @@ export const BulkPasteModal: React.FC<BulkPasteModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

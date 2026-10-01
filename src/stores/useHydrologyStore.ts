@@ -393,11 +393,17 @@ export const useHydrologyStore = create<HydrologyState>()(
   setCurahHujanRencana: (val: string) => set({ curahHujanRencana: val, isBanjirDirty: true, isNeracaDirty: true }),
   
   fetchStasiun: async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      // Offline mode: jika stasiunList kosong, inisialisasi default
+      const currentList = get().stasiunList;
+      if (currentList.length === 0) {
+        await get().seedInitialStations();
+      }
+      return;
+    }
     set({ isLoading: true });
     try {
       const { data, error } = await supabase
-
         .from('master_stasiun')
         .select('*')
         .order('nama_stasiun');
@@ -405,29 +411,41 @@ export const useHydrologyStore = create<HydrologyState>()(
       if (error) throw error;
       set({ stasiunList: data || [] });
     } catch (error: any) {
-      set({ error: error.message });
+      console.warn('fetchStasiun gagal, menggunakan data lokal:', error.message);
     } finally {
       set({ isLoading: false });
     }
   },
   seedInitialStations: async () => {
-    if (!supabase) return;
+    const initialStations = [
+      { nama_stasiun: 'Panjalu', koordinat_x: 108.2711, koordinat_y: -7.1242, elevasi: 730, keterangan: null },
+      { nama_stasiun: 'Panawangan', koordinat_x: 108.3842, koordinat_y: -7.0983, elevasi: 620, keterangan: null },
+      { nama_stasiun: 'Sadananya', koordinat_x: 108.3245, koordinat_y: -7.2842, elevasi: 450, keterangan: null },
+      { nama_stasiun: 'Sidamulih', koordinat_x: 108.4562, koordinat_y: -7.6542, elevasi: 120, keterangan: null },
+      { nama_stasiun: 'Tanjungsukur', koordinat_x: 108.5242, koordinat_y: -7.3452, elevasi: 50, keterangan: null },
+      { nama_stasiun: 'Cikupa', koordinat_x: 108.2145, koordinat_y: -7.4212, elevasi: 350, keterangan: null },
+      { nama_stasiun: 'Kawali', koordinat_x: 108.3562, koordinat_y: -7.1842, elevasi: 420, keterangan: null },
+      { nama_stasiun: 'Rancah', koordinat_x: 108.5123, koordinat_y: -7.2142, elevasi: 380, keterangan: null },
+      { nama_stasiun: 'Kaso', koordinat_x: 108.4212, koordinat_y: -7.2562, elevasi: 310, keterangan: null },
+      { nama_stasiun: 'Janggala', koordinat_x: 108.4842, koordinat_y: -7.3842, elevasi: 150, keterangan: null },
+      { nama_stasiun: 'Ciamis', koordinat_x: 108.3542, koordinat_y: -7.3242, elevasi: 210, keterangan: null }
+    ];
+
+    if (!supabase) {
+      const seeded = initialStations.map((s, idx) => ({
+        id: `seed_stn_${idx + 1}`,
+        ...s,
+        created_at: new Date().toISOString()
+      }));
+      set(state => ({
+        stasiunList: seeded,
+        selectedStasiun: state.selectedStasiun || seeded[0]
+      }));
+      return;
+    }
+
     set({ isLoading: true });
     try {
-      const initialStations = [
-        { nama_stasiun: 'Panjalu', koordinat_x: 108.2711, koordinat_y: -7.1242, elevasi: 730, keterangan: null },
-        { nama_stasiun: 'Panawangan', koordinat_x: 108.3842, koordinat_y: -7.0983, elevasi: 620, keterangan: null },
-        { nama_stasiun: 'Sadananya', koordinat_x: 108.3245, koordinat_y: -7.2842, elevasi: 450, keterangan: null },
-        { nama_stasiun: 'Sidamulih', koordinat_x: 108.4562, koordinat_y: -7.6542, elevasi: 120, keterangan: null },
-        { nama_stasiun: 'Tanjungsukur', koordinat_x: 108.5242, koordinat_y: -7.3452, elevasi: 50, keterangan: null },
-        { nama_stasiun: 'Cikupa', koordinat_x: 108.2145, koordinat_y: -7.4212, elevasi: 350, keterangan: null },
-        { nama_stasiun: 'Kawali', koordinat_x: 108.3562, koordinat_y: -7.1842, elevasi: 420, keterangan: null },
-        { nama_stasiun: 'Rancah', koordinat_x: 108.5123, koordinat_y: -7.2142, elevasi: 380, keterangan: null },
-        { nama_stasiun: 'Kaso', koordinat_x: 108.4212, koordinat_y: -7.2562, elevasi: 310, keterangan: null },
-        { nama_stasiun: 'Janggala', koordinat_x: 108.4842, koordinat_y: -7.3842, elevasi: 150, keterangan: null },
-        { nama_stasiun: 'Ciamis', koordinat_x: 108.3542, koordinat_y: -7.3242, elevasi: 210, keterangan: null }
-      ];
-
       const { error } = await supabase
         .from('master_stasiun')
         .insert(initialStations);
@@ -440,19 +458,39 @@ export const useHydrologyStore = create<HydrologyState>()(
       }
       await get().fetchStasiun();
     } catch (error: any) {
-      set({ error: error.message });
+      console.warn('seedInitialStations gagal ke DB, populate lokal:', error.message);
+      const seeded = initialStations.map((s, idx) => ({
+        id: `seed_stn_${idx + 1}`,
+        ...s,
+        created_at: new Date().toISOString()
+      }));
+      set(state => ({
+        stasiunList: seeded,
+        selectedStasiun: state.selectedStasiun || seeded[0]
+      }));
     } finally {
       set({ isLoading: false });
-
     }
   },
 
 
 
   addStasiun: async (stasiun) => {
-    if (!supabase) return;
     set({ isLoading: true });
     try {
+      if (!supabase) {
+        const newStation: StasiunHidrologi = {
+          id: `stn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          ...stasiun,
+          created_at: new Date().toISOString(),
+        };
+        set(state => ({
+          stasiunList: [...state.stasiunList, newStation],
+          selectedStasiun: state.selectedStasiun || newStation
+        }));
+        return;
+      }
+
       const { data, error } = await supabase
         .from('master_stasiun')
         .insert([stasiun])
@@ -464,17 +502,29 @@ export const useHydrologyStore = create<HydrologyState>()(
         set(state => ({ stasiunList: [...state.stasiunList, data[0]] }));
       }
     } catch (error: any) {
-      set({ error: error.message });
-      throw error;
+      console.warn('Supabase addStasiun gagal, simpan ke lokal:', error);
+      const fallbackStation: StasiunHidrologi = {
+        id: `stn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        ...stasiun,
+        created_at: new Date().toISOString(),
+      };
+      set(state => ({ stasiunList: [...state.stasiunList, fallbackStation] }));
     } finally {
       set({ isLoading: false });
     }
   },
 
   updateStasiun: async (id, data) => {
-    if (!supabase) return;
     set({ isLoading: true });
     try {
+      if (!supabase) {
+        set(state => ({
+          stasiunList: state.stasiunList.map(s => s.id === id ? { ...s, ...data } as StasiunHidrologi : s),
+          selectedStasiun: state.selectedStasiun?.id === id ? { ...state.selectedStasiun, ...data } as StasiunHidrologi : state.selectedStasiun
+        }));
+        return;
+      }
+
       const { data: updatedData, error } = await supabase
         .from('master_stasiun')
         .update(data)
@@ -490,35 +540,41 @@ export const useHydrologyStore = create<HydrologyState>()(
           selectedStasiun: state.selectedStasiun?.id === id ? updated : state.selectedStasiun
         }));
       } else {
-        // Fallback if select doesn't return the row but no error was thrown
         set(state => ({
           stasiunList: state.stasiunList.map(s => s.id === id ? { ...s, ...data } as any : s),
           selectedStasiun: state.selectedStasiun?.id === id ? { ...state.selectedStasiun, ...data } as any : state.selectedStasiun
         }));
       }
     } catch (error: any) {
-      set({ error: error.message });
-      throw error;
+      console.warn('Supabase updateStasiun gagal, update lokal:', error);
+      set(state => ({
+        stasiunList: state.stasiunList.map(s => s.id === id ? { ...s, ...data } as StasiunHidrologi : s),
+        selectedStasiun: state.selectedStasiun?.id === id ? { ...state.selectedStasiun, ...data } as StasiunHidrologi : state.selectedStasiun
+      }));
     } finally {
       set({ isLoading: false });
     }
   },
 
   deleteStasiun: async (id) => {
-    if (!supabase) return;
     set({ isLoading: true });
     try {
-      const { error } = await supabase
-        .from('master_stasiun')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      set(state => ({
-        stasiunList: state.stasiunList.filter(s => s.id !== id),
-        selectedStasiun: state.selectedStasiun?.id === id ? null : state.selectedStasiun,
-        dataHujan: state.selectedStasiun?.id === id ? [] : state.dataHujan
-      }));
+      if (supabase) {
+        const { error } = await supabase
+          .from('master_stasiun')
+          .delete()
+          .eq('id', id);
+        if (error) console.warn('Supabase delete stasiun error:', error);
+      }
+
+      set(state => {
+        const remaining = state.stasiunList.filter(s => s.id !== id);
+        return {
+          stasiunList: remaining,
+          selectedStasiun: state.selectedStasiun?.id === id ? (remaining[0] || null) : state.selectedStasiun,
+          dataHujan: state.dataHujan.filter(d => d.stasiun_id !== id)
+        };
+      });
     } catch (error: any) {
       set({ error: error.message });
       throw error;
@@ -528,18 +584,31 @@ export const useHydrologyStore = create<HydrologyState>()(
   },
 
   addDataHujan: async (data) => {
-    if (!supabase) return;
     set({ isLoading: true });
     try {
-      const { data: inserted, error } = await supabase
-        .from('master_data_hujan')
-        .insert([data])
-        .select();
-      
-      if (error) throw error;
-      if (inserted && inserted.length > 0) {
-        set(state => ({ dataHujan: [...state.dataHujan, inserted[0]] }));
+      if (supabase) {
+        const { data: inserted, error } = await supabase
+          .from('master_data_hujan')
+          .insert([data])
+          .select();
+        
+        if (error) console.warn('Supabase insert single error:', error);
+        if (inserted && inserted.length > 0) {
+          set(state => ({ dataHujan: [...state.dataHujan, inserted[0]] }));
+          return;
+        }
       }
+
+      // Local fallback
+      set(state => ({
+        dataHujan: [
+          ...state.dataHujan,
+          {
+            id: `local_ch_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            ...data
+          }
+        ]
+      }));
     } catch (error: any) {
       set({ error: error.message });
       throw error;
@@ -598,20 +667,26 @@ export const useHydrologyStore = create<HydrologyState>()(
   },
 
   deleteDataHujanByYear: async (stasiunId, year) => {
-    if (!supabase) return;
     set({ isLoading: true });
     try {
       const start = `${year}-01-01`;
       const end = `${year}-12-31`;
-      const { error } = await supabase
-        .from('master_data_hujan')
-        .delete()
-        .eq('stasiun_id', stasiunId)
-        .gte('tanggal', start)
-        .lte('tanggal', end);
-      
-      if (error) throw error;
-      await get().fetchDataHujan(stasiunId);
+
+      if (supabase) {
+        const { error } = await supabase
+          .from('master_data_hujan')
+          .delete()
+          .eq('stasiun_id', stasiunId)
+          .gte('tanggal', start)
+          .lte('tanggal', end);
+        if (error) console.warn('Supabase delete year error:', error);
+      }
+
+      set(state => ({
+        dataHujan: state.dataHujan.filter(
+          d => !(d.stasiun_id === stasiunId && d.tanggal >= start && d.tanggal <= end)
+        )
+      }));
     } catch (error: any) {
       set({ error: error.message });
       throw error;
@@ -621,15 +696,38 @@ export const useHydrologyStore = create<HydrologyState>()(
   },
 
   updateDataHujanSingle: async (stasiunId, tanggal, curah_hujan) => {
-    if (!supabase) return;
     set({ isLoading: true });
     try {
-      const { error } = await supabase
-        .from('master_data_hujan')
-        .upsert({ stasiun_id: stasiunId, tanggal, curah_hujan }, { onConflict: 'stasiun_id, tanggal' });
-      
-      if (error) throw error;
-      await get().fetchDataHujan(stasiunId);
+      if (supabase) {
+        const { error } = await supabase
+          .from('master_data_hujan')
+          .upsert({ stasiun_id: stasiunId, tanggal, curah_hujan }, { onConflict: 'stasiun_id, tanggal' });
+        if (error) console.warn('Supabase update single error:', error);
+      }
+
+      set(state => {
+        const existingIdx = state.dataHujan.findIndex(
+          d => d.stasiun_id === stasiunId && d.tanggal === tanggal
+        );
+        if (existingIdx >= 0) {
+          const updated = [...state.dataHujan];
+          updated[existingIdx] = { ...updated[existingIdx], curah_hujan, is_infilled: false };
+          return { dataHujan: updated };
+        } else {
+          return {
+            dataHujan: [
+              ...state.dataHujan,
+              {
+                id: `local_ch_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                stasiun_id: stasiunId,
+                tanggal,
+                curah_hujan,
+                is_infilled: false,
+              }
+            ]
+          };
+        }
+      });
     } catch (error: any) {
       set({ error: error.message });
       throw error;

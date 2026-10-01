@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useHydrologyStore, type StasiunHidrologi, type DataHujan } from '@/stores/useHydrologyStore';
 import { Button } from '@/components/ui/Button';
 import {
@@ -654,8 +655,8 @@ export const MasterHidrologiTab: React.FC = () => {
       )}
 
       {/* QC Modal */}
-      {showModalQC && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      {showModalQC && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-3">
@@ -717,7 +718,20 @@ export const MasterHidrologiTab: React.FC = () => {
                     const newQcResults: Record<string, any> = {};
 
                     for (const stasiunId of selectedQCStations) {
-                      const records = dataHujan.filter((d) => d.stasiun_id === stasiunId);
+                      let records: DataHujan[] = [];
+
+                      if (selectedStasiun && stasiunId === selectedStasiun.id) {
+                        records = dataHujan;
+                      } else if (supabase) {
+                        const { data: dbRecords } = await supabase
+                          .from('master_data_hujan')
+                          .select('*')
+                          .eq('stasiun_id', stasiunId);
+                        records = (dbRecords as DataHujan[]) || [];
+                      } else {
+                        records = dataHujan.filter((d) => d.stasiun_id === stasiunId);
+                      }
+
                       const maxByYear: Record<number, number> = {};
 
                       records.forEach((row) => {
@@ -765,7 +779,8 @@ export const MasterHidrologiTab: React.FC = () => {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
