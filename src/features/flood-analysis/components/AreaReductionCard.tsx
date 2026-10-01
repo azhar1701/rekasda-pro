@@ -14,9 +14,12 @@ export const AreaReductionCard: React.FC = () => {
     const setHasilARF = useHydrologyStore(s => s.setHasilARF);
     const curahHujanRencana = useHydrologyStore(s => s.curahHujanRencana);
 
+    const activeRainfallSource = useHydrologyStore(s => s.activeRainfallSource);
+    const isAlreadyAreal = activeRainfallSource !== 'titik';
+
     // Manual ARF override
     const [arfOverride, setArfOverride] = useState<string>('');
-    const isOverridden = arfOverride !== '' && !isNaN(parseFloat(arfOverride));
+    const isOverridden = !isAlreadyAreal && arfOverride !== '' && !isNaN(parseFloat(arfOverride));
 
     // Get point rainfall from frequency analysis or manual input
     const hujanTitik = useMemo(() => {
@@ -31,6 +34,7 @@ export const AreaReductionCard: React.FC = () => {
 
     // Calculate ARF
     const arfResult = useMemo(() => {
+        if (isAlreadyAreal) return { arf: 1.0 };
         const A = parseFloat(luasDas);
         if (!A || A <= 0 || hujanTitik <= 0) return null;
 
@@ -40,23 +44,23 @@ export const AreaReductionCard: React.FC = () => {
         } catch {
             return null;
         }
-    }, [luasDas, hujanTitik]);
+    }, [luasDas, hujanTitik, isAlreadyAreal]);
 
-    // Effective ARF (override or calculated)
-    const effectiveArf = isOverridden ? parseFloat(arfOverride) : arfResult?.arf || 0;
+    // Effective ARF (override, calculated, or 1.0 if already areal)
+    const effectiveArf = isAlreadyAreal ? 1.0 : (isOverridden ? parseFloat(arfOverride) : (arfResult?.arf || 1.0));
     const effectiveHujanDAS = hujanTitik > 0 ? Number((hujanTitik * effectiveArf).toFixed(2)) : 0;
 
     // Save to store
     const handleSave = useCallback(() => {
-        if (!arfResult && !isOverridden) return;
+        if (!isAlreadyAreal && !arfResult && !isOverridden) return;
 
         setHasilARF({
-            arfValue: arfResult?.arf || effectiveArf,
+            arfValue: effectiveArf,
             arfOverride: isOverridden ? parseFloat(arfOverride) : null,
             hujanTitik,
             hujanDAS: effectiveHujanDAS,
         });
-    }, [arfResult, isOverridden, arfOverride, hujanTitik, effectiveHujanDAS, effectiveArf, setHasilARF]);
+    }, [arfResult, isOverridden, arfOverride, hujanTitik, effectiveHujanDAS, effectiveArf, setHasilARF, isAlreadyAreal]);
 
     // Auto-save on calculation
     React.useEffect(() => {
@@ -157,6 +161,13 @@ export const AreaReductionCard: React.FC = () => {
                 <p className="text-[10px] text-amber-600 font-medium mt-2 text-center">
                     ⚠ ARF di-override manual. Klik ⟲ untuk reset ke nilai PSA 007.
                 </p>
+            )}
+
+            {isAlreadyAreal && (
+                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-[11px] text-slate-700 flex items-center gap-1.5">
+                    <span className="font-bold text-pupr-blue">ℹ️ Info SNI:</span>
+                    <span>Sumber data merupakan <b>Hujan Wilayah ({activeRainfallSource === 'thiessen' ? 'Poligon Thiessen' : activeRainfallSource === 'aljabar' ? 'Rerata Aljabar' : 'Garis Isohyet'})</b>. Nilai ARF = 1.000 untuk mencegah reduksi luas ganda.</span>
+                </div>
             )}
         </div>
     );

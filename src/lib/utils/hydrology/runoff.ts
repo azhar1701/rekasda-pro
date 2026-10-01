@@ -108,6 +108,46 @@ export function calculateEffectiveRainfallByCN(totalRainfallMm: number, CN: numb
 }
 
 /**
+ * Metode Curve Number (SCS-CN) untuk Rangkaian Hietograf Jam-jaman (Cumulative Storm Abstraction)
+ * Sesuai NRCS National Engineering Handbook (NEH-4) dan Chow et al. (1988)
+ * 
+ * Initial abstraction (Ia = 0.2S) diperhitungkan secara kumulatif terhadap akumulasi hujan badai,
+ * bukan dipotong berulang-ulang pada tiap jam.
+ * 
+ * @param hyetograph Array hujan bertahap per jam (mm)
+ * @param CN Nilai Curve Number (0 < CN < 100)
+ * @returns Array hujan efektif per jam (mm)
+ */
+export function calculateCumulativeSCSCNRunoff(hyetograph: number[], CN: number): number[] {
+  if (CN <= 0 || CN >= 100 || !hyetograph || hyetograph.length === 0) {
+    return (hyetograph || []).map(() => 0);
+  }
+
+  const S_mm = (25400 / CN) - 254;
+  const Ia = 0.2 * S_mm;
+
+  let cumP = 0;
+  let prevCumQ = 0;
+  const effectiveRainfall: number[] = [];
+
+  for (let i = 0; i < hyetograph.length; i++) {
+    const p = Math.max(0, hyetograph[i]);
+    cumP += p;
+
+    let cumQ = 0;
+    if (cumP > Ia) {
+      cumQ = Math.pow(cumP - Ia, 2) / (cumP + 0.8 * S_mm);
+    }
+
+    const incrementalQ = Math.max(0, cumQ - prevCumQ);
+    effectiveRainfall.push(parseFloat(incrementalQ.toFixed(4)));
+    prevCumQ = cumQ;
+  }
+
+  return effectiveRainfall;
+}
+
+/**
  * 3. Metode Infiltrasi Indeks (Phi-Index)
  * P_eff = P - (Phi * t)
  */
