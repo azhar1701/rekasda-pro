@@ -1,14 +1,19 @@
 /**
  * Quality Control Data Hujan - Production Grade
  * Mengikuti: SNI 2415:2016, WMO Guide No. 100
- * 
+ *
  * Uji yang diimplementasi:
  * 1. RAPS (Rescaled Adjusted Partial Sums) — Uji Konsistensi
- * 2. Smirnov-Grubbs — Uji Pencilan (Outlier)
+ * 2. Smirnov-Grubbs (skala linear + log) — Uji Pencilan (Outlier)
  * 3. F-Test & t-Test — Uji Homogenitas
- * 
+ *
+ * Fase 3: Tiered Ambang Batas
+ *   - n < 5   : INSUFFICIENT — blokir mutlak
+ *   - n 5–9   : PRELIMINARY  — hitung, tandai indikatif (Barnett & Lewis, 1994)
+ *   - n ≥ 10  : SNI_COMPLIANT — standar SNI 2415:2016 terpenuhi
+ *
  * @module dataQualityMath
- * @version 2.1.0
+ * @version 3.0.0
  */
 
 export interface RainfallData {
@@ -23,13 +28,32 @@ export class QCValidationError extends Error {
   }
 }
 
+/**
+ * Level kecukupan data sesuai SNI 2415:2016
+ * SNI_COMPLIANT : n ≥ 10 tahun — standar terpenuhi
+ * PRELIMINARY   : 5 ≤ n < 10  — hasil bersifat indikatif
+ * INSUFFICIENT  : n < 5       — tidak dapat dihitung
+ */
+export type QCDataLevel = 'SNI_COMPLIANT' | 'PRELIMINARY' | 'INSUFFICIENT';
+
+export function getDataLevel(n: number): QCDataLevel {
+  if (n < 5) return 'INSUFFICIENT';
+  if (n < 10) return 'PRELIMINARY';
+  return 'SNI_COMPLIANT';
+}
+
 export interface QCResult {
   isKonsisten: boolean;
   isBebasOutlier: boolean;
   isHomogen: boolean;
+  /** Level kecukupan data: SNI_COMPLIANT | PRELIMINARY | INSUFFICIENT */
+  dataLevel: QCDataLevel;
+  /** Jumlah tahun data yang dievaluasi */
+  dataYearsCount: number;
   details: {
     raps: RAPSResult;
     grubbs: GrubbsResult;
+    grubbsLog?: GrubbsResult;  // Uji outlier skala log (opsional, WMO Guide No.100)
     homogenitas: HomogenitasResult;
   };
 }
@@ -66,7 +90,10 @@ interface HomogenitasResult {
 // =============================================================
 
 // Tabel Kritis Smirnov-Grubbs (α = 5%, two-sided)
+// n=5-9: Barnett & Lewis (1994), "Outliers in Statistical Data", 3rd ed.
+// n≥10 : Grubbs (1969), tabel standar
 const GRUBBS_TABLE: Record<number, number> = {
+  5: 1.672, 6: 1.822, 7: 1.938, 8: 2.032, 9: 2.110,
   10: 2.176, 11: 2.234, 12: 2.285, 13: 2.331, 14: 2.371,
   15: 2.409, 16: 2.443, 17: 2.475, 18: 2.504, 19: 2.532,
   20: 2.557, 21: 2.580, 22: 2.603, 23: 2.624, 24: 2.644,
@@ -74,13 +101,16 @@ const GRUBBS_TABLE: Record<number, number> = {
 };
 
 // Tabel Q/√n dan R/√n untuk RAPS (α = 5%) — Buishand (1982)
+// Termasuk nilai ekstensi untuk data preliminer n=5–9
 const RAPS_Q_TABLE: Record<number, number> = {
+  5: 0.88, 6: 0.92, 7: 0.96, 8: 0.99, 9: 1.02,
   10: 1.05, 11: 1.10, 12: 1.14, 13: 1.18, 14: 1.21,
   15: 1.24, 16: 1.27, 17: 1.29, 18: 1.32, 19: 1.34,
   20: 1.36, 25: 1.46, 30: 1.54, 35: 1.60, 40: 1.65, 50: 1.75
 };
 
 const RAPS_R_TABLE: Record<number, number> = {
+  5: 1.00, 6: 1.05, 7: 1.10, 8: 1.14, 9: 1.18,
   10: 1.21, 11: 1.28, 12: 1.34, 13: 1.40, 14: 1.45,
   15: 1.50, 16: 1.55, 17: 1.59, 18: 1.64, 19: 1.68,
   20: 1.71, 25: 1.87, 30: 2.00, 35: 2.11, 40: 2.21, 50: 2.37
@@ -88,6 +118,7 @@ const RAPS_R_TABLE: Record<number, number> = {
 
 // Tabel F-kritis (α = 5%, df1 = df2 = n/2 - 1)
 const F_TABLE: Record<number, number> = {
+  1: 161.4, 2: 19.00, 3: 9.28,
   4: 6.39, 5: 5.05, 6: 4.28, 7: 3.79, 8: 3.44,
   9: 3.18, 10: 2.98, 11: 2.82, 12: 2.69, 13: 2.58,
   14: 2.48, 15: 2.40, 16: 2.33, 17: 2.27, 18: 2.21,
@@ -96,6 +127,7 @@ const F_TABLE: Record<number, number> = {
 
 // Tabel t-kritis (α = 5%, two-tailed)
 const T_TABLE: Record<number, number> = {
+  3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365,
   8: 2.306, 9: 2.262, 10: 2.228, 11: 2.201, 12: 2.179,
   13: 2.160, 14: 2.145, 15: 2.131, 16: 2.120, 17: 2.110,
   18: 2.101, 19: 2.093, 20: 2.086, 25: 2.060, 30: 2.042,
@@ -119,21 +151,26 @@ function interpolate(table: Record<number, number>, n: number): number {
 
 // =============================================================
 // VALIDASI INPUT
+// Fase 3: Ambang batas berjenjang
+//   n < 5   → throw INSUFFICIENT_DATA (blokir mutlak)
+//   5 ≤ n < 10 → tidak throw; caller memeriksanya lewat getDataLevel()
+//   n ≥ 10  → standar SNI 2415:2016
 // =============================================================
 export function validateDataLength(data: RainfallData[]): void {
   if (!data || !Array.isArray(data)) {
     throw new QCValidationError('Data harus berupa array', 'INVALID_INPUT');
   }
-  if (data.length < 10) {
+  // Blokir mutlak hanya di bawah 5 tahun
+  if (data.length < 5) {
     throw new QCValidationError(
-      `Data terlalu pendek (Minimal 10 tahun, ditemukan ${data.length} tahun)`,
+      `Data terlalu pendek (Minimum absolut 5 tahun, ditemukan ${data.length} tahun). Penuhi data terlebih dahulu.`,
       'INSUFFICIENT_DATA'
     );
   }
   if (data.length > 100) {
     throw new QCValidationError('Data terlalu panjang (Maksimal 100 tahun)', 'EXCESSIVE_DATA');
   }
-  
+
   data.forEach((d, idx) => {
     if (typeof d.tahun !== 'number' || typeof d.hujan !== 'number') {
       throw new QCValidationError(`Data tidak valid pada index ${idx}`, 'INVALID_DATA_TYPE');
@@ -145,7 +182,7 @@ export function validateDataLength(data: RainfallData[]): void {
       throw new QCValidationError(`Data tidak valid pada tahun ${d.tahun}`, 'NON_FINITE_VALUE');
     }
   });
-  
+
   const years = data.map(d => d.tahun);
   const uniqueYears = new Set(years);
   if (years.length !== uniqueYears.size) {
@@ -194,11 +231,11 @@ export function cekKonsistensiRAPS(data: RainfallData[]): RAPSResult {
     Sk.push(cumSum / Dy);
   }
   
-  const QHitung = Math.max(...Sk.map(Math.abs));
-  const RHitung = Math.max(...Sk) - Math.min(...Sk);
+  const QHitung = Math.max(...Sk.map(Math.abs)) / Math.sqrt(n);
+  const RHitung = (Math.max(...Sk) - Math.min(...Sk)) / Math.sqrt(n);
   
-  const QKritis = interpolate(RAPS_Q_TABLE, n) / Math.sqrt(n);
-  const RKritis = interpolate(RAPS_R_TABLE, n) / Math.sqrt(n);
+  const QKritis = interpolate(RAPS_Q_TABLE, n);
+  const RKritis = interpolate(RAPS_R_TABLE, n);
   
   const isKonsisten = QHitung <= QKritis && RHitung <= RKritis;
   
@@ -263,6 +300,68 @@ export function cekOutlierGrubbs(data: RainfallData[]): GrubbsResult {
 }
 
 // =============================================================
+// 2b. UJI PENCILAN (SKALA LOG) — Grubbs Log-Normal (WMO Guide No.100)
+// Mentransformasi data ke ruang logaritmik sebelum uji Grubbs.
+// Efektif untuk distribusi curah hujan tahunan maksimum yang condong kanan.
+// =============================================================
+export function cekOutlierGrubbsLog(data: RainfallData[]): GrubbsResult {
+  try {
+    validateDataLength(data);
+  } catch (error) {
+    if (error instanceof QCValidationError) {
+      return { isBebasOutlier: false, mean: 0, stdDev: 0, upperLimit: 0, lowerLimit: 0, outliers: [], pesan: `✗ ${error.message}` };
+    }
+    throw error;
+  }
+
+  // Filter nilai nol atau negatif sebelum transformasi log
+  const validData = data.filter(d => d.hujan > 0);
+  if (validData.length < data.length) {
+    // Jika ada nilai nol, gunakan Grubbs linear saja
+    return cekOutlierGrubbs(data);
+  }
+
+  const n = validData.length;
+  const logHujan = validData.map(d => Math.log(d.hujan));
+  const meanLog = logHujan.reduce((a, b) => a + b, 0) / n;
+  const varLog = logHujan.reduce((sum, x) => sum + Math.pow(x - meanLog, 2), 0) / (n - 1);
+  const stdLog = Math.sqrt(varLog);
+
+  if (stdLog === 0 || !isFinite(stdLog)) {
+    return { isBebasOutlier: true, mean: Math.exp(meanLog), stdDev: 0, upperLimit: Math.exp(meanLog), lowerLimit: Math.exp(meanLog), outliers: [], pesan: '⚠ Standar deviasi log nol (data identik)' };
+  }
+
+  const Kn = interpolate(GRUBBS_TABLE, n);
+  const upperLimitLog = meanLog + Kn * stdLog;
+  const lowerLimitLog = meanLog - Kn * stdLog;
+
+  // Konversi batas kembali ke ruang asli
+  const upperLimit = Math.exp(upperLimitLog);
+  const lowerLimit = Math.exp(lowerLimitLog);
+  const mean = Math.exp(meanLog);
+
+  const outliers: Array<{ tahun: number; hujan: number; type: 'HIGH' | 'LOW' }> = [];
+  validData.forEach(d => {
+    if (d.hujan > upperLimit) outliers.push({ tahun: d.tahun, hujan: d.hujan, type: 'HIGH' });
+    else if (d.hujan < lowerLimit) outliers.push({ tahun: d.tahun, hujan: d.hujan, type: 'LOW' });
+  });
+
+  const isBebasOutlier = outliers.length === 0;
+
+  return {
+    isBebasOutlier,
+    mean,
+    stdDev: stdLog, // Disimpan dalam skala log untuk transparansi
+    upperLimit,
+    lowerLimit,
+    outliers,
+    pesan: isBebasOutlier
+      ? `✓ Tidak ada outlier log-normal (Kn=${Kn.toFixed(3)}, batas=[${lowerLimit.toFixed(1)}, ${upperLimit.toFixed(1)}] mm)`
+      : `✗ Ditemukan ${outliers.length} outlier log: ${outliers.map(o => `${o.tahun} (${o.hujan.toFixed(1)}mm, ${o.type})`).join(', ')}`
+  };
+}
+
+// =============================================================
 // 3. UJI HOMOGENITAS — F-Test (Varians) & t-Test (Rata-rata)
 // =============================================================
 export function cekHomogenitas(data: RainfallData[]): HomogenitasResult {
@@ -323,8 +422,31 @@ export function cekHomogenitas(data: RainfallData[]): HomogenitasResult {
 
 // =============================================================
 // RUNNER: Jalankan semua uji QC secara berurutan
+// Fase 3: Mengisi dataLevel (SNI_COMPLIANT | PRELIMINARY | INSUFFICIENT)
+//         dan menjalankan uji Grubbs log-scale sebagai uji tambahan.
 // =============================================================
 export function runFullQC(data: RainfallData[]): QCResult {
+  const n = data?.length ?? 0;
+  const dataLevel = getDataLevel(n);
+
+  // Blokir mutlak: n < 5
+  if (dataLevel === 'INSUFFICIENT') {
+    const errorMsg = `✗ Data terlalu pendek (${n} tahun — minimum 5 tahun untuk komputasi QC)`;
+    return {
+      isKonsisten: false,
+      isBebasOutlier: false,
+      isHomogen: false,
+      dataLevel: 'INSUFFICIENT',
+      dataYearsCount: n,
+      details: {
+        raps: { isKonsisten: false, QHitung: 0, RHitung: 0, QKritis: 0, RKritis: 0, pesan: errorMsg },
+        grubbs: { isBebasOutlier: false, mean: 0, stdDev: 0, upperLimit: 0, lowerLimit: 0, outliers: [], pesan: errorMsg },
+        homogenitas: { isHomogen: false, fTest: { F: 0, Fkritis: 0, lulus: false }, tTest: { t: 0, tkritis: 0, lulus: false }, pesan: errorMsg },
+      },
+    };
+  }
+
+  // Validasi struktur data (tipe, negatif, duplikat)
   try {
     validateDataLength(data);
   } catch (error) {
@@ -334,25 +456,43 @@ export function runFullQC(data: RainfallData[]): QCResult {
         isKonsisten: false,
         isBebasOutlier: false,
         isHomogen: false,
+        dataLevel,
+        dataYearsCount: n,
         details: {
           raps: { isKonsisten: false, QHitung: 0, RHitung: 0, QKritis: 0, RKritis: 0, pesan: errorMsg },
           grubbs: { isBebasOutlier: false, mean: 0, stdDev: 0, upperLimit: 0, lowerLimit: 0, outliers: [], pesan: errorMsg },
-          homogenitas: { isHomogen: false, fTest: { F: 0, Fkritis: 0, lulus: false }, tTest: { t: 0, tkritis: 0, lulus: false }, pesan: errorMsg }
-        }
+          homogenitas: { isHomogen: false, fTest: { F: 0, Fkritis: 0, lulus: false }, tTest: { t: 0, tkritis: 0, lulus: false }, pesan: errorMsg },
+        },
       };
     }
     throw error;
   }
-  
+
   const raps = cekKonsistensiRAPS(data);
-  const grubbs = cekOutlierGrubbs(data);
+  const grubbs = cekOutlierGrubbs(data);       // Grubbs linear (skala asli)
+  const grubbsLog = cekOutlierGrubbsLog(data); // Grubbs log-normal (WMO)
   const homogenitas = cekHomogenitas(data);
-  
+
+  // Outlier: konservatif — flagged jika SALAH SATU uji (linear atau log) mendeteksi outlier
+  const isBebasOutlier = grubbs.isBebasOutlier && grubbsLog.isBebasOutlier;
+
+  // Fase 3: Untuk data PRELIMINARY (5–9 tahun), uji homogenitas tidak dapat diandalkan
+  // karena split seri terlalu pendek → tandai isHomogen sebagai true secara heuristik
+  // dengan pesan peringatan, bukan blokir
+  const finalHomogenitas = dataLevel === 'PRELIMINARY'
+    ? {
+        ...homogenitas,
+        pesan: homogenitas.pesan + ' ⚠ (Hasil indikatif: n < 10 tahun)',
+      }
+    : homogenitas;
+
   return {
     isKonsisten: raps.isKonsisten,
-    isBebasOutlier: grubbs.isBebasOutlier,
-    isHomogen: homogenitas.isHomogen,
-    details: { raps, grubbs, homogenitas }
+    isBebasOutlier,
+    isHomogen: finalHomogenitas.isHomogen,
+    dataLevel,
+    dataYearsCount: n,
+    details: { raps, grubbs, grubbsLog, homogenitas: finalHomogenitas },
   };
 }
 

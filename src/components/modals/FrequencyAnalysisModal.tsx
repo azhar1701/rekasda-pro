@@ -150,7 +150,13 @@ export const FrequencyAnalysisModal: React.FC<FrequencyAnalysisModalProps> = ({
     }
   }, [data, runQC]);
 
-  const canProceedToAnalysis = qcStatus && (qcStatus.konsisten && qcStatus.bebasOutlier && qcStatus.homogen || isQCOverridden);
+  const canProceedToAnalysis = isQCOverridden || Boolean(
+    qcStatus && (
+      (qcStatus as any).konsisten !== undefined
+        ? (qcStatus as any).konsisten && (qcStatus as any).bebasOutlier && (qcStatus as any).homogen
+        : Object.values(qcStatus).length > 0 && Object.values(qcStatus).every(s => s.konsisten && s.bebasOutlier && s.homogen)
+    )
+  );
 
   useEffect(() => {
     if (data.length >= 3 && canProceedToAnalysis) {

@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
-import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
+import { runFullQC, type QCResult, type QCDataLevel } from '@/lib/utils/qc/dataQualityMath';
+import { type StationCompletenessSummary } from '@/lib/utils/qc/dailyCompletenessMath';
 import { supabase } from '@/lib/api/supabase';
 import { chunkArray } from '@/lib/sanitizer/rainfallSanitizer';
 
@@ -68,7 +69,7 @@ export interface HasilAnalisisFrekuensi {
   lulusUjiKecocokan: boolean;
   curahHujanRencana: DesignRainfallValue[];
   selectedKalaUlang: number | null;
-  qcResults?: QualityControlResults;
+  qcResults?: QCResult | QualityControlResults;
 }
 
 export interface QualityControlResults {
@@ -286,8 +287,9 @@ export interface HydrologyState {
   distribusiHujanJamJaman: number[] | null;
   hujanEfektif: number[] | null;
   durasiHujan: number;
-  qcResults: Record<string, QualityControlResults> | null;
-  qcStatus: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean }> | null;
+  qcResults: Record<string, QCResult> | null;
+  qcStatus: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean; dataLevel?: QCDataLevel; dataYearsCount?: number }> | null;
+  dailyCompleteness: Record<string, StationCompletenessSummary> | null;
   isQCOverridden: boolean;
   isQCCalculating: boolean;
   rentangTahun: { min: number, max: number } | null;
@@ -335,8 +337,9 @@ export interface HydrologyState {
   getTimeOfConcentration: () => number;
   getDesignRainfall: (returnPeriod: number) => number | null;
   getDesignDischarge: (type: 'flood' | 'irrigation') => number | null;
-  setQCResults: (results: Record<string, QualityControlResults> | null) => void;
-  setQCStatus: (status: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean }> | null) => void;
+  setQCResults: (results: Record<string, QCResult> | null) => void;
+  setQCStatus: (status: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean; dataLevel?: QCDataLevel; dataYearsCount?: number }> | null) => void;
+  setDailyCompleteness: (completeness: Record<string, StationCompletenessSummary> | null) => void;
   setQCOverride: (override: boolean) => void;
   setQCCalculating: (calculating: boolean) => void;
   updateDataHujanManual: (data: DataHujan[]) => void;
@@ -378,7 +381,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   hasilBanjir: null, hasilBanjirEmpiris: null, hasilBanjirHSS: null,
   hasilNeraca: null, hasilEmbung: null, hasilSaluran: null, hasilMock: null,
   hasilKonvolusi: null, neracaFinal: null, distribusiHujanJamJaman: null, hujanEfektif: null, durasiHujan: 6,
-  qcResults: null, qcStatus: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
+  qcResults: null, qcStatus: null, dailyCompleteness: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
   hssComparisonResults: null, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
   selectedKalaUlang: 25,
 
@@ -1038,15 +1041,31 @@ export const useHydrologyStore = create<HydrologyState>()(
 
   setQCResults: (results) => set({ qcResults: results }),
   setQCStatus: (status) => set({ qcStatus: status }),
+  setDailyCompleteness: (completeness) => set({ dailyCompleteness: completeness }),
   setQCOverride: (override) => set({ isQCOverridden: override }),
   setQCCalculating: (calculating) => set({ isQCCalculating: calculating }),
   updateDataHujanManual: (data) => {
     set({ dataHujan: data });
     if (data.length >= 10) {
       const years = Array.from(new Set(data.map(d => new Date(d.tanggal).getFullYear())));
-      const annualMax = years.map(y => ({ tahun: y, hujan: Math.max(...data.filter(d => new Date(d.tanggal).getFullYear() === y).map(d => d.curah_hujan)) }));
-      const qc = runFullQC(annualMax);
-      set({ qcResults: { [data[0]?.stasiun_id]: qc } as any });
+      if (years.length >= 10) {
+        const annualMax = years.map(y => ({
+          tahun: y,
+          hujan: Math.max(...data.filter(d => new Date(d.tanggal).getFullYear() === y).map(d => d.curah_hujan))
+        }));
+        const qc = runFullQC(annualMax);
+        const stasiunId = data[0]?.stasiun_id || '_default';
+        set({
+          qcResults: { [stasiunId]: qc },
+          qcStatus: {
+            [stasiunId]: {
+              konsisten: qc.isKonsisten,
+              bebasOutlier: qc.isBebasOutlier,
+              homogen: qc.isHomogen,
+            }
+          }
+        });
+      }
     }
   },
 

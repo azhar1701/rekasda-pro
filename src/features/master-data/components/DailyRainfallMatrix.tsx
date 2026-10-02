@@ -1,13 +1,18 @@
 import React, { useMemo } from 'react';
 import type { DataHujan } from '@/stores/useHydrologyStore';
+import { calculateYearCompleteness } from '@/lib/utils/qc/dailyCompletenessMath';
+import { CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
 
 interface DailyRainfallMatrixProps {
   data: DataHujan[];
   year: number;
   onCellClick?: (dateStr: string, currentVal: number | null) => void;
+  onOpenInfillModal?: () => void;
 }
 
-export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, year, onCellClick }) => {
+export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, year, onCellClick, onOpenInfillModal }) => {
+  const completeness = useMemo(() => calculateYearCompleteness(data, year), [data, year]);
+
   // Pre-calculate Matrix & Stats using useMemo for high performance
   const { matrix, monthlyStats, maxRainfall } = useMemo(() => {
     const grid: { val: number | null; isInfilled: boolean }[][] = Array.from(
@@ -123,6 +128,66 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
 
   return (
     <div className="flex flex-col gap-4 w-full">
+      {/* QC Kelengkapan Harian (WMO No. 168 / BMKG) */}
+      <div className={`p-3 rounded-lg border text-xs flex flex-wrap items-center justify-between gap-2.5 ${
+        completeness.status === 'LENGKAP'
+          ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
+          : completeness.status === 'CUKUP'
+          ? 'bg-sky-50/80 border-sky-200 text-sky-900'
+          : completeness.status === 'KURANG'
+          ? 'bg-amber-50/80 border-amber-300 text-amber-900'
+          : 'bg-rose-50/80 border-rose-300 text-rose-900'
+      }`}>
+        <div className="flex items-center gap-2 flex-wrap">
+          {completeness.status === 'LENGKAP' || completeness.status === 'CUKUP' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          )}
+          <span className="font-bold">
+            Kelengkapan Data Harian Tahun {year}:
+          </span>
+          <span className="font-mono font-semibold">
+            {completeness.recordedDays}/{completeness.totalDays} Hari ({completeness.completenessPercent}%)
+          </span>
+          <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider ${
+            completeness.status === 'LENGKAP'
+              ? 'bg-emerald-100 text-emerald-800'
+              : completeness.status === 'CUKUP'
+              ? 'bg-sky-100 text-sky-800'
+              : completeness.status === 'KURANG'
+              ? 'bg-amber-100 text-amber-800'
+              : 'bg-rose-100 text-rose-800'
+          }`}>
+            {completeness.status === 'LENGKAP' && '✓ 100% Lengkap'}
+            {completeness.status === 'CUKUP' && '✓ Standar WMO Terpenuhi (≥90%)'}
+            {completeness.status === 'KURANG' && '⚠️ Kurang Lengkap (<90%)'}
+            {completeness.status === 'KRITIS' && '⛔ Data Kritis (<75%)'}
+          </span>
+          {completeness.infilledDays > 0 && (
+            <span className="text-[11px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-medium">
+              Infilled: {completeness.infilledDays} Hari
+            </span>
+          )}
+          {completeness.missingDays > 0 && (
+            <span className="text-[11px] text-slate-600">
+              (Hilang: <strong>{completeness.missingDays}</strong> hari, celah terpanjang: <strong>{completeness.maxConsecutiveMissing}</strong> hari)
+            </span>
+          )}
+        </div>
+
+        {completeness.missingDays > 0 && onOpenInfillModal && (
+          <button
+            type="button"
+            onClick={onOpenInfillModal}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs transition-colors shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Infill Data Hilang ({completeness.missingDays} Hari)</span>
+          </button>
+        )}
+      </div>
+
       {/* Legend Bar */}
       <div className="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-2.5 rounded-md border border-slate-200">
         <span className="font-semibold text-slate-600">Keterangan:</span>

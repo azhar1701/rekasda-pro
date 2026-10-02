@@ -1,8 +1,10 @@
-import React from 'react';
-import { AlertTriangle, CheckCircle2, XCircle, ShieldAlert, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, CheckCircle2, XCircle, ShieldAlert, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { QCDetailsPanel } from '@/components/ui/QCDetailsPanel';
+import type { QCResult } from '@/lib/utils/qc/dataQualityMath';
 
 interface DataQualityDashboardProps {
   onProceed?: () => void;
@@ -12,7 +14,9 @@ interface DataQualityDashboardProps {
 export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({ 
   onProceed
 }) => {
-  const { qcStatus, qcResults, isQCOverridden, setQCOverride, rentangTahun, stasiunList } = useHydrologyStore();
+  const { qcStatus, qcResults, dailyCompleteness, isQCOverridden, setQCOverride, rentangTahun, stasiunList } = useHydrologyStore();
+  const [expandedStations, setExpandedStations] = useState<Record<string, boolean>>({});
+  const [expandedCompleteness, setExpandedCompleteness] = useState<Record<string, boolean>>({});
 
   if (!qcStatus || Object.keys(qcStatus).length === 0) {
     return (
@@ -29,6 +33,10 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
   // Evaluates to true IF AND ONLY IF all stations pass ALL 3 tests
   const allStasiunValid = Object.values(qcStatus).every(
     status => status.konsisten && status.bebasOutlier && status.homogen
+  );
+
+  const hasPreliminaryStations = Object.values(qcStatus).some(
+    s => s.dataLevel === 'PRELIMINARY' || (s.dataYearsCount !== undefined && s.dataYearsCount < 10)
   );
 
   const canProceed = allStasiunValid || isQCOverridden;
@@ -63,11 +71,29 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
            )}
         </div>
         {allStasiunValid && (
-          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full border border-green-200 shadow-sm flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4"/> Semua Uji Stasiun Lolos
-          </span>
+          hasPreliminaryStations ? (
+            <span className="px-3 py-1 text-sm font-medium text-amber-800 bg-amber-50 rounded-full border border-amber-300 shadow-sm flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600"/> Lolos (Tingkat Indikatif 5–9 Thn)
+            </span>
+          ) : (
+            <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full border border-green-200 shadow-sm flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4"/> Standar SNI Terpenuhi (≥10 Thn)
+            </span>
+          )
         )}
       </div>
+
+      {/* Preliminary Notice Banner when all valid but data is 5-9 years */}
+      {allStasiunValid && hasPreliminaryStations && (
+        <Card className="p-3.5 bg-amber-50/70 border border-amber-300/80">
+          <div className="flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-900 leading-relaxed">
+              <strong>Catatan SNI 2415:2016:</strong> Data stasiun yang dievaluasi mencakup 5–9 tahun pengamatan tahunan. Uji konsistensi dan pencilan dinyatakan <strong>lulus secara statistik</strong> (Barnett & Lewis, 1994; WMO No. 100), namun SNI menganjurkan panjang data minimum 10 tahun untuk desain konstruksi hidraulik permanen.
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Aggregate Blocking Banner - Gagal QC */}
       {!allStasiunValid && !isQCOverridden && (
@@ -104,13 +130,33 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
         {Object.entries(qcStatus).map(([stasiunId, status]) => {
           const stasiun = stasiunList.find(s => s.id === stasiunId);
           const results = qcResults ? qcResults[stasiunId] : null;
+          const qcRes = results as any;
           
+          const rapsMessage = qcRes?.details?.raps?.pesan || qcRes?.konsistensi?.message || (status.konsisten ? 'Data konsisten (RAPS test)' : 'Data tidak konsisten');
+          const homogenMessage = qcRes?.details?.homogenitas?.pesan || qcRes?.homogenitas?.message || (status.homogen ? 'Rata-rata homogen (F-Test/t-test)' : 'Ragam / varians data tidak homogen');
+          const outlierMessage = qcRes?.details?.grubbs?.pesan || qcRes?.outlier?.message || (status.bebasOutlier ? 'Tidak terdeteksi outlier (Smirnov-Grubbs)' : 'Ditemukan pencilan data');
+          const isExpanded = !!expandedStations[stasiunId];
+
+          const stationYears = qcRes?.dataYearsCount || status.dataYearsCount;
+          const stationLevel = qcRes?.dataLevel || status.dataLevel;
+
           return (
             <Card key={stasiunId} className="p-4 border border-slate-200 overflow-hidden relative">
                <div className="absolute top-0 left-0 w-1 h-full bg-slate-300"></div>
                <div className="pl-2">
                  <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                   <h5 className="font-semibold text-slate-800">Stasiun: {stasiun?.nama_stasiun || 'Unknown'}</h5>
+                   <div className="flex items-center gap-2">
+                     <h5 className="font-semibold text-slate-800">Stasiun: {stasiun?.nama_stasiun || 'Unknown'}</h5>
+                     {stationLevel === 'PRELIMINARY' || (stationYears && stationYears < 10) ? (
+                       <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                         ⚠️ Indikatif ({stationYears ? `${stationYears} Thn` : '5–9 Thn'})
+                       </span>
+                     ) : stationYears && stationYears >= 10 ? (
+                       <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                         ✓ SNI ({stationYears} Thn)
+                       </span>
+                     ) : null}
+                   </div>
                    {status.konsisten && status.bebasOutlier && status.homogen ? (
                      <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">✅ VALID</span>
                    ) : (
@@ -126,7 +172,7 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
                         {getStatusIcon(status.konsisten)}
                      </div>
                      <p className="text-xs mt-1 leading-snug">
-                       {results?.konsistensi?.message || (status.konsisten ? 'Data konsisten (RAPS test)' : 'Data tidak konsisten')}
+                       {rapsMessage}
                      </p>
                    </div>
                    
@@ -137,7 +183,7 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
                         {getStatusIcon(status.homogen)}
                      </div>
                      <p className="text-xs mt-1 leading-snug">
-                       {results?.homogenitas?.message || (status.homogen ? 'Rata-rata homogen (F-Test/t-test)' : 'Ragam / varians data tidak homogen')}
+                       {homogenMessage}
                      </p>
                    </div>
 
@@ -148,10 +194,112 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
                         {getStatusIcon(status.bebasOutlier)}
                      </div>
                      <p className="text-xs mt-1 leading-snug">
-                       {results?.outlier?.message || (status.bebasOutlier ? 'Tidak terdeteksi Grubbs-beck outlier' : 'Ditemukan outlier tinggi/rendah')}
+                       {outlierMessage}
                      </p>
                    </div>
                  </div>
+
+                 {/* Daily Completeness KPI & Breakdown (WMO No. 168) */}
+                 {dailyCompleteness && dailyCompleteness[stasiunId] && (
+                   <div className="mt-3 pt-2.5 border-t border-slate-100">
+                     <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50/80 p-2.5 rounded-lg border border-slate-200 text-xs">
+                       <div className="flex items-center gap-2 flex-wrap">
+                         <span className="font-bold text-slate-700">Kelengkapan Harian (WMO No. 168):</span>
+                         <span className="font-mono font-semibold text-slate-800">
+                           Rata-rata {dailyCompleteness[stasiunId].averageCompletenessPercent}%
+                         </span>
+                         <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                           dailyCompleteness[stasiunId].status === 'MEMENUHI_STANDAR'
+                             ? 'bg-emerald-100 text-emerald-800'
+                             : dailyCompleteness[stasiunId].status === 'PERLU_INFILL'
+                             ? 'bg-amber-100 text-amber-800'
+                             : 'bg-rose-100 text-rose-800'
+                         }`}>
+                           {dailyCompleteness[stasiunId].status === 'MEMENUHI_STANDAR' && '✓ Memenuhi Standar'}
+                           {dailyCompleteness[stasiunId].status === 'PERLU_INFILL' && '⚠️ Perlu Infill'}
+                           {dailyCompleteness[stasiunId].status === 'TIDAK_LAYAK' && '⛔ Data Kritis'}
+                         </span>
+                         <span className="text-slate-500">
+                           ({dailyCompleteness[stasiunId].reliableYearsCount} dari {dailyCompleteness[stasiunId].totalYears} tahun layak AMS)
+                         </span>
+                       </div>
+
+                       <button
+                         type="button"
+                         onClick={() => setExpandedCompleteness(prev => ({ ...prev, [stasiunId]: !prev[stasiunId] }))}
+                         className="text-xs text-blue-700 hover:text-blue-900 font-semibold underline flex items-center gap-1"
+                       >
+                         <span>{expandedCompleteness[stasiunId] ? 'Tutup' : 'Lihat'} Rincian Tahunan</span>
+                         {expandedCompleteness[stasiunId] ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                       </button>
+                     </div>
+
+                     {/* Breakdown Table */}
+                     {expandedCompleteness[stasiunId] && (
+                       <div className="mt-2 overflow-x-auto border border-slate-200 rounded-md">
+                         <table className="w-full text-left text-xs">
+                           <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                             <tr>
+                               <th className="py-1.5 px-2 text-center">Tahun</th>
+                               <th className="py-1.5 px-2 text-right">Hari Tercatat</th>
+                               <th className="py-1.5 px-2 text-right">Kelengkapan</th>
+                               <th className="py-1.5 px-2 text-right">Hari Hilang</th>
+                               <th className="py-1.5 px-2 text-right">Gap Terpanjang</th>
+                               <th className="py-1.5 px-2 text-right">Hilang Musim Hujan</th>
+                               <th className="py-1.5 px-2 text-center">Keandalan AMS</th>
+                             </tr>
+                           </thead>
+                           <tbody className="divide-y divide-slate-100">
+                             {dailyCompleteness[stasiunId].years.map((y) => (
+                               <tr key={y.year} className="hover:bg-slate-50">
+                                 <td className="py-1 px-2 text-center font-mono font-medium">{y.year}</td>
+                                 <td className="py-1 px-2 text-right font-mono">{y.recordedDays}/{y.totalDays}</td>
+                                 <td className="py-1 px-2 text-right font-mono font-semibold">
+                                   <span className={y.completenessPercent >= 90 ? 'text-emerald-700' : 'text-amber-700'}>
+                                     {y.completenessPercent}%
+                                   </span>
+                                 </td>
+                                 <td className="py-1 px-2 text-right font-mono">{y.missingDays}</td>
+                                 <td className="py-1 px-2 text-right font-mono">{y.maxConsecutiveMissing} hari</td>
+                                 <td className="py-1 px-2 text-right font-mono text-slate-600">{y.wetSeasonMissingDays} hari</td>
+                                 <td className="py-1 px-2 text-center">
+                                   {y.isReliableForAMS ? (
+                                     <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                       ✓ Layak AMS
+                                     </span>
+                                   ) : (
+                                     <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                                       ⚠️ Rentan Bias
+                                     </span>
+                                   )}
+                                 </td>
+                               </tr>
+                             ))}
+                           </tbody>
+                         </table>
+                       </div>
+                     )}
+                   </div>
+                 )}
+
+                 {/* Collapsible QC Details Panel */}
+                 {qcRes?.details && (
+                   <div className="mt-3 pt-2 border-t border-slate-100">
+                     <button
+                       type="button"
+                       onClick={() => setExpandedStations(prev => ({ ...prev, [stasiunId]: !prev[stasiunId] }))}
+                       className="flex items-center justify-between text-xs text-blue-700 hover:text-blue-800 font-medium py-1 px-1 rounded hover:bg-blue-50/70 transition-colors w-full"
+                     >
+                       <span>{isExpanded ? 'Sembunyikan' : 'Tampilkan'} Rincian Statistik Uji (Q, R, F, t & Ambang Kritis)</span>
+                       {isExpanded ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+                     </button>
+                     {isExpanded && (
+                       <div className="mt-2 pt-2 border-t border-slate-100 animate-in fade-in duration-200">
+                         <QCDetailsPanel result={qcRes as QCResult} />
+                       </div>
+                     )}
+                   </div>
+                 )}
                </div>
             </Card>
           );

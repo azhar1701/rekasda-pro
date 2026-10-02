@@ -76,14 +76,13 @@ export function MasterDataDashboard({ onNavigateToSection }: MasterDataDashboard
   const qcStatus = useMemo(() => {
     if (!qcResults) return null;
 
-    // qcResults is now Record<string, QualityControlResults>
     const entries = Object.values(qcResults);
     if (entries.length === 0) return null;
 
-    // Aggregate across all stations
-    const rapsValid = entries.every(r => r.konsistensi?.isPassed ?? false);
-    const grubbsValid = entries.every(r => r.outlier?.isPassed ?? false);
-    const homogeneityValid = entries.every(r => r.homogenitas?.isPassed ?? false);
+    // Aggregate across all stations (supports both QCResult and legacy QualityControlResults)
+    const rapsValid = entries.every(r => (r as any).isKonsisten ?? (r as any).konsistensi?.isPassed ?? false);
+    const grubbsValid = entries.every(r => (r as any).isBebasOutlier ?? (r as any).outlier?.isPassed ?? false);
+    const homogeneityValid = entries.every(r => (r as any).isHomogen ?? (r as any).homogenitas?.isPassed ?? false);
 
     return {
       rapsValid,

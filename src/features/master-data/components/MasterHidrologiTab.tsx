@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
+import { calculateStationCompleteness } from '@/lib/utils/qc/dailyCompletenessMath';
 import { supabase } from '@/lib/api/supabase';
 import { DataQualityDashboard } from '@/components/ui/DataQualityDashboard';
 import { parseExcelData, exportHidrologiTemplate } from '@/utils/excelService';
@@ -51,6 +52,40 @@ export const MasterHidrologiTab: React.FC = () => {
     arealRainfallThiessen,
     arealRainfallIsohyet,
   } = useHydrologyStore();
+
+  // Paginated helper: ambil SEMUA data hujan untuk satu stasiun tanpa terpotong batas 1000-baris Supabase
+  const fetchAllStationRecords = async (stasiunId: string): Promise<DataHujan[]> => {
+    // Gunakan data dari state (sudah paginasi oleh fetchDataHujan di store) jika ini stasiun aktif
+    if (selectedStasiun && stasiunId === selectedStasiun.id) {
+      return dataHujan;
+    }
+    // Fallback lokal (mode offline)
+    if (!supabase) {
+      return dataHujan.filter((d) => d.stasiun_id === stasiunId);
+    }
+    // Fetch berpaging untuk stasiun non-aktif dari Supabase
+    let allRecords: DataHujan[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+    while (hasMore) {
+      const { data: chunk, error } = await supabase
+        .from('master_data_hujan')
+        .select('id, stasiun_id, tanggal, curah_hujan, is_infilled')
+        .eq('stasiun_id', stasiunId)
+        .order('tanggal', { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      if (error) throw new Error(`Gagal memuat data stasiun ${stasiunId}: ${error.message}`);
+      if (chunk && chunk.length > 0) {
+        allRecords = [...allRecords, ...(chunk as DataHujan[])];
+        hasMore = chunk.length === pageSize;
+        page++;
+      } else {
+        hasMore = false;
+      }
+    }
+    return allRecords;
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -536,6 +571,7 @@ export const MasterHidrologiTab: React.FC = () => {
                   data={displayData}
                   year={selectedYear}
                   onCellClick={handleCellClick}
+                  onOpenInfillModal={() => setIsInfillModalOpen(true)}
                 />
 
                 {/* Annual Maximum Summary Table */}
@@ -714,28 +750,26 @@ export const MasterHidrologiTab: React.FC = () => {
                 onClick={async () => {
                   setIsQCLoading(true);
                   try {
-                    const newQcStatus: Record<string, any> = {};
+                    const newQcStatus: Record<string, { konsisten: boolean; bebasOutlier: boolean; homogen: boolean; dataLevel?: any; dataYearsCount?: number }> = {};
                     const newQcResults: Record<string, any> = {};
+                    const newDailyCompleteness: Record<string, any> = {};
+                    let globalMinYear = Infinity;
+                    let globalMaxYear = -Infinity;
 
                     for (const stasiunId of selectedQCStations) {
-                      let records: DataHujan[] = [];
+                      // Fase 2: gunakan helper berpaging — tidak terpotong limit 1000 baris Supabase
+                      const records = await fetchAllStationRecords(stasiunId);
 
-                      if (selectedStasiun && stasiunId === selectedStasiun.id) {
-                        records = dataHujan;
-                      } else if (supabase) {
-                        const { data: dbRecords } = await supabase
-                          .from('master_data_hujan')
-                          .select('*')
-                          .eq('stasiun_id', stasiunId);
-                        records = (dbRecords as DataHujan[]) || [];
-                      } else {
-                        records = dataHujan.filter((d) => d.stasiun_id === stasiunId);
-                      }
+                      // Fase 4: evaluasi kelengkapan data harian (WMO No. 168)
+                      const stn = stasiunList.find((s) => s.id === stasiunId);
+                      const completeness = calculateStationCompleteness(records, stasiunId, stn?.nama_stasiun);
+                      newDailyCompleteness[stasiunId] = completeness;
 
                       const maxByYear: Record<number, number> = {};
 
                       records.forEach((row) => {
                         const y = parseInt(row.tanggal.split('-')[0], 10);
+                        if (isNaN(y)) return;
                         const val = Number(row.curah_hujan) || 0;
                         if (!maxByYear[y] || val > maxByYear[y]) {
                           maxByYear[y] = val;
@@ -746,29 +780,56 @@ export const MasterHidrologiTab: React.FC = () => {
                         .map(([yr, val]) => ({ tahun: parseInt(yr, 10), hujan: val }))
                         .sort((a, b) => a.tahun - b.tahun);
 
-                      if (annualMax.length >= 5) {
+                      const yearCount = annualMax.length;
+
+                      // Fase 3: ambang batas berjenjang sesuai SNI 2415:2016
+                      if (yearCount < 5) {
+                        // Kurang dari 5 tahun: blokir mutlak
+                        toast.warning(`Stasiun ini memiliki ${yearCount} tahun data — terlalu sedikit untuk analisis QC (minimum 5 tahun).`);
+                        continue;
+                      }
+
+                      if (yearCount >= 5) {
                         const result = runFullQC(annualMax);
                         newQcStatus[stasiunId] = {
                           konsisten: result.isKonsisten,
                           bebasOutlier: result.isBebasOutlier,
                           homogen: result.isHomogen,
+                          dataLevel: result.dataLevel,
+                          dataYearsCount: result.dataYearsCount,
                         };
                         newQcResults[stasiunId] = result;
+
+                        // Kumpulkan rentang tahun global untuk DataQualityDashboard
+                        const minY = annualMax[0].tahun;
+                        const maxY = annualMax[annualMax.length - 1].tahun;
+                        if (minY < globalMinYear) globalMinYear = minY;
+                        if (maxY > globalMaxYear) globalMaxYear = maxY;
+
+                        if (yearCount < 10) {
+                          toast.warning(`Stasiun ini memiliki ${yearCount} tahun data (< 10 tahun SNI). Hasil QC bersifat indikatif.`);
+                        }
                       }
                     }
 
                     if (Object.keys(newQcStatus).length > 0) {
                       useHydrologyStore.getState().setQCStatus(newQcStatus);
                       useHydrologyStore.getState().setQCResults(newQcResults);
+                      useHydrologyStore.getState().setDailyCompleteness(newDailyCompleteness);
+                      // Fase 2: perbarui rentangTahun di store agar DataQualityDashboard header akurat
+                      if (isFinite(globalMinYear) && isFinite(globalMaxYear)) {
+                        useHydrologyStore.setState({ rentangTahun: { min: globalMinYear, max: globalMaxYear } });
+                      }
                       toast.success(
                         `Analisis QC berhasil dihitung untuk ${Object.keys(newQcStatus).length} stasiun.`
                       );
                     } else {
-                      toast.warning('Data tahunan belum mencukupi (minimal 5 tahun data).');
+                      toast.warning('Tidak ada stasiun dengan data yang mencukupi untuk QC (minimal 5 tahun data).');
                     }
                     setShowModalQC(false);
                   } catch (err: any) {
-                    toast.error('Gagal menjalankan Quality Control.');
+                    console.error('[QC Error]', err);
+                    toast.error(`Gagal menjalankan Quality Control: ${err?.message || 'Terjadi kesalahan tak terduga.'}`);
                   } finally {
                     setIsQCLoading(false);
                   }
