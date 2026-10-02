@@ -191,6 +191,18 @@ export function validateDataLength(data: RainfallData[]): void {
 }
 
 // =============================================================
+export interface DoubleMassCandidate {
+  year: number;
+  index: number;
+  slopeBefore: number;
+  slopeAfter: number;
+  faktorKoreksi: number;
+  slopeDiffPercent: number;
+  sse: number;
+  fStat?: number;
+  confidence: 'TINGGI' | 'SEDANG' | 'RENDAH';
+}
+
 export interface DoubleMassResult {
   isKonsisten: boolean;
   koreksiDiperlukan: boolean;
@@ -198,6 +210,11 @@ export interface DoubleMassResult {
   faktorKoreksi?: number;
   dataPlot: Array<{ tahun: number; akumulasiReferensi: number; akumulasiTarget: number }>;
   pesan: string;
+  rSquared?: number;
+  slopeBefore?: number;
+  slopeAfter?: number;
+  slopeDiffPercent?: number;
+  candidates?: DoubleMassCandidate[];
 }
 
 // 1. UJI KONSISTENSI — RAPS (Rescaled Adjusted Partial Sums)
@@ -497,10 +514,50 @@ export function runFullQC(data: RainfallData[]): QCResult {
 }
 
 // =============================================================
-// 4. UJI KONSISTENSI — Double Mass Curve (Kurva Massa Ganda)
+// 4. UJI KONSISTENSI & DETEKSI PATAHAN — Double Mass Curve (DMC)
 // Membandingkan akumulasi stasiun target dengan rata-rata stasiun referensi
+// Standar: WMO Guide to Hydrological Practices No. 168 §5.3.2
+// Algoritma: Piecewise Segmented Least-Squares Regression & Chow Test
 // =============================================================
-export function cekDoubleMassCurve(targetData: RainfallData[], referenceData: RainfallData[]): DoubleMassResult {
+
+/**
+ * Menggabungkan beberapa stasiun referensi menjadi satu deret komposit (rata-rata tahunan),
+ * sesuai rekomendasi WMO No. 168 §5.3.2 untuk mengurangi bias individual stasiun acuan.
+ */
+export function createCompositeReferenceSeries(
+  stationsAnnualData: RainfallData[][]
+): RainfallData[] {
+  if (!stationsAnnualData || stationsAnnualData.length === 0) return [];
+  if (stationsAnnualData.length === 1) return stationsAnnualData[0];
+
+  const yearSums = new Map<number, { sum: number; count: number }>();
+  stationsAnnualData.forEach(series => {
+    series.forEach(d => {
+      const cur = yearSums.get(d.tahun) || { sum: 0, count: 0 };
+      cur.sum += d.hujan;
+      cur.count += 1;
+      yearSums.set(d.tahun, cur);
+    });
+  });
+
+  return Array.from(yearSums.entries())
+    .map(([tahun, val]) => ({
+      tahun,
+      hujan: Math.round((val.sum / val.count) * 10) / 10,
+    }))
+    .sort((a, b) => a.tahun - b.tahun);
+}
+
+export interface DMCOptions {
+  customBreakYear?: number;
+  slopeThresholdPercent?: number; // ambang batas patahan, default: 12%
+}
+
+export function cekDoubleMassCurve(
+  targetData: RainfallData[],
+  referenceData: RainfallData[],
+  options?: DMCOptions
+): DoubleMassResult {
   try {
     validateDataLength(targetData);
     validateDataLength(referenceData);
@@ -515,15 +572,14 @@ export function cekDoubleMassCurve(targetData: RainfallData[], referenceData: Ra
   const refMap = new Map(referenceData.map(d => [d.tahun, d.hujan]));
   const syncedData = targetData.filter(d => refMap.has(d.tahun)).sort((a, b) => a.tahun - b.tahun);
   
-  if (syncedData.length < 10) {
-    return { isKonsisten: false, koreksiDiperlukan: false, dataPlot: [], pesan: '✗ Data beririsan kurang dari 10 tahun' };
+  if (syncedData.length < 5) {
+    return { isKonsisten: false, koreksiDiperlukan: false, dataPlot: [], pesan: '✗ Data beririsan kurang dari 5 tahun' };
   }
 
   const dataPlot: Array<{ tahun: number; akumulasiReferensi: number; akumulasiTarget: number }> = [];
   let sumRef = 0;
   let sumTarget = 0;
 
-  // Hitung akumulasi (terbalik dari tahun terbaru ke terlama, atau kronologis. SNI biasanya kronologis)
   for (let i = 0; i < syncedData.length; i++) {
     const year = syncedData[i].tahun;
     sumTarget += syncedData[i].hujan;
@@ -532,38 +588,125 @@ export function cekDoubleMassCurve(targetData: RainfallData[], referenceData: Ra
     dataPlot.push({
       tahun: year,
       akumulasiTarget: sumTarget,
-      akumulasiReferensi: sumRef
+      akumulasiReferensi: sumRef,
     });
   }
 
-  // Deteksi patahan (Break point) via regresi linear terpisah (Segmented Regression sederhana)
-  // Jika kemiringan (slope) berubah signifikan (>10%), flag inkonstensi
   const n = dataPlot.length;
-  const mid = Math.floor(n / 2);
-  
-  const getSlope = (pts: typeof dataPlot) => {
-    const n = pts.length;
-    const sumX = pts.reduce((a, b) => a + b.akumulasiReferensi, 0);
-    const sumY = pts.reduce((a, b) => a + b.akumulasiTarget, 0);
-    const sumXY = pts.reduce((a, b) => a + b.akumulasiReferensi * b.akumulasiTarget, 0);
-    const sumX2 = pts.reduce((a, b) => a + Math.pow(b.akumulasiReferensi, 2), 0);
-    return (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+
+  // 1. Hitung Korelasi Keseluruhan (R²) & SSE Overall
+  const meanX = dataPlot.reduce((s, p) => s + p.akumulasiReferensi, 0) / n;
+  const meanY = dataPlot.reduce((s, p) => s + p.akumulasiTarget, 0) / n;
+  let covXY = 0;
+  let varX = 0;
+  let varY = 0;
+  for (const p of dataPlot) {
+    const dx = p.akumulasiReferensi - meanX;
+    const dy = p.akumulasiTarget - meanY;
+    covXY += dx * dy;
+    varX += dx * dx;
+    varY += dy * dy;
+  }
+  const overallSlope = varX > 0 ? covXY / varX : 1;
+  const rSquared = (varX > 0 && varY > 0) ? Math.min(1, Math.max(0, Math.pow(covXY, 2) / (varX * varY))) : 0;
+
+  let sseOverall = 0;
+  for (const p of dataPlot) {
+    const yPred = meanY + overallSlope * (p.akumulasiReferensi - meanX);
+    sseOverall += Math.pow(p.akumulasiTarget - yPred, 2);
+  }
+
+  // Helper untuk regresi segmen terkecil kuadrat
+  const calcSegment = (pts: typeof dataPlot) => {
+    const m = pts.length;
+    if (m < 2) return { slope: 0, sse: 0 };
+    const mX = pts.reduce((s, p) => s + p.akumulasiReferensi, 0) / m;
+    const mY = pts.reduce((s, p) => s + p.akumulasiTarget, 0) / m;
+    let cXY = 0;
+    let vX = 0;
+    for (const p of pts) {
+      cXY += (p.akumulasiReferensi - mX) * (p.akumulasiTarget - mY);
+      vX += Math.pow(p.akumulasiReferensi - mX, 2);
+    }
+    const slope = vX > 0 ? cXY / vX : 0;
+    let sse = 0;
+    for (const p of pts) {
+      const pred = mY + slope * (p.akumulasiReferensi - mX);
+      sse += Math.pow(p.akumulasiTarget - pred, 2);
+    }
+    return { slope, sse };
   };
 
-  // Deteksi patahan sederhana membagi 2 rentang waktu
-  const slope1 = getSlope(dataPlot.slice(0, mid));
-  const slope2 = getSlope(dataPlot.slice(mid));
-  
-  // Beda kemiringan lebih dari 15% dianggap ada stasiun pindah / anomali sensor
-  const slopeDiff = Math.abs((slope1 - slope2) / Math.max(slope1, slope2));
-  const isKonsisten = slopeDiff < 0.15;
-  
-  let faktorKoreksi = 1;
-  let breakYear = undefined;
+  // 2. Piecewise Segmented Search untuk semua titik patah potensial
+  const minPoints = n >= 8 ? 3 : 2;
+  const candidates: DoubleMassCandidate[] = [];
 
-  if (!isKonsisten) {
-    faktorKoreksi = slope1 / slope2; // Slope lama / Slope baru
-    breakYear = dataPlot[mid].tahun;
+  for (let k = minPoints; k <= n - minPoints; k++) {
+    const seg1 = calcSegment(dataPlot.slice(0, k));
+    const seg2 = calcSegment(dataPlot.slice(k));
+
+    const slopeBefore = seg1.slope;
+    const slopeAfter = seg2.slope;
+    const maxSlope = Math.max(Math.abs(slopeBefore), Math.abs(slopeAfter));
+    const slopeDiff = maxSlope > 0 ? Math.abs(slopeAfter - slopeBefore) / maxSlope : 0;
+    const slopeDiffPercent = Math.round(slopeDiff * 1000) / 10;
+
+    // WMO §5.3.2: Faktor koreksi = Sa / So (Slope Pasca / Slope Pra)
+    const faktorKoreksi = slopeBefore > 0 ? Math.round((slopeAfter / slopeBefore) * 10000) / 10000 : 1;
+    const totalSSE = seg1.sse + seg2.sse;
+
+    // Chow Test / F-statistic untuk structural break
+    const dfNum = 2;
+    const dfDen = Math.max(1, n - 4);
+    const fStat = totalSSE > 0 ? Math.max(0, ((sseOverall - totalSSE) / dfNum) / (totalSSE / dfDen)) : 0;
+
+    let confidence: 'TINGGI' | 'SEDANG' | 'RENDAH' = 'RENDAH';
+    if (slopeDiffPercent >= 20 && (fStat >= 3.0 || n < 8)) {
+      confidence = 'TINGGI';
+    } else if (slopeDiffPercent >= 12) {
+      confidence = 'SEDANG';
+    }
+
+    candidates.push({
+      year: dataPlot[k].tahun,
+      index: k,
+      slopeBefore: Math.round(slopeBefore * 1000) / 1000,
+      slopeAfter: Math.round(slopeAfter * 1000) / 1000,
+      faktorKoreksi,
+      slopeDiffPercent,
+      sse: totalSSE,
+      fStat: Math.round(fStat * 100) / 100,
+      confidence,
+    });
+  }
+
+  // 3. Evaluasi Titik Patah Terbaik
+  const threshold = options?.slopeThresholdPercent ?? 12;
+  const significant = candidates.filter(c => c.slopeDiffPercent >= threshold);
+
+  let bestCandidate: DoubleMassCandidate | undefined;
+  if (options?.customBreakYear) {
+    bestCandidate = candidates.find(c => c.year === options.customBreakYear) || candidates[0];
+  } else if (significant.length > 0) {
+    // Urutkan berdasarkan SSE terkecil (fit paling baik), lalu beda slope
+    significant.sort((a, b) => a.sse - b.sse || b.slopeDiffPercent - a.slopeDiffPercent);
+    bestCandidate = significant[0];
+  }
+
+  const isKonsisten = !bestCandidate;
+  const breakYear = bestCandidate?.year;
+  const faktorKoreksi = bestCandidate ? bestCandidate.faktorKoreksi : 1;
+  const slopeBefore = bestCandidate ? bestCandidate.slopeBefore : Math.round(overallSlope * 1000) / 1000;
+  const slopeAfter = bestCandidate ? bestCandidate.slopeAfter : Math.round(overallSlope * 1000) / 1000;
+  const slopeDiffPercent = bestCandidate ? bestCandidate.slopeDiffPercent : 0;
+
+  const rSquaredRounded = Math.round(rSquared * 1000) / 1000;
+
+  let pesan = '';
+  if (isKonsisten) {
+    pesan = `✓ Data konsisten secara grafis (R²: ${rSquaredRounded}, tidak ada patahan > ${threshold}%)`;
+  } else {
+    pesan = `✗ Patahan terdeteksi sekitar tahun ${breakYear} (ΔSlope: ${slopeDiffPercent}%, F=${bestCandidate?.fStat ?? 0}, Keyakinan: ${bestCandidate?.confidence}). Faktor Koreksi: ${faktorKoreksi.toFixed(4)}`;
   }
 
   return {
@@ -572,9 +715,100 @@ export function cekDoubleMassCurve(targetData: RainfallData[], referenceData: Ra
     breakYear,
     faktorKoreksi,
     dataPlot,
-    pesan: isKonsisten 
-      ? `✓ Data konsisten secara grafis (Beda Slope: ${(slopeDiff*100).toFixed(1)}%)`
-      : `✗ Patahan terdeteksi sekitar tahun ${breakYear}. Faktor Koreksi: ${faktorKoreksi.toFixed(3)}`
+    pesan,
+    rSquared: rSquaredRounded,
+    slopeBefore,
+    slopeAfter,
+    slopeDiffPercent,
+    candidates: candidates.sort((a, b) => a.year - b.year),
+  };
+}
+
+// =============================================================
+// 5. KOREKSI DOUBLE MASS CURVE
+// Mengaplikasikan faktor koreksi ke data harian berdasarkan breakpoint
+// Referensi: WMO Guide No. 100 §5.3.2
+// =============================================================
+
+export interface DMCCorrectionInput {
+  /** Data harian stasiun target (format YYYY-MM-DD) */
+  records: Array<{ tanggal: string; curah_hujan: number }>;
+  /** Faktor koreksi dari cekDoubleMassCurve (slope1 / slope2) */
+  faktorKoreksi: number;
+  /** Tahun breakpoint — data sebelum tahun ini yang dikoreksi */
+  breakYear: number;
+}
+
+export interface DMCCorrectionResult {
+  /** Jumlah record yang dikoreksi */
+  correctedCount: number;
+  /** Jumlah record yang tidak berubah (setelah breakYear) */
+  unchangedCount: number;
+  /** Data setelah koreksi */
+  correctedRecords: Array<{ tanggal: string; curah_hujan: number; was_corrected: boolean }>;
+  /** Faktor koreksi yang diaplikasikan */
+  faktorKoreksi: number;
+  breakYear: number;
+  pesan: string;
+}
+
+/**
+ * Mengaplikasikan faktor koreksi DMC ke data harian stasiun.
+ * Record dengan tahun < breakYear dikalikan faktorKoreksi.
+ * Record dengan tahun >= breakYear dibiarkan apa adanya.
+ *
+ * @param input - Data harian, faktor koreksi, dan tahun breakpoint
+ * @returns Hasil koreksi lengkap dengan record yang sudah dikoreksi
+ */
+export function applyDoubleMassCorrection(input: DMCCorrectionInput): DMCCorrectionResult {
+  const { records, faktorKoreksi, breakYear } = input;
+
+  if (!records || records.length === 0) {
+    return {
+      correctedCount: 0,
+      unchangedCount: 0,
+      correctedRecords: [],
+      faktorKoreksi,
+      breakYear,
+      pesan: '✗ Tidak ada data untuk dikoreksi',
+    };
+  }
+
+  if (faktorKoreksi <= 0 || !isFinite(faktorKoreksi)) {
+    throw new Error(`Faktor koreksi tidak valid: ${faktorKoreksi}`);
+  }
+
+  let correctedCount = 0;
+  let unchangedCount = 0;
+
+  const correctedRecords = records.map(rec => {
+    const year = parseInt(rec.tanggal.split('-')[0], 10);
+    if (isNaN(year)) {
+      unchangedCount++;
+      return { ...rec, was_corrected: false };
+    }
+
+    if (year < breakYear) {
+      // Koreksi: data lama × faktor koreksi, dibulatkan ke 1 desimal
+      const corrected = Math.round(rec.curah_hujan * faktorKoreksi * 10) / 10;
+      correctedCount++;
+      return { tanggal: rec.tanggal, curah_hujan: Math.max(0, corrected), was_corrected: true };
+    } else {
+      unchangedCount++;
+      return { ...rec, was_corrected: false };
+    }
+  });
+
+  const pctChange = ((faktorKoreksi - 1) * 100).toFixed(1);
+  const arahKoreksi = faktorKoreksi > 1 ? `ditingkatkan ${pctChange}%` : `diturunkan ${Math.abs(Number(pctChange))}%`;
+
+  return {
+    correctedCount,
+    unchangedCount,
+    correctedRecords,
+    faktorKoreksi,
+    breakYear,
+    pesan: `✓ Koreksi berhasil: ${correctedCount} data (pra-${breakYear}) ${arahKoreksi}. ${unchangedCount} data pasca-${breakYear} tidak berubah.`,
   };
 }
 

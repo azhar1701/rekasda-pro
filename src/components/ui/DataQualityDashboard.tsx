@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { AlertTriangle, CheckCircle2, XCircle, ShieldAlert, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, ShieldAlert, Info, ChevronDown, ChevronUp, GitCompare } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { QCDetailsPanel } from '@/components/ui/QCDetailsPanel';
 import type { QCResult } from '@/lib/utils/qc/dataQualityMath';
+import { DoubleMassCorrectionModal } from '@/features/master-data/components/modals/DoubleMassCorrectionModal';
 
 interface DataQualityDashboardProps {
   onProceed?: () => void;
@@ -17,6 +18,7 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
   const { qcStatus, qcResults, dailyCompleteness, isQCOverridden, setQCOverride, rentangTahun, stasiunList } = useHydrologyStore();
   const [expandedStations, setExpandedStations] = useState<Record<string, boolean>>({});
   const [expandedCompleteness, setExpandedCompleteness] = useState<Record<string, boolean>>({});
+  const [dcmmModalStasiunId, setDcmmModalStasiunId] = useState<string | null>(null);
 
   if (!qcStatus || Object.keys(qcStatus).length === 0) {
     return (
@@ -282,7 +284,27 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
                    </div>
                  )}
 
-                 {/* Collapsible QC Details Panel */}
+                 {/* Tombol Koreksi DMC — tampil jika konsistensi gagal */}
+                  {!status.konsisten && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-100">
+                      <div className="flex items-center gap-2.5 bg-rose-50/70 border border-rose-200/80 rounded-xl p-3">
+                        <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                        <p className="text-xs text-rose-800 flex-1">
+                          Uji konsistensi gagal. Gunakan <strong>Koreksi DMC</strong> untuk mendeteksi dan memperbaiki patahan data.
+                        </p>
+                        <Button
+                          size="sm"
+                          onClick={() => setDcmmModalStasiunId(stasiunId)}
+                          className="shrink-0 bg-blue-700 hover:bg-blue-800 text-white text-xs h-8 px-3 gap-1.5"
+                        >
+                          <GitCompare className="w-3.5 h-3.5" />
+                          Koreksi DMC
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Collapsible QC Details Panel */}
                  {qcRes?.details && (
                    <div className="mt-3 pt-2 border-t border-slate-100">
                      <button
@@ -306,7 +328,18 @@ export const DataQualityDashboard: React.FC<DataQualityDashboardProps> = ({
         })}
       </div>
 
-
+      {/* DoubleMassCorrectionModal */}
+      {dcmmModalStasiunId && (() => {
+        const dcmmStation = stasiunList.find(s => s.id === dcmmModalStasiunId);
+        if (!dcmmStation) return null;
+        return (
+          <DoubleMassCorrectionModal
+            targetStasiun={dcmmStation}
+            onClose={() => setDcmmModalStasiunId(null)}
+            onCorrectionApplied={() => setDcmmModalStasiunId(null)}
+          />
+        );
+      })()}
 
       {/* Warning Banner - Override Aktif */}
       {isQCOverridden && !allStasiunValid && (
