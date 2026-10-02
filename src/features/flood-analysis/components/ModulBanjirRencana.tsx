@@ -25,6 +25,17 @@ import * as Select from '@radix-ui/react-select';
 import { cn } from '@/lib/utils';
 import { useFloodMethod } from '@/hooks/useFloodMethod';
 import { useEffect } from 'react';
+import {
+    calculateRational,
+    calculateMelchior,
+    calculateHaspers,
+    calculateDerWeduwen,
+    calculateHSSNakayasu,
+    calculateHSSGamma1,
+    calculateHSSSnyder,
+    calculateHSSSCS,
+    generateEmpiricalHydrograph,
+} from '@/lib/engine/flood';
 
 // ────────────────────────────────────────────
 // Types & Constants
@@ -168,121 +179,181 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
         const L = parseFloat(localL);
         const R = parseFloat(localR);
 
-        if (!A || isNaN(A)) {
-            toast.error('Luas DAS (A) wajib diisi dengan benar.');
+        if (!A || isNaN(A) || A <= 0) {
+            toast.error('Luas DAS (A) wajib diisi dengan benar (angka positif).');
             return;
         }
-        if (!L || isNaN(L)) {
-            toast.error('Panjang Sungai (L) wajib diisi dengan benar.');
+        if (!L || isNaN(L) || L <= 0) {
+            toast.error('Panjang Sungai (L) wajib diisi dengan benar (angka positif).');
             return;
         }
 
         setIsCalculating(true);
 
         setTimeout(() => {
-            // ── Mock calculations per method ──
-            let peak = 0;
-            let tPeak = 3;
+            try {
+                let peak = 0;
+                let tPeak = 3;
+                let hydro: { time: number; inflow: number }[] = [];
 
-            switch (method) {
-                case 'rasional_dasar': {
-                    const C = parseFloat(localC) || 0.65;
-                    const tc = parseFloat(localTc) || 2.5;
-                    const I = R ? (R / (tc * 60)) * 10 : 50; // mock intensity
-                    peak = 0.278 * C * I * A;
-                    tPeak = tc;
-                    break;
+                const R24 = !isNaN(R) && R > 0 ? R : 80;
+                const S = Math.max(0.0001, parseFloat(melchiorKemiringan) || 0.01);
+                const C_runoff = Math.min(1.0, Math.max(0.05, parseFloat(localC) || 0.65));
+
+                switch (method) {
+                    case 'rasional_dasar': {
+                        const tcInput = parseFloat(localTc);
+                        const res = calculateRational({
+                            C: C_runoff,
+                            A,
+                            L,
+                            S,
+                            R24,
+                            tc: !isNaN(tcInput) && tcInput > 0 ? tcInput : undefined,
+                        });
+                        peak = res.Qp;
+                        tPeak = res.tc;
+                        const empHydro = generateEmpiricalHydrograph('rational', res.Qp, res.tc);
+                        hydro = empHydro.map(p => ({ time: p.time, inflow: p.discharge }));
+                        break;
+                    }
+                    case 'melchior': {
+                        const res = calculateMelchior({ A, L, S, R24 });
+                        peak = res.Qp;
+                        tPeak = res.tc;
+                        const empHydro = generateEmpiricalHydrograph('melchior', res.Qp, res.tc);
+                        hydro = empHydro.map(p => ({ time: p.time, inflow: p.discharge }));
+                        break;
+                    }
+                    case 'der_weduwen': {
+                        const res = calculateDerWeduwen({ A, L, S, R24 });
+                        peak = res.Qp;
+                        tPeak = res.tc;
+                        const empHydro = generateEmpiricalHydrograph('der_weduwen', res.Qp, res.tc);
+                        hydro = empHydro.map(p => ({ time: p.time, inflow: p.discharge }));
+                        break;
+                    }
+                    case 'haspers': {
+                        const res = calculateHaspers({ A, L, S, R24 });
+                        peak = res.Qp;
+                        tPeak = res.tc;
+                        const empHydro = generateEmpiricalHydrograph('haspers', res.Qp, res.tc);
+                        hydro = empHydro.map(p => ({ time: p.time, inflow: p.discharge }));
+                        break;
+                    }
+                    case 'nakayasu': {
+                        const alpha = Math.min(3.0, Math.max(1.5, parseFloat(nakAlpha) || 2.0));
+                        const Pe = R24 * C_runoff;
+                        const uh = calculateHSSNakayasu({ Ro: 1, Alpha: alpha, A, L });
+                        peak = uh.Qp * Pe;
+                        tPeak = uh.Tp;
+                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        break;
+                    }
+                    case 'gama1': {
+                        const sfVal = parseFloat(gamaSF) || 0.45;
+                        const simVal = parseFloat(gamaSIM) || 0.30;
+                        const Pe = R24 * C_runoff;
+                        const uh = calculateHSSGamma1({
+                            Ro: 1,
+                            A,
+                            L,
+                            S,
+                            SF: sfVal,
+                            SIM: simVal,
+                            JN: 3,
+                            SN: 0.1,
+                            RUA: 0.2,
+                        });
+                        peak = uh.Qp * Pe;
+                        tPeak = uh.Tp;
+                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        break;
+                    }
+                    case 'snyder': {
+                        const ctVal = parseFloat(snyderCt) || 0.60;
+                        const cpVal = parseFloat(snyderCp) || 0.60;
+                        const lcVal = parseFloat(snyderLc) || L * 0.5;
+                        const Pe = R24 * C_runoff;
+                        const uh = calculateHSSSnyder({
+                            Ro: 1,
+                            A,
+                            L,
+                            Lc: lcVal,
+                            Ct: ctVal,
+                            Cp: cpVal,
+                        });
+                        peak = uh.Qp * Pe;
+                        tPeak = uh.Tp;
+                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        break;
+                    }
+                    case 'scs': {
+                        const cnVal = Math.min(99, Math.max(30, parseFloat(scsCN) || 75));
+                        const S_scs = (25400 / cnVal) - 254;
+                        const Pe = R24 > 0.2 * S_scs ? Math.pow(R24 - 0.2 * S_scs, 2) / (R24 + 0.8 * S_scs) : 0.01;
+                        const uh = calculateHSSSCS({ Ro: 1, A, L, S });
+                        peak = uh.Qp * Pe;
+                        tPeak = uh.Tp;
+                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        break;
+                    }
+                    case 'itb': {
+                        const csVal = parseFloat(itbCs) || 0.20;
+                        const Pe = R24 * C_runoff;
+                        const tcKirpich = (0.0195 * Math.pow(L * 1000, 0.77) * Math.pow(S, -0.385)) / 60;
+                        const tp = Math.max(0.5, tcKirpich * 0.8);
+                        const qpUnit = (csVal * A) / (3.6 * tp);
+                        peak = qpUnit * Pe;
+                        tPeak = tp;
+                        const tb = tp * 4.0;
+                        const itbHydro: { time: number; inflow: number }[] = [];
+                        const dt = 0.2;
+                        for (let t = 0; t <= tb; t += dt) {
+                            let q = 0;
+                            if (t <= tp) {
+                                q = peak * Math.pow(t / tp, 1.5);
+                            } else {
+                                q = peak * Math.exp(-(t - tp) / (0.5 * tp));
+                            }
+                            itbHydro.push({ time: Number(t.toFixed(1)), inflow: Number(Math.max(0, q).toFixed(3)) });
+                        }
+                        hydro = itbHydro;
+                        break;
+                    }
                 }
-                case 'melchior': {
-                    const red = parseFloat(melchiorReduksi) || 0.90;
-                    peak = red * A * 2.8;
-                    tPeak = 2.5;
-                    break;
+
+                peak = Math.max(peak, 0.01);
+
+                // Fallback jika hydrograph kosong
+                if (hydro.length === 0) {
+                    const totalTime = tPeak * 4;
+                    const steps = 20;
+                    for (let i = 0; i <= steps; i++) {
+                        const t = (totalTime / steps) * i;
+                        const q = t <= tPeak ? peak * Math.pow(t / tPeak, 2.0) : peak * Math.exp(-0.5 * ((t - tPeak) / tPeak));
+                        hydro.push({ time: Number(t.toFixed(1)), inflow: Number(q.toFixed(2)) });
+                    }
                 }
-                case 'der_weduwen': {
-                    const red = parseFloat(weduwendReduksi) || 0.85;
-                    const limp = parseFloat(weduwendLimpasan) || 0.75;
-                    peak = red * limp * A * 3.0;
-                    tPeak = 2.8;
-                    break;
-                }
-                case 'haspers': {
-                    const red = parseFloat(haspersReduksi) || 0.88;
-                    const koef = parseFloat(haspersKoef) || 0.70;
-                    peak = red * koef * A * 3.1;
-                    tPeak = 2.4;
-                    break;
-                }
-                case 'nakayasu': {
-                    const alpha = parseFloat(nakAlpha) || 2.0;
-                    // SNI 2415:2016: L <= 15 km: Tg = 0.21 * L^0.7; L > 15 km: Tg = 0.4 + 0.058 * L
-                    const Tg = L <= 15 ? 0.21 * Math.pow(L, 0.7) : 0.4 + 0.058 * L;
-                    const Tr = 0.5 * Tg;
-                    const Tp = Tg + 0.8 * Tr;
-                    peak = (A * (R || 80)) / (3.6 * (0.3 * Tp + alpha * (Tp + Tg)));
-                    tPeak = Tp;
-                    break;
-                }
-                case 'gama1': {
-                    const SF = parseFloat(gamaSF) || 0.45;
-                    peak = A * SF * 2.2;
-                    tPeak = 3.2;
-                    break;
-                }
-                case 'snyder': {
-                    const Ct = parseFloat(snyderCt) || 0.60;
-                    const Cp = parseFloat(snyderCp) || 0.60;
-                    const LcVal = parseFloat(snyderLc) || L * 0.5;
-                    const tp = Ct * Math.pow(L * LcVal, 0.3);
-                    peak = (2.78 * Cp * A) / tp;
-                    tPeak = tp;
-                    break;
-                }
-                case 'scs': {
-                    const CN = parseFloat(scsCN) || 75;
-                    const S = (25400 / CN) - 254;
-                    const Pe = R ? Math.pow(R - 0.2 * S, 2) / (R + 0.8 * S) : 40;
-                    peak = (Pe * A * 2.08) / (Math.sqrt(A) + 1.5);
-                    tPeak = 2.7;
-                    break;
-                }
-                case 'itb': {
-                    const Cs = parseFloat(itbCs) || 0.20;
-                    peak = Cs * A * (R || 80) / (3.6 * 2.5);
-                    tPeak = 2.5;
-                    break;
-                }
+
+                setChartData(hydro);
+                setResultSummary({ debitPuncak: Number(peak.toFixed(2)), waktuPuncak: Number(tPeak.toFixed(2)) });
+
+                // Commit to global state
+                setHasilBanjir({
+                    debitPuncak: Number(peak.toFixed(2)),
+                    hidrograf: hydro,
+                    method: currentMethodInfo?.label || method,
+                });
+
+                toast.success(`Perhitungan ${currentMethodInfo?.label || method} (SNI 2415) berhasil!`);
+            } catch (err: any) {
+                console.error('[ModulBanjirRencana] Calculation Error:', err);
+                toast.error(`Gagal menghitung: ${err?.message || 'Parameter tidak valid'}`);
+            } finally {
+                setIsCalculating(false);
             }
-
-            peak = Math.max(peak, 0.01);
-
-            // Generate mock hydrograph
-            const hydro: { time: number; inflow: number }[] = [];
-            const totalTime = tPeak * 4;
-            const steps = 20;
-            for (let i = 0; i <= steps; i++) {
-                const t = (totalTime / steps) * i;
-                let q: number;
-                if (t <= tPeak) {
-                    q = peak * Math.pow(t / tPeak, 2.5);
-                } else {
-                    q = peak * Math.exp(-0.5 * ((t - tPeak) / tPeak));
-                }
-                hydro.push({ time: Number(t.toFixed(1)), inflow: Number(q.toFixed(2)) });
-            }
-
-            setChartData(hydro);
-            setResultSummary({ debitPuncak: Number(peak.toFixed(2)), waktuPuncak: Number(tPeak.toFixed(2)) });
-
-            // Commit to global state
-            setHasilBanjir({
-                debitPuncak: Number(peak.toFixed(2)),
-                hidrograf: hydro,
-            });
-
-            setIsCalculating(false);
-            toast.success(`Perhitungan ${currentMethodInfo?.label || method} berhasil. Data disinkronisasikan.`);
-        }, 900);
+        }, 150);
     }, [
         localA, localL, localR, method, localC, localTc,
         melchiorReduksi, melchiorKemiringan,
