@@ -1,7 +1,17 @@
 /**
  * Flood Method Selection Logic - Recommender Engine
  * Compliant with SNI 2415:2016
+ *
+ * CATATAN SNI: Batas keberlakuan Metode Rasional adalah 50 km² (5000 ha)
+ * sesuai SNI 2415:2016 Pasal 5.2. Rekomendasi di sini menggunakan 3 km²
+ * sebagai heuristik praktis lapangan (di bawah batas itu intensitas merata
+ * dengan sangat baik). Nilai batas SNI resmi tersimpan di SNI_RATIONAL_AREA_LIMIT_KM2.
  */
+
+import { SNI_RATIONAL_AREA_LIMIT_KM2 } from '@/lib/constants/sni';
+
+/** Heuristik praktis (≤ 3 km²): asumsi curah hujan merata sangat terpenuhi */
+const PRACTICAL_RATIONAL_THRESHOLD_KM2 = 3;
 
 export interface MethodRecommendation {
   metode: 'Rasional' | 'HSS Nakayasu' | 'None';
@@ -12,10 +22,12 @@ export interface MethodRecommendation {
 
 /**
  * Menentukan metode perhitungan debit banjir berdasarkan Luas DAS (A).
- * Aturan Hidrologi SNI:
- * - A <= 3 km2: Metode Rasional (Asumsi intensitas hujan merata terpenuhi)
- * - A > 3 km2: Metode HSS (Efek routing saluran mulai signifikan)
- * 
+ *
+ * Rekomendasi praktis (berbeda dengan batas SNI resmi 50 km²):
+ * - A ≤ 3 km²: Metode Rasional ideal (intensitas hujan merata sangat baik)
+ * - 3 < A ≤ 50 km²: Rasional masih diizinkan SNI, namun HSS lebih akurat
+ * - A > 50 km²: WAJIB HSS sesuai SNI 2415:2016 Pasal 5.2
+ *
  * @param luasDasKm2 Luas DAS dalam kilometer persegi
  * @returns MethodRecommendation
  */
@@ -26,7 +38,7 @@ export function determineFloodMethod(luasDasKm2: number | null | undefined | str
       metode: 'None',
       isRasional: false,
       alasan: 'Parameter Luas DAS (A) belum terdefinisi. Selesaikan delineasi di Modul Spasial.',
-      status: 'not_ready'
+      status: 'not_ready',
     };
   }
 
@@ -37,24 +49,35 @@ export function determineFloodMethod(luasDasKm2: number | null | undefined | str
       metode: 'None',
       isRasional: false,
       alasan: 'Nilai Luas DAS tidak valid. Harap masukkan angka positif > 0.',
-      status: 'not_ready'
+      status: 'not_ready',
     };
   }
 
-  // SNI 2415:2016 Recommendation Logic
-  if (area <= 3) {
+  // Pelanggaran batas SNI — WAJIB HSS
+  if (area > SNI_RATIONAL_AREA_LIMIT_KM2) {
+    return {
+      metode: 'HSS Nakayasu',
+      isRasional: false,
+      alasan: `Luas DAS (${area.toFixed(2)} km²) melebihi batas SNI 2415:2016 Pasal 5.2 (${SNI_RATIONAL_AREA_LIMIT_KM2} km² / 5000 ha). WAJIB menggunakan Metode HSS.`,
+      status: 'ready',
+    };
+  }
+
+  // Heuristik praktis ≤ 3 km²: Rasional paling tepat
+  if (area <= PRACTICAL_RATIONAL_THRESHOLD_KM2) {
     return {
       metode: 'Rasional',
       isRasional: true,
-      alasan: `Luas DAS (${area.toFixed(2)} km²) ≤ 3 km². Asumsi intensitas hujan merata terpenuhi untuk penggunaan Metode Rasional sesuai SNI 2415:2016.`,
-      status: 'ready'
+      alasan: `Luas DAS (${area.toFixed(2)} km²) ≤ ${PRACTICAL_RATIONAL_THRESHOLD_KM2} km². Asumsi intensitas hujan merata terpenuhi optimal. Metode Rasional direkomendasikan (SNI 2415:2016 Pasal 5.2).`,
+      status: 'ready',
     };
   }
 
+  // Zona 3–50 km²: Rasional valid per SNI, tapi HSS lebih akurat
   return {
     metode: 'HSS Nakayasu',
     isRasional: false,
-    alasan: `Luas DAS (${area.toFixed(2)} km²) > 3 km². Wajib menggunakan penelusuran hidrograf satuan sintetis (HSS) karena efek routing saluran mulai signifikan.`,
-    status: 'ready'
+    alasan: `Luas DAS (${area.toFixed(2)} km²) berada di zona ${PRACTICAL_RATIONAL_THRESHOLD_KM2}–${SNI_RATIONAL_AREA_LIMIT_KM2} km². Metode Rasional masih diizinkan SNI 2415:2016, namun HSS Nakayasu memberikan akurasi lebih baik untuk DAS ukuran ini.`,
+    status: 'ready',
   };
 }

@@ -70,6 +70,33 @@ describe('rainfallSanitizer QA Suite', () => {
       expect(result.errors.length).toBe(0);
       expect(result.yearSummary[2024]).toBeDefined();
     });
+
+    it('should parse full BMKG/Excel table with headers, summary footers, and auto-detect year', () => {
+      const fullBmkgText = `
+        Hari Hujan : 2 hari
+        Hujan Max : 55,00 mm Tanggal: 2008
+        Tanggal	Jan	Feb	Mar	Apr	Mei	Jun	Jul	Ags	Sep	Okt	Nop	Des
+        1	1	3	1	1	1	0	0	0	0	0	2	0
+        2	4	0	0	1	0	0	0	0	0	0	0	0
+        14	55	0	3	0	0	1	0	0	0	0	0	2
+        30	19		0	0	0	0	0	0	0	1	1	1
+        Hujan Maximum	55	3	3	1	1	1	0	0	0	1	2	2
+        Jml Curah Hujan	79	3	4	2	1	1	0	0	0	1	3	3
+        "O" = Tidak ada hujan
+        "-" = Tidak ada data
+      `;
+      const result = parseBulkMatrixText(fullBmkgText, 2020);
+      expect(result.detectedYear).toBe(2008);
+      expect(result.records.length).toBeGreaterThan(0);
+      expect(result.errors.length).toBe(0);
+      expect(result.verification?.isVerified).toBe(true);
+      expect(result.stats?.maxRainfall).toBe(55);
+    });
+
+    it('should parse letter O as 0 mm per BMKG legend', () => {
+      expect(parseRainfallValue('O').val).toBe(0);
+      expect(parseRainfallValue('o').val).toBe(0);
+    });
   });
 
   describe('chunkArray', () => {

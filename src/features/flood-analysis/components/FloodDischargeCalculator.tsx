@@ -109,20 +109,32 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
   const [sidebarWidth, setSidebarWidth] = useState(35);
   const [isResizing, setIsResizing] = useState(false);
   const [engineWarnings, setEngineWarnings] = useState<string[]>([]);
-  // FIX BUG-2: useRef to avoid stale closure in resize handler
+  // Ref to avoid stale closure in resize handler
   const sidebarWidthRef = React.useRef(sidebarWidth);
   React.useEffect(() => { sidebarWidthRef.current = sidebarWidth; }, [sidebarWidth]);
-  // FIX BUG-3: ref guard against re-entrant useEffect for return periods
+  // Ref guard against re-entrant useEffect for return periods
   const lastRainfallKeyRef = React.useRef('');
+
+  // FIX BUG: Reactive window width — avoids SSR-unsafe window access in JSX
+  const [windowWidth, setWindowWidth] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1280
+  );
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Hydrology Store Integration
   const { distribusiHujanJamJaman, setHasilKonvolusi } = useHydrologyStore();
 
-  // SNI 2415:2016 Workflow Validation
-  const sniWorkflow = useMemo(() => {
-    const area = method === 'RATIONAL' ? rationalInputs.A : nakayasuInputs.A;
-    return useSNI2415Workflow(area);
-  }, [method, rationalInputs.A, nakayasuInputs.A]);
+  // FIX BUG: useSNI2415Workflow called at component level (Rules of Hooks),
+  // not inside useMemo. Area derived separately via useMemo.
+  const sniArea = useMemo(
+    () => (method === 'RATIONAL' ? rationalInputs.A : nakayasuInputs.A),
+    [method, rationalInputs.A, nakayasuInputs.A]
+  );
+  const sniWorkflow = useSNI2415Workflow(sniArea);
 
   const rasionalMutation = useRasionalModifikasiMutation();
   const [calculateRationalDischarge, setCalculateRationalDischarge] = useState({ qPeak: 0, warnings: [] as string[] });
@@ -472,7 +484,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
         <div className="flex flex-col lg:flex-row gap-6 relative z-0">
 
           {/* LEFT SIDEBAR */}
-          <div className="w-full lg:w-auto" style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}%` : '100%', position: 'relative' }}>
+          <div className="w-full lg:w-auto" style={{ width: windowWidth >= 1024 ? `${sidebarWidth}%` : '100%', position: 'relative' }}>
             <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 space-y-3 md:space-y-4">
               {/* Pilot Data Loader */}
               <div className="bg-white rounded-md shadow-sm border border-slate-200 p-5">
@@ -875,7 +887,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
           </div>
 
           {/* MAIN CONTENT */}
-          <div className="w-full lg:w-auto space-y-3 md:space-y-4" style={{ width: window.innerWidth >= 1024 ? `${100 - sidebarWidth}%` : '100%' }}>
+          <div className="w-full lg:w-auto space-y-3 md:space-y-4" style={{ width: windowWidth >= 1024 ? `${100 - sidebarWidth}%` : '100%' }}>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3 relative z-0">
               {method === 'RATIONAL' ? (
@@ -1088,7 +1100,7 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                 volume={volume}
                 title="Hidrograf Banjir Rencana"
                 primaryColor="#0d9488"
-                height={window.innerWidth < 768 ? 250 : 350}
+                height={windowWidth < 768 ? 250 : 350}
               />
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <p className="text-xs text-slate-600">
@@ -1135,9 +1147,11 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                                 type="number"
                                 value={rp.rainfall}
                                 onChange={e => {
-                                  const updated = [...returnPeriods];
-                                  updated[idx].rainfall = parseFloat(e.target.value) || 0;
-                                  setReturnPeriods(updated);
+                                  // FIX BUG: Immutable update — no direct array mutation
+                                  const newRainfall = parseFloat(e.target.value) || 0;
+                                  setReturnPeriods(prev =>
+                                    prev.map((rp, i) => i === idx ? { ...rp, rainfall: newRainfall } : rp)
+                                  );
                                 }}
                                 className="w-20 text-right bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm font-bold focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 outline-none"
                               />
@@ -1169,9 +1183,11 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
                             type="number"
                             value={rp.rainfall}
                             onChange={e => {
-                              const updated = [...returnPeriods];
-                              updated[idx].rainfall = parseFloat(e.target.value) || 0;
-                              setReturnPeriods(updated);
+                              // FIX BUG: Immutable update — no direct array mutation
+                              const newRainfall = parseFloat(e.target.value) || 0;
+                              setReturnPeriods(prev =>
+                                prev.map((rp, i) => i === idx ? { ...rp, rainfall: newRainfall } : rp)
+                              );
                             }}
                             className="w-full text-base bg-white border border-slate-300 rounded-md px-3 py-2 font-bold focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 outline-none"
                           />
