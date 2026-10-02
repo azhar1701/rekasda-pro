@@ -215,7 +215,8 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                 }
                 case 'nakayasu': {
                     const alpha = parseFloat(nakAlpha) || 2.0;
-                    const Tg = L < 15 ? 0.4 + 0.058 * L : 0.21 * Math.pow(L, 0.7);
+                    // SNI 2415:2016: L <= 15 km: Tg = 0.21 * L^0.7; L > 15 km: Tg = 0.4 + 0.058 * L
+                    const Tg = L <= 15 ? 0.21 * Math.pow(L, 0.7) : 0.4 + 0.058 * L;
                     const Tr = 0.5 * Tg;
                     const Tp = Tg + 0.8 * Tr;
                     peak = (A * (R || 80)) / (3.6 * (0.3 * Tp + alpha * (Tp + Tg)));

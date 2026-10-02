@@ -51,7 +51,8 @@ export const HSSComparisonStep: React.FC<HSSComparisonStepProps> = ({
       const results: Record<string, { time: number[]; discharge: number[]; hydrograph: { time: number; discharge: number }[] }> = {};
 
       // Nakayasu via centralized apiClient (uses VITE_API_URL env var)
-      const Tg_nak = L < 15 ? 0.4 + 0.058 * L : 0.21 * Math.pow(L, 0.7);
+      // SNI 2415:2016: L <= 15 km: Tg = 0.21 * L^0.7; L > 15 km: Tg = 0.4 + 0.058 * L
+      const Tg_nak = L <= 15 ? 0.21 * Math.pow(L, 0.7) : 0.4 + 0.058 * L;
       const Tr_nak = 0.5 * Tg_nak;
 
       let nakayasuOutput: { Qp: number; Tp: number; Tb: number; hydrograph: { time: number; discharge: number }[] };
