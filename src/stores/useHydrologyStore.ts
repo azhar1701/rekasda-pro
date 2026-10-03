@@ -1,10 +1,96 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import { calculateTimeOfConcentration } from '@/lib/utils/derivedState';
 import { runFullQC, type QCResult, type QCDataLevel } from '@/lib/utils/qc/dataQualityMath';
 import { type StationCompletenessSummary } from '@/lib/utils/qc/dailyCompletenessMath';
 import { supabase } from '@/lib/api/supabase';
 import { chunkArray } from '@/lib/sanitizer/rainfallSanitizer';
+
+/**
+ * Storage adapter tahan-kuota untuk Zustand persist.
+ * Menggunakan IndexedDB (>500MB kuota) sebagai media utama, dengan migrasi otomatis
+ * dan fallback aman ke localStorage dengan pemangkasan data masif jika kuota browser terlampaui.
+ */
+const createHydrologyStorage = (): StateStorage => ({
+  getItem: async (name: string): Promise<string | null> => {
+    if (typeof window === 'undefined') return null;
+    try {
+      if (typeof indexedDB !== 'undefined') {
+        const idbVal = await idbGet(name);
+        if (idbVal !== undefined && idbVal !== null) {
+          return typeof idbVal === 'string' ? idbVal : JSON.stringify(idbVal);
+        }
+      }
+      // Migrasi dari localStorage jika IndexedDB belum memiliki data
+      const localVal = window.localStorage.getItem(name);
+      if (localVal) {
+        if (typeof indexedDB !== 'undefined') {
+          try {
+            await idbSet(name, localVal);
+            // Bebaskan kuota localStorage setelah data termigrasi aman ke IndexedDB
+            window.localStorage.removeItem(name);
+          } catch (migrateErr) {
+            console.warn('[HydrologyStore] Migrasi awal ke IndexedDB tertunda:', migrateErr);
+          }
+        }
+        return localVal;
+      }
+      return null;
+    } catch (err) {
+      console.warn('[HydrologyStore] Gagal membaca dari IndexedDB, fallback ke localStorage:', err);
+      try {
+        return window.localStorage.getItem(name);
+      } catch {
+        return null;
+      }
+    }
+  },
+
+  setItem: async (name: string, value: string): Promise<void> => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (typeof indexedDB !== 'undefined') {
+        await idbSet(name, value);
+        return;
+      }
+    } catch (idbErr) {
+      console.warn('[HydrologyStore] Gagal menulis ke IndexedDB, mencoba fallback localStorage:', idbErr);
+    }
+
+    // Fallback ke localStorage jika IndexedDB tidak tersedia
+    try {
+      window.localStorage.setItem(name, value);
+    } catch (localErr) {
+      console.warn('[HydrologyStore] Kuota localStorage terlampaui, melakukan pemangkasan deret waktu:', localErr);
+      try {
+        // Pangkas deret data harian masif agar konfigurasi & metadata utama tetap tersimpan aman
+        const parsed = JSON.parse(value);
+        if (parsed?.state) {
+          parsed.state.dataHujan = [];
+          parsed.state.arealRainfallAlgebraic = null;
+          parsed.state.arealRainfallThiessen = null;
+          parsed.state.arealRainfallIsohyet = null;
+          window.localStorage.setItem(name, JSON.stringify(parsed));
+        }
+      } catch (pruneErr) {
+        console.error('[HydrologyStore] Fallback pemangkasan juga gagal:', pruneErr);
+      }
+    }
+  },
+
+  removeItem: async (name: string): Promise<void> => {
+    if (typeof window === 'undefined') return;
+    if (typeof indexedDB !== 'undefined') {
+      try {
+        await idbDel(name);
+      } catch {}
+    }
+    try {
+      window.localStorage.removeItem(name);
+    } catch {}
+  },
+});
 
 
 // --- Interfaces ---
@@ -1143,7 +1229,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   {
     name: 'rekasda-hydrology-store',
     version: 1,
-    storage: createJSONStorage(() => localStorage),
+    storage: createJSONStorage(() => createHydrologyStorage()),
     partialize: (state) => {
       // Hanya persist state yang penting — exclude transient/loading states
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

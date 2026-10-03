@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { useHydrologyStore, type CurahHujanWilayah, type ThiessenStasiunConfig, type IsohyetConfig, type DataHujan } from '@/stores/useHydrologyStore';
 import { calculateIsohyet } from '@/lib/utils/hydrology/arealRainfall';
 import { calculateArealSeries, extractAnnualMaximums } from '@/utils/rainfallSeriesUtils';
-import { determineRainfallMethod, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
+import { determineRainfallMethod, inferParamsFromSpatial, MethodParams, RecommendationResult } from '@/utils/rainfallMethodSelector';
 import { toast } from '@/hooks/useToast';
 import { HelpTooltip } from '@/components/ui/govtech';
 import { useOnboarding } from '@/providers/OnboardingProvider';
@@ -32,12 +32,9 @@ export const HujanWilayahCard: React.FC = () => {
   );
   const [isSaved, setIsSaved] = useState(false);
 
-  const [params, setParams] = useState<MethodParams>({
-    hasCoordinates: true,
-    topography: 'flat',
-    distribution: 'uniform',
-    stationCount: stasiunList.length,
-  });
+  const [params, setParams] = useState<MethodParams>(() =>
+    inferParamsFromSpatial(morfometriDAS, stasiunList)
+  );
 
   const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -52,9 +49,15 @@ export const HujanWilayahCard: React.FC = () => {
     }
   }, [curahHujanWilayah]);
 
+  // Sinkronisasi parameter evaluasi ketika stasiunList atau morfometriDAS terisi/berubah
   useEffect(() => {
+    const inferred = inferParamsFromSpatial(morfometriDAS, stasiunList);
+    setParams(prev => ({
+      ...prev,
+      ...inferred,
+    }));
+
     if (stasiunList.length > 0) {
-      setParams(prev => ({ ...prev, stationCount: stasiunList.length }));
       setConfigs(prevConfigs => {
         // Sinkronisasi configs dengan stasiunList terbaru
         const newConfigs = stasiunList.map(s => {
@@ -72,10 +75,9 @@ export const HujanWilayahCard: React.FC = () => {
         return newConfigs;
       });
     } else {
-      setParams(prev => ({ ...prev, stationCount: 0 }));
       setConfigs([]);
     }
-  }, [stasiunList]);
+  }, [stasiunList, morfometriDAS]);
 
   useEffect(() => {
     setRecommendation(determineRainfallMethod(params));
@@ -223,7 +225,7 @@ export const HujanWilayahCard: React.FC = () => {
         hujanRataRata: avgValue,
         hujanRataRataAMS: amsArray
       };
-      setCurahHujanWilayah(data);
+      await setCurahHujanWilayah(data);
       setConfigs(safeConfigs);
       setIsohyetalConfigs(safeIsohyet);
       setIsSaved(true);
@@ -257,51 +259,91 @@ export const HujanWilayahCard: React.FC = () => {
 
         <div className="p-4">
           <AssistantContainer title="Rekomendasi Metode Berbasis Lokasi (AI Assistant)">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            {morfometriDAS && (morfometriDAS.luasDAS > 0 || morfometriDAS.elevasi > 0) && (
+              <div className="mb-4 p-2.5 bg-blue-50/80 border border-blue-200 rounded-md flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold text-pupr-blue uppercase tracking-tight">Parameter Spasial Terdeteksi:</span>
+                  <span>Luas DAS: <strong>{morfometriDAS.luasDAS ? `${morfometriDAS.luasDAS.toLocaleString('id-ID')} km²` : '-'}</strong></span>
+                  <span>•</span>
+                  <span>Kemiringan: <strong>{morfometriDAS.kemiringanSungai ?? 0}%</strong></span>
+                  <span>•</span>
+                  <span>Elevasi: <strong>{morfometriDAS.elevasi ? `${morfometriDAS.elevasi} mdpl` : '-'}</strong></span>
+                </div>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-100 text-blue-800">
+                  SNI 2415:2016
+                </span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Ketersediaan Koordinat</label>
-                <div className="flex gap-4 mt-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div className="flex gap-3 mt-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs">
                     <input
                       type="radio"
                       checked={params.hasCoordinates}
                       onChange={() => setParams({ ...params, hasCoordinates: true })}
                       className="w-3.5 h-3.5 text-pupr-blue"
                     />
-                    <span className="text-sm text-slate-700">Tersedia</span>
+                    <span className="text-slate-700">Tersedia</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs">
                     <input
                       type="radio"
                       checked={!params.hasCoordinates}
                       onChange={() => setParams({ ...params, hasCoordinates: false })}
                       className="w-3.5 h-3.5 text-pupr-blue"
                     />
-                    <span className="text-sm text-slate-700">Tidak Ada</span>
+                    <span className="text-slate-700">Tidak Ada</span>
                   </label>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Kondisi Topografi</label>
-                <div className="flex gap-4 mt-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div className="flex gap-3 mt-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs">
                     <input
                       type="radio"
                       checked={params.topography === 'flat'}
                       onChange={() => setParams({ ...params, topography: 'flat' })}
                       className="w-3.5 h-3.5 text-pupr-blue"
                     />
-                    <span className="text-sm text-slate-700">Relatif Datar</span>
+                    <span className="text-slate-700">Relatif Datar</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs">
                     <input
                       type="radio"
                       checked={params.topography === 'varied'}
                       onChange={() => setParams({ ...params, topography: 'varied' })}
                       className="w-3.5 h-3.5 text-pupr-blue"
                     />
-                    <span className="text-sm text-slate-700">Pegunungan / Bervariasi</span>
+                    <span className="text-slate-700">Pegunungan / Bervariasi</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-tight">Distribusi Hujan</label>
+                <div className="flex gap-3 mt-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                    <input
+                      type="radio"
+                      checked={params.distribution === 'uneven'}
+                      onChange={() => setParams({ ...params, distribution: 'uneven' })}
+                      className="w-3.5 h-3.5 text-pupr-blue"
+                    />
+                    <span className="text-slate-700">Heterogen / Bervariasi</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                    <input
+                      type="radio"
+                      checked={params.distribution === 'uniform'}
+                      onChange={() => setParams({ ...params, distribution: 'uniform' })}
+                      className="w-3.5 h-3.5 text-pupr-blue"
+                    />
+                    <span className="text-slate-700">Homogen</span>
                   </label>
                 </div>
               </div>
@@ -313,16 +355,23 @@ export const HujanWilayahCard: React.FC = () => {
                     type="number"
                     value={params.stationCount}
                     onChange={(e) => setParams({ ...params, stationCount: parseInt(e.target.value) || 0 })}
-                    className="w-20 px-2 py-1 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-pupr-blue tabular-nums"
+                    className="w-16 px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-pupr-blue tabular-nums"
                   />
-                  <span className="text-xs text-slate-500 italic">(Terdeteksi: {stasiunList.length})</span>
+                  <span className="text-[11px] text-slate-500 italic">(Terdeteksi: {stasiunList.length})</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 border border-slate-100 p-3 rounded-md">
-              <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">Analisis Hasil</h4>
-              <p className="text-sm font-bold text-pupr-blue">{recommendation?.method}</p>
+            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-md mt-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Hasil Analisis & Rekomendasi</h4>
+                {recommendation?.sourceStandard && (
+                  <span className="text-[10px] font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                    {recommendation.sourceStandard}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm font-bold text-pupr-blue mt-1">{recommendation?.method}</p>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">{recommendation?.reason}</p>
 
               <button
@@ -332,7 +381,19 @@ export const HujanWilayahCard: React.FC = () => {
                     if (recommendation.method === 'Metode Poligon Thiessen') methodValue = 'thiessen';
                     if (recommendation.method === 'Metode Isohyet') methodValue = 'isohyet';
                     setMetode(methodValue);
-                    toast.success(`Metode ${methodValue} diterapkan`);
+
+                    // Auto-inisialisasi proporsional awal Thiessen jika luasPengaruh masih 0 semua dan luasDAS ada
+                    if (methodValue === 'thiessen' && configs.length > 0 && totalLuasPengaruh === 0 && morfometriDAS?.luasDAS) {
+                      const equalArea = parseFloat((morfometriDAS.luasDAS / configs.length).toFixed(2));
+                      setConfigs(configs.map(c => ({
+                        ...c,
+                        luasPengaruh: equalArea,
+                        bobot: 100 / configs.length,
+                      })));
+                    }
+
+                    toast.success(`${recommendation.method} diterapkan`);
+                    setIsSaved(false);
                   }
                 }}
                 className="mt-3 px-3 py-1.5 bg-pupr-blue text-white text-xs font-bold rounded hover:bg-[#092b4d] transition-all flex items-center gap-2"
