@@ -196,45 +196,45 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
       const rawLocal = window.localStorage.getItem('hydrofield_history');
       if (rawLocal) {
         const localItems = JSON.parse(rawLocal);
-      if (Array.isArray(localItems)) {
-        localItems.forEach((localRecord: any) => {
-          const recId = String(localRecord.id || '');
-          if (!recId || processedIds.has(recId)) return; // Jangan duplikasi
+        if (Array.isArray(localItems)) {
+          localItems.forEach((localRecord: any) => {
+            const recId = String(localRecord.id || '');
+            if (!recId || processedIds.has(recId)) return; // Jangan duplikasi
 
-          let calcType: AllCalculationsData['type'] = 'manning';
-          const typeStr = String(localRecord.type || '').toUpperCase();
-          if (typeStr.includes('FLOOD') || typeStr.includes('RATIONAL')) calcType = 'flood';
-          else if (typeStr.includes('WATER')) calcType = 'water_balance';
-          else if (typeStr.includes('EMBUNG')) calcType = 'embung';
+            let calcType: AllCalculationsData['type'] = 'manning';
+            const typeStr = String(localRecord.type || '').toUpperCase();
+            if (typeStr.includes('FLOOD') || typeStr.includes('RATIONAL')) calcType = 'flood';
+            else if (typeStr.includes('WATER')) calcType = 'water_balance';
+            else if (typeStr.includes('EMBUNG')) calcType = 'embung';
 
-          const projectName = localRecord.inputs?.site?.channelName ||
-            localRecord.inputs?.projectName ||
-            localRecord.inputs?.site?.namaPekerjaan ||
-            localRecord.notes ||
-            `Perhitungan ${calcType} (Lokal)`;
+            const projectName = localRecord.inputs?.site?.channelName ||
+              localRecord.inputs?.projectName ||
+              localRecord.inputs?.site?.namaPekerjaan ||
+              localRecord.notes ||
+              `Perhitungan ${calcType} (Lokal)`;
 
-          allData.push({
-            id: recId,
-            type: calcType,
-            project_name: projectName,
-            created_at: localRecord.date || new Date().toISOString(),
-            data: {
-              inputs: localRecord.inputs || {},
-              results: localRecord.outputs || {},
-              monthly_inputs: localRecord.inputs?.monthlyInputs,
-              monthly_results: localRecord.outputs?.monthlyResults,
-              summary: localRecord.outputs?.summary,
-              result_data: localRecord.outputs,
-              input_data: localRecord.inputs
-            },
-            location: localRecord.location,
-            isLocalOnly: true
+            allData.push({
+              id: recId,
+              type: calcType,
+              project_name: projectName,
+              created_at: localRecord.date || new Date().toISOString(),
+              data: {
+                inputs: localRecord.inputs || {},
+                results: localRecord.outputs || {},
+                monthly_inputs: localRecord.inputs?.monthlyInputs,
+                monthly_results: localRecord.outputs?.monthlyResults,
+                summary: localRecord.outputs?.summary,
+                result_data: localRecord.outputs,
+                input_data: localRecord.inputs
+              },
+              location: localRecord.location,
+              isLocalOnly: true
+            });
           });
-        });
+        }
       }
     }
-  }
-} catch (e) {
+  } catch (e) {
     console.warn('Gagal membaca hydrofield_history dari localStorage:', e);
   }
 

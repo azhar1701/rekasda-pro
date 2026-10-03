@@ -28,8 +28,19 @@ import {
 } from 'lucide-react';
 
 export const ExecutiveDashboard: React.FC = () => {
-  const store = useHydrologyStore();
-  const { isFrekuensiDirty, isBanjirDirty, isNeracaDirty } = store;
+  const identitasLokasi = useHydrologyStore((s) => s.identitasLokasi);
+  const hasilBanjir = useHydrologyStore((s) => s.hasilBanjir);
+  const hasilNeraca = useHydrologyStore((s) => s.hasilNeraca);
+  const hasilEmbung = useHydrologyStore((s) => s.hasilEmbung);
+  const hasilSaluran = useHydrologyStore((s) => s.hasilSaluran);
+  const hasilAnalisisFrekuensi = useHydrologyStore((s) => s.hasilAnalisisFrekuensi);
+  const luasDas = useHydrologyStore((s) => s.luasDas);
+  const morfometriDAS = useHydrologyStore((s) => s.morfometriDAS);
+  const tutupanLahan = useHydrologyStore((s) => s.tutupanLahan);
+  const isFrekuensiDirty = useHydrologyStore((s) => s.isFrekuensiDirty);
+  const isBanjirDirty = useHydrologyStore((s) => s.isBanjirDirty);
+  const isNeracaDirty = useHydrologyStore((s) => s.isNeracaDirty);
+
   const isDirty = isFrekuensiDirty || isBanjirDirty || isNeracaDirty;
 
   // State: Source Mode (Active Workspace vs History)
@@ -48,16 +59,14 @@ export const ExecutiveDashboard: React.FC = () => {
   const [isKopModalOpen, setIsKopModalOpen] = useState(false);
   const [isSectionsModalOpen, setIsSectionsModalOpen] = useState(false);
 
-  // Load history list when switching to HISTORY mode
+  // Load history list when switching to HISTORY mode (no infinite loop)
   useEffect(() => {
     if (dataSource === 'HISTORY') {
       setLoadingHistory(true);
       getAllCalculations()
         .then((items: AllCalculationsData[]) => {
           setHistoryItems(items);
-          if (items.length > 0 && !selectedHistoryId) {
-            setSelectedHistoryId(items[0].id);
-          }
+          setSelectedHistoryId((prev) => (prev ? prev : (items.length > 0 ? items[0].id : null)));
         })
         .catch((err: unknown) => {
           console.error('Gagal memuat riwayat kalkulasi:', err);
@@ -65,7 +74,7 @@ export const ExecutiveDashboard: React.FC = () => {
         })
         .finally(() => setLoadingHistory(false));
     }
-  }, [dataSource, selectedHistoryId]);
+  }, [dataSource]);
 
   // Aggregate active report payload
   const activeReport = useMemo<ExecutiveReportPayload>(() => {
@@ -82,23 +91,49 @@ export const ExecutiveDashboard: React.FC = () => {
       }
     }
 
-    const payload = aggregateActiveReportData(store);
+    const payload = aggregateActiveReportData({
+      identitasLokasi,
+      hasilBanjir,
+      hasilNeraca,
+      hasilEmbung,
+      hasilSaluran,
+      hasilAnalisisFrekuensi,
+      luasDas,
+      morfometriDAS,
+      tutupanLahan
+    });
     return {
       ...payload,
       kop: { ...payload.kop, ...kopData },
       sectionsConfig: { ...sectionsConfig },
       aiSummary: customAiSummary || payload.aiSummary
     };
-  }, [dataSource, selectedHistoryId, historyItems, store, kopData, sectionsConfig, customAiSummary]);
+  }, [
+    dataSource, 
+    selectedHistoryId, 
+    historyItems, 
+    identitasLokasi, 
+    hasilBanjir, 
+    hasilNeraca, 
+    hasilEmbung, 
+    hasilSaluran, 
+    hasilAnalisisFrekuensi, 
+    luasDas, 
+    morfometriDAS, 
+    tutupanLahan, 
+    kopData, 
+    sectionsConfig, 
+    customAiSummary
+  ]);
 
   // Check if active workspace has data
   const hasActiveData = Boolean(
-    store.identitasLokasi?.namaPekerjaan || 
-    store.hasilBanjir || 
-    store.hasilNeraca || 
-    store.hasilEmbung || 
-    store.hasilSaluran || 
-    store.hasilAnalisisFrekuensi
+    identitasLokasi?.namaPekerjaan || 
+    hasilBanjir || 
+    hasilNeraca || 
+    hasilEmbung || 
+    hasilSaluran || 
+    hasilAnalisisFrekuensi
   );
 
   // Handlers
@@ -376,43 +411,85 @@ export const ExecutiveDashboard: React.FC = () => {
                 <span className="text-[11px] font-bold text-slate-800 uppercase tracking-wider block mb-2">Penandatangan Teknis</span>
                 
                 <div className="space-y-3">
-                  <div>
-                    <label className="font-semibold text-slate-600 block mb-0.5">Nama Tenaga Ahli Penyusun</label>
-                    <input
-                      type="text"
-                      value={kopData.penandatangan.penyusun}
-                      onChange={(e) => setKopData({
-                        ...kopData,
-                        penandatangan: { ...kopData.penandatangan, penyusun: e.target.value }
-                      })}
-                      className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-semibold text-slate-600 block mb-0.5">Nama Tenaga Ahli Penyusun</label>
+                      <input
+                        type="text"
+                        value={kopData.penandatangan.penyusun}
+                        onChange={(e) => setKopData({
+                          ...kopData,
+                          penandatangan: { ...kopData.penandatangan, penyusun: e.target.value }
+                        })}
+                        className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-600 block mb-0.5">Jabatan Penyusun</label>
+                      <input
+                        type="text"
+                        value={kopData.penandatangan.jabatanPenyusun}
+                        onChange={(e) => setKopData({
+                          ...kopData,
+                          penandatangan: { ...kopData.penandatangan, jabatanPenyusun: e.target.value }
+                        })}
+                        className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="font-semibold text-slate-600 block mb-0.5">Nama Lead Hydrologist / Verifikator</label>
-                    <input
-                      type="text"
-                      value={kopData.penandatangan.verifikator}
-                      onChange={(e) => setKopData({
-                        ...kopData,
-                        penandatangan: { ...kopData.penandatangan, verifikator: e.target.value }
-                      })}
-                      className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-semibold text-slate-600 block mb-0.5">Nama Verifikator / Lead</label>
+                      <input
+                        type="text"
+                        value={kopData.penandatangan.verifikator}
+                        onChange={(e) => setKopData({
+                          ...kopData,
+                          penandatangan: { ...kopData.penandatangan, verifikator: e.target.value }
+                        })}
+                        className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-600 block mb-0.5">Jabatan Verifikator</label>
+                      <input
+                        type="text"
+                        value={kopData.penandatangan.jabatanVerifikator}
+                        onChange={(e) => setKopData({
+                          ...kopData,
+                          penandatangan: { ...kopData.penandatangan, jabatanVerifikator: e.target.value }
+                        })}
+                        className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="font-semibold text-slate-600 block mb-0.5">Nama Pengguna Jasa / PPK</label>
-                    <input
-                      type="text"
-                      value={kopData.penandatangan.penggunaJasa}
-                      onChange={(e) => setKopData({
-                        ...kopData,
-                        penandatangan: { ...kopData.penandatangan, penggunaJasa: e.target.value }
-                      })}
-                      className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-semibold text-slate-600 block mb-0.5">Nama Pengguna Jasa / PPK</label>
+                      <input
+                        type="text"
+                        value={kopData.penandatangan.penggunaJasa}
+                        onChange={(e) => setKopData({
+                          ...kopData,
+                          penandatangan: { ...kopData.penandatangan, penggunaJasa: e.target.value }
+                        })}
+                        className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-slate-600 block mb-0.5">Jabatan Pengguna Jasa</label>
+                      <input
+                        type="text"
+                        value={kopData.penandatangan.jabatanPenggunaJasa}
+                        onChange={(e) => setKopData({
+                          ...kopData,
+                          penandatangan: { ...kopData.penandatangan, jabatanPenggunaJasa: e.target.value }
+                        })}
+                        className="w-full border border-slate-300 rounded px-3 py-1.5 text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

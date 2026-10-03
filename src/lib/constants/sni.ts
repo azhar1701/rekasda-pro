@@ -32,6 +32,327 @@ export interface HSSParameter {
  * Koefisien Pengaliran (C) - Runoff Coefficients
  * Sumber: Permen PU No. 12/PRT/M/2014 & Suripin (2004)
  */
+// ─────────────────────────────────────────────────────────────────────────────
+// KLASIFIKASI TUTUPAN LAHAN — Koefisien C & Curve Number CN
+// SSOT untuk TutupanLahanCard dropdown & agent-assisted input
+// Sumber: SNI 2415:2016, Suripin (2004), SCS-CN USDA, Permen PU 12/2014
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type LandCoverCategory = 'hutan_alami' | 'pertanian' | 'permukiman' | 'industri_komersial' | 'permukaan_keras' | 'perairan' | 'lain';
+
+export interface LandCoverClassification {
+  /** Kode unik tutupan lahan */
+  id: string;
+  /** Nama tutupan lahan (Bahasa Indonesia) */
+  nama: string;
+  /** Deskripsi detail kondisi lahan */
+  deskripsi: string;
+  /** Kategori tutupan lahan */
+  kategori: LandCoverCategory;
+  /** Label kategori untuk tampilan UI */
+  kategoriLabel: string;
+  /** Koefisien Pengaliran (C) — nilai tengah */
+  nilaiC: number;
+  /** Range Koefisien C [min, max] */
+  rangeC: [number, number];
+  /** Curve Number (CN) — kondisi tanah HSG-B (normal) */
+  nilaiCN: number;
+  /** Range CN [min, max] untuk berbagai kondisi tanah */
+  rangeCN: [number, number];
+  /** Referensi standar */
+  sumber: string;
+}
+
+export const SNI_LAND_COVER_CLASSIFICATIONS: LandCoverClassification[] = [
+  // ── Hutan & Vegetasi Alami ─────────────────────────────────────────────────
+  {
+    id: 'HUTAN_LEBAT',
+    nama: 'Hutan Lebat / Primer',
+    deskripsi: 'Hutan kerapatan tinggi, tajuk menutup >75%, serasah tebal',
+    kategori: 'hutan_alami',
+    kategoriLabel: 'Hutan & Vegetasi Alami',
+    nilaiC: 0.10,
+    rangeC: [0.05, 0.15],
+    nilaiCN: 45,
+    rangeCN: [30, 55],
+    sumber: 'Suripin (2004), SCS-CN USDA',
+  },
+  {
+    id: 'HUTAN_SEKUNDER',
+    nama: 'Hutan Sekunder / Bekas Tebang',
+    deskripsi: 'Hutan yang pernah ditebang, dalam proses pemulihan',
+    kategori: 'hutan_alami',
+    kategoriLabel: 'Hutan & Vegetasi Alami',
+    nilaiC: 0.18,
+    rangeC: [0.10, 0.25],
+    nilaiCN: 55,
+    rangeCN: [45, 65],
+    sumber: 'Suripin (2004)',
+  },
+  {
+    id: 'SEMAK_BELUKAR',
+    nama: 'Semak Belukar / Brush',
+    deskripsi: 'Vegetasi perdu dan semak, tutupan sedang 40–75%',
+    kategori: 'hutan_alami',
+    kategoriLabel: 'Hutan & Vegetasi Alami',
+    nilaiC: 0.25,
+    rangeC: [0.15, 0.35],
+    nilaiCN: 65,
+    rangeCN: [55, 75],
+    sumber: 'SCS-CN USDA TR-55',
+  },
+  {
+    id: 'PADANG_RUMPUT',
+    nama: 'Padang Rumput / Grassland',
+    deskripsi: 'Tutupan rumput, tidak diolah, kerapatan sedang hingga tinggi',
+    kategori: 'hutan_alami',
+    kategoriLabel: 'Hutan & Vegetasi Alami',
+    nilaiC: 0.22,
+    rangeC: [0.10, 0.35],
+    nilaiCN: 61,
+    rangeCN: [49, 74],
+    sumber: 'SCS-CN USDA TR-55',
+  },
+  {
+    id: 'MANGROVE',
+    nama: 'Hutan Mangrove / Bakau',
+    deskripsi: 'Vegetasi pesisir di zona pasang surut, tanah jenuh',
+    kategori: 'hutan_alami',
+    kategoriLabel: 'Hutan & Vegetasi Alami',
+    nilaiC: 0.12,
+    rangeC: [0.05, 0.20],
+    nilaiCN: 50,
+    rangeCN: [40, 60],
+    sumber: 'Suripin (2004)',
+  },
+
+  // ── Pertanian & Perkebunan ────────────────────────────────────────────────
+  {
+    id: 'SAWAH_IRIGASI',
+    nama: 'Sawah Irigasi',
+    deskripsi: 'Lahan padi sawah dengan irigasi teknis, kondisi tergenang',
+    kategori: 'pertanian',
+    kategoriLabel: 'Pertanian & Perkebunan',
+    nilaiC: 0.55,
+    rangeC: [0.40, 0.70],
+    nilaiCN: 90,
+    rangeCN: [85, 95],
+    sumber: 'SNI 2415:2016, Suripin (2004)',
+  },
+  {
+    id: 'SAWAH_TADAH_HUJAN',
+    nama: 'Sawah Tadah Hujan',
+    deskripsi: 'Lahan padi bergantung hujan, periode kering dan basah',
+    kategori: 'pertanian',
+    kategoriLabel: 'Pertanian & Perkebunan',
+    nilaiC: 0.45,
+    rangeC: [0.30, 0.60],
+    nilaiCN: 80,
+    rangeCN: [70, 90],
+    sumber: 'Suripin (2004)',
+  },
+  {
+    id: 'LADANG_TEGALAN',
+    nama: 'Ladang / Tegalan (Palawija)',
+    deskripsi: 'Lahan pertanian kering: jagung, kedelai, sayuran',
+    kategori: 'pertanian',
+    kategoriLabel: 'Pertanian & Perkebunan',
+    nilaiC: 0.35,
+    rangeC: [0.20, 0.50],
+    nilaiCN: 72,
+    rangeCN: [60, 82],
+    sumber: 'Suripin (2004), SCS-CN USDA',
+  },
+  {
+    id: 'PERKEBUNAN',
+    nama: 'Perkebunan (Kelapa Sawit, Karet, Kakao)',
+    deskripsi: 'Perkebunan monokultur, tajuk sedang, ground cover ada',
+    kategori: 'pertanian',
+    kategoriLabel: 'Pertanian & Perkebunan',
+    nilaiC: 0.30,
+    rangeC: [0.20, 0.40],
+    nilaiCN: 65,
+    rangeCN: [55, 75],
+    sumber: 'Suripin (2004)',
+  },
+  {
+    id: 'KEBUN_CAMPURAN',
+    nama: 'Kebun Campuran / Agroforestri',
+    deskripsi: 'Kombinasi pohon buah dan tanaman semusim, multi-strata',
+    kategori: 'pertanian',
+    kategoriLabel: 'Pertanian & Perkebunan',
+    nilaiC: 0.25,
+    rangeC: [0.15, 0.35],
+    nilaiCN: 60,
+    rangeCN: [50, 70],
+    sumber: 'Suripin (2004)',
+  },
+
+  // ── Permukiman ────────────────────────────────────────────────────────────
+  {
+    id: 'PERMUKIMAN_PADAT',
+    nama: 'Permukiman Padat Perkotaan',
+    deskripsi: 'Kawasan perumahan rapat, tutupan bangunan >70%, sedikit RTH',
+    kategori: 'permukiman',
+    kategoriLabel: 'Permukiman & Perumahan',
+    nilaiC: 0.75,
+    rangeC: [0.60, 0.90],
+    nilaiCN: 85,
+    rangeCN: [77, 92],
+    sumber: 'Permen PU 12/2014, Suripin (2004)',
+  },
+  {
+    id: 'PERMUKIMAN_SEDANG',
+    nama: 'Permukiman Sedang (Suburban)',
+    deskripsi: 'Perumahan suburban, bangunan 40–70%, terdapat halaman dan RTH',
+    kategori: 'permukiman',
+    kategoriLabel: 'Permukiman & Perumahan',
+    nilaiC: 0.55,
+    rangeC: [0.40, 0.70],
+    nilaiCN: 77,
+    rangeCN: [70, 84],
+    sumber: 'Permen PU 12/2014, Suripin (2004)',
+  },
+  {
+    id: 'PERMUKIMAN_JARANG',
+    nama: 'Permukiman Jarang / Pedesaan',
+    deskripsi: 'Perumahan pedesaan, bangunan <40%, banyak vegetasi dan halaman luas',
+    kategori: 'permukiman',
+    kategoriLabel: 'Permukiman & Perumahan',
+    nilaiC: 0.30,
+    rangeC: [0.20, 0.45],
+    nilaiCN: 66,
+    rangeCN: [58, 74],
+    sumber: 'Suripin (2004)',
+  },
+
+  // ── Industri & Komersial ──────────────────────────────────────────────────
+  {
+    id: 'PUSAT_KOTA',
+    nama: 'Pusat Kota / Central Business District',
+    deskripsi: 'Kawasan perdagangan dan jasa rapat, hampir seluruh area terbangun',
+    kategori: 'industri_komersial',
+    kategoriLabel: 'Industri & Komersial',
+    nilaiC: 0.88,
+    rangeC: [0.75, 0.95],
+    nilaiCN: 90,
+    rangeCN: [85, 95],
+    sumber: 'Permen PU 12/2014',
+  },
+  {
+    id: 'KAWASAN_INDUSTRI',
+    nama: 'Kawasan Industri',
+    deskripsi: 'Pabrik, gudang, dan infrastruktur industri; banyak area paved',
+    kategori: 'industri_komersial',
+    kategoriLabel: 'Industri & Komersial',
+    nilaiC: 0.80,
+    rangeC: [0.65, 0.90],
+    nilaiCN: 85,
+    rangeCN: [80, 92],
+    sumber: 'Suripin (2004)',
+  },
+  {
+    id: 'KAWASAN_KOMERSIAL',
+    nama: 'Kawasan Komersial / Ritel',
+    deskripsi: 'Pertokoan, mall, ruko; sebagian besar area kedap',
+    kategori: 'industri_komersial',
+    kategoriLabel: 'Industri & Komersial',
+    nilaiC: 0.80,
+    rangeC: [0.70, 0.90],
+    nilaiCN: 87,
+    rangeCN: [82, 93],
+    sumber: 'Permen PU 12/2014',
+  },
+
+  // ── Permukaan Keras & Infrastruktur ──────────────────────────────────────
+  {
+    id: 'JALAN_ASPAL',
+    nama: 'Jalan Aspal / Beton',
+    deskripsi: 'Perkerasan jalan aspal atau beton, hampir kedap air',
+    kategori: 'permukaan_keras',
+    kategoriLabel: 'Permukaan Keras & Infrastruktur',
+    nilaiC: 0.95,
+    rangeC: [0.90, 0.98],
+    nilaiCN: 98,
+    rangeCN: [96, 100],
+    sumber: 'Permen PU 12/2014',
+  },
+  {
+    id: 'JALAN_PAVING',
+    nama: 'Jalan Paving Block',
+    deskripsi: 'Paving block dengan celah, infiltrasi lebih tinggi dari aspal',
+    kategori: 'permukaan_keras',
+    kategoriLabel: 'Permukaan Keras & Infrastruktur',
+    nilaiC: 0.85,
+    rangeC: [0.75, 0.90],
+    nilaiCN: 90,
+    rangeCN: [85, 95],
+    sumber: 'Suripin (2004)',
+  },
+  {
+    id: 'ATAP_GEDUNG',
+    nama: 'Atap Gedung / Rooftop',
+    deskripsi: 'Permukaan atap beton, metal, atau genteng; kedap air',
+    kategori: 'permukaan_keras',
+    kategoriLabel: 'Permukaan Keras & Infrastruktur',
+    nilaiC: 0.92,
+    rangeC: [0.85, 0.98],
+    nilaiCN: 97,
+    rangeCN: [95, 99],
+    sumber: 'Permen PU 12/2014',
+  },
+  {
+    id: 'TANAH_TERBUKA',
+    nama: 'Tanah Terbuka / Gundul',
+    deskripsi: 'Lahan terbuka tanpa vegetasi, rawan erosi',
+    kategori: 'permukaan_keras',
+    kategoriLabel: 'Permukaan Keras & Infrastruktur',
+    nilaiC: 0.60,
+    rangeC: [0.50, 0.70],
+    nilaiCN: 77,
+    rangeCN: [68, 85],
+    sumber: 'Suripin (2004)',
+  },
+  {
+    id: 'TAMAN_RTH',
+    nama: 'Taman / Ruang Terbuka Hijau',
+    deskripsi: 'Area taman kota dengan rumput, pohon, jalur setapak',
+    kategori: 'permukaan_keras',
+    kategoriLabel: 'Permukaan Keras & Infrastruktur',
+    nilaiC: 0.15,
+    rangeC: [0.10, 0.25],
+    nilaiCN: 61,
+    rangeCN: [49, 74],
+    sumber: 'Permen PU 12/2014',
+  },
+
+  // ── Perairan ──────────────────────────────────────────────────────────────
+  {
+    id: 'BADAN_AIR',
+    nama: 'Badan Air (Danau, Situ, Waduk)',
+    deskripsi: 'Permukaan air bebas, seluruh hujan menjadi aliran',
+    kategori: 'perairan',
+    kategoriLabel: 'Badan Air & Rawa',
+    nilaiC: 1.00,
+    rangeC: [1.00, 1.00],
+    nilaiCN: 100,
+    rangeCN: [100, 100],
+    sumber: 'SNI 2415:2016',
+  },
+  {
+    id: 'RAWA',
+    nama: 'Rawa / Lahan Basah',
+    deskripsi: 'Lahan dengan muka air tinggi, vegetasi air, sering tergenang',
+    kategori: 'perairan',
+    kategoriLabel: 'Badan Air & Rawa',
+    nilaiC: 0.65,
+    rangeC: [0.50, 0.80],
+    nilaiCN: 88,
+    rangeCN: [80, 95],
+    sumber: 'SCS-CN USDA TR-55',
+  },
+];
+
 export const SNI_RUNOFF_COEFFICIENTS: Record<string, RunoffCoefficientData> = {
   // Permukaan Jalan
   JALAN_ASPAL: {

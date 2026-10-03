@@ -21,8 +21,6 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
   const [notes, setNotes] = useState('');
   const [scenarioName, setScenarioName] = useState('Kondisi Eksisting (Desain)');
 
-  if (!data) return null;
-
   useEffect(() => {
     if (isOpen && data) {
       // Use data from the calculator if available
@@ -90,6 +88,8 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
   };
 
   const site = data?.inputs ? (data.inputs as any).site : null;
+
+  if (!isOpen || !data) return null;
 
   return (
     <Dialog open={isOpen && !!data} onClose={onClose} className="relative z-[100]">

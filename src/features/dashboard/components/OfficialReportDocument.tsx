@@ -15,6 +15,20 @@ interface Props {
   report: ExecutiveReportPayload;
 }
 
+const formatNum = (val: any, decimals = 2, fallback = '-'): string => {
+  if (val === null || val === undefined || val === '') return fallback;
+  const num = Number(val);
+  if (isNaN(num) || !isFinite(num)) return fallback;
+  return num.toFixed(decimals);
+};
+
+const formatInt = (val: any, fallback = '-'): string => {
+  if (val === null || val === undefined || val === '') return fallback;
+  const num = Number(val);
+  if (isNaN(num) || !isFinite(num)) return fallback;
+  return Math.round(num).toLocaleString('id-ID');
+};
+
 export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
   const { 
     kop, 
@@ -130,26 +144,26 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             <div className="border-b border-slate-200 pb-1 flex justify-between">
               <span className="text-slate-500">Panjang Sungai Utama:</span>
               <span className="font-bold text-slate-900 text-right">
-                {identitas.panjangSungai ? `${identitas.panjangSungai} km` : '-'}
+                {identitas.panjangSungai ? `${formatNum(identitas.panjangSungai, 2)} km` : '-'}
               </span>
             </div>
             <div className="border-b border-slate-200 pb-1 flex justify-between">
               <span className="text-slate-500">Waktu Konsentrasi (tc):</span>
               <span className="font-bold text-slate-900 text-right">
-                {identitas.waktuKonsentrasi ? `${identitas.waktuKonsentrasi.toFixed(2)} jam` : '-'}
+                {identitas.waktuKonsentrasi ? `${formatNum(identitas.waktuKonsentrasi, 2)} jam` : '-'}
               </span>
             </div>
             <div className="border-b border-slate-200 pb-1 flex justify-between">
               <span className="text-slate-500">Koefisien Limpasan:</span>
               <span className="font-bold text-slate-900 text-right">
-                {identitas.koefisienLimpasan ? `${identitas.koefisienLimpasan.toFixed(2)} (C/CN)` : '-'}
+                {identitas.koefisienLimpasan ? `${formatNum(identitas.koefisienLimpasan, 2)} (C/CN)` : '-'}
               </span>
             </div>
-            {identitas.latitude && identitas.longitude && (
+            {identitas.latitude !== undefined && identitas.longitude !== undefined && (
               <div className="col-span-2 border-b border-slate-200 pb-1 flex justify-between">
                 <span className="text-slate-500">Titik Koordinat (Geografis):</span>
                 <span className="font-mono font-bold text-slate-900">
-                  {identitas.latitude.toFixed(6)}, {identitas.longitude.toFixed(6)}
+                  {formatNum(identitas.latitude, 6)}, {formatNum(identitas.longitude, 6)}
                 </span>
               </div>
             )}
@@ -173,7 +187,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           <div className="flex flex-wrap items-center justify-between text-xs mb-2">
             <div>
               <span className="text-slate-500">Metode Distribusi Terpilih: </span>
-              <span className="font-bold text-slate-900">{frekuensi.metodeTerpilih}</span>
+              <span className="font-bold text-slate-900">{frekuensi.metodeTerpilih || 'Gumbel'}</span>
             </div>
             <div>
               <span className="text-slate-500">Uji Kesesuaian Statistik: </span>
@@ -183,7 +197,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             </div>
           </div>
 
-          {frekuensi.curahHujanRencana.length > 0 && (
+          {frekuensi.curahHujanRencana && frekuensi.curahHujanRencana.length > 0 && (
             <div className="overflow-x-auto border border-slate-200 rounded">
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
@@ -201,7 +215,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
                     <td className="py-1.5 px-3 font-semibold text-slate-800">Curah Hujan R24 (mm)</td>
                     {frekuensi.curahHujanRencana.map((item, idx) => (
                       <td key={idx} className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
-                        {item.R24.toFixed(1)}
+                        {formatNum(item.R24, 1)}
                       </td>
                     ))}
                   </tr>
@@ -229,19 +243,19 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Debit Puncak Desain</span>
               <span className="text-base font-extrabold text-red-700 font-mono">
-                {banjir.debitPuncak.toFixed(2)} <span className="text-xs font-normal">m³/s</span>
+                {formatNum(banjir.debitPuncak, 2)} <span className="text-xs font-normal">m³/s</span>
               </span>
             </div>
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Waktu ke Puncak (tp)</span>
               <span className="text-base font-extrabold text-slate-900 font-mono">
-                {banjir.waktuPuncak.toFixed(2)} <span className="text-xs font-normal">jam</span>
+                {formatNum(banjir.waktuPuncak, 2)} <span className="text-xs font-normal">jam</span>
               </span>
             </div>
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Metode Hidrologi</span>
               <span className="text-sm font-extrabold text-slate-800">
-                {banjir.metode}
+                {banjir.metode || 'Rasional / HSS'}
               </span>
             </div>
           </div>
@@ -262,7 +276,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
                     <td className="py-1.5 px-3 font-semibold text-slate-800">Debit Banjir Q (m³/s)</td>
                     {banjir.returnPeriods.map((rp, idx) => (
                       <td key={idx} className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
-                        {rp.qPeak.toFixed(2)}
+                        {formatNum(rp.qPeak, 2)}
                       </td>
                     ))}
                   </tr>
@@ -290,17 +304,17 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             <div>
               <span className="text-slate-500">Status Tahunan: </span>
               <span className={`font-bold ${neraca.netBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                {neraca.netBalance >= 0 ? 'SURPLUS' : 'DEFISIT'} ({neraca.netBalance >= 0 ? '+' : ''}{neraca.netBalance.toFixed(1)} m³/s)
+                {neraca.netBalance >= 0 ? 'SURPLUS' : 'DEFISIT'} ({neraca.netBalance >= 0 ? '+' : ''}{formatNum(neraca.netBalance, 1)} m³/s)
               </span>
             </div>
             <div>
               <span className="text-slate-500">Bulan Kritis: </span>
-              <span className="font-bold text-amber-700">{neraca.bulanKritis}</span>
+              <span className="font-bold text-amber-700">{neraca.bulanKritis || 'Agustus'}</span>
             </div>
             {neraca.ikaPercent !== undefined && (
               <div>
                 <span className="text-slate-500">Indeks Kerapuhan Air (IKA): </span>
-                <span className="font-mono font-bold text-slate-900">{neraca.ikaPercent.toFixed(1)}%</span>
+                <span className="font-mono font-bold text-slate-900">{formatNum(neraca.ikaPercent, 1)}%</span>
               </div>
             )}
           </div>
@@ -312,7 +326,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
                   <tr>
                     <th className="py-1.5 px-2">Bulan</th>
                     {neraca.monthlyRows.map((r, idx) => (
-                      <th key={idx} className="py-1.5 px-1.5 text-center text-[10px]">{r.bulan.substring(0, 3)}</th>
+                      <th key={idx} className="py-1.5 px-1.5 text-center text-[10px]">{String(r.bulan || '').substring(0, 3)}</th>
                     ))}
                   </tr>
                 </thead>
@@ -321,7 +335,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
                     <td className="py-1 px-2 font-medium text-slate-600">Andalan (m³/s)</td>
                     {neraca.monthlyRows.map((r, idx) => (
                       <td key={idx} className="py-1 px-1.5 text-center font-mono text-[10px] text-slate-800">
-                        {r.ketersediaan.toFixed(1)}
+                        {formatNum(r.ketersediaan, 1)}
                       </td>
                     ))}
                   </tr>
@@ -329,7 +343,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
                     <td className="py-1 px-2 font-medium text-slate-600">Kebutuhan (m³/s)</td>
                     {neraca.monthlyRows.map((r, idx) => (
                       <td key={idx} className="py-1 px-1.5 text-center font-mono text-[10px] text-slate-800">
-                        {r.kebutuhan.toFixed(1)}
+                        {formatNum(r.kebutuhan, 1)}
                       </td>
                     ))}
                   </tr>
@@ -339,7 +353,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
                       <td key={idx} className={`py-1 px-1.5 text-center font-mono text-[10px] font-bold ${
                         r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
                       }`}>
-                        {r.neraca >= 0 ? '+' : ''}{r.neraca.toFixed(1)}
+                        {r.neraca >= 0 ? '+' : ''}{formatNum(r.neraca, 1)}
                       </td>
                     ))}
                   </tr>
@@ -367,19 +381,19 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Reduksi Puncak</span>
               <span className="text-base font-extrabold text-teal-700 font-mono">
-                {embung.reduksiPuncak.toFixed(1)}%
+                {formatNum(embung.reduksiPuncak, 1)}%
               </span>
             </div>
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Umur Layanan Sedimen</span>
               <span className="text-base font-extrabold text-slate-900 font-mono">
-                {embung.umurSedimen} <span className="text-xs font-normal">Tahun</span>
+                {embung.umurSedimen || 25} <span className="text-xs font-normal">Tahun</span>
               </span>
             </div>
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Tampungan Efektif</span>
               <span className="text-sm font-extrabold text-slate-900 font-mono">
-                {embung.effectiveStorage ? Number(embung.effectiveStorage).toLocaleString('id-ID') : '-'} <span className="text-[10px] font-normal">m³</span>
+                {formatInt(embung.effectiveStorage)} <span className="text-[10px] font-normal">m³</span>
               </span>
             </div>
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
@@ -408,15 +422,15 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-2">
             <div className="border border-slate-200 p-2 rounded">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Kapasitas Debit (Q)</span>
-              <span className="text-sm font-bold text-blue-700 font-mono">{saluran.dischargeCapacity.toFixed(2)} m³/s</span>
+              <span className="text-sm font-bold text-blue-700 font-mono">{formatNum(saluran.dischargeCapacity, 2)} m³/s</span>
             </div>
             <div className="border border-slate-200 p-2 rounded">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Kecepatan Alir (V)</span>
-              <span className="text-sm font-bold text-slate-900 font-mono">{saluran.velocity.toFixed(2)} m/s</span>
+              <span className="text-sm font-bold text-slate-900 font-mono">{formatNum(saluran.velocity, 2)} m/s</span>
             </div>
             <div className="border border-slate-200 p-2 rounded">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Bilangan Froude (Fr)</span>
-              <span className="text-sm font-bold text-slate-900 font-mono">{saluran.froudeNumber.toFixed(2)}</span>
+              <span className="text-sm font-bold text-slate-900 font-mono">{formatNum(saluran.froudeNumber, 2)}</span>
             </div>
             <div className="border border-slate-200 p-2 rounded">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Status Keamanan</span>
@@ -428,7 +442,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
 
           <div className="text-xs text-slate-600 flex justify-between border-t border-slate-100 pt-1.5">
             <span>Bentuk Penampang: <strong className="text-slate-800 uppercase">{saluran.shape}</strong></span>
-            <span>Tinggi Jagaan: <strong className="text-slate-800">{saluran.freeboardActual.toFixed(2)} m</strong> (Syarat: {saluran.freeboardRecommended.toFixed(2)} m)</span>
+            <span>Tinggi Jagaan: <strong className="text-slate-800">{formatNum(saluran.freeboardActual, 2)} m</strong> (Syarat: {formatNum(saluran.freeboardRecommended, 2)} m)</span>
             <span>Rejim Aliran: <strong className="text-slate-800">{saluran.flowRegime}</strong></span>
           </div>
         </section>

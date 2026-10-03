@@ -105,11 +105,13 @@ export const exportHidrologiTemplate = async (stasiunName: string): Promise<void
   saveAs(new Blob([buffer]), safeFilename);
 };
 
+import { ExecutiveReportPayload } from '@/features/dashboard/types/report.types';
+
 /**
  * Export Laporan Eksekutif Lengkap ke dalam Multi-Sheet Excel (.xlsx)
  * Standar format pelaporan teknis Rekayasa Sumber Daya Air (SNI)
  */
-export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> => {
+export const exportExecutiveSummaryToExcel = async (report: ExecutiveReportPayload): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'RekaSDA Pro - Platform Rekayasa Sumber Daya Air SNI';
   workbook.lastModifiedBy = 'Tim Tenaga Ahli Hidrologi';
@@ -154,10 +156,10 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
   wsSummary.addRow({ param: 'Nama Pekerjaan', value: report.identitas?.namaPekerjaan || '-', unit: '-' });
   wsSummary.addRow({ param: 'Nama DAS / Wilayah Sungai', value: report.identitas?.namaDAS || '-', unit: '-' });
   wsSummary.addRow({ param: 'Provinsi / Kabupaten', value: `${report.identitas?.provinsi || '-'} / ${report.identitas?.kabupaten || '-'}`, unit: '-' });
-  wsSummary.addRow({ param: 'Luas DAS Terukur', value: report.identitas?.luasDas || '-', unit: 'km²' });
-  wsSummary.addRow({ param: 'Panjang Sungai Utama', value: report.identitas?.panjangSungai || '-', unit: 'km' });
-  wsSummary.addRow({ param: 'Waktu Konsentrasi (tc)', value: report.identitas?.waktuKonsentrasi ? Number(report.identitas.waktuKonsentrasi).toFixed(2) : '-', unit: 'jam' });
-  wsSummary.addRow({ param: 'Koefisien Limpasan Rerata', value: report.identitas?.koefisienLimpasan || '-', unit: 'C / CN' });
+  wsSummary.addRow({ param: 'Luas DAS Terukur', value: report.identitas?.luasDas !== undefined ? Number(report.identitas.luasDas) : '-', unit: 'km²' });
+  wsSummary.addRow({ param: 'Panjang Sungai Utama', value: report.identitas?.panjangSungai !== undefined ? Number(report.identitas.panjangSungai) : '-', unit: 'km' });
+  wsSummary.addRow({ param: 'Waktu Konsentrasi (tc)', value: report.identitas?.waktuKonsentrasi !== undefined ? Number(report.identitas.waktuKonsentrasi) : '-', unit: 'jam' });
+  wsSummary.addRow({ param: 'Koefisien Limpasan Rerata', value: report.identitas?.koefisienLimpasan !== undefined ? Number(report.identitas.koefisienLimpasan) : '-', unit: 'C / CN' });
   wsSummary.addRow({ param: 'Koordinat Geografis', value: report.identitas?.latitude && report.identitas?.longitude ? `${report.identitas.latitude}, ${report.identitas.longitude}` : '-', unit: 'Lat, Long' });
   wsSummary.addRow({ param: 'Sintesis Rekomendasi AI', value: report.aiSummary || '-', unit: 'SNI Compliance' });
 
@@ -172,13 +174,14 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
     ];
     styleHeaderRow(wsFreq.getRow(1));
 
-    report.frekuensi.curahHujanRencana.forEach((item: any) => {
-      wsFreq.addRow({
+    report.frekuensi.curahHujanRencana.forEach((item) => {
+      const row = wsFreq.addRow({
         tr: `Tr ${item.Tr} Tahun`,
-        r24: Number(item.R24).toFixed(2),
-        method: report.frekuensi.metodeTerpilih || 'Gumbel',
-        test: report.frekuensi.lulusUji ? 'Lulus / Memenuhi' : 'Perlu Koreksi'
+        r24: Number(item.R24 || 0),
+        method: report.frekuensi?.metodeTerpilih || 'Gumbel',
+        test: report.frekuensi?.lulusUji ? 'Lulus / Memenuhi' : 'Perlu Koreksi'
       });
+      row.getCell('r24').numFmt = '#,##0.00';
     });
   }
 
@@ -194,27 +197,33 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
     styleHeaderRow(wsFlood.getRow(1));
 
     wsFlood.addRow({ param: 'Metode Analisis Banjir', val: report.banjir.metode || 'Rasional / HSS', unit: '-', ref: 'SNI 2415:2016' });
-    wsFlood.addRow({ param: 'Debit Puncak (Qpeak)', val: Number(report.banjir.debitPuncak || 0).toFixed(2), unit: 'm³/s', ref: 'Puncak Limpasan' });
-    wsFlood.addRow({ param: 'Waktu Puncak (tp)', val: Number(report.banjir.waktuPuncak || 0).toFixed(2), unit: 'jam', ref: 'Time to Peak' });
-    wsFlood.addRow({ param: 'Volume Total Banjir', val: Number(report.banjir.volumeTotal || 0).toFixed(0), unit: 'm³', ref: 'Total Runoff Volume' });
+    const rowQp = wsFlood.addRow({ param: 'Debit Puncak (Qpeak)', val: Number(report.banjir.debitPuncak || 0), unit: 'm³/s', ref: 'Puncak Limpasan' });
+    rowQp.getCell('val').numFmt = '#,##0.00';
+
+    const rowTp = wsFlood.addRow({ param: 'Waktu Puncak (tp)', val: Number(report.banjir.waktuPuncak || 0), unit: 'jam', ref: 'Time to Peak' });
+    rowTp.getCell('val').numFmt = '#,##0.00';
+
+    const rowVol = wsFlood.addRow({ param: 'Volume Total Banjir', val: Number(report.banjir.volumeTotal || 0), unit: 'm³', ref: 'Total Runoff Volume' });
+    rowVol.getCell('val').numFmt = '#,##0';
 
     if (report.banjir.returnPeriods && report.banjir.returnPeriods.length > 0) {
       wsFlood.addRow({});
-      const subHeader = wsFlood.addRow({ param: 'Kala Ulang', val: 'Debit Puncak (m³/s)', unit: 'Status', ref: 'Standar SNI' });
+      const subHeader = wsFlood.addRow({ param: 'Kala Ulang', val: 'Debit Puncak (m³/s)', unit: 'Satuan', ref: 'Standar SNI' });
       subHeader.font = { bold: true };
       report.banjir.returnPeriods.forEach((rp: any) => {
-        wsFlood.addRow({
+        const rpRow = wsFlood.addRow({
           param: `Kala Ulang ${rp.period} Th`,
-          val: Number(rp.qPeak || 0).toFixed(2),
+          val: Number(rp.qPeak || 0),
           unit: 'm³/s',
           ref: 'SNI 2415:2016'
         });
+        rpRow.getCell('val').numFmt = '#,##0.00';
       });
     }
   }
 
   // 4. SHEET 4: NERACA AIR BULANAN
-  if (report.neraca && report.neraca.monthlyRows?.length > 0) {
+  if (report.neraca && report.neraca.monthlyRows && report.neraca.monthlyRows.length > 0) {
     const wsWB = workbook.addWorksheet('Neraca Air Bulanan');
     wsWB.columns = [
       { header: 'Bulan', key: 'bulan', width: 15 },
@@ -226,23 +235,52 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
     styleHeaderRow(wsWB.getRow(1));
 
     report.neraca.monthlyRows.forEach((r: any) => {
-      wsWB.addRow({
+      const balNum = Number(r.neraca || 0);
+      const row = wsWB.addRow({
         bulan: r.bulan,
-        sup: Number(r.ketersediaan || 0).toFixed(2),
-        dem: Number(r.kebutuhan || 0).toFixed(2),
-        bal: Number(r.neraca || 0).toFixed(2),
-        status: r.status
+        sup: Number(r.ketersediaan || 0),
+        dem: Number(r.kebutuhan || 0),
+        bal: balNum,
+        status: r.status || (balNum >= 0 ? 'Surplus' : 'Defisit')
       });
+      row.getCell('sup').numFmt = '#,##0.00';
+      row.getCell('dem').numFmt = '#,##0.00';
+      row.getCell('bal').numFmt = '#,##0.00';
+
+      if (balNum < 0) {
+        row.getCell('bal').font = { color: { argb: 'FFDC2626' }, bold: true };
+        row.getCell('status').fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFEE2E2' }
+        };
+        row.getCell('status').font = { color: { argb: 'FF991B1B' }, bold: true };
+      }
     });
 
     wsWB.addRow({});
-    wsWB.addRow({
+    const netTotal = Number(report.neraca.netBalance || 0);
+    const summaryRow = wsWB.addRow({
       bulan: 'TOTAL KELAYAKAN',
-      sup: Number(report.neraca.totalKetersediaan || 0).toFixed(2),
-      dem: Number(report.neraca.totalKebutuhan || 0).toFixed(2),
-      bal: Number(report.neraca.netBalance || 0).toFixed(2),
-      status: report.neraca.netBalance >= 0 ? 'SURPLUS' : 'DEFISIT'
+      sup: Number(report.neraca.totalKetersediaan || 0),
+      dem: Number(report.neraca.totalKebutuhan || 0),
+      bal: netTotal,
+      status: netTotal >= 0 ? 'SURPLUS' : 'DEFISIT'
     });
+    summaryRow.font = { bold: true };
+    summaryRow.getCell('sup').numFmt = '#,##0.00';
+    summaryRow.getCell('dem').numFmt = '#,##0.00';
+    summaryRow.getCell('bal').numFmt = '#,##0.00';
+    if (netTotal < 0) {
+      summaryRow.getCell('bal').font = { color: { argb: 'FFDC2626' }, bold: true };
+      summaryRow.getCell('status').fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFEE2E2' }
+      };
+      summaryRow.getCell('status').font = { color: { argb: 'FF991B1B' }, bold: true };
+    }
+
     wsWB.addRow({
       bulan: 'Bulan Kritis',
       sup: report.neraca.bulanKritis || '-',
@@ -263,11 +301,11 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
     ];
     styleHeaderRow(wsEmbung.getRow(1));
 
-    wsEmbung.addRow({ param: 'Reduksi Puncak Banjir', val: `${Number(report.embung.reduksiPuncak || 0).toFixed(1)}%`, unit: '%', ref: 'Efektivitas Meredam Banjir' });
+    wsEmbung.addRow({ param: 'Reduksi Puncak Banjir', val: Number(report.embung.reduksiPuncak || 0) / 100, unit: '%', ref: 'Efektivitas Meredam Banjir' }).getCell('val').numFmt = '0.0%';
     wsEmbung.addRow({ param: 'Taksiran Umur Sedimen', val: report.embung.umurSedimen || 25, unit: 'Tahun', ref: 'Pd T-03-2005-A' });
-    wsEmbung.addRow({ param: 'Tampungan Efektif', val: Number(report.embung.effectiveStorage || 0).toLocaleString('id-ID'), unit: 'm³', ref: 'Volume Aktif Operasi' });
-    wsEmbung.addRow({ param: 'Tampungan Mati (Dead Storage)', val: Number(report.embung.deadStorage || 0).toLocaleString('id-ID'), unit: 'm³', ref: 'Ruang Sedimen Mati' });
-    wsEmbung.addRow({ param: 'Total Kapasitas Desain', val: Number(report.embung.totalCapacity || 0).toLocaleString('id-ID'), unit: 'm³', ref: 'Gross Storage' });
+    wsEmbung.addRow({ param: 'Tampungan Efektif', val: Number(report.embung.effectiveStorage || 0), unit: 'm³', ref: 'Volume Aktif Operasi' }).getCell('val').numFmt = '#,##0';
+    wsEmbung.addRow({ param: 'Tampungan Mati (Dead Storage)', val: Number(report.embung.deadStorage || 0), unit: 'm³', ref: 'Ruang Sedimen Mati' }).getCell('val').numFmt = '#,##0';
+    wsEmbung.addRow({ param: 'Total Kapasitas Desain', val: Number(report.embung.totalCapacity || 0), unit: 'm³', ref: 'Gross Storage' }).getCell('val').numFmt = '#,##0';
     wsEmbung.addRow({ param: 'Status Keamanan Embung', val: report.embung.isAman ? 'Aman' : 'Perlu Evaluasi', unit: '-', ref: 'Stabilitas & Tinggi Jagaan' });
   }
 
@@ -283,11 +321,11 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
     styleHeaderRow(wsSal.getRow(1));
 
     wsSal.addRow({ param: 'Bentuk Penampang', val: report.saluran.shape, unit: '-', ref: 'SNI 03-2401-1991' });
-    wsSal.addRow({ param: 'Debit Kapasitas (Qkap)', val: Number(report.saluran.dischargeCapacity || 0).toFixed(2), unit: 'm³/s', ref: 'Rumus Manning' });
-    wsSal.addRow({ param: 'Kecepatan Aliran (V)', val: Number(report.saluran.velocity || 0).toFixed(2), unit: 'm/s', ref: report.saluran.velocityStatus || 'Normal' });
-    wsSal.addRow({ param: 'Angka Froude (Fr)', val: Number(report.saluran.froudeNumber || 0).toFixed(2), unit: '-', ref: report.saluran.flowRegime || 'Subkritis' });
-    wsSal.addRow({ param: 'Tinggi Jagaan Aktual', val: Number(report.saluran.freeboardActual || 0).toFixed(2), unit: 'm', ref: 'Freeboard Aktual' });
-    wsSal.addRow({ param: 'Tinggi Jagaan Disyaratkan', val: Number(report.saluran.freeboardRecommended || 0).toFixed(2), unit: 'm', ref: 'Minimum SNI' });
+    wsSal.addRow({ param: 'Debit Kapasitas (Qkap)', val: Number(report.saluran.dischargeCapacity || 0), unit: 'm³/s', ref: 'Rumus Manning' }).getCell('val').numFmt = '#,##0.00';
+    wsSal.addRow({ param: 'Kecepatan Aliran (V)', val: Number(report.saluran.velocity || 0), unit: 'm/s', ref: report.saluran.velocityStatus || 'Normal' }).getCell('val').numFmt = '#,##0.00';
+    wsSal.addRow({ param: 'Angka Froude (Fr)', val: Number(report.saluran.froudeNumber || 0), unit: '-', ref: report.saluran.flowRegime || 'Subkritis' }).getCell('val').numFmt = '#,##0.00';
+    wsSal.addRow({ param: 'Tinggi Jagaan Aktual', val: Number(report.saluran.freeboardActual || 0), unit: 'm', ref: 'Freeboard Aktual' }).getCell('val').numFmt = '#,##0.00';
+    wsSal.addRow({ param: 'Tinggi Jagaan Disyaratkan', val: Number(report.saluran.freeboardRecommended || 0), unit: 'm', ref: 'Minimum SNI' }).getCell('val').numFmt = '#,##0.00';
     wsSal.addRow({ param: 'Status Keseluruhan Saluran', val: report.saluran.isSafe ? 'Aman (Memenuhi SNI)' : 'Bahaya Limpasan', unit: '-', ref: 'Verifikasi Desain' });
   }
 
@@ -296,4 +334,5 @@ export const exportExecutiveSummaryToExcel = async (report: any): Promise<void> 
   const buffer = await workbook.xlsx.writeBuffer();
   saveAs(new Blob([buffer]), `${fileName}.xlsx`);
 };
+
 

@@ -28,7 +28,7 @@ export const defaultKopData: ReportKopData = {
   instansi: 'KONSULTAN PERENCANA & PENGELOLA SUMBER DAYA AIR',
   balai: 'DIVISI PERENCANAAN TEKNIS & ANALISIS HIDROLOGI',
   subTitle: 'LAPORAN RINGKASAN EKSEKUTIF KELAYAKAN TEKNIS HIDROLOGI & DESAIN INFRASTRUKTUR AIR',
-  nomorDokumen: `LAP-SDA/${new Date().getFullYear()}/${String(Math.floor(1000 + Math.random() * 9000))}`,
+  nomorDokumen: `LAP-SDA/${new Date().getFullYear()}/0001`,
   tanggalDokumen: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
   statusDokumen: 'FINAL',
   penandatangan: {
@@ -173,7 +173,7 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
     kop: {
       ...defaultKopData,
       instansi: identitas.instansi || defaultKopData.instansi,
-      nomorDokumen: `LAP-SDA/${identitas.tahunAnalisis || new Date().getFullYear()}/${String(Math.floor(1000 + Math.random() * 9000))}`
+      nomorDokumen: identitas.nomorDokumen || `LAP-SDA/${identitas.tahunAnalisis || new Date().getFullYear()}/0001`
     },
     identitas: {
       namaPekerjaan: identitas.namaPekerjaan || 'Perencanaan Pengelolaan Sumber Daya Air Terpadu',
@@ -186,8 +186,11 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
       luasDas: luasDas || (store.morfometriDAS ? store.morfometriDAS.luasDAS : undefined),
       panjangSungai: store.morfometriDAS ? store.morfometriDAS.panjangSungai : undefined,
       kemiringanSungai: store.morfometriDAS ? store.morfometriDAS.kemiringanSungai : undefined,
-      waktuKonsentrasi: store.waktuKonsentrasi,
-      koefisienLimpasan: store.tutupanLahanTotalC
+      waktuKonsentrasi: store.waktuKonsentrasi 
+        || (store.morfometriDAS?.panjangSungai 
+          ? (0.87 * Math.pow(Number(store.morfometriDAS.panjangSungai), 2) / (1000 * Math.max(0.001, Number(store.morfometriDAS.kemiringanSungai || 0.01)))) 
+          : undefined),
+      koefisienLimpasan: store.tutupanLahan?.koefisienPengaliranGabungan || store.tutupanLahanTotalC
     },
     frekuensi: frekuensiPayload,
     banjir: banjirPayload,
@@ -238,62 +241,67 @@ export const aggregateHistoricalProjectData = (item: AllCalculationsData): Execu
   };
 
   if (item.type === 'manning') {
-    const res = d.results || {};
-    const inp = d.inputs || {};
+    const res = d.results || d.outputResults || d.result_data || d;
+    const inp = d.inputs || d.inputParameters || d.input_data || d;
     basePayload.saluran = {
       shape: inp.shape || 'trapezoid',
-      channelName: item.project_name,
-      dischargeCapacity: Number(res.Discharge || 0),
-      velocity: Number(res.Velocity || 0),
-      froudeNumber: Number(res.Froude || 0),
-      flowRegime: res.FlowType || 'Subkritis',
-      isSafe: res.SafetyStatus === 'Aman',
-      isVelocitySafe: true,
-      velocityStatus: 'Normal',
-      freeboardActual: Number(res.Freeboard || 0),
-      freeboardRecommended: Number(res.Freeboard || 0),
+      channelName: item.project_name || inp.channelName || 'Saluran Terbuka',
+      dischargeCapacity: Number(res.Discharge || res.dischargeCapacity || res.Q || res.capacity || 0),
+      designDischarge: Number(res.designDischarge || inp.designDischarge || inp.Q || 0),
+      velocity: Number(res.Velocity || res.velocity || res.V || 0),
+      froudeNumber: Number(res.Froude || res.froudeNumber || res.Fr || 0),
+      flowRegime: res.FlowType || res.flowRegime || 'Subkritis',
+      isSafe: res.SafetyStatus === 'Aman' || res.isSafe === true,
+      isVelocitySafe: res.isVelocitySafe ?? true,
+      velocityStatus: res.velocityStatus || 'Normal',
+      freeboardActual: Number(res.Freeboard || res.freeboardActual || 0),
+      freeboardRecommended: Number(res.freeboardRecommended || res.Freeboard || 0),
       dimensions: {
-        width: inp.bottomWidth,
-        depth: inp.waterDepth,
-        totalDepth: inp.channelDepth
+        width: inp.bottomWidth || inp.width || inp.b,
+        depth: inp.waterDepth || inp.depth || inp.h,
+        totalDepth: inp.channelDepth || inp.totalDepth || inp.H
       }
     };
   } else if (item.type === 'flood') {
-    const res = d.results || {};
+    const res = d.results || d.outputResults || d.result_data || d;
     basePayload.banjir = {
-      metode: d.method || 'Rasional',
-      debitPuncak: Number(res.qPeak || 0),
-      waktuPuncak: Number(res.tPeak || 0),
-      volumeTotal: Number(res.volume || 0),
+      metode: d.method || res.method || 'Rasional',
+      debitPuncak: Number(res.qPeak || res.peakDischarge || res.Qp || res.Qpeak || res.debitPuncak || 0),
+      waktuPuncak: Number(res.tPeak || res.timeToPeak || res.Tp || res.waktuPuncak || 0),
+      volumeTotal: Number(res.volume || res.totalVolume || res.volumeTotal || 0),
       returnPeriods: res.returnPeriods || []
     };
   } else if (item.type === 'water_balance') {
-    const monthly = d.monthly_results || [];
-    const supplySum = monthly.reduce((s: number, m: any) => s + parseFloat(m.supply || 0), 0);
-    const demandSum = monthly.reduce((s: number, m: any) => s + parseFloat(m.totalDemand || 0), 0);
+    const monthly = d.monthly_results || d.monthlyResults || d.chartData || d.monthlyRows || [];
+    const supplySum = d.totalSupply !== undefined 
+      ? Number(d.totalSupply) 
+      : monthly.reduce((s: number, m: any) => s + parseFloat(m.supply || m.ketersediaan || 0), 0);
+    const demandSum = d.totalDemand !== undefined 
+      ? Number(d.totalDemand) 
+      : monthly.reduce((s: number, m: any) => s + parseFloat(m.totalDemand || m.demand || m.kebutuhan || 0), 0);
     basePayload.neraca = {
-      bulanKritis: d.summary?.criticalMonth?.month || 'Agustus',
+      bulanKritis: d.summary?.criticalMonth?.month || d.summary?.criticalMonth || 'Agustus',
       totalKetersediaan: supplySum,
       totalKebutuhan: demandSum,
       netBalance: supplySum - demandSum,
       monthlyRows: monthly.map((m: any) => ({
-        bulan: m.month,
-        ketersediaan: parseFloat(m.supply || 0),
-        kebutuhan: parseFloat(m.totalDemand || 0),
-        neraca: parseFloat(m.balance || 0),
-        status: m.status || (parseFloat(m.balance || 0) >= 0 ? 'Surplus' : 'Defisit')
+        bulan: m.month || m.bulan,
+        ketersediaan: parseFloat(m.supply || m.ketersediaan || 0),
+        kebutuhan: parseFloat(m.totalDemand || m.demand || m.kebutuhan || 0),
+        neraca: parseFloat(m.balance || m.neraca || 0),
+        status: m.status || (parseFloat(m.balance || m.neraca || 0) >= 0 ? 'Surplus' : 'Defisit')
       }))
     };
   } else if (item.type === 'embung') {
-    const res = d.result_data || d.results || {};
+    const res = d.result_data || d.results || d.outputResults || d;
     basePayload.embung = {
-      isAman: true,
-      reduksiPuncak: Number(res.attenuationPercent || 0),
-      umurSedimen: Number(res.serviceLife || 25),
-      effectiveStorage: Number(res.effectiveStorage || res.storageRequired || 0),
-      deadStorage: Number(res.deadStorage || res.sedimentStorage || 0),
-      totalCapacity: Number(res.totalCapacity || res.grossStorage || 0),
-      maxElevation: Number(res.maxWaterLevel || 0),
+      isAman: res.isSafe ?? true,
+      reduksiPuncak: Number(res.attenuationPercent || res.reduksiPuncak || 0),
+      umurSedimen: Number(res.serviceLife || res.umurSedimen || 25),
+      effectiveStorage: Number(res.effectiveStorage || res.storageRequired || res.tampunganEfektif || 0),
+      deadStorage: Number(res.deadStorage || res.sedimentStorage || res.tampunganMati || 0),
+      totalCapacity: Number(res.totalCapacity || res.grossStorage || res.tampunganTotal || 0),
+      maxElevation: Number(res.maxWaterLevel || res.maxElevation || 0),
       peakInflow: Number(res.peakInflow || 0),
       peakOutflow: Number(res.peakOutflow || 0),
     };
