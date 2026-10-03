@@ -102,6 +102,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
   const hasilSaluran = useHydrologyStore((s) => s.hasilSaluran);
   const hasilMock = useHydrologyStore((s) => s.hasilMock);
   const neracaFinal = useHydrologyStore((s) => s.neracaFinal);
+  const isFrekuensiDirty = useHydrologyStore((s) => s.isFrekuensiDirty);
   const isBanjirDirty = useHydrologyStore((s) => s.isBanjirDirty);
   const isNeracaDirty = useHydrologyStore((s) => s.isNeracaDirty);
   const durasiHujan = useHydrologyStore((s) => s.durasiHujan);
@@ -199,6 +200,9 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     }
 
     // Dirty state warnings
+    if (isFrekuensiDirty) {
+      contextParts.push(`⚠️ WARNING: Data hujan stasiun/wilayah telah diperbarui tetapi analisis frekuensi belum di-rekalkulasi (isFrekuensiDirty = true).`);
+    }
     if (isBanjirDirty) {
       contextParts.push(`⚠️ WARNING: Parameter banjir telah diubah tetapi belum di-rekalkulasi (isBanjirDirty = true).`);
     }
@@ -214,6 +218,16 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     const chips: SuggestionChip[] = [];
 
     // Dirty state chips
+    if (isFrekuensiDirty) {
+      chips.push({
+        id: 'dirty-frekuensi',
+        label: 'Mengapa analisis frekuensi perlu disinkronkan?',
+        prompt: 'Data curah hujan stasiun atau wilayah telah diperbarui. Jelaskan bagaimana cara menyinkronkan deret curah hujan maksimum tahunan (AMS) dan memperbarui hujan rencana.',
+        severity: 'warning',
+        icon: '🌧️',
+      });
+    }
+
     if (isBanjirDirty) {
       chips.push({
         id: 'dirty-banjir',
@@ -454,7 +468,7 @@ export function useAIContext(activeTab: ActiveModule): AIContextResult {
     activeTab, luasDas, panjangSungai, curahHujanRencana,
     hasilThiessen, hasilARF, hasilAnalisisFrekuensi,
     hasilBanjir, hasilKonvolusi, hasilNeraca, hasilEmbung,
-    hasilMock, neracaFinal, isBanjirDirty, isNeracaDirty,
+    hasilMock, neracaFinal, isFrekuensiDirty, isBanjirDirty, isNeracaDirty,
     durasiHujan, distribusiHujanJamJaman,
   ]);
 }

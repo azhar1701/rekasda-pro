@@ -26,6 +26,7 @@ import { toast } from '@/hooks/useToast';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import { SuccessCelebration } from '@/components/ui/feedback/SuccessCelebration';
 import { HelpTooltip } from '@/components/ui/govtech';
+import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import {
   calculateStatisticalParams,
   calculateDistributions,
@@ -169,6 +170,32 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       }
     } catch (err) {
       toast.error('Gagal membaca clipboard. Pastikan Anda sudah menyalin data dari Excel.');
+    }
+  };
+
+  const handleSyncLatestSeries = () => {
+    let sourceData = dataHujan;
+    if (inputType === 'point') {
+      sourceData = selectedStasiun
+        ? dataHujan.filter(d => d.stasiun_id === selectedStasiun.id)
+        : dataHujan;
+    } else if (inputType === 'areal_thiessen') {
+      sourceData = arealRainfallThiessen || [];
+    } else if (inputType === 'areal_algebraic') {
+      sourceData = arealRainfallAlgebraic || [];
+    } else if (inputType === 'areal_isohyet') {
+      sourceData = arealRainfallIsohyet || [];
+    }
+
+    const ams = extractAnnualMaximums(sourceData);
+    if (ams.length >= 10) {
+      setDataInput(ams.map(d => d.value));
+      toast.info(`Berhasil menyinkronkan ${ams.length} data curah hujan tahunan (AMS) terkini. Silakan verifikasi dan klik Simpan & Lanjutkan.`);
+    } else if (ams.length > 0) {
+      setDataInput(ams.map(d => d.value));
+      toast.warning(`Data tahunan terkini yang tersedia hanya ${ams.length} tahun (minimal 10 tahun per SNI 2415:2016).`);
+    } else {
+      toast.error('Tidak ditemukan data curah hujan yang valid untuk menyusun deret tahunan.');
     }
   };
 
@@ -407,6 +434,13 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
             onComplete={() => setShowCelebration(false)}
           />
         )}
+
+        {/* Cascade Invalidation Alert */}
+        <DependencyWarningBanner
+          module="frekuensi"
+          onAction={handleSyncLatestSeries}
+          actionLabel="Sinkronkan Deret Baru"
+        />
 
         {/* TAHAP 1: Smart Data Context - Input AMS */}
         <div className="rounded-md border border-slate-300 bg-white shadow-sm">

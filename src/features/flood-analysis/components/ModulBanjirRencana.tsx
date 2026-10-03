@@ -961,7 +961,11 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                     {/* ═══════════════════════════════ RIGHT COLUMN ══════════════════════ */}
                     <div className="md:col-span-7 flex flex-col gap-5 min-h-[400px]">
-                        <DependencyWarningBanner module="banjir" />
+                        <DependencyWarningBanner
+                            module="banjir"
+                            onAction={isDataReady ? handleCalculate : undefined}
+                            actionLabel="Hitung Ulang Hidrograf"
+                        />
 
                         {/* Hyetograph Generator (Mononobe + ABM) */}
                         <HyetographGenerator />

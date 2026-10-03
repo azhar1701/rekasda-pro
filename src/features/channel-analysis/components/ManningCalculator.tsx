@@ -9,6 +9,7 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { FormulaAccordion } from '@/components/ui/data-display/FormulaAccordion';
 import { StatCard } from '@/components/ui/StatCard';
 import { toast } from '@/hooks/useToast';
+import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 import { saveManningCalculation } from '@/services/calculationService';
 import { CalculationType } from '@/types/types';
 import {
@@ -286,6 +287,18 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
       }
     >
       <div className="flex flex-col gap-6">
+        {/* Cascade Invalidation Alert */}
+        <DependencyWarningBanner
+          module="saluran"
+          onAction={() => {
+            if (qDesign) {
+              setTargetQInput(qDesign.toFixed(2));
+              toast.info(`Debit banjir rencana ${qDesign.toFixed(3)} m³/s disinkronkan ke solver.`);
+            }
+          }}
+          actionLabel="Sinkronkan Debit Banjir"
+        />
+
         {/* Navigation Tabs */}
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -378,7 +391,21 @@ export const ManningCalculator: React.FC<Props> = ({ onSave, onConsultAI }) => {
                     </p>
                     <div className="flex items-center gap-2">
                       <div className="flex-1">
-                        <label className="text-[10px] font-bold text-teal-800 uppercase block mb-1">Target Debit (Q, m³/s)</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[10px] font-bold text-teal-800 uppercase block">Target Debit (Q, m³/s)</label>
+                          {qDesign && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTargetQInput(qDesign.toFixed(2));
+                                toast.success(`Debit banjir ${qDesign.toFixed(2)} m³/s dimasukkan ke target.`);
+                              }}
+                              className="text-[10px] text-teal-700 underline font-semibold hover:text-teal-900 cursor-pointer"
+                            >
+                              Gunakan Qp ({qDesign.toFixed(2)} m³/s)
+                            </button>
+                          )}
+                        </div>
                         <Input
                           type="number"
                           step="0.1"

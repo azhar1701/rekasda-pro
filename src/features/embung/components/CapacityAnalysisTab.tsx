@@ -6,6 +6,7 @@ import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 import { Download, Calculator, Info, Waves, Spline, Loader2, Sparkles, Database } from 'lucide-react';
 import { toast } from '@/hooks/useToast';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { DependencyWarningBanner } from '@/components/ui/DependencyWarningBanner';
 // import { calculateSequentPeak } from '@/lib/engine/embung';
 import type { MonthlyData, SequentPeakResult } from '../types/embung.types';
 import { useKapasitasMutation } from '@/hooks/api/useEmbungApi';
@@ -105,6 +106,13 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
                     </div>
                 </div>
             </div>
+
+            {/* Cascade Invalidation Alert */}
+            <DependencyWarningBanner
+                module="neraca"
+                onAction={handleSyncFromNeraca}
+                actionLabel="Sinkronkan Neraca Air"
+            />
 
             {/* Main Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">

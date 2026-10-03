@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { ProjectMenuModal } from '@/components/ui/navigation/ProjectMenuModal';
 
 interface HeaderProps {
   appName: string;
@@ -25,8 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
             <BrandLogo size="md" showText={true} />
           </div>
 
-          {/* Right Side - Status & Version */}
+          {/* Right Side - Project Manager, Status & Version */}
           <div className="flex items-center gap-2 md:gap-3">
+            <ProjectMenuModal />
+
             {statusBadge && (
               <div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
                 <div

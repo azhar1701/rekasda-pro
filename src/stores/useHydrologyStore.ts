@@ -386,6 +386,7 @@ export interface HydrologyState {
   arealRainfallAlgebraic: DataHujan[] | null;
   arealRainfallThiessen: DataHujan[] | null;
   arealRainfallIsohyet: DataHujan[] | null;
+  isFrekuensiDirty: boolean;
   isBanjirDirty: boolean;
   isNeracaDirty: boolean;
   isLoading: boolean;
@@ -449,6 +450,11 @@ export interface HydrologyState {
   setHasilSaluran: (hasil: HasilSaluran | null) => void;
   fetchMultipleStationsData: (stasiunIds: string[]) => Promise<void>;
 
+  // --- Dirty Flag Setters ---
+  setIsFrekuensiDirty: (dirty: boolean) => void;
+  setIsBanjirDirty: (dirty: boolean) => void;
+  setIsNeracaDirty: (dirty: boolean) => void;
+
   // --- Rainfall Routing Setters ---
   setActiveRainfallSource: (source: 'titik' | 'aljabar' | 'thiessen' | 'isohyet') => void;
   setArealRainfallData: (type: 'aljabar' | 'thiessen' | 'isohyet', data: DataHujan[] | null) => void;
@@ -468,7 +474,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   hasilNeraca: null, hasilEmbung: null, hasilSaluran: null, hasilMock: null,
   hasilKonvolusi: null, neracaFinal: null, distribusiHujanJamJaman: null, hujanEfektif: null, durasiHujan: 6,
   qcResults: null, qcStatus: null, dailyCompleteness: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
-  hssComparisonResults: null, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
+  hssComparisonResults: null, isFrekuensiDirty: false, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
   selectedKalaUlang: 25,
 
   // --- Initial Rainfall Routing States ---
@@ -480,6 +486,9 @@ export const useHydrologyStore = create<HydrologyState>()(
 
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
+  setIsFrekuensiDirty: (dirty: boolean) => set({ isFrekuensiDirty: dirty }),
+  setIsBanjirDirty: (dirty: boolean) => set({ isBanjirDirty: dirty }),
+  setIsNeracaDirty: (dirty: boolean) => set({ isNeracaDirty: dirty }),
   setLuasDas: (luas: string) => set({ luasDas: luas, isBanjirDirty: true, isNeracaDirty: true }),
   setPanjangSungai: (val: string) => set({ panjangSungai: val, isBanjirDirty: true }),
   setCurahHujanRencana: (val: string) => set({ curahHujanRencana: val, isBanjirDirty: true, isNeracaDirty: true }),
@@ -725,7 +734,7 @@ export const useHydrologyStore = create<HydrologyState>()(
         
         if (error) console.warn('Supabase insert single error:', error);
         if (inserted && inserted.length > 0) {
-          set(state => ({ dataHujan: [...state.dataHujan, inserted[0]] }));
+          set(state => ({ dataHujan: [...state.dataHujan, inserted[0]], isFrekuensiDirty: true, isBanjirDirty: true }));
           return;
         }
       }
@@ -738,7 +747,9 @@ export const useHydrologyStore = create<HydrologyState>()(
             id: `local_ch_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             ...data
           }
-        ]
+        ],
+        isFrekuensiDirty: true,
+        isBanjirDirty: true
       }));
     } catch (error: any) {
       set({ error: error.message });
@@ -762,7 +773,7 @@ export const useHydrologyStore = create<HydrologyState>()(
               ...item
             });
           });
-          return { dataHujan: Array.from(existingMap.values()) };
+          return { dataHujan: Array.from(existingMap.values()), isFrekuensiDirty: true, isBanjirDirty: true };
         });
         if (onProgress) onProgress(100);
         return;
@@ -789,6 +800,7 @@ export const useHydrologyStore = create<HydrologyState>()(
       if (currentStasiun) {
         await get().fetchDataHujan(currentStasiun.id);
       }
+      set({ isFrekuensiDirty: true, isBanjirDirty: true });
     } catch (error: any) {
       set({ error: error.message });
       throw error;
@@ -816,7 +828,9 @@ export const useHydrologyStore = create<HydrologyState>()(
       set(state => ({
         dataHujan: state.dataHujan.filter(
           d => !(d.stasiun_id === stasiunId && d.tanggal >= start && d.tanggal <= end)
-        )
+        ),
+        isFrekuensiDirty: true,
+        isBanjirDirty: true
       }));
     } catch (error: any) {
       set({ error: error.message });
@@ -843,7 +857,7 @@ export const useHydrologyStore = create<HydrologyState>()(
         if (existingIdx >= 0) {
           const updated = [...state.dataHujan];
           updated[existingIdx] = { ...updated[existingIdx], curah_hujan, is_infilled: false };
-          return { dataHujan: updated };
+          return { dataHujan: updated, isFrekuensiDirty: true, isBanjirDirty: true };
         } else {
           return {
             dataHujan: [
@@ -855,7 +869,9 @@ export const useHydrologyStore = create<HydrologyState>()(
                 curah_hujan,
                 is_infilled: false,
               }
-            ]
+            ],
+            isFrekuensiDirty: true,
+            isBanjirDirty: true
           };
         }
       });
@@ -937,6 +953,7 @@ export const useHydrologyStore = create<HydrologyState>()(
       hasilThiessen: hasil,
       arealRainfallThiessen: arealData,
       activeRainfallSource: hasil ? 'thiessen' : 'titik',
+      isFrekuensiDirty: true,
       isBanjirDirty: true,
       isNeracaDirty: true
     });
@@ -1045,7 +1062,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   },
 
   setCurahHujanWilayah: async (data) => {
-    set({ curahHujanWilayah: data, isBanjirDirty: true });
+    set({ curahHujanWilayah: data, isFrekuensiDirty: true, isBanjirDirty: true });
     if (!supabase || !data) return;
     try {
       const dasId = '00000000-0000-0000-0000-000000000001';
@@ -1118,7 +1135,7 @@ export const useHydrologyStore = create<HydrologyState>()(
       console.warn('fetchSpatialParameters warning:', err);
     }
   },
-  setAnalisisFrekuensi: (data) => set({ analisisFrekuensi: data, hasilBanjir: null, isBanjirDirty: true }),
+  setAnalisisFrekuensi: (data) => set({ analisisFrekuensi: data, hasilBanjir: null, isFrekuensiDirty: false, isBanjirDirty: true }),
   setIdentitasLokasi: (data) => set(state => ({ identitasLokasi: { ...state.identitasLokasi, ...data } })),
 
   getTimeOfConcentration: () => calculateTimeOfConcentration(parseFloat(get().morfometriDAS?.panjangSungai + '' || '0'), 0.01),
@@ -1131,7 +1148,7 @@ export const useHydrologyStore = create<HydrologyState>()(
   setQCOverride: (override) => set({ isQCOverridden: override }),
   setQCCalculating: (calculating) => set({ isQCCalculating: calculating }),
   updateDataHujanManual: (data) => {
-    set({ dataHujan: data });
+    set({ dataHujan: data, isFrekuensiDirty: true, isBanjirDirty: true });
     if (data.length >= 10) {
       const years = Array.from(new Set(data.map(d => new Date(d.tanggal).getFullYear())));
       if (years.length >= 10) {
@@ -1157,7 +1174,7 @@ export const useHydrologyStore = create<HydrologyState>()(
 
   setLandCoverParams: (params) => set({ landCoverParams: params, isBanjirDirty: true }),
   setEffectiveRainfall: (result) => set({ effectiveRainfall: result, isBanjirDirty: true }),
-  setHasilAnalisisFrekuensi: (hasil) => set({ hasilAnalisisFrekuensi: hasil, isBanjirDirty: true }),
+  setHasilAnalisisFrekuensi: (hasil) => set({ hasilAnalisisFrekuensi: hasil, isFrekuensiDirty: false, isBanjirDirty: true }),
   setSelectedKalaUlang: (kalaUlang) => set(state => {
     const freq = state.hasilAnalisisFrekuensi;
     if (!freq) return state;
@@ -1219,12 +1236,12 @@ export const useHydrologyStore = create<HydrologyState>()(
     }
   },
 
-  setActiveRainfallSource: (source) => set({ activeRainfallSource: source }),
+  setActiveRainfallSource: (source) => set({ activeRainfallSource: source, isFrekuensiDirty: true, isBanjirDirty: true }),
   setArealRainfallData: (type, data) => {
-    if (type === 'aljabar') set({ arealRainfallAlgebraic: data });
-    else if (type === 'thiessen') set({ arealRainfallThiessen: data });
-    else if (type === 'isohyet') set({ arealRainfallIsohyet: data });
-    },
+    if (type === 'aljabar') set({ arealRainfallAlgebraic: data, isFrekuensiDirty: true, isBanjirDirty: true });
+    else if (type === 'thiessen') set({ arealRainfallThiessen: data, isFrekuensiDirty: true, isBanjirDirty: true });
+    else if (type === 'isohyet') set({ arealRainfallIsohyet: data, isFrekuensiDirty: true, isBanjirDirty: true });
+  },
   }),
   {
     name: 'rekasda-hydrology-store',
@@ -1233,7 +1250,7 @@ export const useHydrologyStore = create<HydrologyState>()(
     partialize: (state) => {
       // Hanya persist state yang penting — exclude transient/loading states
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { isLoading, error, isBanjirDirty, isNeracaDirty, isQCCalculating, ...persisted } = state;
+      const { isLoading, error, isFrekuensiDirty, isBanjirDirty, isNeracaDirty, isQCCalculating, ...persisted } = state;
       return persisted;
     },
   }

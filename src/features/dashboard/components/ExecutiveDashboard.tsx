@@ -29,8 +29,8 @@ import {
 
 export const ExecutiveDashboard: React.FC = () => {
   const store = useHydrologyStore();
-  const { isBanjirDirty, isNeracaDirty } = store;
-  const isDirty = isBanjirDirty || isNeracaDirty;
+  const { isFrekuensiDirty, isBanjirDirty, isNeracaDirty } = store;
+  const isDirty = isFrekuensiDirty || isBanjirDirty || isNeracaDirty;
 
   // State: Source Mode (Active Workspace vs History)
   const [dataSource, setDataSource] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
@@ -214,8 +214,10 @@ export const ExecutiveDashboard: React.FC = () => {
     >
       {/* Dependency Warning */}
       {isDirty && (
-        <div className="mb-6 no-print">
-          <DependencyWarningBanner module="banjir" />
+        <div className="mb-6 no-print space-y-2">
+          {isFrekuensiDirty && <DependencyWarningBanner module="frekuensi" />}
+          {isBanjirDirty && <DependencyWarningBanner module="banjir" />}
+          {isNeracaDirty && <DependencyWarningBanner module="neraca" />}
         </div>
       )}
 
