@@ -143,7 +143,8 @@ const AppLayout: React.FC = () => {
       const rawType = String(record.type || '').toUpperCase();
       const moduleType = (rawType.includes('MANNING') ? 'manning' :
         rawType.includes('WATER') ? 'water_balance' :
-        rawType.includes('EMBUNG') ? 'embung' : 'flood') as 'manning' | 'flood' | 'water_balance' | 'embung';
+        rawType.includes('EMBUNG') ? 'embung' :
+        rawType.includes('FREQ') ? 'frequency' : 'flood') as 'manning' | 'flood' | 'water_balance' | 'embung' | 'frequency';
 
       const snapshotTitle = (record.inputs as any)?.site?.channelName ||
         (record.inputs as any)?.site?.namaPekerjaan ||
@@ -197,8 +198,14 @@ const AppLayout: React.FC = () => {
     setIsAIDrawerOpen(true); // Open drawer instead of switching tab
   };
 
-  const handleCalculationSave = (type: CalculationType, inputs: any, outputs: any) => {
-    setTempCalculation({ type, inputs, outputs, location: inputs.site?.location, photoUrl: inputs.site?.photoUrl });
+  const handleCalculationSave = (type: CalculationType | any, inputs: any, outputs: any) => {
+    setTempCalculation({
+      type,
+      inputs,
+      outputs,
+      location: inputs?.site?.location || inputs?.location,
+      photoUrl: inputs?.site?.photoUrl || inputs?.photoUrl
+    });
     setReportModalOpen(true);
   };
 
@@ -261,26 +268,26 @@ const AppLayout: React.FC = () => {
                 <Route path="/" element={<Navigate to={Tab.MASTER} replace />} />
                 <Route path={Tab.WORKFLOW} element={<div className="w-full min-h-[750px]"><WorkflowCanvas /></div>} />
                 <Route path={Tab.SALURAN} element={<ManningCalculator onSave={handleCalculationSave} onConsultAI={(i, o) => handleConsultAI(CalculationType.MANNING, i, o)} />} />
-                <Route path={Tab.BANJIR} element={<FloodAnalysisTab onConsultAI={() => {
+                <Route path={Tab.BANJIR} element={<FloodAnalysisTab onSave={handleCalculationSave} onConsultAI={() => {
                   setLastContext('Analisis Banjir - Perhitungan Hidrograf dan HSS');
                   setAiInitialQuery('Audit hasil perhitungan hidrograf banjir saya. Apakah debit puncak dan Tp yang dihasilkan masuk akal untuk karakteristik DAS ini? Berikan saran optimasi parameter jika perlu.');
                   setAiTriggerCount(prev => prev + 1);
                   setIsAIDrawerOpen(true);
                 }} />} />
-                <Route path={Tab.NERACA} element={<WaterBalanceTab onConsultAI={() => {
+                <Route path={Tab.NERACA} element={<WaterBalanceTab onSave={handleCalculationSave} onConsultAI={() => {
                   setLastContext('Neraca Air - Analisis ketersediaan dan kebutuhan air');
                   setAiInitialQuery('Berikan analisis komprehensif tentang neraca air ini, termasuk interpretasi surplus/defisit, bulan kritis, dan rekomendasi pengelolaan sumber daya air.');
                   setAiTriggerCount(prev => prev + 1);
                   setIsAIDrawerOpen(true);
                 }} />} />
-                <Route path={Tab.EMBUNG} element={<EmbungDashboard onConsultAI={(tabType, data, result) => {
+                <Route path={Tab.EMBUNG} element={<EmbungDashboard onSave={handleCalculationSave} onConsultAI={(tabType, data, result) => {
                   setLastContext(`Modul Embung: ${tabType}\nInput: ${JSON.stringify(data)}\nOutput: ${JSON.stringify(result)}`);
                   setAiInitialQuery(`Berikan analisis teknis komprehensif mengenai hasil perhitungan ${tabType} ini. Sebutkan poin-poin penting, potensi isu, dan rekomendasi desain yang sesuai dengan SNI.`);
                   setAiTriggerCount(prev => prev + 1);
                   setIsAIDrawerOpen(true);
                 }} />} />
                 <Route path={Tab.MASTER} element={<MasterDataPage />} />
-                <Route path={Tab.FREKUENSI} element={<ModulAnalisisFrekuensi />} />
+                <Route path={Tab.FREKUENSI} element={<ModulAnalisisFrekuensi onSave={handleCalculationSave} />} />
                 <Route path={Tab.EXEC} element={<ExecutiveDashboard />} />
                 <Route path={Tab.AI} element={<GeminiConsultant lastContext={lastContext} initialQuery={aiInitialQuery} />} />
                 <Route path={Tab.HISTORY} element={

@@ -5,6 +5,7 @@ import AlphaParameterInput from './AlphaParameterInput';
 import { FloodHydrographChart } from './FloodHydrographChart';
 import { TcCalculator, FrequencyAnalysisCalculator } from '@/features/channel-analysis/components/MiniCalculators';
 import { saveFloodCalculation } from '@/services/calculationService';
+import { CalculationType } from '@/types/common.types';
 import { calculateTg, calculateTp, calculateT03, calculateQp, generateHydrograph } from '@/lib/utils/calculations/nakayasu';
 import { calculateRationalMethod, convertKm2ToHa } from '@/lib/engine';
 import { computeDesignFloodHydrograph } from '@/lib/engine/flood/convolution';
@@ -65,9 +66,10 @@ const TOOLTIPS = {
 
 interface Props {
   onConsultAI?: () => void;
+  onSave?: (type: any, inputs: any, outputs: any) => void;
 }
 
-export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
+export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI, onSave }) => {
   const [method, setMethod] = useState<MethodType>('RATIONAL');
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [rationalInputs, setRationalInputs] = useState<RationalInputs>({
@@ -329,12 +331,19 @@ export const FloodDischargeCalculator: React.FC<Props> = ({ onConsultAI }) => {
         saveMethod = 'RATIONAL';
       }
 
-      const { error } = await saveFloodCalculation({ method: saveMethod, projectName, inputs, results });
+      const { error } = await saveFloodCalculation({ method: saveMethod, projectName, inputs, results }) as any;
 
       if (error) {
-        setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
+        setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + (error?.message || 'Error') });
       } else {
         setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan perhitungan!' });
+        if (onSave) {
+          onSave(
+            CalculationType.RATIONAL,
+            { site: { channelName: projectName, location: locationData?.coordinates ? { latitude: locationData.coordinates.lat, longitude: locationData.coordinates.lng, accuracy: 10, timestamp: Date.now() } : undefined }, ...inputs },
+            results
+          );
+        }
       }
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err) {

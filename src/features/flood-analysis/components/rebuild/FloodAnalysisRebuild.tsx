@@ -55,9 +55,10 @@ const STEPS: StepConfig[] = [
 
 interface FloodAnalysisRebuildProps {
     onConsultAI?: () => void;
+    onSave?: (type: any, inputs: any, outputs: any) => void;
 }
 
-export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onConsultAI }) => {
+export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onConsultAI, onSave }) => {
     const [activeStep, setActiveStep] = useState<Step>(1);
     const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
 
@@ -195,6 +196,7 @@ export const FloodAnalysisRebuild: React.FC<FloodAnalysisRebuildProps> = ({ onCo
                         <StepRekapVisualisasi
                             selectedMethod={selectedMethod}
                             unitHydrograph={unitHydrograph}
+                            onSave={onSave}
                         />
                     )}
                 </div>

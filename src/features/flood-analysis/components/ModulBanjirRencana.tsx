@@ -15,12 +15,14 @@ import {
     CloudRain, Calculator, Activity, ChevronDown,
     Beaker, BarChart3, Waves, FlaskConical,
     TrendingUp, Droplets, Mountain, Layers,
-    BarChart2, AlertTriangle, ShieldCheck
+    BarChart2, AlertTriangle, ShieldCheck, FolderGit2
 } from 'lucide-react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
 import { toast } from '@/hooks/useToast';
+import { saveFloodCalculation } from '@/services/calculationService';
+import { CalculationType } from '@/types/common.types';
 import { useOnboarding } from '@/providers/OnboardingProvider';
 import * as Select from '@radix-ui/react-select';
 import { cn } from '@/lib/utils';
@@ -81,7 +83,7 @@ interface ModulBanjirRencanaProps {
 // Main Component
 // ────────────────────────────────────────────
 
-export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsultAI: _onConsultAI, onSave: _onSave }) => {
+export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsultAI, onSave }) => {
     // ── Global state (read-only reference) ──
     const {
         luasDas: globalLuasDas,
@@ -462,6 +464,31 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     method: currentMethodInfo?.label || method,
                 });
 
+                // Auto-save snapshot ke Unified Project Storage
+                saveFloodCalculation({
+                    projectName: `Analisis Debit Banjir ${currentMethodInfo?.label || method}`,
+                    method: method,
+                    inputs: {
+                        luasDas: A,
+                        panjangSungai: L,
+                        curahHujanRencana: R24,
+                        koefisienPengaliran: C_runoff,
+                        kemiringanSungai: S,
+                        waktuKonsentrasi: parseFloat(localTc) || tPeak,
+                        metode: method,
+                        kategori: category,
+                        stormMethod,
+                        stormDuration
+                    },
+                    results: {
+                        debitPuncak: Number(peak.toFixed(2)),
+                        waktuPuncak: Number(tPeak.toFixed(2)),
+                        totalVolume: totalVol > 0 ? Number(totalVol.toFixed(0)) : undefined,
+                        hidrograf: hydro
+                    },
+                    notes: `Dihitung menggunakan metode ${currentMethodInfo?.label || method} (SNI 2415)`
+                }).catch(e => console.warn('Auto-save flood snapshot warning:', e));
+
                 completeStep('banjir');
 
                 const suffix = category === 'hss' && stormMethod !== 'lumped'
@@ -599,6 +626,17 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                 description="Two-Tier Method Selector · Hybrid Input System · 9 Metode Standar"
                 icon={<CloudRain className="w-6 h-6" />}
                 iconColorClass="bg-blue-50 text-blue-600"
+                actions={onConsultAI ? (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onConsultAI}
+                        className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 h-8 text-xs font-semibold"
+                    >
+                        <Activity className="w-3.5 h-3.5 mr-1 text-purple-600" />
+                        Konsultasi AI
+                    </Button>
+                ) : undefined}
             >
                 <div className="h-full relative grid grid-cols-1 md:grid-cols-12 gap-6 pt-2 page-enter">
                     {/* ═══════════════════════════════ LEFT COLUMN ═══════════════════════ */}
@@ -1032,6 +1070,37 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                             <span className="text-xs font-bold text-slate-400">ribu m³</span>
                                         </div>
                                         <p className="text-[10px] text-slate-400 mt-2 font-medium">Konvolusi: {resultSummary.stormMethod || 'ABM'}</p>
+                                    </div>
+                                )}
+                                {onSave && (
+                                    <div className="col-span-2 lg:col-span-3 flex justify-end pt-1">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                onSave(
+                                                    CalculationType.RATIONAL,
+                                                    {
+                                                        site: { channelName: `DAS ${currentMethodInfo?.label || method}` },
+                                                        A: parseFloat(localA) || 0,
+                                                        L: parseFloat(localL) || 0,
+                                                        R24: parseFloat(localR) || 0,
+                                                        C: parseFloat(localC) || 0,
+                                                        method: method,
+                                                        category: category
+                                                    },
+                                                    {
+                                                        Discharge: resultSummary.debitPuncak,
+                                                        PeakTime: resultSummary.waktuPuncak,
+                                                        Volume: resultSummary.totalVolume || 0
+                                                    }
+                                                );
+                                            }}
+                                            className="text-xs bg-pupr-blue text-white hover:bg-blue-800 flex items-center gap-1.5 font-bold shadow-xs py-1.5 px-3"
+                                        >
+                                            <FolderGit2 className="w-3.5 h-3.5" />
+                                            Simpan ke Skenario Proyek
+                                        </Button>
                                     </div>
                                 )}
                             </div>

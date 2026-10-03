@@ -6,11 +6,12 @@ import { Layers, Activity, Calculator } from 'lucide-react';
 
 interface FloodAnalysisTabProps {
   onConsultAI?: () => void;
+  onSave?: (type: any, inputs: any, outputs: any) => void;
 }
 
 type FloodMode = 'workflow' | 'multi' | 'calculator';
 
-export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI }) => {
+export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI, onSave }) => {
   const [activeMode, setActiveMode] = useState<FloodMode>('workflow');
 
   return (
@@ -64,9 +65,9 @@ export const FloodAnalysisTab: React.FC<FloodAnalysisTabProps> = ({ onConsultAI 
       </div>
 
       {/* Render Active Module */}
-      {activeMode === 'workflow' && <FloodAnalysisRebuild onConsultAI={onConsultAI} />}
-      {activeMode === 'multi' && <ModulBanjirRencana onConsultAI={onConsultAI} />}
-      {activeMode === 'calculator' && <FloodDischargeCalculator onConsultAI={onConsultAI} />}
+      {activeMode === 'workflow' && <FloodAnalysisRebuild onConsultAI={onConsultAI} onSave={onSave} />}
+      {activeMode === 'multi' && <ModulBanjirRencana onConsultAI={onConsultAI} onSave={onSave} />}
+      {activeMode === 'calculator' && <FloodDischargeCalculator onConsultAI={onConsultAI} onSave={onSave} />}
     </div>
   );
 };

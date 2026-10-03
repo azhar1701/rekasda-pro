@@ -15,6 +15,7 @@ import { WaterBalanceWhiteBox } from './WaterBalanceWhiteBox';
 import { DependableFlowModal } from '@/components/ui/modals/DependableFlowModal';
 import { ProjectContextBanner } from '@/components/ui/ProjectContextBanner';
 import { saveWaterBalance } from '@/services/calculationService';
+import { CalculationType } from '@/types/common.types';
 import { SNILabel, ComplianceBadge } from '@/components/ui/data-display/ComplianceComponents';
 import { FormulaAccordion } from '@/components/ui/data-display/FormulaAccordion';
 import { Collapsible } from '@/components/ui/Collapsible';
@@ -40,9 +41,10 @@ import { toast } from '@/hooks/useToast';
 interface Props {
   onConsultAI?: () => void;
   onNavigateToEmbung?: () => void;
+  onSave?: (type: any, inputs: any, outputs: any) => void;
 }
 
-export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbung }) => {
+export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbung, onSave }) => {
   const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -354,16 +356,40 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbu
 
     try {
       const { error } = await saveWaterBalance({
-        projectName: identitasLokasi.namaPekerjaan || 'Untitled Project',
+        projectName: identitasLokasi.namaPekerjaan || identitasLokasi.namaDAS || 'Analisis Neraca Air Terpadu',
         monthlyInputs: { ...inputs, location: identitasLokasi },
         monthlyResults: results,
         summary,
       });
 
       if (error) {
-        setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message });
+        const errMsg = (error as any)?.message || 'Terjadi kesalahan';
+        setSaveMessage({ type: 'error', text: 'Gagal menyimpan: ' + errMsg });
+        toast.error('Gagal menyimpan neraca air: ' + errMsg);
       } else {
-        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan neraca air ke database!' });
+        setSaveMessage({ type: 'success', text: '✓ Berhasil menyimpan neraca air ke skenario proyek!' });
+        toast.success('Hasil perhitungan neraca air berhasil disimpan ke proyek!');
+        if (onSave) {
+          onSave(
+            CalculationType.WATER_BALANCE,
+            {
+              site: {
+                channelName: identitasLokasi.namaDAS || identitasLokasi.namaPekerjaan || 'Neraca Air DAS',
+                regency: identitasLokasi.kabupaten || '',
+                district: '',
+                village: ''
+              },
+              ...inputs,
+              location: identitasLokasi
+            },
+            {
+              totalDemand: summary?.totalDemand || 0,
+              totalSupply: summary?.totalSupply || 0,
+              deficitMonths: summary?.deficitMonths || 0,
+              criticalMonth: summary?.criticalMonth?.month || '-'
+            }
+          );
+        }
       }
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err: any) {

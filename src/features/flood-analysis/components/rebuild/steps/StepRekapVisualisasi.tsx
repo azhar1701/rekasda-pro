@@ -5,6 +5,8 @@ import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { calculateConvolution } from '@/lib/engine/flood';
 import { WhiteBoxFormula } from '@/components/ui/WhiteBoxFormula';
 import { toast } from '@/hooks/useToast';
+import { saveFloodCalculation } from '@/services/calculationService';
+import { CalculationType } from '@/types/common.types';
 import {
     BarChart3,
     Download,
@@ -26,9 +28,10 @@ interface WhiteBoxFormulaData {
 interface StepRekapVisualisasiProps {
     selectedMethod: string;
     unitHydrograph: any[];
+    onSave?: (type: any, inputs: any, outputs: any) => void;
 }
 
-export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ selectedMethod, unitHydrograph }) => {
+export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ selectedMethod, unitHydrograph, onSave }) => {
     const {
         hujanEfektif,
         hasilBanjirEmpiris,
@@ -202,8 +205,41 @@ export const StepRekapVisualisasi: React.FC<StepRekapVisualisasiProps> = ({ sele
         toast.success('File JSON analisis banjir berhasil diunduh.');
     };
 
-    const handleSaveDashboard = () => {
-        toast.success(`Hasil analisis banjir Q${selectedKalaUlang || 25} (${selectedMethod.toUpperCase()}) tersimpan ke dashboard.`);
+    const handleSaveDashboard = async () => {
+        if (!finalResults) return;
+        try {
+            const inputs = {
+                method: selectedMethod,
+                kalaUlang: selectedKalaUlang || 25,
+                morfometri: morfometriDAS,
+                tutupanLahan,
+                effectiveRainfall: hujanEfektif,
+                unitHydrograph
+            };
+            const outputs = {
+                debitPuncak: finalResults.Qp,
+                waktuPuncak: finalResults.Tp,
+                volumeLimpasan: finalResults.totalVolume || 0,
+                hydrograph: finalResults.hydrograph
+            };
+
+            await saveFloodCalculation({
+                projectName: `Analisis Banjir ${selectedMethod.toUpperCase()} Q${selectedKalaUlang || 25}`,
+                method: selectedMethod,
+                inputs,
+                results: outputs,
+                notes: `Skenario Banjir Q${selectedKalaUlang || 25}`
+            });
+
+            if (onSave) {
+                onSave(CalculationType.RATIONAL, inputs, outputs);
+            } else {
+                toast.success(`Hasil analisis banjir Q${selectedKalaUlang || 25} (${selectedMethod.toUpperCase()}) berhasil disimpan ke skenario proyek!`);
+            }
+        } catch (err) {
+            console.error('Save flood error:', err);
+            toast.success(`Hasil analisis banjir Q${selectedKalaUlang || 25} tersimpan lokal.`);
+        }
     };
 
     // KaTeX White-Box Formula

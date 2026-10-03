@@ -1,10 +1,13 @@
 import React from 'react';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { Droplets, Beaker, Spline, Activity, Waves, Database, ChevronRight, ChevronLeft, CheckCircle2, Sparkles } from 'lucide-react';
+import { Droplets, Beaker, Spline, Activity, Waves, Database, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, Save } from 'lucide-react';
 import { useEmbungStore, EmbungProvider } from '../../hooks/useEmbungStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
+import { saveEmbungProject } from '@/services/calculationService';
+import { CalculationType } from '@/types/common.types';
+import { toast } from '@/hooks/useToast';
 
 // Step Components
 import { StepGeometry } from './steps/StepGeometry';
@@ -23,9 +26,10 @@ const STEPS = [
 
 interface EmbungRebuildProps {
     onConsultAI?: (type: string, data: any, result: any) => void;
+    onSave?: (type: any, inputs: any, outputs: any) => void;
 }
 
-export const EmbungRebuildMain: React.FC<EmbungRebuildProps> = ({ onConsultAI }) => {
+export const EmbungRebuildMain: React.FC<EmbungRebuildProps> = ({ onConsultAI, onSave }) => {
     const { state, dispatch } = useEmbungStore();
     const currentStepIndex = STEPS.findIndex(s => s.id === state.activeTab);
 
@@ -41,31 +45,84 @@ export const EmbungRebuildMain: React.FC<EmbungRebuildProps> = ({ onConsultAI })
         }
     };
 
+    const handleSaveDesign = async () => {
+        try {
+            await saveEmbungProject({
+                projectName: 'Desain Situ & Embung Terpadu',
+                analysisType: 'full_embung_workflow',
+                inputData: {
+                    activeTab: state.activeTab,
+                    zoning: state.zoning,
+                },
+                resultData: {
+                    capacityResult: state.capacityResult,
+                    routingResult: state.routingResult,
+                    waterBalanceResult: state.waterBalanceResult,
+                    sedimentResult: state.sedimentResult,
+                },
+                notes: 'Desain teknis situ dan embung terintegrasi (SNI Pedoman Embung)'
+            });
+
+            if (onSave) {
+                onSave(
+                    CalculationType.EMBUNG,
+                    {
+                        site: { channelName: 'Desain Situ & Embung Terpadu' },
+                        zoning: state.zoning
+                    },
+                    {
+                        deadStorage: state.zoning?.deadStorageVolume || 0,
+                        effectiveStorage: state.zoning?.activeStorageVolume || 0,
+                        floodStorage: state.zoning?.floodStorageVolume || 0,
+                        totalStorage: state.zoning?.totalStorageVolume || 0
+                    }
+                );
+            } else {
+                toast.success('Desain & analisis Embung berhasil disimpan ke skenario proyek!');
+            }
+        } catch (err) {
+            console.error('Save embung error:', err);
+            toast.error('Gagal menyimpan desain embung');
+        }
+    };
+
     return (
         <ModuleLayout
             title="Manajemen Situ & Embung"
             description="Desain & Analisis terpadu berdasarkan Standar Perencanaan Embung (Guidance Workflow)"
             icon={<Droplets className="w-6 h-6" />}
             iconColorClass="bg-blue-50 text-pupr-blue"
-            actions={onConsultAI ? (
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                        onConsultAI(state.activeTab, state, {
-                            zoning: state.zoning,
-                            capacityResult: state.capacityResult,
-                            routingResult: state.routingResult,
-                            waterBalanceResult: state.waterBalanceResult,
-                            sedimentResult: state.sedimentResult
-                        });
-                    }}
-                    className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 h-8 text-xs font-semibold"
-                >
-                    <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600" />
-                    Konsultasi AI
-                </Button>
-            ) : undefined}
+            actions={
+                <div className="flex items-center gap-2">
+                    <Button
+                        size="sm"
+                        onClick={handleSaveDesign}
+                        className="bg-pupr-blue text-white hover:bg-blue-800 h-8 text-xs font-semibold flex items-center gap-1.5"
+                    >
+                        <Save className="w-3.5 h-3.5" />
+                        Simpan Desain
+                    </Button>
+                    {onConsultAI && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                                onConsultAI(state.activeTab, state, {
+                                    zoning: state.zoning,
+                                    capacityResult: state.capacityResult,
+                                    routingResult: state.routingResult,
+                                    waterBalanceResult: state.waterBalanceResult,
+                                    sedimentResult: state.sedimentResult
+                                });
+                            }}
+                            className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 h-8 text-xs font-semibold"
+                        >
+                            <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-600" />
+                            Konsultasi AI
+                        </Button>
+                    )}
+                </div>
+            }
         >
             <div className="flex flex-col h-full gap-6">
                 {/* Stepper Header */}
@@ -130,14 +187,23 @@ export const EmbungRebuildMain: React.FC<EmbungRebuildProps> = ({ onConsultAI })
                             <span className="text-xs font-medium text-slate-400">
                                 Langkah {currentStepIndex + 1} dari {STEPS.length}
                             </span>
-                            <Button
-                                onClick={handleNext}
-                                disabled={currentStepIndex === STEPS.length - 1}
-                                className="bg-pupr-blue hover:bg-teal-700 text-white"
-                            >
-                                {currentStepIndex === STEPS.length - 1 ? 'Selesai' : 'Lanjut'}
-                                <ChevronRight className="w-4 h-4 ml-2" />
-                            </Button>
+                            {currentStepIndex === STEPS.length - 1 ? (
+                                <Button
+                                    onClick={handleSaveDesign}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Selesai & Simpan Desain
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleNext}
+                                    className="bg-pupr-blue hover:bg-teal-700 text-white"
+                                >
+                                    Lanjut
+                                    <ChevronRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -146,8 +212,8 @@ export const EmbungRebuildMain: React.FC<EmbungRebuildProps> = ({ onConsultAI })
     );
 };
 
-export const EmbungRebuild: React.FC<EmbungRebuildProps> = ({ onConsultAI }) => (
+export const EmbungRebuild: React.FC<EmbungRebuildProps> = ({ onConsultAI, onSave }) => (
     <EmbungProvider>
-        <EmbungRebuildMain onConsultAI={onConsultAI} />
+        <EmbungRebuildMain onConsultAI={onConsultAI} onSave={onSave} />
     </EmbungProvider>
 );

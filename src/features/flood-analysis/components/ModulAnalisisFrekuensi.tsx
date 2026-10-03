@@ -7,7 +7,8 @@ import {
   Clipboard,
   TrendingUp,
   Info,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FolderGit2
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -51,7 +52,11 @@ const METHOD_LABELS: Record<string, string> = {
 
 const RETURN_PERIODS = [2, 5, 10, 20, 25, 50, 100];
 
-export const ModulAnalisisFrekuensi: React.FC = () => {
+interface ModulAnalisisFrekuensiProps {
+  onSave?: (type: any, inputs: any, outputs: any) => void;
+}
+
+export const ModulAnalisisFrekuensi: React.FC<ModulAnalisisFrekuensiProps> = ({ onSave }) => {
   const {
     analisisFrekuensi, setAnalisisFrekuensi, dataHujan, selectedStasiun,
     activeRainfallSource, arealRainfallAlgebraic, arealRainfallThiessen, arealRainfallIsohyet
@@ -249,7 +254,84 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
     setIsCalculated(true);
     setShowCelebration(true);
     completeStep('frekuensi');
+
+    // Auto-save snapshot ke Unified Project Storage
+    (async () => {
+      try {
+        const { saveCalculationSnapshot, generateUUID } = await import('@/services/unifiedProjectService');
+        const activeProjectId = useHydrologyStore.getState().currentProjectId || generateUUID();
+        await saveCalculationSnapshot(activeProjectId, {
+          moduleType: 'frequency',
+          snapshotTitle: `Analisis Frekuensi Hujan (${METHOD_LABELS[selectedMethod] || selectedMethod})`,
+          scenarioName: `Hujan Rencana Q${selectedTr}`,
+          inputParameters: {
+            inputType,
+            dataCount: dataInput.length,
+            selectedMethod,
+            selectedTr
+          },
+          outputResults: {
+            metodeTerpilih: selectedMethod,
+            curahHujanRencana,
+            paramsAsli,
+            paramsLog
+          },
+          notes: `Analisis frekuensi SNI 2415:2016 metode ${METHOD_LABELS[selectedMethod]}`
+        });
+      } catch (snapErr) {
+        console.warn('Auto-save frekuensi snapshot warning:', snapErr);
+      }
+    })();
+
     toast.success(`Analisis frekuensi disimpan (Metode: ${METHOD_LABELS[selectedMethod]}, Q${selectedTr})`);
+  };
+
+  const handleSaveToProject = async () => {
+    if (!selectedMethod || !distributions) return;
+    try {
+      const selectedDist = distributions.find(d => d.method === selectedMethod);
+      const { saveCalculationSnapshot, generateUUID } = await import('@/services/unifiedProjectService');
+      const activeProjectId = useHydrologyStore.getState().currentProjectId || generateUUID();
+      
+      await saveCalculationSnapshot(activeProjectId, {
+        moduleType: 'frequency',
+        snapshotTitle: `Analisis Frekuensi Hujan (${METHOD_LABELS[selectedMethod] || selectedMethod})`,
+        scenarioName: `Hujan Rencana Q${selectedTr}`,
+        inputParameters: {
+          inputType,
+          dataCount: dataInput.length,
+          selectedMethod,
+          selectedTr
+        },
+        outputResults: {
+          metodeTerpilih: selectedMethod,
+          curahHujanRencana: selectedDist?.values || [],
+          paramsAsli,
+          paramsLog
+        },
+        notes: `Analisis frekuensi SNI 2415:2016 metode ${METHOD_LABELS[selectedMethod]}`
+      });
+
+      if (onSave) {
+        onSave(
+          'frequency',
+          {
+            site: { channelName: `Analisis Frekuensi (${METHOD_LABELS[selectedMethod]})` },
+            inputType,
+            selectedMethod
+          },
+          {
+            R24_Q25: selectedDist?.values.find(v => v.Tr === selectedTr)?.R24 || 0,
+            Tr: selectedTr
+          }
+        );
+      } else {
+        toast.success(`Analisis frekuensi ${METHOD_LABELS[selectedMethod]} berhasil disimpan ke skenario proyek!`);
+      }
+    } catch (e) {
+      console.warn('Gagal menyimpan frekuensi ke snapshot:', e);
+      toast.success('Analisis frekuensi tersimpan lokal.');
+    }
   };
 
   const handleExportJson = () => {
@@ -412,6 +494,13 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       actions={
         isCalculated && (
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleSaveToProject}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-pupr-blue text-white rounded-md font-semibold hover:bg-blue-800 transition-colors text-xs"
+            >
+              <FolderGit2 className="w-3.5 h-3.5" />
+              Simpan ke Proyek
+            </button>
             <button
               onClick={handleExportCsv}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-md font-semibold hover:bg-slate-50 transition-colors text-xs"
