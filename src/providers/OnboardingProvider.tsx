@@ -10,7 +10,7 @@ interface OnboardingContextType extends OnboardingState {
     setHasSeenWelcome: (value: boolean) => void;
     completeStep: (stepId: string) => void;
     setChecklistVisible: (value: boolean) => void;
-    resetOnboarding: () => void;
+    resetOnboarding: (keepWelcome?: boolean) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -46,12 +46,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setState(prev => ({ ...prev, isChecklistVisible: value }));
     };
 
-    const resetOnboarding = () => {
-        setState({
-            hasSeenWelcome: false,
+    const resetOnboarding = (keepWelcome = false) => {
+        setState(prev => ({
+            hasSeenWelcome: keepWelcome ? prev.hasSeenWelcome : false,
             completedSteps: [],
             isChecklistVisible: true
-        });
+        }));
     };
 
     return (

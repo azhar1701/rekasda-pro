@@ -21,6 +21,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
 import { toast } from '@/hooks/useToast';
+import { useOnboarding } from '@/providers/OnboardingProvider';
 import * as Select from '@radix-ui/react-select';
 import { cn } from '@/lib/utils';
 import { useFloodMethod } from '@/hooks/useFloodMethod';
@@ -87,10 +88,13 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
         panjangSungai: globalPanjangSungai,
         curahHujanRencana: globalCurahHujan,
         hasilAnalisisFrekuensi,
+        hasilBanjir,
         setSelectedKalaUlang,
         setHasilBanjir,
         isBanjirDirty,
     } = useHydrologyStore();
+
+    const { completeStep } = useOnboarding();
 
     // ── Frequency Analysis Modal ──
     const [showFreqModal, setShowFreqModal] = useState(false);
@@ -105,6 +109,19 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
     const [localA, setLocalA] = useState(globalLuasDas || '');
     const [localL, setLocalL] = useState(globalPanjangSungai || '');
     const [localR, setLocalR] = useState(globalCurahHujan || '');
+
+    // Synchronize local parameters with global store changes (including project resets)
+    useEffect(() => {
+        setLocalA(globalLuasDas || '');
+    }, [globalLuasDas]);
+
+    useEffect(() => {
+        setLocalL(globalPanjangSungai || '');
+    }, [globalPanjangSungai]);
+
+    useEffect(() => {
+        setLocalR(globalCurahHujan || '');
+    }, [globalCurahHujan]);
 
     // Rasional Dasar
     const [localC, setLocalC] = useState('0.65');
@@ -167,6 +184,20 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
     const [isCalculating, setIsCalculating] = useState(false);
     const [chartData, setChartData] = useState<{ time: number; inflow: number }[]>([]);
     const [resultSummary, setResultSummary] = useState<{ debitPuncak: number; waktuPuncak: number; totalVolume?: number; stormMethod?: string } | null>(null);
+
+    // Reactively clear or sync flood calculation results when hasilBanjir in store changes
+    useEffect(() => {
+        if (!hasilBanjir) {
+            setChartData([]);
+            setResultSummary(null);
+        } else if (hasilBanjir.hidrograf && (!chartData || chartData.length === 0)) {
+            setChartData(hasilBanjir.hidrograf);
+            setResultSummary({
+                debitPuncak: hasilBanjir.debitPuncak,
+                waktuPuncak: hasilBanjir.hidrograf[0]?.time ?? 0,
+            });
+        }
+    }, [hasilBanjir]);
 
     // ── Derived ──
     const currentMethods = useMemo(() => category === 'empiris' ? EMPIRIS_METHODS : HSS_METHODS, [category]);
@@ -430,6 +461,8 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     hidrograf: hydro,
                     method: currentMethodInfo?.label || method,
                 });
+
+                completeStep('banjir');
 
                 const suffix = category === 'hss' && stormMethod !== 'lumped'
                     ? ` dengan Konvolusi ${stormMethod === 'abm' ? 'ABM' : 'Pusair'} (${stormDuration} Jam)`

@@ -79,6 +79,12 @@ export const WaterBalanceTab: React.FC<Props> = ({ onConsultAI, onNavigateToEmbu
   const luasDasEffective = luasDasLocal !== '' ? (parseFloat(luasDasLocal) || 0) : luasDasGlobal;
   const isLuasDasOverridden = luasDasLocal !== '' && parseFloat(luasDasLocal) !== luasDasGlobal;
 
+  useEffect(() => {
+    if (!luasDas) {
+      setLuasDasLocal('');
+    }
+  }, [luasDas]);
+
   const [supplyMethod, setSupplyMethod] = useState<'manual' | 'mock'>('manual');
   const [rainSource, setRainSource] = useState<'master_station' | 'master_thiessen' | 'manual'>('master_station');
   const [mockParams, setMockParams] = useState({

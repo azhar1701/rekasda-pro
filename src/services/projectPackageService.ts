@@ -245,6 +245,8 @@ export function applyProjectToStore(
   setStoreState({
     identitasLokasi: state.identitasLokasi,
     morfometriDAS: state.morfometriDAS,
+    luasDas: state.morfometriDAS?.luasDAS ? String(state.morfometriDAS.luasDAS) : '',
+    panjangSungai: state.morfometriDAS?.panjangSungai ? String(state.morfometriDAS.panjangSungai) : '',
     tutupanLahan: state.tutupanLahan,
     stasiunList: state.stasiunList || [],
     selectedStasiun: state.stasiunList?.[0] || null,

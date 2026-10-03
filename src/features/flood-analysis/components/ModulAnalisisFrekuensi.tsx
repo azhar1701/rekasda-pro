@@ -115,6 +115,9 @@ export const ModulAnalisisFrekuensi: React.FC = () => {
       if (analisisFrekuensi.hasilDistribusi && analisisFrekuensi.hasilDistribusi.length > 0) {
         setIsCalculated(true);
       }
+    } else {
+      setIsCalculated(false);
+      setSelectedMethod(null);
     }
   }, [analisisFrekuensi]);
 

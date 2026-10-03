@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Mountain, Save, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { useHydrologyStore, type MorfometriDAS } from '@/stores/useHydrologyStore';
+import { useOnboarding } from '@/providers/OnboardingProvider';
 import { toast } from '@/hooks/useToast';
 
 export const KarakteristikDASCard: React.FC = () => {
   const { morfometriDAS, saveMorfometriDAS } = useHydrologyStore();
+  const { completeStep } = useOnboarding();
 
   const [formData, setFormData] = useState<MorfometriDAS>({
     luasDAS: morfometriDAS?.luasDAS || 0,
@@ -19,6 +21,14 @@ export const KarakteristikDASCard: React.FC = () => {
     if (morfometriDAS) {
       setFormData(morfometriDAS);
       setIsSaved(true);
+    } else {
+      setFormData({
+        luasDAS: 0,
+        panjangSungai: 0,
+        kemiringanSungai: 0,
+        elevasi: 0,
+      });
+      setIsSaved(false);
     }
   }, [morfometriDAS]);
 
@@ -44,6 +54,7 @@ export const KarakteristikDASCard: React.FC = () => {
     try {
       await saveMorfometriDAS(safeData);
       setIsSaved(true);
+      completeStep('spasial');
     } catch (error) {
       console.error('Failed to save Morfometri DAS:', error);
       toast.error('Gagal menyimpan data Morfometri DAS.');

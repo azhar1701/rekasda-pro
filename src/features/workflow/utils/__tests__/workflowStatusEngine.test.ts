@@ -39,6 +39,7 @@ describe('Workflow Status Engine', () => {
       arealRainfallAlgebraic: null,
       arealRainfallThiessen: null,
       arealRainfallIsohyet: null,
+      isFrekuensiDirty: false,
       isBanjirDirty: false,
       isNeracaDirty: false,
       isLoading: false,
@@ -85,7 +86,7 @@ describe('Workflow Status Engine', () => {
     expect(result.modules.hujan.metricSummary).toContain('1 Pos Stasiun');
   });
 
-  it('should route ekspor and dashboard to /exec instead of /master', () => {
+  it('should route ekspor, dashboard, and thiessen to their correct tabs', () => {
     const state = createMockHydroState();
     const result = computeWorkflowStatus(state);
 
@@ -93,6 +94,34 @@ describe('Workflow Status Engine', () => {
     expect(result.modules.dashboard.targetTab).toBe('/exec');
     expect(result.modules.identitas.targetTab).toBe('/master?tab=identitas');
     expect(result.modules.hujan.targetTab).toBe('/master?tab=data-hujan');
+    expect(result.modules.thiessen.targetTab).toBe('/master?tab=parameter-spasial');
+  });
+
+  it('should mark modules as Peringatan (warning) when dirty flags are set', () => {
+    const state = createMockHydroState({
+      hasilBanjir: {
+        debitPuncak: 45.2,
+        hidrograf: [],
+        method: 'Nakayasu'
+      } as any,
+      isBanjirDirty: true,
+      hasilAnalisisFrekuensi: {
+        metodeTerpilih: 'gumbel',
+        lulusUjiKecocokan: true,
+        curahHujanRencana: [{ kalaUlang: 25, curahHujan: 125, Tr: 25, R24: 125 }],
+        selectedKalaUlang: 25
+      } as any,
+      isFrekuensiDirty: true,
+    });
+
+    const result = computeWorkflowStatus(state);
+
+    expect(result.modules.banjir.status).toBe('Peringatan');
+    expect(result.modules.banjir.statusType).toBe('warning');
+    expect(result.modules.banjir.metricSummary).toContain('dihitung ulang');
+
+    expect(result.modules.frekuensi.status).toBe('Peringatan');
+    expect(result.modules.frekuensi.statusType).toBe('warning');
   });
 
   it('should recommend next step logically based on readiness', () => {

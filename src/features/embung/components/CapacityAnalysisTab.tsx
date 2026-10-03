@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,13 @@ export const CapacityAnalysisTab: React.FC<CapacityAnalysisTabProps> = ({ onCons
     const { hasilNeraca } = useHydrologyStore();
     const [data, setData] = useState<MonthlyData[]>(INITIAL_DATA);
     const [result, setResult] = useState<SequentPeakResult | null>(null);
+
+    useEffect(() => {
+        if (!hasilNeraca) {
+            setData(INITIAL_DATA);
+            setResult(null);
+        }
+    }, [hasilNeraca]);
 
     const handleSyncFromNeraca = () => {
         if (!hasilNeraca?.monthlySupply || hasilNeraca.monthlySupply.length === 0) {

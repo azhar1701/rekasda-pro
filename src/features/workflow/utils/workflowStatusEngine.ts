@@ -175,7 +175,7 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
       phase: 'pre',
       phaseLabel: 'Pre-Proses',
       order: 6,
-      targetTab: '/frekuensi',
+      targetTab: '/master?tab=parameter-spasial',
       description: 'Perhitungan curah hujan rata-rata wilayah menggunakan Polygon Thiessen atau Isohyet.',
       algorithm: 'CHw = Σ (CH_stasiun × Luas_pengaruh) / Luas_total_DAS',
       inputs: ['dataHujan tervalidasi', 'Luas pengaruh stasiun'],
@@ -462,18 +462,34 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
   // 8. Frekuensi
   const hasFrekuensi = Boolean(hydroState.hasilAnalisisFrekuensi?.curahHujanRencana?.length || hydroState.analisisFrekuensi?.hasilDistribusi);
   const isFrekuensiReady = hasThiessen || isHujanDone;
+  let frekuensiStatus: ModuleStatus = 'Menunggu Data';
+  let frekuensiStatusType: ModuleStatusType = 'pending';
+  let frekuensiMetric = 'Menunggu data curah hujan wilayah';
+
+  if (hasFrekuensi) {
+    if (hydroState.isFrekuensiDirty) {
+      frekuensiStatus = 'Peringatan';
+      frekuensiStatusType = 'warning';
+      frekuensiMetric = 'Data curah hujan diperbarui — Frekuensi perlu dihitung ulang';
+    } else {
+      frekuensiStatus = 'Selesai';
+      frekuensiStatusType = 'success';
+      frekuensiMetric = `Rencana Tr 2-100th (${hydroState.hasilAnalisisFrekuensi?.metodeTerpilih || 'Log Pearson III'})`;
+    }
+  } else if (isFrekuensiReady) {
+    frekuensiStatus = 'Siap Dihitung';
+    frekuensiStatusType = 'ready';
+    frekuensiMetric = 'Siap dihitung distribusi curah hujan rencana';
+  }
+
   modules.frekuensi = {
     ...definitions.frekuensi,
-    status: hasFrekuensi ? 'Selesai' : isFrekuensiReady ? 'Siap Dihitung' : 'Menunggu Data',
-    statusType: hasFrekuensi ? 'success' : isFrekuensiReady ? 'ready' : 'pending',
-    metricSummary: hasFrekuensi
-      ? `Rencana Tr 2-100th (${hydroState.hasilAnalisisFrekuensi?.metodeTerpilih || 'Log Pearson III'})`
-      : isFrekuensiReady
-      ? 'Siap dihitung distribusi curah hujan rencana'
-      : 'Menunggu data curah hujan wilayah',
+    status: frekuensiStatus,
+    statusType: frekuensiStatusType,
+    metricSummary: frekuensiMetric,
     prerequisites: [
       { name: 'Curah Hujan Wilayah Maksimum', isMet: isFrekuensiReady },
-      { name: 'Uji Distribusi Probabilitas SNI', isMet: hasFrekuensi },
+      { name: 'Uji Distribusi Probabilitas SNI', isMet: hasFrekuensi && !hydroState.isFrekuensiDirty },
     ],
   };
 
@@ -517,18 +533,34 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
   const hasFloodResult = Boolean(hydroState.hasilBanjir || hydroState.hasilKonvolusi || hasSavedFlood);
   const isFloodReady = (hasDistribusi || hasFrekuensi) && isSpasialDone;
   const floodPeak = hydroState.hasilBanjir?.debitPuncak ?? hydroState.hasilKonvolusi?.peakDischarge;
+  let floodStatus: ModuleStatus = 'Menunggu Data';
+  let floodStatusType: ModuleStatusType = 'pending';
+  let floodMetric = 'Menunggu parameter DAS & hujan efektif';
+
+  if (hasFloodResult) {
+    if (hydroState.isBanjirDirty) {
+      floodStatus = 'Peringatan';
+      floodStatusType = 'warning';
+      floodMetric = 'Parameter hulu berubah — Hidrograf banjir perlu dihitung ulang';
+    } else {
+      floodStatus = 'Selesai';
+      floodStatusType = 'success';
+      floodMetric = `Qp = ${(floodPeak || 0).toFixed(2)} m³/s (Hidrograf HSS)`;
+    }
+  } else if (isFloodReady) {
+    floodStatus = 'Siap Disimulasi';
+    floodStatusType = 'ready';
+    floodMetric = 'Siap simulasi konvolusi hidrograf banjir';
+  }
+
   modules.banjir = {
     ...definitions.banjir,
-    status: hasFloodResult ? 'Selesai' : isFloodReady ? 'Siap Disimulasi' : 'Menunggu Data',
-    statusType: hasFloodResult ? 'success' : isFloodReady ? 'ready' : 'pending',
-    metricSummary: hasFloodResult
-      ? `Qp = ${(floodPeak || 0).toFixed(2)} m³/s (Hidrograf HSS)`
-      : isFloodReady
-      ? 'Siap simulasi konvolusi hidrograf banjir'
-      : 'Menunggu parameter DAS & hujan efektif',
+    status: floodStatus,
+    statusType: floodStatusType,
+    metricSummary: floodMetric,
     prerequisites: [
       { name: 'Morfometri DAS (A, L)', isMet: isSpasialDone },
-      { name: 'Hujan Efektif / Rencana', isMet: hasDistribusi || hasFrekuensi },
+      { name: 'Hujan Efektif / Rencana', isMet: (hasDistribusi || hasFrekuensi) && !hydroState.isBanjirDirty },
     ],
   };
 
@@ -536,16 +568,32 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
   const hasNeracaResult = Boolean(hydroState.hasilMock || hydroState.neracaFinal || hasSavedNeraca);
   const isNeracaReady = hasThiessen || isHujanDone;
   const qAndalan = hydroState.hasilMock?.qAndalan;
+  let neracaStatus: ModuleStatus = 'Menunggu Data';
+  let neracaStatusType: ModuleStatusType = 'pending';
+  let neracaMetric = 'Menunggu data hujan bulanan';
+
+  if (hasNeracaResult) {
+    if (hydroState.isNeracaDirty) {
+      neracaStatus = 'Peringatan';
+      neracaStatusType = 'warning';
+      neracaMetric = 'Parameter DAS/hujan berubah — Neraca air perlu dihitung ulang';
+    } else {
+      neracaStatus = 'Selesai';
+      neracaStatusType = 'success';
+      neracaMetric = `Debit Andalan Q80% = ${(qAndalan ?? 0).toFixed(2)} m³/s`;
+    }
+  } else if (isNeracaReady) {
+    neracaStatus = 'Siap Disimulasi';
+    neracaStatusType = 'ready';
+    neracaMetric = 'Siap simulasi neraca air bulanan FJ Mock';
+  }
+
   modules.neraca = {
     ...definitions.neraca,
-    status: hasNeracaResult ? 'Selesai' : isNeracaReady ? 'Siap Disimulasi' : 'Menunggu Data',
-    statusType: hasNeracaResult ? 'success' : isNeracaReady ? 'ready' : 'pending',
-    metricSummary: hasNeracaResult
-      ? `Debit Andalan Q80% = ${(qAndalan ?? 0).toFixed(2)} m³/s`
-      : isNeracaReady
-      ? 'Siap simulasi neraca air bulanan FJ Mock'
-      : 'Menunggu data hujan bulanan',
-    prerequisites: [{ name: 'Hujan Bulanan Wilayah', isMet: isNeracaReady }],
+    status: neracaStatus,
+    statusType: neracaStatusType,
+    metricSummary: neracaMetric,
+    prerequisites: [{ name: 'Hujan Bulanan Wilayah', isMet: isNeracaReady && !hydroState.isNeracaDirty }],
   };
 
   // 13. Embung
@@ -567,15 +615,31 @@ export function computeWorkflowStatus(hydroState: HydrologyState): {
   const hasChannelResult = Boolean(hydroState.hasilSaluran || hasSavedManning);
   const isChannelReady = hasFloodResult;
   const channelQ = hydroState.hasilSaluran?.dischargeCapacity ?? hydroState.hasilSaluran?.designDischarge;
+  let channelStatus: ModuleStatus = 'Siap Diisi';
+  let channelStatusType: ModuleStatusType = 'ready';
+  let channelMetric = 'Siap input dimensi & kemiringan saluran';
+
+  if (hasChannelResult) {
+    if (hydroState.isBanjirDirty) {
+      channelStatus = 'Peringatan';
+      channelStatusType = 'warning';
+      channelMetric = 'Debit banjir hulu berstatus kedaluwarsa — Verifikasi dimensi';
+    } else {
+      channelStatus = 'Selesai';
+      channelStatusType = 'success';
+      channelMetric = `Kapasitas Saluran: Q = ${(channelQ ?? 0).toFixed(2)} m³/s (Manning)`;
+    }
+  } else if (isChannelReady) {
+    channelStatus = 'Siap Didesain';
+    channelStatusType = 'ready';
+    channelMetric = 'Debit banjir siap dialirkan ke desain saluran';
+  }
+
   modules.saluran = {
     ...definitions.saluran,
-    status: hasChannelResult ? 'Selesai' : isChannelReady ? 'Siap Didesain' : 'Siap Diisi',
-    statusType: hasChannelResult ? 'success' : isChannelReady ? 'ready' : 'ready',
-    metricSummary: hasChannelResult
-      ? `Kapasitas Saluran: Q = ${(channelQ ?? 0).toFixed(2)} m³/s (Manning)`
-      : isChannelReady
-      ? 'Debit banjir siap dialirkan ke desain saluran'
-      : 'Siap input dimensi & kemiringan saluran',
+    status: channelStatus,
+    statusType: channelStatusType,
+    metricSummary: channelMetric,
     prerequisites: [{ name: 'Debit Rencana / Geometri Saluran', isMet: isChannelReady || true }],
   };
 

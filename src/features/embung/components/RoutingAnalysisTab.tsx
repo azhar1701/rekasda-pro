@@ -54,6 +54,10 @@ export const RoutingAnalysisTab: React.FC<RoutingAnalysisTabProps> = ({ onConsul
             setHydrograph(hasilBanjir.hidrograf.map(h => ({ time: h.time, inflow: h.inflow })));
             setResultData(null);
             setSummary(null);
+        } else if (!hasilBanjir) {
+            setHydrograph(DEFAULT_HYDROGRAPH);
+            setResultData(null);
+            setSummary(null);
         }
     }, [isAutoFilled, hasilBanjir]);
 

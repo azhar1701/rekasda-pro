@@ -450,6 +450,10 @@ export interface HydrologyState {
   setHasilSaluran: (hasil: HasilSaluran | null) => void;
   fetchMultipleStationsData: (stasiunIds: string[]) => Promise<void>;
 
+  // --- Project Lifecycle & Sync ---
+  resetProject: () => void;
+  refreshDataHujan: (stasiunId?: string) => Promise<{ success: boolean; count: number; message: string }>;
+
   // --- Dirty Flag Setters ---
   setIsFrekuensiDirty: (dirty: boolean) => void;
   setIsBanjirDirty: (dirty: boolean) => void;
@@ -460,34 +464,72 @@ export interface HydrologyState {
   setArealRainfallData: (type: 'aljabar' | 'thiessen' | 'isohyet', data: DataHujan[] | null) => void;
 }
 
-// Mock data removed for production integration
-
+export const INITIAL_HYDROLOGY_STATE = {
+  luasDas: '',
+  panjangSungai: '',
+  curahHujanRencana: '',
+  stasiunList: [] as StasiunHidrologi[],
+  selectedStasiun: null as StasiunHidrologi | null,
+  dataHujan: [] as DataHujan[],
+  identitasLokasi: {
+    namaPekerjaan: '',
+    namaDAS: '',
+    namaSungai: '',
+    provinsi: '',
+    kabupaten: '',
+    koordinat: { lat: null, lng: null }
+  } as IdentitasLokasi,
+  morfometriDAS: null as MorfometriDAS | null,
+  tutupanLahan: null as TutupanLahan | null,
+  curahHujanWilayah: null as CurahHujanWilayah | null,
+  analisisFrekuensi: null as AnalisisFrekuensi | null,
+  hasilThiessen: null as HasilThiessen | null,
+  hasilARF: null as HasilARF | null,
+  hasilAnalisisFrekuensi: null as HasilAnalisisFrekuensi | null,
+  hasilBanjir: null as HasilBanjir | null,
+  hasilBanjirEmpiris: null as Record<string, any> | null,
+  hasilBanjirHSS: null as Record<string, any> | null,
+  hasilNeraca: null as HasilNeraca | null,
+  hasilEmbung: null as HasilEmbung | null,
+  hasilSaluran: null as HasilSaluran | null,
+  hasilMock: null as HasilMock | null,
+  hasilKonvolusi: null as HasilKonvolusi | null,
+  neracaFinal: null as NeracaFinalRow[] | null,
+  distribusiHujanJamJaman: null as number[] | null,
+  hujanEfektif: null as number[] | null,
+  durasiHujan: 6,
+  qcResults: null,
+  qcStatus: null,
+  dailyCompleteness: null,
+  isQCOverridden: false,
+  isQCCalculating: false,
+  rentangTahun: null,
+  landCoverParams: null,
+  effectiveRainfall: null,
+  hssComparisonResults: null,
+  isFrekuensiDirty: false,
+  isBanjirDirty: false,
+  isNeracaDirty: false,
+  isLoading: false,
+  error: null,
+  selectedKalaUlang: 25,
+  activeRainfallSource: 'titik' as const,
+  arealRainfallAlgebraic: null as DataHujan[] | null,
+  arealRainfallThiessen: null as DataHujan[] | null,
+  arealRainfallIsohyet: null as DataHujan[] | null,
+  deletedStationIds: [] as string[],
+};
 
 export const useHydrologyStore = create<HydrologyState>()(
   persist(
     (set, get) => ({
-  luasDas: '', panjangSungai: '', curahHujanRencana: '', stasiunList: [], selectedStasiun: null, dataHujan: [],
-  identitasLokasi: { namaPekerjaan: '', namaDAS: '', namaSungai: '', provinsi: '', kabupaten: '', koordinat: { lat: null, lng: null } },
-  morfometriDAS: null, tutupanLahan: null, curahHujanWilayah: null, analisisFrekuensi: null,
-  hasilThiessen: null, hasilARF: null, hasilAnalisisFrekuensi: null,
-  hasilBanjir: null, hasilBanjirEmpiris: null, hasilBanjirHSS: null,
-  hasilNeraca: null, hasilEmbung: null, hasilSaluran: null, hasilMock: null,
-  hasilKonvolusi: null, neracaFinal: null, distribusiHujanJamJaman: null, hujanEfektif: null, durasiHujan: 6,
-  qcResults: null, qcStatus: null, dailyCompleteness: null, isQCOverridden: false, isQCCalculating: false, rentangTahun: null, landCoverParams: null, effectiveRainfall: null,
-  hssComparisonResults: null, isFrekuensiDirty: false, isBanjirDirty: false, isNeracaDirty: false, isLoading: false, error: null,
-  selectedKalaUlang: 25,
+      ...INITIAL_HYDROLOGY_STATE,
 
-  // --- Initial Rainfall Routing States ---
-  activeRainfallSource: 'titik',
-  arealRainfallAlgebraic: null,
-  arealRainfallThiessen: null,
-  arealRainfallIsohyet: null,
-  deletedStationIds: [],
-
-  setLoading: (loading: boolean) => set({ isLoading: loading }),
-  setError: (error: string | null) => set({ error }),
-  setIsFrekuensiDirty: (dirty: boolean) => set({ isFrekuensiDirty: dirty }),
-  setIsBanjirDirty: (dirty: boolean) => set({ isBanjirDirty: dirty }),
+      resetProject: () => set({ ...INITIAL_HYDROLOGY_STATE }),
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
+      setError: (error: string | null) => set({ error }),
+      setIsFrekuensiDirty: (dirty: boolean) => set({ isFrekuensiDirty: dirty }),
+      setIsBanjirDirty: (dirty: boolean) => set({ isBanjirDirty: dirty }),
   setIsNeracaDirty: (dirty: boolean) => set({ isNeracaDirty: dirty }),
   setLuasDas: (luas: string) => set({ luasDas: luas, isBanjirDirty: true, isNeracaDirty: true }),
   setPanjangSungai: (val: string) => set({ panjangSungai: val, isBanjirDirty: true }),
@@ -933,6 +975,48 @@ export const useHydrologyStore = create<HydrologyState>()(
       set({ dataHujan: allData });
     } catch (error: any) {
       set({ error: error.message });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  refreshDataHujan: async (stasiunId?: string) => {
+    const targetId = stasiunId || get().selectedStasiun?.id;
+    set({ isLoading: true, error: null });
+    try {
+      // 1. Sinkronisasi ulang stasiun
+      await get().fetchStasiun();
+
+      // 2. Muat ulang data hujan stasiun jika ada
+      if (targetId) {
+        if (supabase) {
+          await get().fetchDataHujan(targetId);
+          const count = get().dataHujan.filter(d => d.stasiun_id === targetId).length;
+          return {
+            success: true,
+            count,
+            message: `Berhasil memuat ulang ${count} rekaman data curah hujan.`
+          };
+        } else {
+          // Fallback offline: re-verifikasi data lokal
+          await new Promise(resolve => setTimeout(resolve, 300));
+          const count = get().dataHujan.filter(d => d.stasiun_id === targetId).length;
+          return {
+            success: true,
+            count,
+            message: `Data curah hujan lokal tersinkronisasi (${count} rekaman hari).`
+          };
+        }
+      }
+      return {
+        success: true,
+        count: 0,
+        message: 'Daftar stasiun berhasil dimuat ulang.'
+      };
+    } catch (err: any) {
+      const msg = err?.message || 'Gagal memuat ulang data curah hujan';
+      set({ error: msg });
+      return { success: false, count: 0, message: msg };
     } finally {
       set({ isLoading: false });
     }

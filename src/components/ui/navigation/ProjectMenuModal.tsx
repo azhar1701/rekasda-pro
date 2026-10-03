@@ -11,6 +11,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { useOnboarding } from '@/providers/OnboardingProvider';
 import {
   exportProjectBundle,
   downloadProjectFile,
@@ -22,6 +23,7 @@ import { toast } from '@/hooks/useToast';
 
 export const ProjectMenuModal: React.FC = () => {
   const store = useHydrologyStore();
+  const { resetOnboarding } = useOnboarding();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'export' | 'import' | 'new'>('export');
 
@@ -93,46 +95,15 @@ export const ProjectMenuModal: React.FC = () => {
 
   const handleResetProject = () => {
     if (window.confirm('Apakah Anda yakin ingin memulai Proyek Baru? Seluruh data aktif akan di-reset ke nilai default.')) {
-      useHydrologyStore.setState({
-        identitasLokasi: {
-          namaPekerjaan: '',
-          namaDAS: '',
-          namaSungai: '',
-          provinsi: '',
-          kabupaten: '',
-          koordinat: { lat: null, lng: null }
-        },
-        morfometriDAS: null,
-        tutupanLahan: null,
-        stasiunList: [],
-        selectedStasiun: null,
-        dataHujan: [],
-        curahHujanWilayah: null,
-        activeRainfallSource: 'titik',
-        arealRainfallAlgebraic: null,
-        arealRainfallThiessen: null,
-        arealRainfallIsohyet: null,
-        analisisFrekuensi: null,
-        hasilARF: null,
-        curahHujanRencana: '0',
-        distribusiHujanJamJaman: null,
-        hujanEfektif: null,
-        hasilBanjir: null,
-        hasilBanjirEmpiris: null,
-        hasilBanjirHSS: null,
-        hasilKonvolusi: null,
-        hasilNeraca: null,
-        hasilMock: null,
-        neracaFinal: null,
-        hasilEmbung: null,
-        hasilSaluran: null,
-        qcResults: null,
-        qcStatus: null,
-        isFrekuensiDirty: false,
-        isBanjirDirty: false,
-        isNeracaDirty: false,
-      });
-      toast.success('Proyek baru dimulai. Lembar kerja telah di-reset.');
+      useHydrologyStore.getState().resetProject();
+      try {
+        localStorage.removeItem('rekasda_ai_history');
+        window.dispatchEvent(new Event('rekasda_ai_history_sync'));
+      } catch (e) {
+        console.warn('Gagal membersihkan riwayat AI chat:', e);
+      }
+      resetOnboarding(true);
+      toast.success('Proyek baru dimulai. Seluruh lembar kerja dan modul telah di-reset ke nilai default.');
       setIsOpen(false);
     }
   };

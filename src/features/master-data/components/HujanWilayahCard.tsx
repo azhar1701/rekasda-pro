@@ -46,6 +46,11 @@ export const HujanWilayahCard: React.FC = () => {
       setConfigs(curahHujanWilayah.stasiunConfigs);
       setIsohyetalConfigs(curahHujanWilayah.isohyetConfigs || []);
       setIsSaved(true);
+    } else {
+      setMetode('aljabar');
+      setConfigs([]);
+      setIsohyetalConfigs([]);
+      setIsSaved(false);
     }
   }, [curahHujanWilayah]);
 

@@ -16,6 +16,7 @@ import {
   Trash2,
   Wand2,
   Database,
+  RefreshCw,
 } from 'lucide-react';
 
 import { runFullQC } from '@/lib/utils/qc/dataQualityMath';
@@ -33,6 +34,7 @@ import { ManualEntryModal } from './modals/ManualEntryModal';
 import { InfillModal } from './modals/InfillModal';
 
 export const MasterHidrologiTab: React.FC = () => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const {
     stasiunList,
     selectedStasiun,
@@ -51,6 +53,7 @@ export const MasterHidrologiTab: React.FC = () => {
     arealRainfallAlgebraic,
     arealRainfallThiessen,
     arealRainfallIsohyet,
+    refreshDataHujan,
   } = useHydrologyStore();
 
   // Paginated helper: ambil SEMUA data hujan untuk satu stasiun tanpa terpotong batas 1000-baris Supabase
@@ -275,6 +278,22 @@ export const MasterHidrologiTab: React.FC = () => {
     toast.success('Data hujan maksimum berhasil dihubungkan ke modul Analisis Frekuensi.');
   };
 
+  const handleRefreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await refreshDataHujan(selectedStasiun?.id);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      toast.error(`Gagal memuat ulang data: ${err?.message || 'Terjadi kesalahan sistem'}`);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const isCloudConnected = !!supabase;
 
   return (
@@ -306,6 +325,18 @@ export const MasterHidrologiTab: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={handleRefreshData}
+            disabled={isRefreshing || isLoading}
+            variant="outline"
+            size="sm"
+            className="text-xs border-slate-300 hover:bg-slate-100 text-slate-700 font-medium"
+            title="Muat ulang seluruh data stasiun dan curah hujan"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 text-blue-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Memuat...' : 'Refresh Data'}
+          </Button>
+
           {stasiunList.length >= 1 && (
             <Button
               onClick={() => {
@@ -527,6 +558,19 @@ export const MasterHidrologiTab: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Reload Active Station Button */}
+                  <Button
+                    onClick={handleRefreshData}
+                    disabled={isRefreshing || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8 border-slate-300 text-slate-700 hover:text-blue-700 hover:bg-blue-50"
+                    title={`Muat ulang data curah hujan stasiun ${selectedStasiun.nama_stasiun}`}
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 mr-1 text-blue-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Reload
+                  </Button>
+
                   {/* Actions */}
                   <Button
                     onClick={() => setIsInfillModalOpen(true)}
@@ -567,6 +611,24 @@ export const MasterHidrologiTab: React.FC = () => {
 
               {/* Matrix Content */}
               <div className="p-4 sm:p-6 bg-slate-50/30 flex-1 overflow-auto">
+                {displayData.length === 0 && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between text-xs text-amber-800">
+                    <div className="flex items-center gap-2">
+                      <CloudRain className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Belum ada data curah hujan harian untuk stasiun <strong>{selectedStasiun.nama_stasiun}</strong>.</span>
+                    </div>
+                    <Button
+                      onClick={handleRefreshData}
+                      disabled={isRefreshing || isLoading}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-7 border-amber-300 bg-white hover:bg-amber-100 text-amber-800"
+                    >
+                      <RefreshCw className={`w-3 h-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      Muat Ulang
+                    </Button>
+                  </div>
+                )}
                 <DailyRainfallMatrix
                   data={displayData}
                   year={selectedYear}

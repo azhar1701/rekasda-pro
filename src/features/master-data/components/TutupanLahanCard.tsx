@@ -18,6 +18,11 @@ export const TutupanLahanCard: React.FC = () => {
     if (tutupanLahan) {
       setItems(tutupanLahan.items);
       setIsSaved(true);
+    } else {
+      setItems([
+        { id: crypto.randomUUID(), jenis: 'Hutan', luas: 0, nilaiC: 0.2, nilaiCN: 55 },
+      ]);
+      setIsSaved(false);
     }
   }, [tutupanLahan]);
 

@@ -6,9 +6,10 @@ export const GettingStartedChecklist: React.FC = () => {
     const { completedSteps, isChecklistVisible, setChecklistVisible } = useOnboarding();
 
     const steps = [
-        { id: 'identitas', label: 'Lengkapi Identitas Lokasi', tab: '/master' },
-        { id: 'hujan', label: 'Input Data Curah Hujan', tab: '/master' },
-        { id: 'frekuensi', label: 'Jalankan Analisis Frekuensi', tab: '/frekuensi' },
+        { id: 'identitas', label: 'Lengkapi Identitas Lokasi', tab: '/master?tab=identitas' },
+        { id: 'hujan', label: 'Input Data Curah Hujan', tab: '/master?tab=data-hujan' },
+        { id: 'spasial', label: 'Morfometri DAS (A & L)', tab: '/master?tab=parameter-spasial' },
+        { id: 'frekuensi', label: 'Analisis Frekuensi Hujan', tab: '/frekuensi' },
         { id: 'banjir', label: 'Hitung Banjir Rencana (HSS)', tab: '/banjir' }
     ];
 
