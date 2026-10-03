@@ -4,7 +4,7 @@ import { CloudRain, Droplets, Calculator, TrendingUp, ShieldCheck, Info } from '
 import { useHydrologyStore } from '@/stores/useHydrologyStore';
 import { useFrequencyAnalysis } from '@/hooks/useFrequencyAnalysis';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { generateABMTable } from '@/lib/utils/hydrologyMath';
+import { generateHourlyDistributionTable, type HourlyRainfallMethod } from '@/lib/utils/hydrologyMath';
 import { toast } from '@/hooks/useToast';
 import { calculateEffectiveRainfallByC, calculateCumulativeSCSCNRunoff } from '@/lib/utils/hydrology/runoff';
 
@@ -32,6 +32,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
 
     const [returnPeriod, setReturnPeriod] = useState<number>(selectedKalaUlang || 25);
     const [durasi, setLocalDurasi] = useState<number>(storeDurasi || 6);
+    const [distMethod, setDistMethod] = useState<HourlyRainfallMethod>('abm');
     const [lossMethod, setLossMethod] = useState<'C' | 'CN'>('C');
     const [useARF, setUseARF] = useState<boolean>(true);
     const [calculated, setCalculated] = useState(!!storeHujanEfektif);
@@ -72,17 +73,17 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
         setSelectedKalaUlang(tr);
     };
 
-    // Generate tabel Alternating Block Method (ABM)
-    const abmTable = useMemo(() => {
+    // Generate tabel distribusi jam-jaman multi-metode
+    const distributionTable = useMemo(() => {
         if (effectiveR24 <= 0) return [];
-        return generateABMTable(effectiveR24, durasi, 1);
-    }, [effectiveR24, durasi]);
+        return generateHourlyDistributionTable(distMethod, effectiveR24, durasi);
+    }, [distMethod, effectiveR24, durasi]);
 
     // Hitung hujan efektif dan kehilangan (losses)
     const calculationResults = useMemo(() => {
-        if (abmTable.length === 0) return { hyetograph: [], effective: [], losses: [] };
+        if (distributionTable.length === 0) return { hyetograph: [], effective: [], losses: [] };
 
-        const hyetograph = abmTable.map(row => row.hyetograph);
+        const hyetograph = distributionTable.map(row => row.hujanJam);
         let effective: number[] = [];
 
         if (lossMethod === 'C') {
@@ -95,7 +96,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
         const losses = hyetograph.map((p, i) => Math.max(0, p - (effective[i] || 0)));
 
         return { hyetograph, effective, losses };
-    }, [abmTable, lossMethod, C, CN]);
+    }, [distributionTable, lossMethod, C, CN]);
 
     const chartData = useMemo(() => {
         return calculationResults.hyetograph.map((p, i) => ({
@@ -112,7 +113,8 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
             return;
         }
         setCalculated(true);
-        toast.success(`Hietograf hujan jam-jaman ABM (Q${returnPeriod}) berhasil dihitung.`);
+        const methodName = distMethod === 'abm' ? 'ABM' : distMethod === 'pusair' ? 'Pusair' : distMethod === 'mononobe_forward' ? 'Mononobe' : 'Uniform';
+        toast.success(`Hietograf hujan jam-jaman ${methodName} (Q${returnPeriod}) berhasil dihitung.`);
     };
 
     const handleComplete = () => {
@@ -188,6 +190,72 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
                     </h3>
 
                     <div className="space-y-4">
+                        {/* Selector Metode Distribusi Jam-jaman */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                                Pola Distribusi Jam-jaman
+                            </label>
+                            <div className="grid grid-cols-1 gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setDistMethod('abm')}
+                                    className={`p-2 text-left text-xs rounded-md border transition-all ${
+                                        distMethod === 'abm'
+                                            ? 'border-pupr-blue bg-pupr-blue/5 text-pupr-blue font-bold shadow-xs'
+                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-bold">ABM (Mononobe)</span>
+                                        <span className="text-[9px] px-1.5 py-0.5 bg-pupr-blue text-white rounded font-bold">SNI 2415</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Alternating block: puncak hujan di tengah badai</p>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setDistMethod('pusair')}
+                                    className={`p-2 text-left text-xs rounded-md border transition-all ${
+                                        distMethod === 'pusair'
+                                            ? 'border-pupr-blue bg-pupr-blue/5 text-pupr-blue font-bold shadow-xs'
+                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-bold">Pola Pusair (Ditjen SDA)</span>
+                                        <span className="text-[9px] px-1.5 py-0.5 bg-amber-600 text-white rounded font-bold">Empiris ID</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Studi empiris penakar hujan wilayah Indonesia (puncak jam ke-2)</p>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setDistMethod('mononobe_forward')}
+                                    className={`p-2 text-left text-xs rounded-md border transition-all ${
+                                        distMethod === 'mononobe_forward'
+                                            ? 'border-pupr-blue bg-pupr-blue/5 text-pupr-blue font-bold shadow-xs'
+                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span className="font-bold">Mononobe Terurut Menurun</span>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Intensitas terbesar di awal durasi badai</p>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setDistMethod('uniform')}
+                                    className={`p-2 text-left text-xs rounded-md border transition-all ${
+                                        distMethod === 'uniform'
+                                            ? 'border-pupr-blue bg-pupr-blue/5 text-pupr-blue font-bold shadow-xs'
+                                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <span className="font-bold">Distribusi Seragam (Uniform)</span>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Curah hujan terbagi rata setiap jam</p>
+                                </button>
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Durasi Hujan Total</label>
                             <div className="relative">
@@ -201,7 +269,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
                                 />
                                 <span className="absolute right-3 top-2 text-slate-400 font-semibold text-sm">jam</span>
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-1">Standar teknis hidrograf rencana: 6 s/d 24 jam</p>
+                            <p className="text-[10px] text-slate-400 mt-1">Standar teknis hidrograf rencana: 4, 6, 8, s/d 24 jam</p>
                         </div>
 
                         <div>
@@ -241,7 +309,7 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
                             className="w-full py-3 bg-pupr-blue hover:bg-pupr-blue/90 text-white font-bold rounded-md shadow-sm transition-all flex items-center justify-center gap-2 mt-4"
                         >
                             <TrendingUp className="w-4 h-4" />
-                            Hitung Distribusi ABM
+                            Hitung Distribusi {distMethod === 'abm' ? 'ABM' : distMethod === 'pusair' ? 'Pusair' : distMethod === 'mononobe_forward' ? 'Mononobe' : 'Seragam'}
                         </button>
                     </div>
                 </Card>
@@ -249,10 +317,14 @@ export const StepHietograf: React.FC<StepHietografProps> = ({ onComplete }) => {
                 {/* Grafik Hietograf Jam-jaman */}
                 <Card className="p-5 bg-white border border-slate-300 shadow-sm rounded-md lg:col-span-2">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <Droplets className="w-4 h-4 text-pupr-blue" />
-                            Hietograf Hujan Jam-jaman (Alternating Block Method)
-                        </h3>
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <Droplets className="w-4 h-4 text-pupr-blue" />
+                                Hietograf Hujan Jam-jaman ({distMethod === 'abm' ? 'Alternating Block Method' : distMethod === 'pusair' ? 'Pola Pusair Ditjen SDA' : distMethod === 'mononobe_forward' ? 'Mononobe Menurun' : 'Distribusi Seragam'})
+                            </h3>
+                            <p className="text-[11px] text-slate-500 font-medium">Hujan rencana terdistribusi ke badai jam-jaman siap konvolusi</p>
+                        </div>
+
                         <div className="flex items-center gap-4 text-[10px] font-bold">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-3 h-3 rounded-sm bg-slate-300" />

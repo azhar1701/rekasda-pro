@@ -34,8 +34,10 @@ import {
     calculateHSSGamma1,
     calculateHSSSnyder,
     calculateHSSSCS,
+    calculateConvolution,
     generateEmpiricalHydrograph,
 } from '@/lib/engine/flood';
+import { distributeHourlyRainfall } from '@/lib/utils/hydrologyMath';
 
 // ────────────────────────────────────────────
 // Types & Constants
@@ -141,6 +143,10 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
     const [itbVariant, setItbVariant] = useState<'itb1' | 'itb2'>('itb1');
     const [itbCs, setItbCs] = useState('0.20');
 
+    // ── HSS Storm Distribution & Duration ──
+    const [stormMethod, setStormMethod] = useState<'abm' | 'pusair' | 'lumped'>('abm');
+    const [stormDuration, setStormDuration] = useState<number>(6);
+
     // ── Recommender Engine ──
     const { recommendation, isDataReady } = useFloodMethod();
 
@@ -160,7 +166,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
     // ── Calculation state ──
     const [isCalculating, setIsCalculating] = useState(false);
     const [chartData, setChartData] = useState<{ time: number; inflow: number }[]>([]);
-    const [resultSummary, setResultSummary] = useState<{ debitPuncak: number; waktuPuncak: number } | null>(null);
+    const [resultSummary, setResultSummary] = useState<{ debitPuncak: number; waktuPuncak: number; totalVolume?: number; stormMethod?: string } | null>(null);
 
     // ── Derived ──
     const currentMethods = useMemo(() => category === 'empiris' ? EMPIRIS_METHODS : HSS_METHODS, [category]);
@@ -194,6 +200,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
             try {
                 let peak = 0;
                 let tPeak = 3;
+                let totalVol = 0;
                 let hydro: { time: number; inflow: number }[] = [];
 
                 const R24 = !isNaN(R) && R > 0 ? R : 80;
@@ -245,9 +252,22 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                         const alpha = Math.min(3.0, Math.max(1.5, parseFloat(nakAlpha) || 2.0));
                         const Pe = R24 * C_runoff;
                         const uh = calculateHSSNakayasu({ Ro: 1, Alpha: alpha, A, L });
-                        peak = uh.Qp * Pe;
-                        tPeak = uh.Tp;
-                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        if (stormMethod !== 'lumped') {
+                            const hourlyRain = distributeHourlyRainfall(stormMethod, R24, stormDuration);
+                            const effectiveHourly = hourlyRain.map(p => p * C_runoff);
+                            const conv = calculateConvolution({
+                                effectiveRainfall: effectiveHourly,
+                                unitHydrograph: uh.hydrograph
+                            });
+                            peak = conv.Qp;
+                            tPeak = conv.Tp;
+                            hydro = conv.hydrograph.map(p => ({ time: p.time, inflow: p.discharge }));
+                            totalVol = conv.totalVolume || 0;
+                        } else {
+                            peak = uh.Qp * Pe;
+                            tPeak = uh.Tp;
+                            hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        }
                         break;
                     }
                     case 'gama1': {
@@ -265,9 +285,22 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                             SN: 0.1,
                             RUA: 0.2,
                         });
-                        peak = uh.Qp * Pe;
-                        tPeak = uh.Tp;
-                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        if (stormMethod !== 'lumped') {
+                            const hourlyRain = distributeHourlyRainfall(stormMethod, R24, stormDuration);
+                            const effectiveHourly = hourlyRain.map(p => p * C_runoff);
+                            const conv = calculateConvolution({
+                                effectiveRainfall: effectiveHourly,
+                                unitHydrograph: uh.hydrograph
+                            });
+                            peak = conv.Qp;
+                            tPeak = conv.Tp;
+                            hydro = conv.hydrograph.map(p => ({ time: p.time, inflow: p.discharge }));
+                            totalVol = conv.totalVolume || 0;
+                        } else {
+                            peak = uh.Qp * Pe;
+                            tPeak = uh.Tp;
+                            hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        }
                         break;
                     }
                     case 'snyder': {
@@ -283,42 +316,89 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                             Ct: ctVal,
                             Cp: cpVal,
                         });
-                        peak = uh.Qp * Pe;
-                        tPeak = uh.Tp;
-                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        if (stormMethod !== 'lumped') {
+                            const hourlyRain = distributeHourlyRainfall(stormMethod, R24, stormDuration);
+                            const effectiveHourly = hourlyRain.map(p => p * C_runoff);
+                            const conv = calculateConvolution({
+                                effectiveRainfall: effectiveHourly,
+                                unitHydrograph: uh.hydrograph
+                            });
+                            peak = conv.Qp;
+                            tPeak = conv.Tp;
+                            hydro = conv.hydrograph.map(p => ({ time: p.time, inflow: p.discharge }));
+                            totalVol = conv.totalVolume || 0;
+                        } else {
+                            peak = uh.Qp * Pe;
+                            tPeak = uh.Tp;
+                            hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        }
                         break;
                     }
                     case 'scs': {
                         const cnVal = Math.min(99, Math.max(30, parseFloat(scsCN) || 75));
                         const S_scs = (25400 / cnVal) - 254;
-                        const Pe = R24 > 0.2 * S_scs ? Math.pow(R24 - 0.2 * S_scs, 2) / (R24 + 0.8 * S_scs) : 0.01;
                         const uh = calculateHSSSCS({ Ro: 1, A, L, S });
-                        peak = uh.Qp * Pe;
-                        tPeak = uh.Tp;
-                        hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        if (stormMethod !== 'lumped') {
+                            const hourlyRain = distributeHourlyRainfall(stormMethod, R24, stormDuration);
+                            let cumP = 0;
+                            let prevQcum = 0;
+                            const effectiveHourly = hourlyRain.map(p => {
+                                cumP += p;
+                                const cumQ = cumP > 0.2 * S_scs ? Math.pow(cumP - 0.2 * S_scs, 2) / (cumP + 0.8 * S_scs) : 0;
+                                const incQ = Math.max(0, cumQ - prevQcum);
+                                prevQcum = cumQ;
+                                return incQ;
+                            });
+                            const conv = calculateConvolution({
+                                effectiveRainfall: effectiveHourly,
+                                unitHydrograph: uh.hydrograph
+                            });
+                            peak = conv.Qp;
+                            tPeak = conv.Tp;
+                            hydro = conv.hydrograph.map(p => ({ time: p.time, inflow: p.discharge }));
+                            totalVol = conv.totalVolume || 0;
+                        } else {
+                            const Pe = R24 > 0.2 * S_scs ? Math.pow(R24 - 0.2 * S_scs, 2) / (R24 + 0.8 * S_scs) : 0.01;
+                            peak = uh.Qp * Pe;
+                            tPeak = uh.Tp;
+                            hydro = uh.hydrograph.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        }
                         break;
                     }
                     case 'itb': {
                         const csVal = parseFloat(itbCs) || 0.20;
-                        const Pe = R24 * C_runoff;
                         const tcKirpich = (0.0195 * Math.pow(L * 1000, 0.77) * Math.pow(S, -0.385)) / 60;
                         const tp = Math.max(0.5, tcKirpich * 0.8);
                         const qpUnit = (csVal * A) / (3.6 * tp);
-                        peak = qpUnit * Pe;
-                        tPeak = tp;
                         const tb = tp * 4.0;
-                        const itbHydro: { time: number; inflow: number }[] = [];
+                        const itbUH: { time: number; discharge: number }[] = [];
                         const dt = 0.2;
                         for (let t = 0; t <= tb; t += dt) {
                             let q = 0;
                             if (t <= tp) {
-                                q = peak * Math.pow(t / tp, 1.5);
+                                q = qpUnit * Math.pow(t / tp, 1.5);
                             } else {
-                                q = peak * Math.exp(-(t - tp) / (0.5 * tp));
+                                q = qpUnit * Math.exp(-(t - tp) / (0.5 * tp));
                             }
-                            itbHydro.push({ time: Number(t.toFixed(1)), inflow: Number(Math.max(0, q).toFixed(3)) });
+                            itbUH.push({ time: Number(t.toFixed(1)), discharge: Number(Math.max(0, q).toFixed(4)) });
                         }
-                        hydro = itbHydro;
+                        if (stormMethod !== 'lumped') {
+                            const hourlyRain = distributeHourlyRainfall(stormMethod, R24, stormDuration);
+                            const effectiveHourly = hourlyRain.map(p => p * C_runoff);
+                            const conv = calculateConvolution({
+                                effectiveRainfall: effectiveHourly,
+                                unitHydrograph: itbUH
+                            });
+                            peak = conv.Qp;
+                            tPeak = conv.Tp;
+                            hydro = conv.hydrograph.map(p => ({ time: p.time, inflow: p.discharge }));
+                            totalVol = conv.totalVolume || 0;
+                        } else {
+                            const Pe = R24 * C_runoff;
+                            peak = qpUnit * Pe;
+                            tPeak = tp;
+                            hydro = itbUH.map(p => ({ time: p.time, inflow: Number((p.discharge * Pe).toFixed(3)) }));
+                        }
                         break;
                     }
                 }
@@ -337,7 +417,12 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                 }
 
                 setChartData(hydro);
-                setResultSummary({ debitPuncak: Number(peak.toFixed(2)), waktuPuncak: Number(tPeak.toFixed(2)) });
+                setResultSummary({
+                    debitPuncak: Number(peak.toFixed(2)),
+                    waktuPuncak: Number(tPeak.toFixed(2)),
+                    totalVolume: totalVol > 0 ? Number(totalVol.toFixed(0)) : undefined,
+                    stormMethod: category === 'hss' ? (stormMethod === 'abm' ? 'ABM (Mononobe)' : stormMethod === 'pusair' ? 'Pusair SDA' : 'Blok Tunggal') : undefined
+                });
 
                 // Commit to global state
                 setHasilBanjir({
@@ -346,7 +431,10 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                     method: currentMethodInfo?.label || method,
                 });
 
-                toast.success(`Perhitungan ${currentMethodInfo?.label || method} (SNI 2415) berhasil!`);
+                const suffix = category === 'hss' && stormMethod !== 'lumped'
+                    ? ` dengan Konvolusi ${stormMethod === 'abm' ? 'ABM' : 'Pusair'} (${stormDuration} Jam)`
+                    : '';
+                toast.success(`Perhitungan ${currentMethodInfo?.label || method} (SNI 2415)${suffix} berhasil!`);
             } catch (err: any) {
                 console.error('[ModulBanjirRencana] Calculation Error:', err);
                 toast.error(`Gagal menghitung: ${err?.message || 'Parameter tidak valid'}`);
@@ -355,7 +443,8 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
             }
         }, 150);
     }, [
-        localA, localL, localR, method, localC, localTc,
+        localA, localL, localR, method, localC, localTc, category,
+        stormMethod, stormDuration,
         melchiorReduksi, melchiorKemiringan,
         weduwendReduksi, weduwendLimpasan,
         haspersReduksi, haspersKoef,
@@ -754,6 +843,94 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                 </div>
                             </div>
 
+                            {/* ─── HSS HOURLY RAINFALL CONVOLUTION SELECTOR ─── */}
+                            {category === 'hss' && (
+                                <div className="space-y-3 bg-blue-50/40 p-4 rounded-md border border-blue-200/60">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                            <CloudRain className="w-4 h-4 text-pupr-blue" />
+                                            Konvolusi Hujan Jam-jaman
+                                        </label>
+                                        <span className="text-[10px] font-bold text-pupr-blue bg-blue-100/80 px-2 py-0.5 rounded">
+                                            SNI 2415:2016
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStormMethod('abm')}
+                                            className={cn(
+                                                "p-2 rounded text-left border transition-all text-xs",
+                                                stormMethod === 'abm'
+                                                    ? "bg-white border-pupr-blue text-pupr-blue shadow-xs font-bold ring-1 ring-pupr-blue/30"
+                                                    : "bg-white/60 border-slate-200 text-slate-600 hover:bg-white"
+                                            )}
+                                        >
+                                            <div className="font-bold flex items-center justify-between">
+                                                <span>ABM</span>
+                                                <span className="text-[8px] px-1 bg-pupr-blue text-white rounded">SNI</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 mt-0.5 truncate">Mononobe tengah</p>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setStormMethod('pusair')}
+                                            className={cn(
+                                                "p-2 rounded text-left border transition-all text-xs",
+                                                stormMethod === 'pusair'
+                                                    ? "bg-white border-pupr-blue text-pupr-blue shadow-xs font-bold ring-1 ring-pupr-blue/30"
+                                                    : "bg-white/60 border-slate-200 text-slate-600 hover:bg-white"
+                                            )}
+                                        >
+                                            <div className="font-bold flex items-center justify-between">
+                                                <span>Pusair</span>
+                                                <span className="text-[8px] px-1 bg-amber-600 text-white rounded">SDA</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 mt-0.5 truncate">Puncak jam ke-2</p>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setStormMethod('lumped')}
+                                            className={cn(
+                                                "p-2 rounded text-left border transition-all text-xs",
+                                                stormMethod === 'lumped'
+                                                    ? "bg-white border-pupr-blue text-pupr-blue shadow-xs font-bold ring-1 ring-pupr-blue/30"
+                                                    : "bg-white/60 border-slate-200 text-slate-600 hover:bg-white"
+                                            )}
+                                        >
+                                            <div className="font-bold">Blok Tunggal</div>
+                                            <p className="text-[10px] text-slate-400 mt-0.5 truncate">Skalar langsung</p>
+                                        </button>
+                                    </div>
+
+                                    {stormMethod !== 'lumped' && (
+                                        <div className="flex items-center justify-between pt-1 border-t border-blue-100">
+                                            <span className="text-[11px] font-bold text-slate-600">Durasi Hujan Badai:</span>
+                                            <div className="flex gap-1">
+                                                {[2, 4, 6, 8, 12].map(dur => (
+                                                    <button
+                                                        key={dur}
+                                                        type="button"
+                                                        onClick={() => setStormDuration(dur)}
+                                                        className={cn(
+                                                            "px-2.5 py-1 text-xs rounded font-bold transition-all",
+                                                            stormDuration === dur
+                                                                ? "bg-pupr-blue text-white shadow-xs"
+                                                                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                                                        )}
+                                                    >
+                                                        {dur}j
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* ─── ACTION BUTTON ─── */}
                             <div className="pt-1">
                                 <Button
@@ -791,7 +968,7 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
 
                         {/* Result Summary Cards */}
                         {resultSummary && (
-                            <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-300">
                                 <div className="bg-white border border-slate-300 rounded-sm shadow-none p-5">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Debit Puncak (Qp)</p>
                                     <div className="flex items-baseline gap-2">
@@ -808,6 +985,18 @@ export const ModulBanjirRencana: React.FC<ModulBanjirRencanaProps> = ({ onConsul
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2 font-medium">Kategori: {category === 'empiris' ? 'Empiris' : 'HSS'}</p>
                                 </div>
+                                {resultSummary.totalVolume !== undefined && (
+                                    <div className="bg-white border border-slate-300 rounded-sm shadow-none p-5 col-span-2 lg:col-span-1">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Volume Limpasan</p>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-2xl font-extrabold text-pupr-blue tracking-tight font-mono tabular-nums">
+                                                {(resultSummary.totalVolume / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })}
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-400">ribu m³</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-2 font-medium">Konvolusi: {resultSummary.stormMethod || 'ABM'}</p>
+                                    </div>
+                                )}
                             </div>
                         )}
 

@@ -17,6 +17,8 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateMononobe,
   distributeRainfallABM,
+  distributeHourlyRainfall,
+  generateHourlyDistributionTable,
 } from './hydrologyMath';
 
 // ============================================================================
@@ -133,3 +135,62 @@ describe('Alternating Block Method - distributeRainfallABM()', () => {
     expect(totalDistributed).toBeCloseTo(R24, 10);
   });
 });
+
+// ============================================================================
+// TEST SUITE 3: MULTI-METHOD HOURLY RAINFALL DISTRIBUTION
+// ============================================================================
+
+describe('Multi-Method Hourly Rainfall Distribution - distributeHourlyRainfall()', () => {
+  const R24 = 155;
+
+  it('1. Pusair Method: Konservasi massa 100% dan puncak di jam ke-2 (6 jam)', () => {
+    const distribution = distributeHourlyRainfall('pusair', R24, 6);
+    const total = distribution.reduce((s, v) => s + v, 0);
+
+    expect(distribution.length).toBe(6);
+    expect(total).toBeCloseTo(R24, 10);
+
+    // Pada pola standar Pusair 6-jam: [26%, 45%, 13%, 8%, 5%, 3%]
+    // Nilai tertinggi harus di indeks 1 (jam ke-2)
+    const maxVal = Math.max(...distribution);
+    expect(distribution.indexOf(maxVal)).toBe(1);
+    expect(distribution[1]).toBeCloseTo(R24 * 0.45, 5);
+  });
+
+  it('2. Mononobe Forward: Konservasi massa dan urutan monoton menurun', () => {
+    const distribution = distributeHourlyRainfall('mononobe_forward', R24, 6);
+    const total = distribution.reduce((s, v) => s + v, 0);
+
+    expect(distribution.length).toBe(6);
+    expect(total).toBeCloseTo(R24, 10);
+    // Jam 1 harus paling tinggi
+    expect(distribution[0]).toBe(Math.max(...distribution));
+    // Tiap jam berikutnya harus lebih kecil atau sama
+    for (let i = 1; i < distribution.length; i++) {
+      expect(distribution[i]).toBeLessThanOrEqual(distribution[i - 1]);
+    }
+  });
+
+  it('3. Uniform Method: Pembagian rata persis', () => {
+    const durasi = 5;
+    const distribution = distributeHourlyRainfall('uniform', R24, durasi);
+    const total = distribution.reduce((s, v) => s + v, 0);
+
+    expect(distribution.length).toBe(durasi);
+    expect(total).toBeCloseTo(R24, 10);
+    distribution.forEach(v => {
+      expect(v).toBeCloseTo(R24 / durasi, 10);
+    });
+  });
+
+  it('4. generateHourlyDistributionTable: Konsistensi kolom dan akumulasi 100%', () => {
+    const rows = generateHourlyDistributionTable('abm', R24, 6);
+
+    expect(rows.length).toBe(6);
+    expect(rows[rows.length - 1].hujanKumulatif).toBeCloseTo(R24, 1);
+
+    const totalPct = rows.reduce((s, r) => s + r.persentase, 0);
+    expect(totalPct).toBeCloseTo(100, 1);
+  });
+});
+
