@@ -111,6 +111,7 @@ export interface DataHujan {
   tanggal: string; 
   curah_hujan: number; 
   is_infilled?: boolean;
+  is_dmc_corrected?: boolean;
   created_at?: string;
 }
 
@@ -827,22 +828,37 @@ export const useHydrologyStore = create<HydrologyState>()(
 
       for (let i = 0; i < totalChunks; i++) {
         const chunk = chunks[i];
-        const { error } = await supabase
+        let { error } = await supabase
           .from('master_data_hujan')
           .upsert(chunk, { onConflict: 'stasiun_id, tanggal' });
         
+        // Graceful fallback jika kolom is_dmc_corrected belum diaplikasikan di server DB pengguna
+        if (error && error.message?.includes('is_dmc_corrected')) {
+          const stripped = chunk.map(({ is_dmc_corrected, ...rest }: any) => rest);
+          const retry = await supabase
+            .from('master_data_hujan')
+            .upsert(stripped, { onConflict: 'stasiun_id, tanggal' });
+          error = retry.error;
+        }
+
         if (error) throw error;
         if (onProgress) {
           onProgress(Math.round(((i + 1) / totalChunks) * 100));
         }
       }
 
-      // Refresh current view if needed
-      const currentStasiun = get().selectedStasiun;
-      if (currentStasiun) {
-        await get().fetchDataHujan(currentStasiun.id);
-      }
-      set({ isFrekuensiDirty: true, isBanjirDirty: true });
+      // Update state lokal untuk memastikan flag is_dmc_corrected / is_infilled tersimpan di state
+      set(state => {
+        const existingMap = new Map(state.dataHujan.map(d => [`${d.stasiun_id}_${d.tanggal}`, d]));
+        dataList.forEach(item => {
+          const key = `${item.stasiun_id}_${item.tanggal}`;
+          existingMap.set(key, {
+            id: existingMap.get(key)?.id || `local_${Date.now()}_${Math.random()}`,
+            ...item
+          });
+        });
+        return { dataHujan: Array.from(existingMap.values()), isFrekuensiDirty: true, isBanjirDirty: true };
+      });
     } catch (error: any) {
       set({ error: error.message });
       throw error;

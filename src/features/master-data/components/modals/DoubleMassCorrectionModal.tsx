@@ -237,6 +237,7 @@ export const DoubleMassCorrectionModal: React.FC<DoubleMassCorrectionModalProps>
         stasiun_id: targetStasiun.id,
         tanggal: r.tanggal,
         curah_hujan: r.curah_hujan,
+        is_dmc_corrected: r.was_corrected,
       }));
 
       await importDataHujanBatch(toSave);
@@ -815,8 +816,8 @@ export const DoubleMassCorrectionModal: React.FC<DoubleMassCorrectionModalProps>
               <div>
                 <h4 className="text-base font-bold text-slate-800 mb-1">Koreksi Berhasil Disimpan</h4>
                 <p className="text-xs text-slate-600 max-w-md mx-auto">{correctionResult?.pesan}</p>
-                <p className="text-[11px] text-slate-400 mt-2">
-                  Data telah diperbarui di database. Evaluasi QC otomatis diperbarui untuk stasiun ini.
+                <p className="text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded px-2.5 py-1 mt-2 inline-block">
+                  ✓ Seluruh deret data pra-{correctionResult?.breakYear} telah ditandai sebagai <strong>Terkoreksi Double Mass Curve (DMC)</strong>.
                 </p>
               </div>
             </div>

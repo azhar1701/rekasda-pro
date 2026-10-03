@@ -72,12 +72,30 @@ export const MasterHidrologiTab: React.FC = () => {
     const pageSize = 1000;
     let hasMore = true;
     while (hasMore) {
-      const { data: chunk, error } = await supabase
+      let chunk: any[] | null = null;
+      let error: any = null;
+
+      const res = await supabase
         .from('master_data_hujan')
-        .select('id, stasiun_id, tanggal, curah_hujan, is_infilled')
+        .select('id, stasiun_id, tanggal, curah_hujan, is_infilled, is_dmc_corrected')
         .eq('stasiun_id', stasiunId)
         .order('tanggal', { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      chunk = res.data;
+      error = res.error;
+
+      if (error && error.message && error.message.includes('is_dmc_corrected')) {
+        const retry = await supabase
+          .from('master_data_hujan')
+          .select('id, stasiun_id, tanggal, curah_hujan, is_infilled')
+          .eq('stasiun_id', stasiunId)
+          .order('tanggal', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        chunk = retry.data;
+        error = retry.error;
+      }
+
       if (error) throw new Error(`Gagal memuat data stasiun ${stasiunId}: ${error.message}`);
       if (chunk && chunk.length > 0) {
         allRecords = [...allRecords, ...(chunk as DataHujan[])];
@@ -249,16 +267,23 @@ export const MasterHidrologiTab: React.FC = () => {
 
   const annualMaximums = useMemo(() => {
     if (!displayData || displayData.length === 0) return [];
-    const maxByYear: Record<number, number> = {};
+    const maxByYear: Record<number, { curah_hujan: number; is_dmc_corrected?: boolean }> = {};
     displayData.forEach((row) => {
       const [yyyy] = row.tanggal.split('-');
       const y = parseInt(yyyy, 10);
-      if (!maxByYear[y] || row.curah_hujan > maxByYear[y]) {
-        maxByYear[y] = row.curah_hujan;
+      if (!maxByYear[y] || row.curah_hujan > maxByYear[y].curah_hujan) {
+        maxByYear[y] = {
+          curah_hujan: row.curah_hujan,
+          is_dmc_corrected: Boolean(row.is_dmc_corrected),
+        };
       }
     });
     return Object.entries(maxByYear)
-      .map(([year, curah_hujan]) => ({ tahun: parseInt(year, 10), curah_hujan }))
+      .map(([year, val]) => ({
+        tahun: parseInt(year, 10),
+        curah_hujan: val.curah_hujan,
+        is_dmc_corrected: val.is_dmc_corrected,
+      }))
       .sort((a, b) => b.tahun - a.tahun);
   }, [displayData]);
 
@@ -639,10 +664,18 @@ export const MasterHidrologiTab: React.FC = () => {
                 {/* Annual Maximum Summary Table */}
                 {annualMaximums.length > 0 && (
                   <div className="mt-6 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-                    <div className="p-3.5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Rekapitulasi Hujan Maksimum Tahunan ({annualMaximums.length} Tahun)
-                      </span>
+                    <div className="p-3.5 border-b border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Rekapitulasi Hujan Maksimum Tahunan ({annualMaximums.length} Tahun)
+                        </span>
+                        {annualMaximums.some((m) => m.is_dmc_corrected) && (
+                          <span className="text-[10px] bg-teal-100 text-teal-800 border border-teal-200 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-600 inline-block"></span>
+                            Terdapat Nilai Terkoreksi DMC
+                          </span>
+                        )}
+                      </div>
                       <Button
                         onClick={handleHubungkanDistribusi}
                         size="sm"
@@ -668,9 +701,23 @@ export const MasterHidrologiTab: React.FC = () => {
                             {annualMaximums.slice(0, 15).map((m) => (
                               <td
                                 key={m.tahun}
-                                className="py-2.5 px-2.5 text-center font-bold text-blue-700 tabular-nums border-r border-slate-200 font-mono"
+                                className={`py-2 px-2 text-center font-bold tabular-nums border-r border-slate-200 font-mono ${
+                                  m.is_dmc_corrected ? 'bg-teal-50/70 text-teal-900' : 'text-blue-700'
+                                }`}
+                                title={
+                                  m.is_dmc_corrected
+                                    ? `Tahun ${m.tahun}: Hujan maksimum berasal dari data terkoreksi Double Mass Curve (DMC)`
+                                    : undefined
+                                }
                               >
-                                {m.curah_hujan.toFixed(1)}
+                                <div className="flex flex-col items-center justify-center gap-0.5">
+                                  <span>{m.curah_hujan.toFixed(1)}</span>
+                                  {m.is_dmc_corrected && (
+                                    <span className="text-[9px] uppercase font-bold text-teal-700 bg-teal-100 px-1 rounded tracking-tight border border-teal-200">
+                                      DMC
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                             ))}
                           </tr>

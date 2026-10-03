@@ -14,13 +14,14 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
   const completeness = useMemo(() => calculateYearCompleteness(data, year), [data, year]);
 
   // Pre-calculate Matrix & Stats using useMemo for high performance
-  const { matrix, monthlyStats, maxRainfall } = useMemo(() => {
-    const grid: { val: number | null; isInfilled: boolean }[][] = Array.from(
+  const { matrix, monthlyStats, maxRainfall, dmcCountInYear } = useMemo(() => {
+    const grid: { val: number | null; isInfilled: boolean; isDmcCorrected: boolean }[][] = Array.from(
       { length: 31 },
-      () => Array.from({ length: 12 }, () => ({ val: null, isInfilled: false }))
+      () => Array.from({ length: 12 }, () => ({ val: null, isInfilled: false, isDmcCorrected: false }))
     );
 
     let maxVal = 0;
+    let dmcCount = 0;
 
     data.forEach((row) => {
       if (!row.tanggal) return;
@@ -31,9 +32,12 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
         const day = parseInt(dd, 10) - 1;
         if (month >= 0 && month < 12 && day >= 0 && day < 31) {
           const rainfallVal = row.curah_hujan !== undefined && row.curah_hujan !== null ? row.curah_hujan : null;
+          const isDmc = row.is_dmc_corrected || false;
+          if (isDmc) dmcCount++;
           grid[day][month] = {
             val: rainfallVal,
             isInfilled: row.is_infilled || false,
+            isDmcCorrected: isDmc,
           };
           if (rainfallVal !== null && rainfallVal > maxVal) {
             maxVal = rainfallVal;
@@ -92,38 +96,44 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
       matrix: grid,
       monthlyStats: stats,
       maxRainfall: maxVal,
+      dmcCountInYear: dmcCount,
     };
   }, [data, year]);
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nop', 'Des'];
 
-  const getCellClass = (val: number | null, isInfilled: boolean = false) => {
+  const getCellClass = (val: number | null, isInfilled: boolean = false, isDmcCorrected: boolean = false) => {
     if (val === null) {
       return 'text-slate-300 bg-slate-50/70 text-center font-mono select-none';
     }
 
-    const infilledClass = isInfilled ? 'italic text-indigo-700 bg-indigo-50/80 font-medium' : '';
+    let modifierClass = '';
+    if (isDmcCorrected) {
+      modifierClass = 'border-l-2 border-l-teal-600 bg-teal-50/80 text-teal-950 font-semibold';
+    } else if (isInfilled) {
+      modifierClass = 'italic text-indigo-700 bg-indigo-50/80 font-medium';
+    }
 
     if (val < 0) {
-      return `${infilledClass} text-rose-600 font-bold bg-rose-50 text-right pr-2`;
+      return `${modifierClass} text-rose-600 font-bold bg-rose-50 text-right pr-2`;
     }
     if (val === 0) {
-      return `${infilledClass} text-slate-400 bg-white text-right pr-2`;
+      return `${modifierClass} text-slate-400 bg-white text-right pr-2`;
     }
     if (val > 0 && val < 50) {
-      return `${infilledClass} text-slate-800 bg-white text-right pr-2`;
+      return `${modifierClass} text-slate-800 bg-white text-right pr-2`;
     }
     if (val >= 50 && val < 150) {
-      return `${infilledClass} bg-sky-50 text-sky-800 font-bold text-right pr-2`;
+      return `${modifierClass} bg-sky-50 text-sky-800 font-bold text-right pr-2`;
     }
     if (val >= 150 && val < 300) {
-      return `${infilledClass} bg-amber-100 text-amber-900 font-extrabold text-right pr-2`;
+      return `${modifierClass} bg-amber-100 text-amber-900 font-extrabold text-right pr-2`;
     }
     if (val >= 300) {
-      return `${infilledClass} bg-rose-100 text-rose-900 font-black text-right pr-2 ring-1 ring-inset ring-rose-400`;
+      return `${modifierClass} bg-rose-100 text-rose-900 font-black text-right pr-2 ring-1 ring-inset ring-rose-400`;
     }
 
-    return `${infilledClass} text-right pr-2`;
+    return `${modifierClass} text-right pr-2`;
   };
 
   return (
@@ -169,6 +179,12 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
               Infilled: {completeness.infilledDays} Hari
             </span>
           )}
+          {dmcCountInYear > 0 && (
+            <span className="text-[11px] bg-teal-100 text-teal-800 border border-teal-200 px-2 py-0.5 rounded font-medium flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+              Terkoreksi DMC: {dmcCountInYear} Hari
+            </span>
+          )}
           {completeness.missingDays > 0 && (
             <span className="text-[11px] text-slate-600">
               (Hilang: <strong>{completeness.missingDays}</strong> hari, celah terpanjang: <strong>{completeness.maxConsecutiveMissing}</strong> hari)
@@ -210,6 +226,10 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-indigo-50 border border-indigo-300 inline-block" />
           <span className="text-slate-600">Infilled (Hasil Estimasi)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3.5 h-3.5 rounded bg-teal-50 border-l-2 border-l-teal-600 border border-teal-200 inline-flex items-center justify-center text-[10px] text-teal-700 font-bold">*</span>
+          <span className="text-slate-600">Terkoreksi DMC (Double Mass Curve)</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-300 inline-block text-center text-[10px] text-slate-400">-</span>
@@ -267,17 +287,27 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
                     );
                   }
 
-                  const { val, isInfilled } = cell;
+                  const { val, isInfilled, isDmcCorrected } = cell;
                   const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`;
+                  const dmcNote = isDmcCorrected ? ' (terkoreksi DMC)' : '';
                   const ariaLabel =
                     val !== null
-                      ? `Curah hujan tanggal ${dayIndex + 1} ${months[monthIndex]} ${year}: ${val.toFixed(1)} mm ${isInfilled ? '(infilled)' : ''}`
+                      ? `Curah hujan tanggal ${dayIndex + 1} ${months[monthIndex]} ${year}: ${val.toFixed(1)} mm ${isInfilled ? '(infilled)' : ''}${dmcNote}`
                       : `Data curah hujan tanggal ${dayIndex + 1} ${months[monthIndex]} ${year} kosong`;
+
+                  let titleTooltip: string | undefined = undefined;
+                  if (isDmcCorrected && isInfilled) {
+                    titleTooltip = 'Data ini telah dikoreksi konsistensinya dengan Metode Double Mass Curve (DMC) dan diestimasi otomatis (Infilled)';
+                  } else if (isDmcCorrected) {
+                    titleTooltip = 'Data ini telah dikoreksi konsistensinya dengan Metode Double Mass Curve (DMC)';
+                  } else if (isInfilled) {
+                    titleTooltip = 'Data ini diestimasi otomatis (Infilled)';
+                  }
 
                   return (
                     <td
                       key={monthIndex}
-                      className={`py-1 border border-slate-200 tabular-nums ${getCellClass(val, isInfilled)} ${
+                      className={`py-1 border border-slate-200 tabular-nums ${getCellClass(val, isInfilled, isDmcCorrected)} ${
                         onCellClick
                           ? 'cursor-pointer hover:bg-blue-50/70 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-600'
                           : ''
@@ -296,9 +326,16 @@ export const DailyRainfallMatrix: React.FC<DailyRainfallMatrixProps> = ({ data, 
                       role={onCellClick ? 'button' : 'cell'}
                       tabIndex={onCellClick ? 0 : undefined}
                       aria-label={ariaLabel}
-                      title={isInfilled ? 'Data ini diestimasi otomatis (Infilled)' : undefined}
+                      title={titleTooltip}
                     >
-                      {val !== null ? val.toFixed(1) : '-'}
+                      {val !== null ? (
+                        <span className="inline-flex items-center justify-end w-full">
+                          <span>{val.toFixed(1)}</span>
+                          {isDmcCorrected && (
+                            <span className="text-[9px] text-teal-700 font-bold ml-0.5" aria-hidden="true">*</span>
+                          )}
+                        </span>
+                      ) : '-'}
                     </td>
                   );
                 })}
