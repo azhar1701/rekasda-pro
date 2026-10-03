@@ -81,6 +81,24 @@ export const generateDeterministicSummary = (payload: Partial<ExecutiveReportPay
 };
 
 /**
+ * Helper pemetaan nama metode ke kode SSOT metodologi
+ */
+export const resolveMetodologiKey = (metode: string): string => {
+  const m = (metode || '').toLowerCase().trim();
+  if (m.includes('gumbel')) return 'GUMBEL';
+  if (m.includes('pearson') || m.includes('lp3')) return 'LOG_PEARSON_III';
+  if (m.includes('log normal') || m.includes('lognormal')) return 'LOG_NORMAL';
+  if (m.includes('normal')) return 'NORMAL';
+  if (m.includes('rasional') || m.includes('rational')) return 'RASIONAL';
+  if (m.includes('nakayasu') || m.includes('hss')) return 'HSS_NAKAYASU';
+  if (m.includes('scs') || m.includes('cn')) return 'SCS_CN';
+  if (m.includes('manning')) return 'MANNING';
+  if (m.includes('mock') || m.includes('neraca')) return 'FJ_MOCK';
+  if (m.includes('embung') || m.includes('routing')) return 'ROUTING_EMBUNG';
+  return 'RASIONAL';
+};
+
+/**
  * Agregasi data sesi aktif dari useHydrologyStore
  */
 export const aggregateActiveReportData = (store: any): ExecutiveReportPayload => {
@@ -94,6 +112,7 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
 
   const frekuensiPayload = hasilFrekuensi ? {
     metodeTerpilih: hasilFrekuensi.metodeTerpilih || 'Gumbel',
+    metodologiKey: resolveMetodologiKey(hasilFrekuensi.metodeTerpilih || 'Gumbel'),
     lulusUji: hasilFrekuensi.lulusUjiKecocokan ?? true,
     curahHujanRencana: (hasilFrekuensi.curahHujanRencana || []).map((r: any) => ({
       Tr: r.Tr || r.kalaUlang || 0,
@@ -107,6 +126,7 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
 
   const banjirPayload = hasilBanjir ? {
     metode: hasilBanjir.metode || 'Rasional / HSS',
+    metodologiKey: resolveMetodologiKey(hasilBanjir.metode || 'Rasional'),
     debitPuncak: Number(hasilBanjir.debitPuncak || 0),
     waktuPuncak: Number(hasilBanjir.waktuPuncak || 0),
     volumeTotal: Number(hasilBanjir.volumeTotal || 0),
@@ -130,6 +150,7 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
     }));
 
     neracaPayload = {
+      metodologiKey: 'FJ_MOCK',
       bulanKritis: hasilNeraca.bulanKritis || 'Agustus',
       ikaPercent: hasilNeraca.waterScarcity?.ikaPercent,
       ikaStatus: hasilNeraca.waterScarcity?.status,
@@ -142,6 +163,7 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
   }
 
   const embungPayload = hasilEmbung ? {
+    metodologiKey: 'ROUTING_EMBUNG',
     isAman: hasilEmbung.isAman ?? true,
     reduksiPuncak: Number(hasilEmbung.reduksiPuncak || 0),
     umurSedimen: Number(hasilEmbung.umurSedimen || 25),
@@ -151,6 +173,7 @@ export const aggregateActiveReportData = (store: any): ExecutiveReportPayload =>
   } : undefined;
 
   const saluranPayload = hasilSaluran ? {
+    metodologiKey: 'MANNING',
     shape: hasilSaluran.shape || 'trapezoid',
     channelName: hasilSaluran.channelName || 'Saluran Primer',
     dischargeCapacity: Number(hasilSaluran.dischargeCapacity || 0),
@@ -244,6 +267,7 @@ export const aggregateHistoricalProjectData = (item: AllCalculationsData): Execu
     const res = d.results || d.outputResults || d.result_data || d;
     const inp = d.inputs || d.inputParameters || d.input_data || d;
     basePayload.saluran = {
+      metodologiKey: 'MANNING',
       shape: inp.shape || 'trapezoid',
       channelName: item.project_name || inp.channelName || 'Saluran Terbuka',
       dischargeCapacity: Number(res.Discharge || res.dischargeCapacity || res.Q || res.capacity || 0),
@@ -264,8 +288,10 @@ export const aggregateHistoricalProjectData = (item: AllCalculationsData): Execu
     };
   } else if (item.type === 'flood') {
     const res = d.results || d.outputResults || d.result_data || d;
+    const methodStr = d.method || res.method || 'Rasional';
     basePayload.banjir = {
-      metode: d.method || res.method || 'Rasional',
+      metode: methodStr,
+      metodologiKey: resolveMetodologiKey(methodStr),
       debitPuncak: Number(res.qPeak || res.peakDischarge || res.Qp || res.Qpeak || res.debitPuncak || 0),
       waktuPuncak: Number(res.tPeak || res.timeToPeak || res.Tp || res.waktuPuncak || 0),
       volumeTotal: Number(res.volume || res.totalVolume || res.volumeTotal || 0),
@@ -280,6 +306,7 @@ export const aggregateHistoricalProjectData = (item: AllCalculationsData): Execu
       ? Number(d.totalDemand) 
       : monthly.reduce((s: number, m: any) => s + parseFloat(m.totalDemand || m.demand || m.kebutuhan || 0), 0);
     basePayload.neraca = {
+      metodologiKey: 'FJ_MOCK',
       bulanKritis: d.summary?.criticalMonth?.month || d.summary?.criticalMonth || 'Agustus',
       totalKetersediaan: supplySum,
       totalKebutuhan: demandSum,
@@ -295,6 +322,7 @@ export const aggregateHistoricalProjectData = (item: AllCalculationsData): Execu
   } else if (item.type === 'embung') {
     const res = d.result_data || d.results || d.outputResults || d;
     basePayload.embung = {
+      metodologiKey: 'ROUTING_EMBUNG',
       isAman: res.isSafe ?? true,
       reduksiPuncak: Number(res.attenuationPercent || res.reduksiPuncak || 0),
       umurSedimen: Number(res.serviceLife || res.umurSedimen || 25),

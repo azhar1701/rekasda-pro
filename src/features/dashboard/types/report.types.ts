@@ -39,6 +39,7 @@ export interface ReportIdentitasData {
 
 export interface ReportFrekuensiData {
   metodeTerpilih: string;
+  metodologiKey?: string;
   lulusUji: boolean;
   curahHujanRencana: { Tr: number; R24: number }[];
   ujiStatistik?: {
@@ -51,6 +52,7 @@ export interface ReportFrekuensiData {
 
 export interface ReportBanjirData {
   metode: string;
+  metodologiKey?: string;
   debitPuncak: number; // m³/s
   waktuPuncak: number; // jam
   volumeTotal: number; // m³
@@ -58,6 +60,7 @@ export interface ReportBanjirData {
 }
 
 export interface ReportNeracaData {
+  metodologiKey?: string;
   bulanKritis: string;
   ikaPercent?: number;
   ikaStatus?: string;
@@ -75,6 +78,7 @@ export interface ReportNeracaData {
 }
 
 export interface ReportEmbungData {
+  metodologiKey?: string;
   isAman: boolean;
   reduksiPuncak: number; // %
   umurSedimen: number; // tahun
@@ -87,6 +91,7 @@ export interface ReportEmbungData {
 }
 
 export interface ReportSaluranData {
+  metodologiKey?: string;
   shape: string;
   channelName?: string;
   dischargeCapacity: number; // m³/s

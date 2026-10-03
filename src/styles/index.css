@@ -551,51 +551,181 @@ svg text {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 12mm;
+    margin: 12mm 15mm 15mm 15mm;
+
+    @top-center {
+      content: "LAPORAN TEKNIS HIDROLOGI & HIDRAULIKA — REKASDA PRO";
+      font-family: inherit;
+      font-size: 7pt;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 0.5pt solid #cbd5e1;
+      padding-bottom: 2mm;
+    }
+
+    @bottom-right {
+      content: "Hal. " counter(page) " dari " counter(pages);
+      font-family: inherit;
+      font-size: 7pt;
+      color: #94a3b8;
+    }
+
+    @bottom-left {
+      content: "Dokumen Resmi SNI — RekaSDA Pro";
+      font-family: inherit;
+      font-size: 7pt;
+      color: #94a3b8;
+    }
   }
 
-  html, body {
+  /* Universal reset to completely prevent clipping on all ancestor containers */
+  html,
+  body {
     background: #ffffff !important;
     color: #0f172a !important;
-    font-size: 9.5pt !important;
+    font-size: 8.5pt !important;
+    line-height: 1.4 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    position: static !important;
+    width: 100% !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide web application navigation, toolbar, buttons, and drawers */
+  /* Defeat all parent layout wrappers in React / Tailwind tree */
+  #root,
+  #root > div,
+  main,
+  .min-h-screen,
+  [class*="min-h-"],
+  [class*="h-full"],
+  [class*="flex-1"] {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: block !important;
+    position: static !important;
+    float: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Neutralize flexbox column fragmentation bug in Chromium */
+  .flex.flex-col,
+  .flex-col {
+    display: block !important;
+  }
+
+  /* Defeat any overflow clipping */
+  .overflow-hidden,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-x-hidden {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Hide web application navigation, toolbar, buttons, inputs, modals, drawers, and AI widgets */
   header, 
   nav, 
   aside, 
   footer, 
   button,
+  input,
+  select,
   .no-print,
+  [data-ai-consultant-drawer],
   [role="banner"],
-  [role="navigation"] {
+  [role="navigation"],
+  [data-radix-popper-content-wrapper],
+  .fixed,
+  .backdrop-blur-xs,
+  .backdrop-blur-sm {
     display: none !important;
   }
 
-  /* Full-width container and eliminate screen shadows */
-  main, .print-container {
+  /* Full-width container and eliminate screen shadows & borders */
+  .print-container {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
+    background: #ffffff !important;
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Prevent page breaks inside cards, tables, sections */
+  /* Section level pagination */
+  section {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  /* Keep individual cards, signature blocks, and table rows unbroken */
   .print-avoid-break,
-  section,
-  table,
-  tr,
-  .print-card {
+  .print-card,
+  tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
+  /* Page break utilities */
+  .print-page-break-before,
   .print-force-break {
     page-break-before: always !important;
     break-before: page !important;
+  }
+
+  .print-page-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  /* Prevent headings from detaching from their content */
+  h1, h2, h3, h4 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  h3 + *, h4 + * {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+  }
+
+  /* Widows & orphans prevention */
+  p, li {
+    widows: 3;
+    orphans: 3;
+  }
+
+  /* Table rules */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    page-break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
   }
 }

@@ -19,9 +19,9 @@ export const ModuleLayout = ({
     children
 }: ModuleLayoutProps) => {
     return (
-        <div className="w-full h-full flex flex-col bg-slate-50 rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[85vh]">
+        <div className="w-full h-full flex flex-col bg-slate-50 rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[85vh] print:border-none print:shadow-none print:bg-transparent print:min-h-0 print:h-auto print:overflow-visible print:block">
             {/* Dashboard Header */}
-            <div className="px-6 py-5 border-b border-slate-200 bg-white shadow-sm z-10 shrink-0 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-slate-200 bg-white shadow-sm z-10 shrink-0 flex items-center justify-between no-print">
                 <div className="flex items-center gap-3 mb-1">
                     <div className={`p-2 rounded-lg shrink-0 ${iconColorClass}`}>
                         {icon}
@@ -35,8 +35,8 @@ export const ModuleLayout = ({
             </div>
 
             {/* Internal Scrollable Content Area */}
-            <div className="flex-1 overflow-hidden flex flex-col p-3 sm:p-6">
-                <div className="flex-1 overflow-y-auto pr-1 pb-4 flex flex-col relative">
+            <div className="flex-1 overflow-hidden flex flex-col p-3 sm:p-6 print:p-0 print:border-none print:overflow-visible print:h-auto print:min-h-0 print:block">
+                <div className="flex-1 overflow-y-auto pr-1 pb-4 flex flex-col relative print:p-0 print:overflow-visible print:h-auto print:min-h-0 print:block">
                     <GlobalErrorBoundary>
                         {children}
                     </GlobalErrorBoundary>

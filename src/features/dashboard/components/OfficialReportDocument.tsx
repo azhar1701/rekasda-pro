@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExecutiveReportPayload } from '../types/report.types';
+import { MethodologyBox } from './MethodologyBox';
 import { 
   Building2, 
   MapPin, 
@@ -184,6 +185,8 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             <span className="text-[10px] text-slate-500 font-semibold">SNI 2415:2016</span>
           </div>
 
+          <MethodologyBox metodologiKey={frekuensi.metodologiKey || frekuensi.metodeTerpilih || 'GUMBEL'} />
+
           <div className="flex flex-wrap items-center justify-between text-xs mb-2">
             <div>
               <span className="text-slate-500">Metode Distribusi Terpilih: </span>
@@ -230,7 +233,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           BAGIAN 3: ANALISIS DEBIT BANJIR RANCANGAN
           ===================================================================== */}
       {sectionsConfig.showBanjir && banjir && (
-        <section className="mb-6 print-avoid-break">
+        <section className="mb-6 print-avoid-break print-page-break-before">
           <div className="bg-slate-100 px-3 py-1.5 border-l-4 border-red-600 mb-3 flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
               <Activity className="w-3.5 h-3.5 text-red-600" />
@@ -238,6 +241,8 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             </h3>
             <span className="text-[10px] text-slate-500 font-semibold">SNI 2415:2016</span>
           </div>
+
+          <MethodologyBox metodologiKey={banjir.metodologiKey || banjir.metode || 'RASIONAL'} />
 
           <div className="grid grid-cols-3 gap-3 mb-3 text-center">
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
@@ -291,7 +296,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           BAGIAN 4: NERACA AIR BULANAN & KETERSEDIAAN AIR
           ===================================================================== */}
       {sectionsConfig.showNeraca && neraca && (
-        <section className="mb-6 print-avoid-break">
+        <section className="mb-6 print-avoid-break print-page-break-before">
           <div className="bg-slate-100 px-3 py-1.5 border-l-4 border-emerald-600 mb-3 flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 text-emerald-600" />
@@ -299,6 +304,8 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             </h3>
             <span className="text-[10px] text-slate-500 font-semibold">SNI 19-6728.1-2002</span>
           </div>
+
+          <MethodologyBox metodologiKey={neraca.metodologiKey || 'FJ_MOCK'} />
 
           <div className="flex items-center justify-between text-xs mb-2">
             <div>
@@ -320,37 +327,37 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           </div>
 
           {neraca.monthlyRows && neraca.monthlyRows.length > 0 && (
-            <div className="overflow-x-auto border border-slate-200 rounded">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+            <div className="overflow-x-auto border border-slate-200 rounded print:overflow-visible print:border-slate-300">
+              <table className="w-full text-xs text-left print:text-[8pt] border-collapse">
+                <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 print:bg-slate-50">
                   <tr>
-                    <th className="py-1.5 px-2">Bulan</th>
+                    <th className="py-1.5 px-2 print:py-1 print:px-1">Bulan</th>
                     {neraca.monthlyRows.map((r, idx) => (
-                      <th key={idx} className="py-1.5 px-1.5 text-center text-[10px]">{String(r.bulan || '').substring(0, 3)}</th>
+                      <th key={idx} className="py-1.5 px-1.5 text-center text-[10px] print:text-[7.5pt] print:py-1 print:px-0.5">{String(r.bulan || '').substring(0, 3)}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 print:divide-slate-200">
                   <tr>
-                    <td className="py-1 px-2 font-medium text-slate-600">Andalan (m³/s)</td>
+                    <td className="py-1 px-2 font-medium text-slate-600 print:py-0.5 print:px-1">Andalan (m³/s)</td>
                     {neraca.monthlyRows.map((r, idx) => (
-                      <td key={idx} className="py-1 px-1.5 text-center font-mono text-[10px] text-slate-800">
+                      <td key={idx} className="py-1 px-1.5 text-center font-mono text-[10px] print:text-[7.5pt] print:py-0.5 print:px-0.5 text-slate-800">
                         {formatNum(r.ketersediaan, 1)}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="py-1 px-2 font-medium text-slate-600">Kebutuhan (m³/s)</td>
+                    <td className="py-1 px-2 font-medium text-slate-600 print:py-0.5 print:px-1">Kebutuhan (m³/s)</td>
                     {neraca.monthlyRows.map((r, idx) => (
-                      <td key={idx} className="py-1 px-1.5 text-center font-mono text-[10px] text-slate-800">
+                      <td key={idx} className="py-1 px-1.5 text-center font-mono text-[10px] print:text-[7.5pt] print:py-0.5 print:px-0.5 text-slate-800">
                         {formatNum(r.kebutuhan, 1)}
                       </td>
                     ))}
                   </tr>
-                  <tr className="bg-slate-50/70 font-semibold">
-                    <td className="py-1 px-2 font-bold text-slate-700">Neraca (m³/s)</td>
+                  <tr className="bg-slate-50/70 font-semibold print:bg-slate-100/50">
+                    <td className="py-1 px-2 font-bold text-slate-700 print:py-0.5 print:px-1">Neraca (m³/s)</td>
                     {neraca.monthlyRows.map((r, idx) => (
-                      <td key={idx} className={`py-1 px-1.5 text-center font-mono text-[10px] font-bold ${
+                      <td key={idx} className={`py-1 px-1.5 text-center font-mono text-[10px] print:text-[7.5pt] print:py-0.5 print:px-0.5 font-bold ${
                         r.neraca >= 0 ? 'text-emerald-700' : 'text-rose-700'
                       }`}>
                         {r.neraca >= 0 ? '+' : ''}{formatNum(r.neraca, 1)}
@@ -376,6 +383,8 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             </h3>
             <span className="text-[10px] text-slate-500 font-semibold">Pd T-03-2005-A</span>
           </div>
+
+          <MethodologyBox metodologiKey={embung.metodologiKey || 'ROUTING_EMBUNG'} />
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div className="border border-slate-200 p-2.5 rounded bg-slate-50/50">
@@ -410,7 +419,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           BAGIAN 6: DESAIN HIDRAULIK SALURAN TERBUKA (MANNING / SNI 03-2401-1991)
           ===================================================================== */}
       {sectionsConfig.showSaluran && saluran && (
-        <section className="mb-6 print-avoid-break">
+        <section className="mb-6 print-page-break-before">
           <div className="bg-slate-100 px-3 py-1.5 border-l-4 border-blue-600 mb-3 flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
               <Waves className="w-3.5 h-3.5 text-blue-600" />
@@ -419,7 +428,9 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
             <span className="text-[10px] text-slate-500 font-semibold">SNI 03-2401-1991</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-2">
+          <MethodologyBox metodologiKey={saluran.metodologiKey || 'MANNING'} />
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-2 print-avoid-break">
             <div className="border border-slate-200 p-2 rounded">
               <span className="text-[10px] text-slate-500 uppercase font-bold block">Kapasitas Debit (Q)</span>
               <span className="text-sm font-bold text-blue-700 font-mono">{formatNum(saluran.dischargeCapacity, 2)} m³/s</span>
@@ -479,7 +490,7 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
           BAGIAN 8: LEMBAR PENGESAHAN DOKUMEN RESMI (3 PIHAK)
           ===================================================================== */}
       {sectionsConfig.showPengesahan && (
-        <section className="mt-8 pt-4 border-t-2 border-slate-300 print-avoid-break">
+        <section className="mt-8 pt-4 border-t-2 border-slate-300 print-avoid-break print-page-break-before">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center mb-6">
             LEMBAR PENGESAHAN & PENETAPAN KELAYAKAN TEKNIS
           </p>
@@ -526,8 +537,9 @@ export const OfficialReportDocument: React.FC<Props> = ({ report }) => {
 
       {/* Footer Cap Standar */}
       <div className="mt-8 pt-3 border-t border-slate-200 text-[10px] text-slate-400 flex justify-between items-center print:text-slate-500">
-        <span>RekaSDA Pro v1.2 — Format Laporan Standar Rekayasa SDA</span>
-        <span>Halaman 1 dari 1 (Ringkasan Eksekutif)</span>
+        <span>RekaSDA Pro — Format Laporan Standar Rekayasa SDA (SNI Compliant)</span>
+        <span className="print:hidden">Ringkasan Eksekutif Terpadu</span>
+        <span className="hidden print:inline font-mono">Dokumen Resmi RekaSDA Pro ({kop.nomorDokumen})</span>
       </div>
     </div>
   );

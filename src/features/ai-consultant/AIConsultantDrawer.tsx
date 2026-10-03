@@ -175,22 +175,22 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
   };
 
   return (
-    <>
+    <div className="no-print print:hidden" data-ai-consultant-drawer>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
+          className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 no-print print:hidden"
           onClick={onClose}
         />
       )}
 
       <div
         className={cn(
-          "fixed top-0 right-0 z-[70] h-full transform transition-all duration-300 ease-out shadow-2xl",
+          "fixed top-0 right-0 z-[70] h-full transform transition-all duration-300 ease-out shadow-2xl no-print print:hidden",
           isOpen ? 'translate-x-0' : 'translate-x-full',
           isFullScreen ? 'w-full' : 'w-full sm:w-[460px] lg:w-[520px]'
         )}
       >
-        <div className="h-full flex flex-col bg-white border-l border-slate-300 relative overflow-hidden">
+        <div className="h-full flex flex-col bg-white border-l border-slate-300 relative overflow-hidden no-print print:hidden">
 
           {/* ── Header ── */}
           <div className="shrink-0 px-5 py-3.5 border-b border-slate-300 bg-[#0c3a66] text-white z-10 shadow-sm">
@@ -512,6 +512,6 @@ export const AIConsultantDrawer: React.FC<AIConsultantDrawerProps> = ({
         onClose={() => setApiKeyModalOpen(false)}
         onKeyUpdated={() => setHasApiKey(!!getActiveGeminiApiKey())}
       />
-    </>
+    </div>
   );
 };
