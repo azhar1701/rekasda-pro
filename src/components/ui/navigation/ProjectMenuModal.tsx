@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FolderArchive,
   Download,
@@ -123,13 +124,17 @@ export const ProjectMenuModal: React.FC = () => {
         </button>
       </div>
 
-      {/* Modal Dialog */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+      {/* Modal Dialog via Portal to prevent header/nav stacking context clipping */}
+      {isOpen &&
+        createPortal(
           <div
-            className="bg-white rounded-lg border border-slate-200 shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+            onClick={() => setIsOpen(false)}
           >
+            <div
+              className="bg-white rounded-lg border border-slate-200 shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Modal Header */}
             <div className="bg-pupr-blue px-5 py-4 text-white flex items-center justify-between border-b-2 border-pupr-yellow">
               <div className="flex items-center gap-2.5">
@@ -412,7 +417,8 @@ export const ProjectMenuModal: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
