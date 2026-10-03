@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { Button } from '@/components/ui/forms/Button';
 import { CalculationResult, GeoLocationData } from '@/types/common.types';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import { FolderGit2, Layers } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -12,10 +14,12 @@ interface Props {
 }
 
 export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmSave }) => {
+  const { currentProjectId, currentProjectCode, currentProjectName } = useHydrologyStore();
   const [photo, setPhoto] = useState<string | null>(null);
   const [location, setLocation] = useState<GeoLocationData | null>(null);
   const [loadingGeo, setLoadingGeo] = useState(false);
   const [notes, setNotes] = useState('');
+  const [scenarioName, setScenarioName] = useState('Kondisi Eksisting (Desain)');
 
   if (!data) return null;
 
@@ -25,6 +29,7 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
       setPhoto(data.photoUrl || null);
       setLocation(data.location || null);
       setNotes(data.notes || '');
+      setScenarioName((data as any).scenarioName || 'Kondisi Eksisting (Desain)');
 
       // Only trigger auto-gps if not already captured
       if (!data.location) {
@@ -77,7 +82,9 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
       date: new Date().toISOString(),
       location: location || undefined,
       photoUrl: photo || undefined,
-      notes: notes
+      notes: notes,
+      scenarioName: scenarioName.trim() || 'Kondisi Eksisting',
+      projectId: currentProjectId || undefined
     };
     onConfirmSave(finalRecord);
   };
@@ -95,6 +102,44 @@ export const ReportModal: React.FC<Props> = ({ isOpen, data, onClose, onConfirmS
           </div>
 
           <div className="p-6 space-y-5 overflow-y-auto flex-1">
+            {/* Unified Project & Scenario Card */}
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50/60 rounded-xl border border-blue-200">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5 text-[#0c3a66] font-extrabold text-[10px] uppercase tracking-wider">
+                  <FolderGit2 className="w-3.5 h-3.5 text-[#0c3a66]" />
+                  <span>Proyek Penampung</span>
+                </div>
+                {currentProjectCode ? (
+                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-200">
+                    {currentProjectCode}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                    Otomatis Tertaut
+                  </span>
+                )}
+              </div>
+              <p className="text-xs font-bold text-slate-800 truncate">
+                {currentProjectName || 'Proyek Analisis Hidrologi Terpadu'}
+              </p>
+
+              <div className="mt-3 pt-2.5 border-t border-blue-100">
+                <label className="block text-[10px] font-extrabold text-[#0c3a66] uppercase tracking-wider mb-1">
+                  Nama Skenario / Alternatif Desain
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={scenarioName}
+                    onChange={(e) => setScenarioName(e.target.value)}
+                    placeholder="Contoh: Skenario Q25 Penampang Trapesium"
+                    className="w-full text-xs font-semibold px-3 py-2 bg-white rounded-lg border border-blue-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#0c3a66]"
+                  />
+                  <Layers className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5" />
+                </div>
+              </div>
+            </div>
+
             {site && (
               <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <span className="block font-extrabold text-[10px] text-gray-400 uppercase tracking-widest mb-1">Lokasi Proyek</span>

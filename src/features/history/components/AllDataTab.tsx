@@ -26,10 +26,15 @@ import {
   ChevronRight,
   AlertTriangle,
   Cloud,
-  HardDrive
+  HardDrive,
+  FolderGit2,
+  Layers,
+  ArrowUpRight,
+  FolderOpen
 } from 'lucide-react';
 import { TableGovTech } from '@/components/ui/TableGovTech';
 import { toast } from '@/hooks/useToast';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
 
 type ViewMode = 'LIST' | 'MAP';
 type ModuleFilter = 'ALL' | 'manning' | 'flood' | 'water_balance' | 'embung';
@@ -41,11 +46,23 @@ interface Props {
 }
 
 export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDetail }) => {
+  const { currentProjectId, currentProjectCode, currentProjectName } = useHydrologyStore();
   const [data, setData] = useState<AllCalculationsData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSearchingNearby, setIsSearchingNearby] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [focusItemId, setFocusItemId] = useState<string | undefined>(undefined);
+
+  // Project Filter Scope: 'PROJECT' (skenario proyek aktif) vs 'ALL' (semua arsip global)
+  const [projectScope, setProjectScope] = useState<'PROJECT' | 'ALL'>('ALL');
+
+  useEffect(() => {
+    if (currentProjectId) {
+      setProjectScope('PROJECT');
+    } else {
+      setProjectScope('ALL');
+    }
+  }, [currentProjectId]);
 
   // Search, Filter & Pagination states
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -349,9 +366,20 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     return { total, manningCount, floodCount, waterCount, embungCount, localCount };
   }, [data]);
 
+  const projectSnapshotCount = useMemo(() => {
+    if (!currentProjectId) return 0;
+    return data.filter(d => d.projectId === currentProjectId).length;
+  }, [data, currentProjectId]);
+
   // Filtered & Searched Data
   const filteredData = useMemo(() => {
     return data.filter(item => {
+      // 0. Project scope filter (Skenario Proyek Aktif vs Global)
+      if (projectScope === 'PROJECT' && currentProjectId) {
+        if (item.projectId !== currentProjectId) {
+          return false;
+        }
+      }
       // 1. Module filter
       if (selectedModule !== 'ALL' && item.type !== selectedModule) {
         return false;
@@ -360,13 +388,15 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const nameMatch = (item.project_name || '').toLowerCase().includes(query);
+        const scenarioMatch = (item.scenarioName || '').toLowerCase().includes(query);
+        const codeMatch = (item.projectCode || '').toLowerCase().includes(query);
         const typeMatch = getTypeLabel(item.type).toLowerCase().includes(query);
         const dateMatch = new Date(item.created_at).toLocaleDateString('id-ID').toLowerCase().includes(query);
-        return nameMatch || typeMatch || dateMatch;
+        return nameMatch || scenarioMatch || codeMatch || typeMatch || dateMatch;
       }
       return true;
     });
-  }, [data, selectedModule, searchTerm]);
+  }, [data, projectScope, currentProjectId, selectedModule, searchTerm]);
 
   // Pagination slice
   const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
@@ -374,6 +404,32 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     const start = (currentPage - 1) * pageSize;
     return filteredData.slice(start, start + pageSize);
   }, [filteredData, currentPage]);
+
+  // Memuat parameter skenario langsung ke modul aktif
+  const handleApplyScenario = (item: AllCalculationsData) => {
+    let targetPath = '/saluran';
+    if (item.type === 'flood') targetPath = '/banjir';
+    else if (item.type === 'water_balance') targetPath = '/neraca';
+    else if (item.type === 'embung') targetPath = '/embung';
+
+    try {
+      sessionStorage.setItem('rekasda_active_scenario', JSON.stringify({
+        id: item.id,
+        type: item.type,
+        scenarioName: item.scenarioName,
+        data: item.data,
+        location: item.location
+      }));
+
+      window.dispatchEvent(new CustomEvent('loadCalculationScenario', { detail: item }));
+      window.dispatchEvent(new CustomEvent('navigateToTab', { detail: targetPath }));
+
+      toast.success(`Parameter skenario "${item.scenarioName || item.project_name}" berhasil disiapkan di modul!`);
+    } catch (err) {
+      console.error('Gagal menerapkan skenario:', err);
+      toast.error('Gagal menerapkan skenario.');
+    }
+  };
 
   // Export to Excel
   const handleExportExcel = async () => {
@@ -385,8 +441,10 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     const exportRows = filteredData.map((item, idx) => ({
       No: idx + 1,
       Tanggal: new Date(item.created_at).toLocaleDateString('id-ID'),
-      Modul: getTypeLabel(item.type),
+      'Kode Proyek': item.projectCode || '-',
       'Nama Proyek': item.project_name,
+      'Skenario Desain': item.scenarioName || 'Kondisi Eksisting',
+      Modul: getTypeLabel(item.type),
       'Nilai Utama': getMainValue(item),
       Satuan: getMainUnit(item.type),
       'Penyimpanan': item.isLocalOnly ? 'Lokal (Offline)' : 'Cloud Supabase'
@@ -399,11 +457,11 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
   // Table Columns
   const tableColumns = [
     { key: 'date', label: 'Tanggal', align: 'left' as const },
+    { key: 'project', label: 'Proyek & Skenario', align: 'left' as const },
     { key: 'type', label: 'Modul', align: 'left' as const },
-    { key: 'project', label: 'Nama Proyek', align: 'left' as const },
     { key: 'value', label: 'Kapasitas / Debit', align: 'right' as const, numeric: true },
     { key: 'sync', label: 'Penyimpanan', align: 'center' as const },
-    { key: 'actions', label: 'Aksi', align: 'center' as const }
+    { key: 'actions', label: 'Aksi Rekayasa', align: 'center' as const }
   ];
 
   const tableData = paginatedData.map((item) => ({
@@ -412,15 +470,30 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
         {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
       </span>
     ),
+    project: (
+      <div className="max-w-[260px] truncate" title={item.project_name}>
+        <div className="flex items-center gap-1.5">
+          <span className="font-semibold text-slate-800 text-xs truncate">{item.project_name}</span>
+          {item.projectCode && (
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-50 text-blue-900 border border-blue-200 shrink-0 font-bold">
+              {item.projectCode}
+            </span>
+          )}
+        </div>
+        {item.scenarioName && (
+          <div className="flex items-center gap-1 mt-1">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 max-w-[240px] truncate">
+              <Layers className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+              <span className="truncate">{item.scenarioName}</span>
+            </span>
+          </div>
+        )}
+      </div>
+    ),
     type: (
       <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border whitespace-nowrap ${getTypeBadgeStyle(item.type)}`}>
         {getTypeLabel(item.type)}
       </span>
-    ),
-    project: (
-      <div className="max-w-[240px] truncate" title={item.project_name}>
-        <span className="font-semibold text-slate-800 text-xs">{item.project_name}</span>
-      </div>
     ),
     value: (
       <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
@@ -441,6 +514,14 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
     ),
     actions: (
       <div className="flex items-center justify-center gap-1">
+        <button
+          onClick={() => handleApplyScenario(item)}
+          className="h-8 w-8 flex items-center justify-center text-teal-700 hover:bg-teal-50 rounded transition-colors"
+          title="Terapkan Parameter Skenario ke Modul Kerja"
+          aria-label="Terapkan Skenario"
+        >
+          <ArrowUpRight className="w-4 h-4" />
+        </button>
         <button
           onClick={() => handleShowOnMap(item)}
           className="h-8 w-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded transition-colors"
@@ -521,6 +602,83 @@ export const AllDataTab: React.FC<Props> = ({ onViewDetail, onConsultAI, onMapDe
       }
     >
       <div className="flex flex-col gap-6">
+        {/* Unified Project Context Banner */}
+        {currentProjectId ? (
+          <div className="bg-gradient-to-r from-[#0c3a66] via-blue-900 to-indigo-900 text-white p-4 rounded-xl shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-blue-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+                <FolderGit2 className="w-5 h-5 text-amber-300" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-200">
+                    Proyek Aktif Terhubung
+                  </span>
+                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-blue-800 text-amber-300 border border-blue-600">
+                    {currentProjectCode || 'PRJ'}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  {currentProjectName || 'Proyek Analisis Hidrologi Terpadu'}
+                </h3>
+              </div>
+            </div>
+
+            {/* Scope Switcher: Skenario Proyek Aktif vs Semua Riwayat Global */}
+            <div className="flex items-center bg-blue-950/70 p-1 rounded-lg border border-blue-700/60 w-full md:w-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setProjectScope('PROJECT');
+                  setCurrentPage(1);
+                }}
+                className={`flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  projectScope === 'PROJECT'
+                    ? 'bg-amber-400 text-blue-950 shadow-sm'
+                    : 'text-blue-200 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Skenario Proyek Ini ({projectSnapshotCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setProjectScope('ALL');
+                  setCurrentPage(1);
+                }}
+                className={`flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  projectScope === 'ALL'
+                    ? 'bg-amber-400 text-blue-950 shadow-sm'
+                    : 'text-blue-200 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>Semua Riwayat Global ({data.length})</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Belum ada Proyek Aktif terpilih di Lembar Kerja.</strong> Menampilkan seluruh arsip riwayat global.
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('openProjectModal'));
+              }}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs transition-colors self-start sm:self-auto shrink-0 shadow-xs"
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+              <span>Buka Katalog Proyek</span>
+            </button>
+          </div>
+        )}
+
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">

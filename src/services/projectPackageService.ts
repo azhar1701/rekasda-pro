@@ -13,6 +13,8 @@ import { type HydrologyState } from '@/stores/useHydrologyStore';
 export const CURRENT_PROJECT_SCHEMA_VERSION = '1.1';
 
 export interface ProjectMetadata {
+  projectId?: string;
+  projectCode?: string;
   projectName: string;
   dasName: string;
   riverName: string;
@@ -32,6 +34,7 @@ export interface ProjectPackagePayload {
   app: 'RekasDA Pro';
   schemaVersion: string;
   metadata: ProjectMetadata;
+  snapshots?: any[];
   state: {
     identitasLokasi: HydrologyState['identitasLokasi'];
     morfometriDAS: HydrologyState['morfometriDAS'];
@@ -62,7 +65,7 @@ export interface ProjectPackagePayload {
     qcResults: HydrologyState['qcResults'];
     qcStatus: HydrologyState['qcStatus'];
   };
-  summary: {
+  summary?: {
     hasFrequency: boolean;
     hasFlood: boolean;
     hasWaterBalance: boolean;
@@ -88,6 +91,8 @@ export function exportProjectBundle(
   const now = new Date().toISOString();
 
   const metadata: ProjectMetadata = {
+    projectId: customMetadata?.projectId || state.currentProjectId || undefined,
+    projectCode: customMetadata?.projectCode || state.currentProjectCode || undefined,
     projectName: customMetadata?.projectName || identitas?.namaPekerjaan || 'Proyek Hidrologi SDA',
     dasName: customMetadata?.dasName || identitas?.namaDAS || (state.morfometriDAS ? 'DAS Model' : 'DAS Tidak Terdefinisi'),
     riverName: customMetadata?.riverName || identitas?.namaSungai || '-',
@@ -274,6 +279,9 @@ export function applyProjectToStore(
     hasilSaluran: state.hasilSaluran || null,
     qcResults: state.qcResults || null,
     qcStatus: state.qcStatus || null,
+    currentProjectId: payload.metadata.projectId || null,
+    currentProjectCode: payload.metadata.projectCode || null,
+    currentProjectName: payload.metadata.projectName || null,
     isFrekuensiDirty: false,
     isBanjirDirty: false,
     isNeracaDirty: false,

@@ -452,6 +452,10 @@ export interface HydrologyState {
   fetchMultipleStationsData: (stasiunIds: string[]) => Promise<void>;
 
   // --- Project Lifecycle & Sync ---
+  currentProjectId?: string | null;
+  currentProjectCode?: string | null;
+  currentProjectName?: string | null;
+  setCurrentProject: (id: string | null, code?: string | null, name?: string | null) => void;
   resetProject: () => void;
   refreshDataHujan: (stasiunId?: string) => Promise<{ success: boolean; count: number; message: string }>;
 
@@ -519,6 +523,9 @@ export const INITIAL_HYDROLOGY_STATE = {
   arealRainfallThiessen: null as DataHujan[] | null,
   arealRainfallIsohyet: null as DataHujan[] | null,
   deletedStationIds: [] as string[],
+  currentProjectId: null as string | null,
+  currentProjectCode: null as string | null,
+  currentProjectName: null as string | null,
 };
 
 export const useHydrologyStore = create<HydrologyState>()(
@@ -526,6 +533,12 @@ export const useHydrologyStore = create<HydrologyState>()(
     (set, get) => ({
       ...INITIAL_HYDROLOGY_STATE,
 
+      setCurrentProject: (id, code, name) =>
+        set({
+          currentProjectId: id,
+          currentProjectCode: code || null,
+          currentProjectName: name || null,
+        }),
       resetProject: () => set({ ...INITIAL_HYDROLOGY_STATE }),
       setLoading: (loading: boolean) => set({ isLoading: loading }),
       setError: (error: string | null) => set({ error }),

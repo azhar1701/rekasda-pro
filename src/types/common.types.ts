@@ -48,4 +48,6 @@ export interface CalculationResult {
   photoUrl?: string;
   notes?: string;
   saved?: boolean;
+  scenarioName?: string;
+  projectId?: string;
 }

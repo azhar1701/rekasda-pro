@@ -22,6 +22,12 @@ import { ToastContainer } from '@/components/ui/feedback/Toast';
 import { CalculationType } from '@/types/types';
 import type { CalculationResult } from '@/types/common.types';
 import type { ActiveModule } from '@/hooks/useAIContext';
+import { useHydrologyStore } from '@/stores/useHydrologyStore';
+import {
+  saveCalculationSnapshot,
+  saveUnifiedProject,
+  generateUUID
+} from '@/services/unifiedProjectService';
 
 import { Header } from '@/components/ui/navigation/Header';
 import { Footer } from '@/components/ui/navigation/Footer';
@@ -95,13 +101,84 @@ const AppLayout: React.FC = () => {
 
   const saveToHistory = async (record: CalculationResult) => {
     try {
-      await saveCalculation(record);
+      // 1. Dapatkan atau buat otomatis proyek induk jika belum ada
+      let projectId = useHydrologyStore.getState().currentProjectId;
+      if (!projectId) {
+        const storeState = useHydrologyStore.getState();
+        const newId = generateUUID();
+        const newCode = `PRJ-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+        const defaultName = (record.inputs as any)?.site?.channelName || (record.inputs as any)?.site?.namaPekerjaan || 'Proyek Analisis Hidrologi Terpadu';
+        storeState.setCurrentProject(newId, newCode, defaultName);
+        projectId = newId;
+
+        // Simpan proyek induk baru di penyimpanan terpadu
+        await saveUnifiedProject({
+          metadata: {
+            id: newId,
+            projectCode: newCode,
+            name: defaultName,
+            dasName: storeState.identitasLokasi?.namaDAS || 'DAS Utama',
+            author: 'Tenaga Ahli Hidrologi',
+            institution: 'RekasDA Engineering',
+            status: 'DRAFT',
+            schemaVersion: '2.0',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          masterData: {
+            identitasLokasi: storeState.identitasLokasi,
+            morfometriDAS: storeState.morfometriDAS,
+            tutupanLahan: storeState.tutupanLahan,
+            stasiunList: storeState.stasiunList || [],
+            curahHujanWilayah: storeState.curahHujanWilayah,
+            activeRainfallSource: storeState.activeRainfallSource,
+            dataHujan: storeState.dataHujan || [],
+          },
+          analysisResults: {},
+          snapshots: [],
+        });
+      }
+
+      // 2. Simpan snapshot skenario ke sistem penyimpanan terpadu
+      const rawType = String(record.type || '').toUpperCase();
+      const moduleType = (rawType.includes('MANNING') ? 'manning' :
+        rawType.includes('WATER') ? 'water_balance' :
+        rawType.includes('EMBUNG') ? 'embung' : 'flood') as 'manning' | 'flood' | 'water_balance' | 'embung';
+
+      const snapshotTitle = (record.inputs as any)?.site?.channelName ||
+        (record.inputs as any)?.site?.namaPekerjaan ||
+        (record.inputs as any)?.projectName ||
+        record.notes ||
+        `Analisis ${moduleType.toUpperCase()}`;
+
+      await saveCalculationSnapshot(projectId, {
+        moduleType,
+        snapshotTitle,
+        scenarioName: record.scenarioName || 'Kondisi Eksisting (Desain)',
+        inputParameters: record.inputs as any,
+        outputResults: record.outputs as any,
+        location: record.location,
+        photoUrl: record.photoUrl,
+        notes: record.notes || '',
+        createdBy: 'Tenaga Ahli Hidrologi',
+      });
+
+      // 3. Simpan juga ke database legacy / hydrofield_history untuk backward compatibility
+      try {
+        await saveCalculation(record);
+      } catch (legacyErr) {
+        console.warn('Gagal menyimpan ke tabel legacy (data aman di unified snapshot):', legacyErr);
+        const storedHistory = JSON.parse(localStorage.getItem('hydrofield_history') || '[]');
+        const updated = [record, ...storedHistory];
+        localStorage.setItem('hydrofield_history', JSON.stringify(updated));
+      }
+
+      toast.success('Hasil perhitungan berhasil disimpan sebagai skenario proyek!');
       setReportModalOpen(false);
       navigate(Tab.HISTORY);
     } catch (error) {
-      console.error('Error saving to database:', error);
-      toast.error('Gagal menyimpan ke database. Data disimpan lokal.');
-      // Fallback to localStorage
+      console.error('Error saving calculation snapshot:', error);
+      toast.error('Gagal menyimpan ke database server. Data disimpan lokal.');
       const storedHistory = JSON.parse(localStorage.getItem('hydrofield_history') || '[]');
       const updated = [record, ...storedHistory];
       localStorage.setItem('hydrofield_history', JSON.stringify(updated));

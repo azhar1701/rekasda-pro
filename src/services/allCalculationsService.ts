@@ -1,4 +1,9 @@
 import { supabase } from '../lib/api/supabase';
+import {
+  getAllUnifiedSnapshots,
+  getUnifiedProjectList,
+  deleteCalculationSnapshot
+} from './unifiedProjectService';
 
 export interface AllCalculationsData {
   id: string;
@@ -8,14 +13,69 @@ export interface AllCalculationsData {
   data: any;
   location?: { latitude: number; longitude: number };
   isLocalOnly?: boolean;
+  // Unified project metadata
+  projectId?: string;
+  projectCode?: string;
+  scenarioName?: string;
+  snapshotTitle?: string;
+  createdBy?: string;
+  notes?: string;
+  isSnapshot?: boolean;
 }
 
 /**
- * Mengambil semua data perhitungan dari database Supabase dan/atau localStorage offline
+ * Mengambil semua data perhitungan dari database Supabase dan/atau localStorage offline,
+ * termasuk snapshot skenario dari sistem penyimpanan proyek terpadu (Unified Storage).
  */
 export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
   const allData: AllCalculationsData[] = [];
   const processedIds = new Set<string>();
+
+  // 0. Ambil rekaman dari Unified Project Snapshots (Single Source of Truth)
+  try {
+    const [snapshots, projects] = await Promise.all([
+      getAllUnifiedSnapshots(),
+      getUnifiedProjectList()
+    ]);
+
+    const projectMap = new Map<string, { name: string; projectCode: string }>();
+    projects.forEach((p) => {
+      projectMap.set(p.id, { name: p.name, projectCode: p.projectCode });
+    });
+
+    snapshots.forEach((snap) => {
+      processedIds.add(String(snap.id));
+      const parentProj = projectMap.get(snap.projectId);
+      const displayName = snap.snapshotTitle || parentProj?.name || 'Hasil Analisis';
+
+      allData.push({
+        id: String(snap.id),
+        type: snap.moduleType as any,
+        project_name: displayName,
+        created_at: snap.createdAt,
+        data: {
+          inputs: snap.inputParameters,
+          results: snap.outputResults,
+          monthly_inputs: snap.inputParameters?.monthlyInputs,
+          monthly_results: snap.outputResults?.monthlyResults,
+          summary: snap.outputResults?.summary,
+          result_data: snap.outputResults,
+          input_data: snap.inputParameters
+        },
+        location: snap.location || snap.inputParameters?.site?.location || snap.inputParameters?.location,
+        isLocalOnly: false,
+        projectId: snap.projectId,
+        projectCode: parentProj?.projectCode,
+        scenarioName: snap.scenarioName,
+        snapshotTitle: snap.snapshotTitle,
+        createdBy: snap.createdBy,
+        notes: snap.notes,
+        isSnapshot: true
+      });
+    });
+  } catch (e) {
+    console.warn('Gagal memuat unified calculation snapshots:', e);
+  }
 
   // 1. Ambil data dari Supabase jika tersedia
   if (supabase) {
@@ -130,11 +190,12 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
     }
   }
 
-  // 2. Ambil data dari localStorage offline ('hydrofield_history')
+  // 2. Ambil data dari localStorage offline ('hydrofield_history') jika di browser
   try {
-    const rawLocal = localStorage.getItem('hydrofield_history');
-    if (rawLocal) {
-      const localItems = JSON.parse(rawLocal);
+    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      const rawLocal = window.localStorage.getItem('hydrofield_history');
+      if (rawLocal) {
+        const localItems = JSON.parse(rawLocal);
       if (Array.isArray(localItems)) {
         localItems.forEach((localRecord: any) => {
           const recId = String(localRecord.id || '');
@@ -172,7 +233,8 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
         });
       }
     }
-  } catch (e) {
+  }
+} catch (e) {
     console.warn('Gagal membaca hydrofield_history dari localStorage:', e);
   }
 
@@ -188,6 +250,14 @@ export const getAllCalculations = async (): Promise<AllCalculationsData[]> => {
 export const deleteCalculationById = async (type: string, id: string) => {
   let dbError: any = null;
 
+  // 1. Bersihkan dari Unified Project Snapshots (jika id berupa UUID snapshot)
+  try {
+    await deleteCalculationSnapshot(id);
+  } catch (err) {
+    console.warn('Gagal menghapus snapshot:', err);
+  }
+
+  // 2. Bersihkan dari tabel legacy Supabase jika ada
   if (supabase) {
     let tableName = '';
     if (type === 'manning') tableName = 'manning_calculations';
@@ -211,12 +281,14 @@ export const deleteCalculationById = async (type: string, id: string) => {
 
   // Selalu bersihkan dari localStorage jika ada
   try {
-    const rawLocal = localStorage.getItem('hydrofield_history');
-    if (rawLocal) {
-      const localItems = JSON.parse(rawLocal);
-      if (Array.isArray(localItems)) {
-        const filtered = localItems.filter((item: any) => String(item.id) !== String(id));
-        localStorage.setItem('hydrofield_history', JSON.stringify(filtered));
+    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      const rawLocal = window.localStorage.getItem('hydrofield_history');
+      if (rawLocal) {
+        const localItems = JSON.parse(rawLocal);
+        if (Array.isArray(localItems)) {
+          const filtered = localItems.filter((item: any) => String(item.id) !== String(id));
+          window.localStorage.setItem('hydrofield_history', JSON.stringify(filtered));
+        }
       }
     }
   } catch (e) {
